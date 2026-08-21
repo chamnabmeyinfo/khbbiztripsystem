@@ -4,8 +4,10 @@
  */
 
 import React from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 import { AppProvider, useApp } from './context/AppContext';
 import { isRTL, getFontFamilyClass } from './i18n/translations';
+import { DynamicHead } from './components/common/DynamicHead';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
 import { LandingPage } from './components/marketing/LandingPage';
@@ -36,6 +38,9 @@ const MainLayout: React.FC = () => {
       dir={dir}
       className={`min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 ${fontClass}`}
     >
+      {/* Dynamic SEO Meta & Document Head */}
+      <DynamicHead />
+
       {/* Navigation Header */}
       <Header />
 
@@ -86,8 +91,10 @@ export default function App() {
   })();
 
   return (
-    <AppProvider>
-      {isAgendaStandalone ? <StandaloneAgendaView /> : <MainLayout />}
-    </AppProvider>
+    <HelmetProvider>
+      <AppProvider>
+        {isAgendaStandalone ? <StandaloneAgendaView /> : <MainLayout />}
+      </AppProvider>
+    </HelmetProvider>
   );
 }

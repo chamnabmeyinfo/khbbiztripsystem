@@ -744,6 +744,14 @@ export interface SystemSettings {
   secondaryColor?: string;
   accentColor?: string;
   fontSizeScale?: 'compact' | 'normal' | 'comfortable' | 'large';
+  fontFamilyLatin?: 'plus-jakarta' | 'inter' | 'outfit' | 'poppins' | 'playfair' | 'merriweather' | 'dm-sans' | 'jetbrains-mono' | 'system';
+  fontFamilyKhmer?: 'kantumruy-pro' | 'hanuman' | 'battambang' | 'koulen' | 'siemreap';
+  fontFamilyHeading?: 'inherit' | 'playfair' | 'cinzel' | 'outfit' | 'plus-jakarta' | 'poppins' | 'jetbrains-mono';
+  headingFontWeight?: 'normal' | 'semibold' | 'bold' | 'black';
+  fontLineHeight?: 'snug' | 'normal' | 'relaxed';
+  fontLetterSpacing?: 'tight' | 'normal' | 'wide' | 'widest';
+  fontSmoothing?: 'antialiased' | 'subpixel';
+  fontBoldBoost?: boolean;
   customPalette?: {
     themeName?: string;
     primary: string;

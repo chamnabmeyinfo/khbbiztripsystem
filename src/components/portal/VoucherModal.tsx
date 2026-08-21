@@ -77,9 +77,9 @@ export const VoucherModal: React.FC = () => {
         </div>
 
         {/* Printable Voucher Body */}
-        <div id="printable-voucher" className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white text-slate-900">
+        <div id="printable-voucher" className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white text-slate-900 print-friendly-headers">
           {/* Voucher Header with Brand & Status */}
-          <div className="flex items-start justify-between border-b border-slate-200 pb-6">
+          <div className="flex items-start justify-between border-b border-slate-200 pb-6 print-friendly-headers">
             <div className="flex items-center gap-3">
               {systemSettings?.companyLogoUrl ? (
                 <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 p-1 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
@@ -116,7 +116,7 @@ export const VoucherModal: React.FC = () => {
           </div>
 
           {/* Core Booking Summary & QR Code Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center p-5 rounded-2xl bg-slate-50 border border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center p-5 rounded-2xl bg-slate-50 border border-slate-200 print-friendly-summary">
             <div className="sm:col-span-2 space-y-3">
               <span className="text-xs font-bold text-sky-600 uppercase tracking-wider">
                 {booking.packageDestination}

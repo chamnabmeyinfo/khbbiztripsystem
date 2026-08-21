@@ -126,6 +126,44 @@ export const THEME_PRESETS: Record<string, ThemePalette> = {
   }
 };
 
+export interface FontOption {
+  key: string;
+  label: string;
+  category: string;
+  fontStack: string;
+  sampleText?: string;
+}
+
+export const FONT_LATIN_OPTIONS: FontOption[] = [
+  { key: 'plus-jakarta', label: 'Plus Jakarta Sans', category: 'Modern Geometric (Default)', fontStack: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif", sampleText: 'Official Trade Delegation' },
+  { key: 'inter', label: 'Inter', category: 'Clean Neutral Enterprise', fontStack: "'Inter', system-ui, -apple-system, sans-serif", sampleText: 'Global B2B Commerce' },
+  { key: 'outfit', label: 'Outfit', category: 'Contemporary Tech Display', fontStack: "'Outfit', system-ui, -apple-system, sans-serif", sampleText: 'Executive Summit 2026' },
+  { key: 'poppins', label: 'Poppins', category: 'Friendly Geometric', fontStack: "'Poppins', system-ui, -apple-system, sans-serif", sampleText: 'VIP Travel & Agendas' },
+  { key: 'dm-sans', label: 'DM Sans', category: 'Boutique B2B Agency', fontStack: "'DM Sans', system-ui, -apple-system, sans-serif", sampleText: 'Bilateral Matching Hub' },
+  { key: 'playfair', label: 'Playfair Display', category: 'Luxury Editorial Serif', fontStack: "'Playfair Display', Georgia, serif", sampleText: 'Diplomatic Mission Portfolio' },
+  { key: 'merriweather', label: 'Merriweather', category: 'Refined Business Serif', fontStack: "'Merriweather', Georgia, serif", sampleText: 'Corporate Governance' },
+  { key: 'jetbrains-mono', label: 'JetBrains Mono', category: 'High-Tech Financial Data', fontStack: "'JetBrains Mono', monospace", sampleText: 'USD $3,500.00 / PAX' },
+  { key: 'system', label: 'System Native UI', category: 'Apple / Windows OS', fontStack: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', sampleText: 'System Operating Baseline' },
+];
+
+export const FONT_KHMER_OPTIONS: FontOption[] = [
+  { key: 'kantumruy-pro', label: 'Kantumruy Pro (កន្ទុំរុយ ប្រូ)', category: 'Modern Clean Sans (Default)', fontStack: "'Kantumruy Pro', 'Hanuman', 'Battambang', system-ui, sans-serif", sampleText: 'បេសកកម្មពាណិជ្ជកម្មកម្ពុជា' },
+  { key: 'hanuman', label: 'Hanuman (ហនុមាន)', category: 'Traditional Elegant Serif', fontStack: "'Hanuman', 'Battambang', system-ui, sans-serif", sampleText: 'ប្រតិភូធុរកិច្ចអន្តរជាតិ' },
+  { key: 'battambang', label: 'Battambang (បាត់ដំបង)', category: 'Bold Display Sans', fontStack: "'Battambang', 'Hanuman', system-ui, sans-serif", sampleText: 'ពិព័រណ៍ពាណិជ្ជកម្មក្វាងចូវ' },
+  { key: 'koulen', label: 'Koulen (គូលែន)', category: 'Angkorian Display Header', fontStack: "'Koulen', 'Battambang', system-ui, sans-serif", sampleText: 'កម្ពុជា-ចិន សម្ព័ន្ធភាព' },
+  { key: 'siemreap', label: 'Siemreap (សៀមរាប)', category: 'Classic High Legibility', fontStack: "'Siemreap', 'Hanuman', system-ui, sans-serif", sampleText: 'ដំណើរកម្សាន្តធុរកិច្ច VIP' },
+];
+
+export const FONT_HEADING_OPTIONS: FontOption[] = [
+  { key: 'inherit', label: 'Match Body Font (Default)', category: 'Unified Font Stack', fontStack: 'inherit', sampleText: 'Trade Delegation Agenda' },
+  { key: 'playfair', label: 'Playfair Display', category: 'Luxury Editorial Serif', fontStack: "'Playfair Display', Georgia, serif", sampleText: 'Diplomatic Summit 2026' },
+  { key: 'cinzel', label: 'Cinzel', category: 'Imperial Diplomatic Serif', fontStack: "'Cinzel', Georgia, serif", sampleText: 'MINISTERIAL TRADE EXPEDITION' },
+  { key: 'outfit', label: 'Outfit', category: 'Modern Display Sans', fontStack: "'Outfit', sans-serif", sampleText: 'Global Sourcing & Supply' },
+  { key: 'plus-jakarta', label: 'Plus Jakarta Sans', category: 'High-Tech Corporate', fontStack: "'Plus Jakarta Sans', sans-serif", sampleText: 'Enterprise Logistics Rail' },
+  { key: 'poppins', label: 'Poppins', category: 'Bold Rounded Modern', fontStack: "'Poppins', sans-serif", sampleText: 'Bilateral Matching Hub' },
+  { key: 'jetbrains-mono', label: 'JetBrains Mono', category: 'Monospace Financial & Code', fontStack: "'JetBrains Mono', monospace", sampleText: 'PORTAL_TERMINAL_2026' },
+];
+
 /**
  * Applies dynamic CSS variables and dataset attributes to document root
  */
@@ -161,6 +199,52 @@ export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): vo
     root.style.fontSize = '17.5px';
   } else {
     root.style.fontSize = '16px';
+  }
+
+  // Apply Font Families
+  const latinFont = FONT_LATIN_OPTIONS.find((f) => f.key === settings.fontFamilyLatin)?.fontStack || FONT_LATIN_OPTIONS[0].fontStack;
+  const khmerFont = FONT_KHMER_OPTIONS.find((f) => f.key === settings.fontFamilyKhmer)?.fontStack || FONT_KHMER_OPTIONS[0].fontStack;
+  const headingFont = FONT_HEADING_OPTIONS.find((f) => f.key === settings.fontFamilyHeading)?.fontStack || 'inherit';
+
+  root.style.setProperty('--font-family-latin', latinFont);
+  root.style.setProperty('--font-family-khmer', khmerFont);
+  root.style.setProperty('--font-family-heading', headingFont);
+
+  // Apply Letter Spacing
+  const letterSpacingMap: Record<string, string> = {
+    tight: '-0.025em',
+    normal: '0em',
+    wide: '0.025em',
+    widest: '0.05em',
+  };
+  const letterSpacing = letterSpacingMap[settings.fontLetterSpacing || 'normal'] || '0em';
+  root.style.setProperty('--font-letter-spacing', letterSpacing);
+
+  // Apply Line Height
+  const lineHeightMap: Record<string, string> = {
+    snug: '1.4',
+    normal: '1.55',
+    relaxed: '1.7',
+  };
+  const lineHeight = lineHeightMap[settings.fontLineHeight || 'normal'] || '1.55';
+  root.style.setProperty('--font-line-height', lineHeight);
+
+  // Apply Body Font Stack
+  root.style.fontFamily = latinFont;
+
+  // Smoothing & High Contrast Boost
+  if (settings.fontSmoothing === 'subpixel') {
+    root.style.setProperty('-webkit-font-smoothing', 'auto');
+    root.style.setProperty('-moz-osx-font-smoothing', 'auto');
+  } else {
+    root.style.setProperty('-webkit-font-smoothing', 'antialiased');
+    root.style.setProperty('-moz-osx-font-smoothing', 'grayscale');
+  }
+
+  if (settings.fontBoldBoost) {
+    root.classList.add('font-bold-boost');
+  } else {
+    root.classList.remove('font-bold-boost');
   }
 }
 

@@ -42,11 +42,21 @@ import {
   Check,
   Stamp,
   Palette,
-  Type
+  Type,
+  CaseSensitive,
+  AlignLeft,
+  Sparkle,
+  Layers,
+  Eye
 } from 'lucide-react';
 import { SystemSettings } from '../../types';
 import { AiThemeColorDetectorModal } from './AiThemeColorDetectorModal';
-import { THEME_PRESETS } from '../../services/aiThemeService';
+import {
+  THEME_PRESETS,
+  FONT_LATIN_OPTIONS,
+  FONT_KHMER_OPTIONS,
+  FONT_HEADING_OPTIONS,
+} from '../../services/aiThemeService';
 
 const LOGO_PRESETS = [
   {
@@ -219,7 +229,7 @@ export const SettingsSection: React.FC = () => {
           { id: 'features', label: '⚡ Feature Toggles', icon: Sliders },
           { id: 'payments', label: '💳 Payment Gateways', icon: CreditCard },
           { id: 'branding', label: '🏢 Trade Mission Branding', icon: Building2 },
-          { id: 'theme', label: '🎨 AI Theme & Colors', icon: Palette },
+          { id: 'theme', label: '🎨 Theme & Typography', icon: Palette },
           { id: 'financials', label: '📐 Tax & Costing Defaults', icon: Percent },
           { id: 'security', label: '🔒 Security & Access Rules', icon: Shield },
           { id: 'backup', label: '💾 Backup & Restore (JSON)', icon: Download }
@@ -1432,7 +1442,7 @@ export const SettingsSection: React.FC = () => {
         </form>
       )}
 
-      {/* ── TAB: AI THEME & COLOR TEMPLATE ────────────────────────────── */}
+      {/* ── TAB: AI THEME & COLOR & FONT TYPOGRAPHY ───────────────────── */}
       {activeSubTab === 'theme' && (
         <div className="space-y-6">
           {/* AI Banner Hero */}
@@ -1440,15 +1450,15 @@ export const SettingsSection: React.FC = () => {
             <div className="space-y-1 max-w-xl">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono">
-                  Gemini Smart Palette
+                  Gemini Smart Palette & Font Engine
                 </span>
                 <span className="text-xs text-indigo-200">WCAG AA Contrast Verified</span>
               </div>
               <h3 className="text-lg font-black tracking-tight">
-                AI Color Detection & Dynamic UI Theme Studio
+                AI Color Detection & Dynamic Typography Studio
               </h3>
               <p className="text-xs text-slate-300">
-                Extract bespoke color code palettes from event destinations, official delegation branding, or corporate badges and automatically apply them across the entire customer portal and admin ERP.
+                Customize brand colors, interface font families, Khmer script typography, heading weights, line spacing, and letter spacing across the entire KHB Events portal and ERP.
               </p>
             </div>
 
@@ -1457,20 +1467,20 @@ export const SettingsSection: React.FC = () => {
               className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-sky-500 to-indigo-500 hover:from-indigo-600 hover:to-sky-600 text-white font-bold text-xs shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap self-start md:self-auto active:scale-95"
             >
               <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              <span>Launch AI Theme Detector</span>
+              <span>Launch Theme & Font Studio Modal</span>
             </button>
           </div>
 
-          {/* Theme Presets Grid */}
+          {/* 1. Theme Presets Grid */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Palette className="w-4 h-4 text-indigo-500" />
-                  <span>Curated Business Delegation Palettes</span>
+                  <span>Curated Business Delegation Color Palettes</span>
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Select a pre-tuned chromatic system or customize individual hex color codes.
+                  Select a pre-tuned chromatic system or customize individual primary and accent hex colors.
                 </p>
               </div>
             </div>
@@ -1531,56 +1541,423 @@ export const SettingsSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Typography Font Scale Manager */}
+          {/* 2. Primary Latin & Multi-Lingual Font Family */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Type className="w-4 h-4 text-amber-500" />
-                  <span>Typography Baseline & Font Size Scale</span>
+                  <CaseSensitive className="w-4 h-4 text-indigo-500" />
+                  <span>Primary Interface Font Family (Latin & Global UI)</span>
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Adjust global font scaling for optimal multi-language reading comfort across Khmer, Arabic, Hebrew, and English.
+                  Governs all body copy, data tables, form inputs, dialogs, and navigation elements.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { key: 'compact', label: 'Compact (14.5px)', desc: 'High ERP table data density', scale: '90%' },
-                { key: 'normal', label: 'Normal (16px)', desc: 'Default standard balanced layout', scale: '100%' },
-                { key: 'comfortable', label: 'Comfortable (16.5px)', desc: 'Enhanced mobile & portal legibility', scale: '105%' },
-                { key: 'large', label: 'Large (17.5px)', desc: 'Executive high-visibility mode', scale: '115%' },
-              ].map((opt) => {
-                const isSelected = (formData.fontSizeScale || 'normal') === opt.key;
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {FONT_LATIN_OPTIONS.map((f) => {
+                const isSelected = (formData.fontFamilyLatin || 'plus-jakarta') === f.key;
                 return (
-                  <button
-                    key={opt.key}
-                    type="button"
+                  <div
+                    key={f.key}
                     onClick={() => {
                       const updated = {
                         ...formData,
-                        fontSizeScale: opt.key as any,
+                        fontFamilyLatin: f.key as any,
                       };
                       setFormData(updated);
                       updateSystemSettings(updated);
                       setIsSaved(true);
                       setTimeout(() => setIsSaved(false), 2000);
                     }}
-                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-amber-950 dark:text-amber-200 font-bold ring-2 ring-amber-500/20'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
+                        ? 'border-indigo-600 ring-2 ring-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-950/30'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs">{opt.label}</span>
-                      <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">{opt.scale}</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">{f.label}</span>
+                      {isSelected ? (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-600 text-white flex items-center gap-1">
+                          <Check className="w-2.5 h-2.5" />
+                          <span>Active</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-medium">{f.category.split(' ')[0]}</span>
+                      )}
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal">{opt.desc}</div>
-                  </button>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{f.category}</div>
+                    <div
+                      className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 truncate"
+                      style={{ fontFamily: f.fontStack }}
+                    >
+                      {f.sampleText}
+                    </div>
+                  </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* 3. Khmer Script Typography (សម្រាប់ភាសាខ្មែរ) */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkle className="w-4 h-4 text-amber-500" />
+                  <span>Khmer Script Typography (ពុម្ពអក្សរភាសាខ្មែរ)</span>
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  High-fidelity font styling for Cambodian trade missions, official itineraries, and bilateral contracts.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {FONT_KHMER_OPTIONS.map((f) => {
+                const isSelected = (formData.fontFamilyKhmer || 'kantumruy-pro') === f.key;
+                return (
+                  <div
+                    key={f.key}
+                    onClick={() => {
+                      const updated = {
+                        ...formData,
+                        fontFamilyKhmer: f.key as any,
+                      };
+                      setFormData(updated);
+                      updateSystemSettings(updated);
+                      setIsSaved(true);
+                      setTimeout(() => setIsSaved(false), 2000);
+                    }}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/50 dark:bg-amber-950/30'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">{f.label}</span>
+                      {isSelected ? (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white flex items-center gap-1">
+                          <Check className="w-2.5 h-2.5" />
+                          <span>Active</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-medium">{f.category.split(' ')[0]}</span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{f.category}</div>
+                    <div
+                      className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-base text-slate-900 dark:text-white font-medium truncate"
+                      style={{ fontFamily: f.fontStack }}
+                    >
+                      {f.sampleText}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 4. Heading Font Style & Weight Matrix */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Type className="w-4 h-4 text-sky-500" />
+                <span>Headings & Title Typography Configuration</span>
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Customize display headline typeface and structural stroke weights for section banners.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Heading Font Family */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Headline Font Family
+                </label>
+                <select
+                  value={formData.fontFamilyHeading || 'inherit'}
+                  onChange={(e) => {
+                    const updated = { ...formData, fontFamilyHeading: e.target.value as any };
+                    setFormData(updated);
+                    updateSystemSettings(updated);
+                    setIsSaved(true);
+                    setTimeout(() => setIsSaved(false), 2000);
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {FONT_HEADING_OPTIONS.map((f) => (
+                    <option key={f.key} value={f.key}>
+                      {f.label} &mdash; {f.category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Heading Font Weight */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Headline Stroke Weight
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { key: 'normal', label: 'Regular 400' },
+                    { key: 'semibold', label: 'Medium 600' },
+                    { key: 'bold', label: 'Bold 700' },
+                    { key: 'black', label: 'Heavy 900' },
+                  ].map((w) => {
+                    const isSelected = (formData.headingFontWeight || 'bold') === w.key;
+                    return (
+                      <button
+                        key={w.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, headingFontWeight: w.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-1.5 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {w.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Typography Baseline, Line Height & Letter Spacing Controls */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-emerald-500" />
+                <span>Rhythm, Line Height & Kerning Calibration</span>
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Fine-tune optical readability, character spacing, line height, and baseline scaling.
+              </p>
+            </div>
+
+            {/* Baseline Font Scale */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Baseline Font Scale
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { key: 'compact', label: 'Compact (14.5px)', desc: 'High ERP table data density', scale: '90%' },
+                  { key: 'normal', label: 'Normal (16px)', desc: 'Default standard balanced layout', scale: '100%' },
+                  { key: 'comfortable', label: 'Comfortable (16.5px)', desc: 'Enhanced mobile & portal legibility', scale: '105%' },
+                  { key: 'large', label: 'Large (17.5px)', desc: 'Executive high-visibility mode', scale: '115%' },
+                ].map((opt) => {
+                  const isSelected = (formData.fontSizeScale || 'normal') === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        const updated = {
+                          ...formData,
+                          fontSizeScale: opt.key as any,
+                        };
+                        setFormData(updated);
+                        updateSystemSettings(updated);
+                        setIsSaved(true);
+                        setTimeout(() => setIsSaved(false), 2000);
+                      }}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-amber-950 dark:text-amber-200 font-bold ring-2 ring-amber-500/20'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs">{opt.label}</span>
+                        <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">{opt.scale}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-normal">{opt.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Line Height & Letter Spacing */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-700">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <AlignLeft className="w-4 h-4 text-teal-500" />
+                  <span>Line Height (Leading)</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'snug', label: 'Snug (1.4x)' },
+                    { key: 'normal', label: 'Normal (1.55x)' },
+                    { key: 'relaxed', label: 'Relaxed (1.7x)' },
+                  ].map((lh) => {
+                    const isSelected = (formData.fontLineHeight || 'normal') === lh.key;
+                    return (
+                      <button
+                        key={lh.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, fontLineHeight: lh.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-2 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-teal-600 bg-teal-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {lh.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <CaseSensitive className="w-4 h-4 text-purple-500" />
+                  <span>Letter Spacing (Kerning Tracking)</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { key: 'tight', label: 'Tight' },
+                    { key: 'normal', label: '0 Normal' },
+                    { key: 'wide', label: '+0.025' },
+                    { key: 'widest', label: '+0.05' },
+                  ].map((ls) => {
+                    const isSelected = (formData.fontLetterSpacing || 'normal') === ls.key;
+                    return (
+                      <button
+                        key={ls.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, fontLetterSpacing: ls.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-1 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {ls.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Legibility & Contrast Boost Toggle */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white">
+                  High-Contrast Bold Stroke Boost
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Enhances text stroke density for elevated visibility in bright daylight or mobile screens
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!formData.fontBoldBoost}
+                  onChange={(e) => {
+                    const updated = { ...formData, fontBoldBoost: e.target.checked };
+                    setFormData(updated);
+                    updateSystemSettings(updated);
+                    setIsSaved(true);
+                    setTimeout(() => setIsSaved(false), 2000);
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+          </div>
+
+          {/* 6. Live Interactive Typography & Theme Sandbox */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-emerald-500" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Live Typography & Theme Real-Time Sandbox
+                </h4>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                Live DOM Rendered
+              </span>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                  Headline Font Rendering:
+                </span>
+                <h2 className="text-xl font-heading text-slate-900 dark:text-white mt-1">
+                  KHB Events &bull; 137th Canton Fair International Trade Expedition
+                </h2>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                  Khmer Script Rendering (អក្សរខ្មែរ):
+                </span>
+                <p className="text-base font-khmer text-slate-800 dark:text-slate-200 mt-1">
+                  បេសកកម្មពាណិជ្ជកម្មកម្ពុជា-ចិន ដំណើរកម្សាន្តធុរកិច្ច VIP និងកិច្ចប្រជុំផ្គូផ្គងដៃគូយុទ្ធសាស្ត្រ
+                </p>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                  Body Typography & UI Elements:
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                  Join over 1,500 delegates across ASEAN for 5 days of bilateral networking, B2B matchmaking sessions, automated tax-compliant invoicing, and guided VIP factory tours.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm transition-transform active:scale-95"
+                  style={{ backgroundColor: formData.primaryColor || '#0284c7' }}
+                >
+                  Register Delegation Seat
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-xl text-slate-900 text-xs font-bold shadow-sm"
+                  style={{ backgroundColor: formData.accentColor || '#f59e0b' }}
+                >
+                  ★ VIP Express Pass ($3,500)
+                </button>
+                <span className="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                  Font: {formData.fontFamilyLatin || 'plus-jakarta'} / Khmer: {formData.fontFamilyKhmer || 'kantumruy-pro'}
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -1484,5 +1484,13 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   secondaryColor: '#0f172a',
   accentColor: '#f59e0b',
   fontSizeScale: 'normal',
+  fontFamilyLatin: 'plus-jakarta',
+  fontFamilyKhmer: 'kantumruy-pro',
+  fontFamilyHeading: 'inherit',
+  headingFontWeight: 'bold',
+  fontLineHeight: 'normal',
+  fontLetterSpacing: 'normal',
+  fontSmoothing: 'antialiased',
+  fontBoldBoost: false,
 };
 

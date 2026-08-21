@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAgendaPreviewHtml, generateShortAgendaUrl, parseAgendaUrlParams } from '../../services/agendaExportService';
 import { LanguageCode } from '../../types';
+import { DynamicHead } from '../common/DynamicHead';
 import { ArrowLeft, Globe, Printer, Share2, Check, ExternalLink } from 'lucide-react';
 
 const LANGUAGE_OPTIONS: { code: LanguageCode; label: string; flag: string }[] = [
@@ -145,6 +146,7 @@ export const StandaloneAgendaView: React.FC = () => {
 
   return (
     <div className="w-full h-screen h-[100dvh] max-h-[100dvh] bg-slate-950 flex flex-col overflow-hidden select-text">
+      <DynamicHead customPackage={pkg} />
       {/* Top Client View Action Navigation Bar */}
       <header className="px-2.5 sm:px-6 py-2 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap z-30 shrink-0 text-xs backdrop-blur-md">
         <div className="flex items-center gap-2">

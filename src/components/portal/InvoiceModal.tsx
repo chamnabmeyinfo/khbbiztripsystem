@@ -75,9 +75,9 @@ export const InvoiceModal: React.FC = () => {
         </div>
 
         {/* Printable Official Invoice Body */}
-        <div id="printable-invoice" className={`p-8 sm:p-10 space-y-8 overflow-y-auto flex-1 bg-white text-slate-900 ${getFontFamilyClass(language)}`}>
+        <div id="printable-invoice" className={`p-8 sm:p-10 space-y-8 overflow-y-auto flex-1 bg-white text-slate-900 print-friendly-headers ${getFontFamilyClass(language)}`}>
           {/* Invoice Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-8 print-friendly-headers">
             <div className="flex items-center gap-4">
               {systemSettings?.companyLogoUrl ? (
                 <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 p-1 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
@@ -117,7 +117,7 @@ export const InvoiceModal: React.FC = () => {
           </div>
 
           {/* Billed To / Company Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs print-friendly-summary">
             <div className="space-y-1 p-4 rounded-2xl bg-slate-50 border border-slate-200">
               <span className="font-bold text-slate-400 uppercase text-[10px] block mb-1">
                 Billed To (Delegate / Corporate Entity)
@@ -144,9 +144,9 @@ export const InvoiceModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Line Items Table */}
-          <div className="border border-slate-200 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
+          {/* Line Items Table with Print-Friendly Headers */}
+          <div className="border border-slate-200 rounded-2xl overflow-hidden print-friendly-headers">
+            <table className="w-full text-left text-xs print-friendly-headers">
               <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="py-3 px-4">Item Description</th>
@@ -177,7 +177,7 @@ export const InvoiceModal: React.FC = () => {
           </div>
 
           {/* Financial Calculation Totals Box & QR Code Verification Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-stretch print-friendly-summary">
             {/* Direct Portal Verification QR Code Card */}
             <div className="sm:col-span-7 p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/40 border border-slate-200 flex flex-col justify-between gap-3 text-xs">
               <div className="flex items-start gap-3.5">

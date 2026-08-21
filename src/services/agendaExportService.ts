@@ -1125,6 +1125,24 @@ ${fontsLink}
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
+    .print-friendly-headers {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print-friendly-headers thead {
+      display: table-header-group !important;
+    }
+    .print-friendly-headers tbody tr {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .print-friendly-headers .summary-block,
+    .print-friendly-headers .financial-summary-grid,
+    .print-friendly-summary {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      break-before: auto !important;
+    }
   }
 </style>
 </head>

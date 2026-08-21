@@ -1,14 +1,45 @@
 @import "tailwindcss";
 
+:root {
+  --font-family-latin: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-family-khmer: 'Kantumruy Pro', 'Hanuman', 'Battambang', system-ui, sans-serif;
+  --font-family-heading: inherit;
+  --font-letter-spacing: 0em;
+  --font-line-height: 1.55;
+}
+
+body {
+  font-family: var(--font-family-latin, 'Plus Jakarta Sans', system-ui, sans-serif);
+  letter-spacing: var(--font-letter-spacing, 0em);
+  line-height: var(--font-line-height, 1.55);
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-family-heading, inherit);
+}
+
+.font-bold-boost {
+  -webkit-text-stroke: 0.25px currentColor;
+}
+
 @layer utilities {
   .font-khmer {
-    font-family: 'Hanuman', 'Battambang', 'Kantumruy Pro', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-family-khmer, 'Kantumruy Pro', 'Hanuman', 'Battambang', system-ui, sans-serif);
+  }
+  .font-kantumruy {
+    font-family: 'Kantumruy Pro', 'Hanuman', 'Battambang', system-ui, -apple-system, sans-serif;
   }
   .font-hanuman {
     font-family: 'Hanuman', 'Battambang', system-ui, -apple-system, sans-serif;
   }
   .font-battambang {
     font-family: 'Battambang', 'Hanuman', system-ui, -apple-system, sans-serif;
+  }
+  .font-koulen {
+    font-family: 'Koulen', 'Battambang', system-ui, -apple-system, sans-serif;
+  }
+  .font-siemreap {
+    font-family: 'Siemreap', 'Hanuman', system-ui, -apple-system, sans-serif;
   }
   .font-arabic {
     font-family: 'Noto Sans Arabic', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
@@ -65,6 +96,21 @@
     white-space: nowrap !important;
     box-sizing: border-box !important;
   }
+
+  /* Print-Friendly Headers & PDF Pagination Utility */
+  .print-friendly-headers {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  .print-friendly-summary,
+  .print-page-break-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 /* Global button and interactive element flex-alignment defaults */
@@ -80,6 +126,88 @@ button svg,
 [role="button"] svg {
   flex-shrink: 0;
   display: inline-block;
+}
+
+/* Print-Friendly Headers, Tables, and Invoice Summary Styles */
+.print-friendly-headers {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+table.print-friendly-headers,
+.print-friendly-headers table {
+  width: 100%;
+  border-collapse: collapse;
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+table.print-friendly-headers thead,
+.print-friendly-headers thead {
+  display: table-header-group !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  page-break-after: avoid !important;
+  break-after: avoid !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+table.print-friendly-headers thead tr,
+.print-friendly-headers thead tr,
+table.print-friendly-headers thead th,
+.print-friendly-headers thead th {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+table.print-friendly-headers tbody tr,
+.print-friendly-headers tbody tr {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  page-break-after: auto !important;
+  break-after: auto !important;
+}
+
+table.print-friendly-headers tfoot,
+.print-friendly-headers tfoot {
+  display: table-footer-group !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.print-friendly-headers h1,
+.print-friendly-headers h2,
+.print-friendly-headers h3,
+.print-friendly-headers h4,
+.print-friendly-headers .section-header {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.print-friendly-headers .summary-block,
+.print-friendly-headers .invoice-summary,
+.print-friendly-headers .financial-summary-grid,
+.print-friendly-summary {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  page-break-before: auto !important;
+  break-before: auto !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 
 @media print {
@@ -106,6 +234,19 @@ button svg,
     object-fit: cover !important;
     object-position: center !important;
     display: block !important;
+  }
+  .print-friendly-headers thead {
+    display: table-header-group !important;
+  }
+  .print-friendly-headers tbody tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .print-friendly-headers .summary-block,
+  .print-friendly-headers .financial-summary-grid,
+  .print-friendly-summary {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   .pdf-a4-page {
     width: 210mm !important;

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatMoney } from '../../services/currencyService';
+import { DynamicHead } from '../common/DynamicHead';
 import {
   ArrowLeft,
   Share2,
@@ -139,6 +140,9 @@ export const PackageSalesLandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-28">
+      {/* Dynamic SEO Meta Tags */}
+      <DynamicHead customPackage={pkg} />
+
       {/* ── Top Navigation Bar ────────────────────────────────────────────── */}
       <nav className="sticky top-18 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
