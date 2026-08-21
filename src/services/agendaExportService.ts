@@ -1311,6 +1311,15 @@ function downloadBlob(content: string, filename: string, mimeType: string): void
   setTimeout(() => URL.revokeObjectURL(url), 200);
 }
 
+export function getAgendaBodyHtml(options: AgendaExportOptions): string {
+  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark, systemSettings } = options;
+  const labels = getPdfLabels(language);
+  const pkg = getLocalizedPackage(rawPkg, language);
+  const date = selectedDate || pkg.availableDates[0] || '2026-09-15';
+  const name = travelerName || labels.defaultTravelerName;
+  return buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark, systemSettings }, language);
+}
+
 export function getAgendaPreviewHtml(options: AgendaExportOptions & { format?: ExportFormat }): string {
   const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', format = 'html_pdf', watermark, systemSettings } = options;
   const labels = getPdfLabels(language);

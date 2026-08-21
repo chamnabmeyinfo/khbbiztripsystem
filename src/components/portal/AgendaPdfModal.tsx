@@ -22,11 +22,13 @@ import {
   Globe,
   Stamp,
   Sparkles,
-  Layers
+  Layers,
+  RotateCcw
 } from 'lucide-react';
 import { OptionalTourProgram, LanguageCode } from '../../types';
 import {
   getAgendaPreviewHtml,
+  getAgendaBodyHtml,
   downloadAgendaHtml,
   downloadAgendaDoc,
   downloadAgendaImagePdf,
@@ -198,6 +200,20 @@ export const AgendaPdfModal: React.FC = () => {
       systemSettings,
     });
   }, [pkg, currentDepartureDate, travelerName, selectedOptions, exportLanguage, exportFormat, watermarkConfig, systemSettings]);
+
+  const agendaBodyHtml = useMemo(() => {
+    if (!pkg) return '';
+    return getAgendaBodyHtml({
+      packageData: pkg,
+      selectedDate: currentDepartureDate,
+      travelerName,
+      numberOfAdults: 1,
+      selectedOptionalProgramIds: selectedOptions,
+      language: exportLanguage,
+      watermark: watermarkConfig,
+      systemSettings,
+    });
+  }, [pkg, currentDepartureDate, travelerName, selectedOptions, exportLanguage, watermarkConfig, systemSettings]);
 
   if (activeModal !== 'agenda_pdf' || !selectedPackage) return null;
 
@@ -410,9 +426,9 @@ export const AgendaPdfModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-5 py-2.5 bg-slate-100/80 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-750 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs print:hidden shrink-0">
+        <div className="px-5 py-2.5 bg-slate-100/90 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-750 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 text-xs print:hidden shrink-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1 inline-flex items-center leading-none">Export As:</span>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1 inline-flex items-center leading-none shrink-0">Export As:</span>
             {FORMAT_OPTIONS.map(opt => {
               const isSelected = exportFormat === opt.value;
               return (
@@ -431,15 +447,15 @@ export const AgendaPdfModal: React.FC = () => {
             })}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
             {/* Language Selector */}
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1">
-              <Globe className="w-3.5 h-3.5 text-sky-600" />
-              <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px]">Lang:</span>
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 shrink-0">
+              <Globe className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px] shrink-0">Lang:</span>
               <select
                 value={exportLanguage}
                 onChange={e => setExportLanguage(e.target.value as LanguageCode)}
-                className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer pr-1"
               >
                 {LANGUAGE_OPTIONS.map(opt => (
                   <option key={opt.code} value={opt.code} className="bg-white dark:bg-slate-900">
@@ -449,13 +465,13 @@ export const AgendaPdfModal: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1">
-              <Calendar className="w-3.5 h-3.5 text-sky-600" />
-              <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px]">Departure:</span>
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 shrink-0">
+              <Calendar className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+              <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px] shrink-0">Departure:</span>
               <select
                 value={currentDepartureDate}
                 onChange={e => setSelectedDate(e.target.value)}
-                className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer pr-1"
               >
                 {selectedPackage.availableDates.map(d => (
                   <option key={d} value={d} className="bg-white dark:bg-slate-900">
@@ -465,14 +481,14 @@ export const AgendaPdfModal: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1">
-              <UserCheck className="w-3.5 h-3.5 text-sky-600" />
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 shrink-0">
+              <UserCheck className="w-3.5 h-3.5 text-sky-600 shrink-0" />
               <input
                 type="text"
                 value={travelerName}
                 onChange={e => setTravelerName(e.target.value)}
                 placeholder="Delegate Name / Org"
-                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-medium focus:outline-none w-32 sm:w-36"
+                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-medium focus:outline-none w-28 sm:w-36"
               />
             </div>
 
@@ -481,7 +497,7 @@ export const AgendaPdfModal: React.FC = () => {
                 setShowWatermarkDrawer(prev => !prev);
                 if (showOptionsDrawer) setShowOptionsDrawer(false);
               }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 watermarkEnabled
                   ? 'bg-sky-600 text-white border-sky-600 shadow-xs ring-2 ring-sky-400/30'
                   : showWatermarkDrawer
@@ -499,7 +515,7 @@ export const AgendaPdfModal: React.FC = () => {
                 setShowOptionsDrawer(prev => !prev);
                 if (showWatermarkDrawer) setShowWatermarkDrawer(false);
               }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 showOptionsDrawer || selectedOptions.length > 0
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                   : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
@@ -727,28 +743,41 @@ export const AgendaPdfModal: React.FC = () => {
             </div>
           )}
 
-          <div className="flex-1 overflow-auto flex justify-center p-4 sm:p-6 bg-slate-200/90 dark:bg-slate-950">
+          <div className="flex-1 overflow-auto flex justify-center p-4 sm:p-6 bg-slate-250 dark:bg-slate-950">
             <div
-              className="transition-transform duration-200 origin-top shadow-2xl rounded-lg overflow-hidden bg-white"
+              className="transition-transform duration-200 origin-top shadow-2xl rounded-lg overflow-hidden bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800"
               style={{
                 transform: `scale(${zoomLevel})`,
                 width: '840px',
-                minHeight: '1200px',
+                minHeight: '1123px',
                 height: 'fit-content'
               }}
             >
+              {exportFormat === 'doc' ? (
+                <div className="p-8 sm:p-12 bg-white text-slate-900 font-sans">
+                  <div className="bg-slate-50 border border-slate-200 border-l-4 border-l-sky-600 px-4 py-3 mb-6 rounded text-xs text-slate-600 flex items-center justify-between">
+                    <span>📄 <strong>Word Document Format (.doc)</strong> — Microsoft Word Compatible Layout</span>
+                    <span className="font-mono">Ref: KHB-AGN-{selectedPackage.id.slice(0, 8).toUpperCase()}</span>
+                  </div>
+                  <div className="agenda-document-body" dangerouslySetInnerHTML={{ __html: agendaBodyHtml }} />
+                </div>
+              ) : (
+                <div className="bg-slate-200 dark:bg-slate-900 p-0 flex flex-col items-center">
+                  <div 
+                    className="w-full agenda-document-body"
+                    dangerouslySetInnerHTML={{ __html: agendaBodyHtml }} 
+                  />
+                </div>
+              )}
+
+              {/* Hidden iframe for background print triggering and isolated export generation */}
               <iframe
                 ref={iframeRef}
                 srcDoc={livePreviewHtml}
                 onLoad={handleIframeLoad}
                 title="Exact HTML Tour Agenda Preview"
-                className="w-full border-none bg-slate-200"
-                style={{
-                  width: '840px',
-                  height: iframeHeight,
-                  minHeight: '1200px',
-                  display: 'block'
-                }}
+                className="hidden"
+                style={{ display: 'none' }}
               />
             </div>
           </div>
