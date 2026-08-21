@@ -13,7 +13,7 @@ async function startServer() {
 
   app.use(express.json({ limit: "10mb" }));
 
-  // Shared Gemini client utility on the server with User-Agent telemetry
+// Shared Gemini client utility on the server with User-Agent telemetry
   const getAiClient = () => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "MY_GEMINI_API_KEY") return null;
@@ -25,6 +25,83 @@ async function startServer() {
         },
       },
     });
+  };
+
+  // Resilient helper to execute generation across candidate models with exponential backoff for 503/429
+  const generateWithModelFallback = async (
+    client: GoogleGenAI,
+    promptPayload: string,
+    options?: {
+      systemInstruction?: string;
+      temperature?: number;
+      jsonOutput?: boolean;
+      candidateModels?: string[];
+    }
+  ): Promise<{ text: string; modelUsed: string } | null> => {
+    const models = options?.candidateModels || [
+      "gemini-3.1-flash-lite",
+      "gemini-flash-latest",
+      "gemini-3.7-flash",
+    ];
+    const maxRetriesPerModel = 2;
+
+    for (const modelName of models) {
+      for (let attempt = 1; attempt <= maxRetriesPerModel; attempt++) {
+        try {
+          const config: any = {
+            temperature: options?.temperature ?? 0.2,
+          };
+          if (options?.jsonOutput) {
+            config.responseMimeType = "application/json";
+          }
+          if (options?.systemInstruction) {
+            config.systemInstruction = options.systemInstruction;
+          }
+
+          const response = await client.models.generateContent({
+            model: modelName,
+            contents: [{ role: "user", parts: [{ text: promptPayload }] }],
+            config,
+          });
+
+          const text = response.text || "";
+          if (text.trim()) {
+            return { text, modelUsed: modelName };
+          }
+        } catch (err: any) {
+          const errMsg = err?.message || String(err);
+          const isTransient =
+            errMsg.includes("503") ||
+            errMsg.includes("UNAVAILABLE") ||
+            errMsg.includes("high demand") ||
+            errMsg.includes("429") ||
+            errMsg.includes("RESOURCE_EXHAUSTED") ||
+            errMsg.includes("502") ||
+            errMsg.includes("504");
+
+          if (isTransient && attempt < maxRetriesPerModel) {
+            // Exponential backoff wait before retrying same model
+            await new Promise((resolve) => setTimeout(resolve, attempt * 600));
+          } else {
+            // Move to next candidate model in fallback cascade
+            break;
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
+  // Clean and parse JSON helper
+  const cleanAndParseJson = (raw: string): any => {
+    let cleaned = (raw || "").trim();
+    if (cleaned.startsWith("```json")) {
+      cleaned = cleaned.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+    } else if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```\s*/, "").replace(/\s*```$/, "");
+    }
+    return JSON.parse(cleaned);
   };
 
   // Health check API
@@ -124,73 +201,20 @@ Please respond strictly with a valid JSON object in this schema:
   ]
 }`;
 
-      // Resilient Model Fallback Chain & Retry Logic for High Demand / 503 / 429
-      const candidateModels = ["gemini-3.7-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
-      let parsedData: any = null;
-      let lastErrorMessage = "";
+      const genResult = await generateWithModelFallback(client, promptPayload, {
+        jsonOutput: true,
+        temperature: 0.2,
+      });
 
-      for (const modelName of candidateModels) {
-        let attempts = 0;
-        const maxAttemptsForModel = 2;
-
-        while (attempts < maxAttemptsForModel) {
-          attempts++;
-          try {
-            const response = await client.models.generateContent({
-              model: modelName,
-              contents: [
-                {
-                  role: "user",
-                  parts: [{ text: promptPayload }],
-                },
-              ],
-              config: {
-                responseMimeType: "application/json",
-                temperature: 0.2,
-              },
-            });
-
-            let rawJson = (response.text || "").trim();
-            // Clean markdown code blocks if returned
-            if (rawJson.startsWith("```json")) {
-              rawJson = rawJson.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-            } else if (rawJson.startsWith("```")) {
-              rawJson = rawJson.replace(/^```\s*/, "").replace(/\s*```$/, "");
-            }
-
-            parsedData = JSON.parse(rawJson);
-            break; // Success with this model!
-          } catch (modelErr: any) {
-            lastErrorMessage = modelErr?.message || String(modelErr);
-            const isTransient =
-              lastErrorMessage.includes("503") ||
-              lastErrorMessage.includes("UNAVAILABLE") ||
-              lastErrorMessage.includes("high demand") ||
-              lastErrorMessage.includes("429") ||
-              lastErrorMessage.includes("RESOURCE_EXHAUSTED");
-
-            if (isTransient && attempts < maxAttemptsForModel) {
-              // Wait briefly before retrying this model
-              await new Promise((resolve) => setTimeout(resolve, 800));
-            } else {
-              // Move to next candidate model in fallback chain
-              break;
-            }
-          }
-        }
-
-        if (parsedData) {
-          break; // Successfully generated and parsed
+      if (genResult?.text) {
+        try {
+          const parsedData = cleanAndParseJson(genResult.text);
+          return res.json({ mode: "gemini_success", data: parsedData });
+        } catch {
+          // JSON parse failed, fall through to adaptive engine
         }
       }
 
-      if (parsedData) {
-        return res.json({ mode: "gemini_success", data: parsedData });
-      }
-
-      // If all upstream Gemini models are experiencing temporary demand spikes,
-      // seamlessly return fallback_needed so the frontend adaptive cognitive engine activates instantly
-      console.warn("Gemini upstream experiencing temporary high demand, activating adaptive fallback:", lastErrorMessage);
       return res.status(200).json({
         mode: "fallback_needed",
         message: "Gemini capacity busy, adaptive autonomous engine activated.",
@@ -200,6 +224,154 @@ Please respond strictly with a valid JSON object in this schema:
       return res.status(200).json({
         mode: "fallback_needed",
         message: "Handled gracefully via adaptive client engine",
+      });
+    }
+  });
+
+  // Advanced AI Multilingual Translation Endpoint (Field, Batch Array, and Full Package)
+  app.post("/api/ai-translate", async (req, res) => {
+    try {
+      const { text, texts, packageData, sourceLang, targetLang, fieldHint } = req.body;
+      const target = targetLang || "en";
+      const source = sourceLang || "auto";
+
+      const client = getAiClient();
+      if (!client) {
+        return res.status(200).json({
+          mode: "fallback_needed",
+          message: "No Gemini API key available on server, triggering adaptive client translator.",
+        });
+      }
+
+      // Case 1: Full Package Translation
+      if (packageData && typeof packageData === "object") {
+        const translatePkgPrompt = `You are a Master Multilingual Translator and Cross-Border Tourism & B2B Trade Specialist for KHB Events Business Trip System.
+Translate the following TourPackage object from ${source} to ${target}.
+Maintain high professional quality, diplomatic tone, accurate business and tourism terminology, preserving emojis, formatting, numbers, currencies, and dates.
+
+SOURCE PACKAGE DATA:
+${JSON.stringify(packageData, null, 2)}
+
+TRANSLATION RULES:
+1. Translate all textual fields: title, destination, country, category, description, highlights (array), whoShouldJoin (array), whyShouldJoin (array), inclusions (array), exclusions (array), termsAndConditions (array).
+2. For tourGuide: translate name, title, bio, briefingMeetingPoint, briefingTime. (Keep phone, telegram, photoUrl, badgeNumber unchanged).
+3. For itinerary (array of steps): translate each step's title, description, hotelName, assemblyPoint, dayHighlights (array), and for each slot in guideAgenda translate activity, location, notes. (Keep day number, time unchanged).
+4. For optionalPrograms (array): translate title, description, recommendedAudience, highlights (array), includedMeals (array), meetingPoint. (Keep id, additionalCostUSD, durationHours, includesGuide unchanged).
+5. For emergencyContact: translate country name, touristHelpline label if needed (keep emergency numbers 911, 113, 115 unchanged).
+
+Respond strictly with valid JSON format:
+{
+  "summary": "1-line summary of package translation into ${target}",
+  "translatedPackage": {
+    ...complete translated package object matching the input structure...
+  }
+}`;
+
+        const genResult = await generateWithModelFallback(client, translatePkgPrompt, {
+          jsonOutput: true,
+          temperature: 0.1,
+          candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+        });
+
+        if (genResult?.text) {
+          try {
+            const parsedPkg = cleanAndParseJson(genResult.text);
+            if (parsedPkg?.translatedPackage) {
+              return res.json({
+                mode: "gemini_success",
+                summary: parsedPkg.summary || `Translated tour package to ${target}`,
+                translatedPackage: parsedPkg.translatedPackage,
+              });
+            }
+          } catch {
+            // Parse error, proceed to fallback
+          }
+        }
+      }
+
+      // Case 2: Array of texts translation
+      else if (Array.isArray(texts)) {
+        const translateArrayPrompt = `You are a professional B2B business and travel translator.
+Translate the following array of strings from ${source} to ${target}.
+Context / Field Type: ${fieldHint || "Tourism & business delegation content"}.
+Preserve emojis, bullet numbers, acronyms, and formatting intact.
+
+STRINGS TO TRANSLATE:
+${JSON.stringify(texts, null, 2)}
+
+Respond strictly in valid JSON format:
+{
+  "translatedTexts": [ ...translated strings in same array order... ]
+}`;
+
+        const genResult = await generateWithModelFallback(client, translateArrayPrompt, {
+          jsonOutput: true,
+          temperature: 0.1,
+          candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+        });
+
+        if (genResult?.text) {
+          try {
+            const parsedArr = cleanAndParseJson(genResult.text);
+            if (Array.isArray(parsedArr?.translatedTexts)) {
+              return res.json({
+                mode: "gemini_success",
+                translatedTexts: parsedArr.translatedTexts,
+              });
+            }
+          } catch {
+            // Parse error, proceed to fallback
+          }
+        }
+      }
+
+      // Case 3: Single text translation
+      else if (typeof text === "string" && text.trim()) {
+        const singlePrompt = `You are an expert professional translator for international B2B business trips and high-end tourism delegations.
+Translate the following text from ${source} to ${target}.
+Context / Field Type: ${fieldHint || "General travel and business text"}.
+Preserve tone, emojis, markdown formatting, brand names, and currency symbols.
+
+TEXT TO TRANSLATE:
+"""
+${text}
+"""
+
+Respond strictly with valid JSON format:
+{
+  "translatedText": "Translated text string"
+}`;
+
+        const genResult = await generateWithModelFallback(client, singlePrompt, {
+          jsonOutput: true,
+          temperature: 0.1,
+          candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+        });
+
+        if (genResult?.text) {
+          try {
+            const parsedSingle = cleanAndParseJson(genResult.text);
+            if (typeof parsedSingle?.translatedText === "string") {
+              return res.json({
+                mode: "gemini_success",
+                translatedText: parsedSingle.translatedText,
+              });
+            }
+          } catch {
+            // Parse error, proceed to fallback
+          }
+        }
+      }
+
+      return res.status(200).json({
+        mode: "fallback_needed",
+        message: "Gemini translation temporarily busy, triggering client adaptive translator.",
+      });
+    } catch (error: any) {
+      console.warn("AI translation error:", error?.message || error);
+      return res.status(200).json({
+        mode: "fallback_needed",
+        message: "Handled gracefully via client adaptive translator",
       });
     }
   });
@@ -349,42 +521,25 @@ Please respond strictly with a valid JSON object in this exact schema:
   }
 }`;
 
-      const candidateModels = ["gemini-3.7-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
-      let parsedResult: any = null;
+      const genResult = await generateWithModelFallback(client, parsePrompt, {
+        jsonOutput: true,
+        temperature: 0.1,
+        candidateModels: ["gemini-3.7-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"],
+      });
 
-      for (const modelName of candidateModels) {
+      if (genResult?.text) {
         try {
-          const response = await client.models.generateContent({
-            model: modelName,
-            contents: [{ role: "user", parts: [{ text: parsePrompt }] }],
-            config: {
-              responseMimeType: "application/json",
-              temperature: 0.1,
-            },
-          });
-
-          let rawJson = (response.text || "").trim();
-          if (rawJson.startsWith("```json")) {
-            rawJson = rawJson.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-          } else if (rawJson.startsWith("```")) {
-            rawJson = rawJson.replace(/^```\s*/, "").replace(/\s*```$/, "");
-          }
-
-          parsedResult = JSON.parse(rawJson);
+          const parsedResult = cleanAndParseJson(genResult.text);
           if (parsedResult?.package) {
-            break;
+            return res.json({
+              mode: "gemini_success",
+              summary: parsedResult.summary || "Extracted tour package attributes successfully.",
+              package: parsedResult.package,
+            });
           }
-        } catch (err) {
-          console.warn(`Model ${modelName} parsing attempt failed, trying next:`, err);
+        } catch {
+          // Parse error, proceed to fallback
         }
-      }
-
-      if (parsedResult && parsedResult.package) {
-        return res.json({
-          mode: "gemini_success",
-          summary: parsedResult.summary || "Extracted tour package attributes successfully.",
-          package: parsedResult.package,
-        });
       }
 
       return res.status(200).json({
@@ -392,7 +547,7 @@ Please respond strictly with a valid JSON object in this exact schema:
         message: "Gemini parser unavailable, activating adaptive client parser.",
       });
     } catch (error: any) {
-      console.warn("AI parse package error:", error);
+      console.warn("AI parse package error:", error?.message || error);
       return res.status(200).json({
         mode: "fallback_needed",
         message: "Handled gracefully via adaptive client parser",
@@ -453,45 +608,24 @@ Respond strictly in valid JSON format with this exact structure:
   "fontScaleRecommendation": "normal"
 }`;
 
-      const candidateModels = ["gemini-3.7-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
-      let parsedTheme: any = null;
+      const genResult = await generateWithModelFallback(client, themeSystemPrompt, {
+        jsonOutput: true,
+        temperature: 0.3,
+        candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+      });
 
-      for (const modelName of candidateModels) {
+      if (genResult?.text) {
         try {
-          const response = await client.models.generateContent({
-            model: modelName,
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: themeSystemPrompt }],
-              },
-            ],
-            config: {
-              responseMimeType: "application/json",
-              temperature: 0.3,
-            },
-          });
-
-          let rawJson = (response.text || "").trim();
-          if (rawJson.startsWith("```json")) {
-            rawJson = rawJson.replace(/^```json\s*/, "").replace(/\s*```$/, "");
-          } else if (rawJson.startsWith("```")) {
-            rawJson = rawJson.replace(/^```\s*/, "").replace(/\s*```$/, "");
-          }
-          parsedTheme = JSON.parse(rawJson);
+          const parsedTheme = cleanAndParseJson(genResult.text);
           if (parsedTheme && parsedTheme.primary) {
-            break;
+            return res.json({
+              mode: "gemini_success",
+              palette: parsedTheme,
+            });
           }
-        } catch (e) {
-          // Fall through to next model
+        } catch {
+          // Parse error, proceed to fallback
         }
-      }
-
-      if (parsedTheme && parsedTheme.primary) {
-        return res.json({
-          mode: "gemini_success",
-          palette: parsedTheme,
-        });
       }
 
       return res.status(200).json({
@@ -499,7 +633,7 @@ Respond strictly in valid JSON format with this exact structure:
         message: "Activating adaptive client theme engine",
       });
     } catch (err: any) {
-      console.warn("AI theme detection error:", err);
+      console.warn("AI theme detection error:", err?.message || err);
       return res.status(200).json({
         mode: "fallback_needed",
         message: "Handled gracefully via adaptive client fallback",

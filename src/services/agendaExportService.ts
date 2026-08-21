@@ -887,13 +887,22 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     color: #ffffff !important;
   }
   .header-main-box div,
-  .header-main-box span {
-    color: inherit;
+  .header-main-box span,
+  .header-main-box p,
+  .header-main-box strong,
+  .header-main-box h1,
+  .header-main-box h2,
+  .header-main-box h3,
+  .header-main-box h4 {
+    color: #ffffff !important;
   }
   .header-main-box .pdf-tag-pill-emerald {
     color: #ffffff !important;
   }
   .header-main-box .pdf-tag-pill-amber {
+    color: #0f172a !important;
+  }
+  .header-main-box .pdf-tag-pill-amber span {
     color: #0f172a !important;
   }
   .pdf-tag-pill {

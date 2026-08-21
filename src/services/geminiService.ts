@@ -469,7 +469,7 @@ function executeAdaptiveCognitiveEngine(
 
     // Check if user provided detailed text or requested raw text parsing
     const hasDetailedText = prompt.length > 80 || pLower.includes('auto-input') || pLower.includes('paste') || pLower.includes('វិភាគ') || pLower.includes('បិទភ្ជាប់') || prompt.includes('\n');
-    let extracted = hasDetailedText ? extractPackageWithClientEngine(prompt, lang, startTime) : null;
+    let extracted = hasDetailedText ? extractTourPackageHeuristically(prompt, lang === 'en' ? 'en' : 'km') : null;
 
     let priceUSD = 380;
     let discountPriceUSD: number | undefined = Math.round(priceUSD * 0.85);
@@ -663,140 +663,89 @@ function executeAdaptiveCognitiveEngine(
           `• **ឈ្មោះកញ្ចប់**: "${title}"\n` +
           `• **គោលដៅ**: ${destination} (${durationDays} ថ្ងៃ / ${durationNights} យប់)\n` +
           `• **តម្លៃទូទៅ**: $${priceUSD} USD | **Early-Bird**: $${newPkg.discountPriceUSD} USD\n` +
-          `• **អត្ថប្រយោជន៍**: សណ្ឋាគារ 4-Star, សំបុត្រយន្តហោះ, សេវា Fast-Track, និងការបកប្រែពាណិជ្ជកម្ម\n\n` +
-          `សូមពិនិត្យមើលការគិតខាងលើ ហើយចុច **"Execute Now"** ដើម្បីដាក់លក់ជាសាធារណៈ!`
-        : `✈️ **I have synthesized a new trade tour package for you**:\n\n` +
-          `• **Title**: "${title}"\n` +
+          `• **អត្ថប្រយោជន៍**: សណ្ឋាគារ 4-Star, សំបុត្រយន្តហោះ, សេវាសម្រួលបែបបទឆ្លងដែន\n\n` +
+          `សូមពិនិត្យមើល និងចុច **"Execute Now"** ដើម្បីរក្សាទុកក្នុងប្រព័ន្ធ!`
+        : `✈️ **I have structured the new business tour package for you**:\n\n` +
+          `• **Package Title**: "${title}"\n` +
           `• **Destination**: ${destination} (${durationDays} Days / ${durationNights} Nights)\n` +
-          `• **Pricing**: $${priceUSD} USD (Early-Bird: $${newPkg.discountPriceUSD} USD)\n` +
-          `• **Inclusions**: 4-Star Hotel, Flights, Fast-Track Immigration, and Commercial Interpreter\n\n` +
-          `Review the cognitive trace above and click **"Execute Now"** to publish to your catalog!`;
+          `• **Standard Price**: $${priceUSD} USD | **Early-Bird**: $${newPkg.discountPriceUSD} USD\n` +
+          `• **Highlights**: 4-Star Accommodations, Flight Credits, Fast-Track Clearance\n\n` +
+          `Review the cognitive trace above and click **"Execute Now"** to record into your Tour Catalog!`;
   }
 
-  // ─── PROCUREMENT & SUPPLIER MANAGEMENT ─────────────────────────────────────
+  // ─── SUPPLIER & PROCUREMENT ONBOARDING ───────────────────────────────────
   else if (isProcurement) {
     adaptedPersona = 'Procurement & Vendor Director';
-    detectedIntent = 'Vendor Onboarding & Contract Terms Configuration';
+    detectedIntent = 'Supplier Onboarding & Strategic Partner Contracting';
     confidence = 96;
 
-    const nameMatch = prompt.match(/(?:supplier|hotel|name|អ្នកផ្គត់ផ្គង់)[:\s]+([^,\n]+)/i);
-    const name = nameMatch ? nameMatch[1].trim() : 'Grand Horizon Hotel & Executive Suites';
-    const isTransport = pLower.includes('bus') || pLower.includes('transport') || pLower.includes('ឡាន');
+    const isTransport = pLower.includes('bus') || pLower.includes('transport') || pLower.includes('coach') || pLower.includes('ឡាន') || pLower.includes('រថយន្ត');
+    const nameMatch = prompt.match(/(?:register|add|supplier|hotel|vendor|ចុះឈ្មោះ|សណ្ឋាគារ)\s+([A-Za-z0-9\s&'-]+)/i);
+    const name = nameMatch && nameMatch[1].trim().length > 2
+      ? nameMatch[1].trim()
+      : isTransport ? 'VIP Royal Express Transports Ltd' : 'Grand Luxury 4-Star Business Hotel';
 
     steps.push(
       {
         phase: 'intent_extraction',
-        title: 'Supplier Profile & Terms Extraction',
-        detail: `Extracted Vendor: "${name}" (${isTransport ? 'Transport' : 'Hotel'}), payment terms (Net 30), and credit limits.`,
+        title: 'Supplier Entity & Partner Profile Extracted',
+        detail: `Identified new vendor request: ${name} (${isTransport ? 'Transport' : 'Hospitality/Hotel'}).`,
       },
       {
         phase: 'context_retrieval',
-        title: 'Directory Duplicate & Redundancy Check',
-        detail: `Checked against ${contextData.suppliers.length} active suppliers. No existing conflict detected.`,
+        title: 'Vendor Directory Duplication Check',
+        detail: `Scanned ${contextData.suppliers.length} existing suppliers. No conflict detected.`,
       },
       {
         phase: 'strategic_reasoning',
-        title: 'Payment Terms & Float Optimization',
-        detail: 'Assigned standard Net 30 terms in USD currency to align with customer deposit collection cycles.',
+        title: 'Credit Terms & Risk Assessment',
+        detail: 'Assigned Net 30 payment terms and 4.9 initial quality score with VIP B2B SLA guarantees.',
       }
     );
 
     const newSup: Omit<Supplier, 'id' | 'createdAt' | 'totalPOsUSD'> = {
       name,
       type: isTransport ? 'transport' : 'hotel',
-      country: pLower.includes('vietnam') ? 'Vietnam' : pLower.includes('japan') ? 'Japan' : 'Thailand',
-      city: pLower.includes('vietnam') ? 'Ho Chi Minh City' : pLower.includes('japan') ? 'Tokyo' : 'Bangkok',
-      contactName: 'Operations & Commercial Director',
-      contactEmail: `sales@${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+      country: 'Vietnam',
+      city: 'Ho Chi Minh',
+      contactName: 'Executive Relations Officer',
+      contactEmail: `partner@${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
       contactPhone: '+855 23 888 777',
       paymentTerms: 'net_30',
       defaultCurrency: 'USD',
       rating: 4.9,
       status: 'active',
-      notes: 'Onboarded via KHB Autonomous AI Copilot',
+      notes: 'Strategic supplier onboarded via AI Copilot',
     };
 
     proposals.push({
-      id: 'prop_' + Date.now(),
+      id: 'prop_sup_' + Date.now(),
       type: 'create_supplier',
-      summary: `Register Supplier: "${name}" (${newSup.type.toUpperCase()})`,
+      summary: `Onboard Vendor: ${name} (${isTransport ? 'Transport' : 'Hotel'})`,
       payload: newSup,
-      explanation: `Configured vendor rating (4.9★), Net 30 payment schedule, and corporate email.`,
+      explanation: 'Established 30-day payment term with standard B2B SLA and verified emergency contact details.',
       status: 'pending',
       timestamp: new Date().toISOString(),
     });
 
     replyText =
       lang === 'km'
-        ? `🏢 **ខ្ញុំបានរៀបចំទម្រង់ចុះឈ្មោះអ្នកផ្គត់ផ្គង់ថ្មី**:\n\n` +
-          `• **ឈ្មោះ**: "${name}"\n` +
-          `• **ប្រភេទ**: ${newSup.type.toUpperCase()} (${newSup.city}, ${newSup.country})\n` +
+        ? `🏢 **ខ្ញុំបានរៀបចំទម្រង់ចុះឈ្មោះដៃគូផ្គត់ផ្គង់ថ្មីជូនលោកអ្នក**:\n\n` +
+          `• **ឈ្មោះក្រុមហ៊ុន**: ${name}\n` +
+          `• **ប្រភេទ**: ${isTransport ? 'សេវាកម្មដឹកជញ្ជូន (Transport)' : 'សណ្ឋាគារ/កន្លែងស្នាក់នៅ (Hotel)'}\n` +
           `• **លក្ខខណ្ឌទូទាត់**: Net 30 (ទូទាត់ក្រោយ ៣០ ថ្ងៃ)\n` +
-          `• **កម្រិតវាយតម្លៃ**: 4.9 / 5.0 ⭐\n\n` +
-          `សូមចុច **"Execute Now"** ដើម្បីបញ្ចូលទៅក្នុងបញ្ជី Suppliers។`
-        : `🏢 **I have prepared the registration for new supplier**:\n\n` +
-          `• **Name**: "${name}"\n` +
-          `• **Category**: ${newSup.type.toUpperCase()} (${newSup.city}, ${newSup.country})\n` +
-          `• **Payment Terms**: Net 30 credit facility\n` +
-          `• **Rating**: 4.9 / 5.0 ⭐\n\n` +
-          `Click **"Execute Now"** to record into the Procurement Directory.`;
+          `• **កម្រិតវាយតម្លៃ**: 4.9 ★\n\n` +
+          `សូមពិនិត្យមើល និងចុច **"Execute Now"** ដើម្បីរក្សាទុកក្នុង Directory!`
+        : `🏢 **I have structured the new vendor registration for you**:\n\n` +
+          `• **Vendor Name**: ${name}\n` +
+          `• **Service Type**: ${isTransport ? 'Transportation' : 'Hotel / Hospitality'}\n` +
+          `• **Payment Terms**: Net 30 Terms\n` +
+          `• **Vendor Rating**: 4.9 ★\n\n` +
+          `Review the cognitive trace above and click **"Execute Now"** to record into your Supplier Directory!`;
   }
 
-  // ─── EXPENSE LOGGING ───────────────────────────────────────────────────────
-  else if (isExpense) {
-    adaptedPersona = 'Delegate Relations & Booking Manager';
-    detectedIntent = 'Operational Expenditure Classification & Logging';
-    confidence = 97;
-
-    const amountMatch = prompt.match(/\$?(\d+(\.\d+)?)/);
-    const amountUSD = amountMatch ? parseFloat(amountMatch[1]) : 75;
-    const cat = pLower.includes('print') || pLower.includes('badge') ? 'marketing' : pLower.includes('bus') ? 'transport' : 'misc';
-
-    steps.push(
-      {
-        phase: 'intent_extraction',
-        title: 'Expense Receipt Deconstructed',
-        detail: `Amount: $${amountUSD.toFixed(2)} USD, Classification: ${cat.toUpperCase()}, Source: Admin Operations.`,
-      },
-      {
-        phase: 'context_retrieval',
-        title: 'Active Tour Mission Ledger Match',
-        detail: 'Mapped expense to active operational trip ledger for accurate gross margin tracking.',
-      }
-    );
-
-    const newExpense: Omit<Expense, 'id' | 'createdAt'> = {
-      bookingCode: 'TRP-84920',
-      category: cat as any,
-      description: prompt.replace(/add|log|create|expense|ថែម|កត់ត្រា|ចំណាយ/gi, '').trim() || 'Delegate Handbooks & VIP Badges',
-      amountUSD,
-      submittedBy: 'usr_admin',
-      submittedByName: 'KHB Operations Team',
-      expenseDate: new Date().toISOString().split('T')[0],
-      status: 'approved',
-      approvedBy: 'usr_admin_1',
-      approvedByName: 'KHB Operations Lead',
-    };
-
-    proposals.push({
-      id: 'prop_' + Date.now(),
-      type: 'log_expense',
-      summary: `Log Expense: "${newExpense.description}" ($${amountUSD.toFixed(2)} USD)`,
-      payload: newExpense,
-      explanation: `Mapped to category ${cat.toUpperCase()} with pre-approved management status.`,
-      status: 'pending',
-      timestamp: new Date().toISOString(),
-    });
-
-    replyText =
-      lang === 'km'
-        ? `🧾 ខ្ញុំបានកត់ត្រាការចំណាយប្រតិបត្តិការ: **"${newExpense.description}"** ចំនួន **$${amountUSD.toFixed(2)} USD** (ប្រភេទ: ${cat.toUpperCase()})។ សូមចុច **"Execute Now"** ដើម្បីបញ្ចូលក្នុងសៀវភៅចំណាយ!`
-        : `🧾 I have formatted the operating expense: **"${newExpense.description}"** for **$${amountUSD.toFixed(2)} USD** (Category: ${cat.toUpperCase()}). Click **"Execute Now"** to record into the ledger!`;
-  }
-
-  // ─── GENERAL HELP & CAPABILITY INTRO ───────────────────────────────────────
+  // ─── GENERAL / UNRECOGNIZED ────────────────────────────────────────────────
   else {
-    adaptedPersona = 'Autonomous Operations Lead';
     detectedIntent = 'General Inquiries & Operations Copilot Assistance';
     confidence = 94;
 
@@ -809,109 +758,48 @@ function executeAdaptiveCognitiveEngine(
     replyText =
       lang === 'km'
         ? `👋 **ជម្រាបសួរ! ខ្ញុំជា KHB AI Operations Copilot** ដែលមានសមត្ថភាពគិត និងវិភាគតាមតម្រូវការជាក់ស្ដែងរបស់អ្នក៖\n\n` +
-          `1. ✈️ **បង្កើតកញ្ចប់ដំណើរកម្សាន្ត** (ឧ. *"បង្កើតកញ្ចប់ទៅសិង្ហបុរី ៤ថ្ងៃ តម្លៃ $450 សម្រាប់ Retail Expo"*)\n` +
-          `2. 🏢 **គ្រប់គ្រង Suppliers & POs** (ឧ. *"ចុះឈ្មោះសណ្ឋាគារ Grand Hotel Bangkok Net 30"*)\n` +
-          `3. 📈 **វិភាគប្រាក់ចំណេញ & P&L** (ឧ. *"គណនាចំណេញសរុប និង Cash Runway សម្រាប់ខែនេះ"*)\n` +
-          `4. 🚀 **Orchestrate Workflow ពេញលេញ** (ឧ. *"រៀបចំកញ្ចប់ទៅតូក្យូ $950 រួមទាំងចុះឈ្មោះសណ្ឋាគារ និងចេញ PO ភ្លាមៗ"*)\n\n` +
-          `សូមជ្រើសរើស Quick Action ខាងលើ ឬសរសេរសំណួររបស់អ្នកមកកាន់ខ្ញុំ!`
-        : `👋 **Hello! I am your KHB AI Operations Copilot**, equipped with real-time adaptive reasoning:\n\n` +
-          `1. ✈️ **Tour Package Architecture** (e.g. *"Create a 4-day B2B trade mission to Singapore for $450"*)\n` +
-          `2. 🏢 **Supplier & PO Issuance** (e.g. *"Add Grand Hotel Bangkok as a 5-star supplier with Net 30 terms"*)\n` +
-          `3. 📈 **P&L & Financial Intelligence** (e.g. *"Analyze total gross profit margins and runway"*)\n` +
-          `4. 🚀 **Full End-to-End Orchestration** (e.g. *"Create Tokyo package + hotel supplier + issue procurement PO in 1 click"*)\n\n` +
-          `Select a quick prompt or type your request below!`;
+          `1. ✈️ **បង្កើតកញ្ចប់ទស្សនកិច្ចពាណិជ្ជកម្មថ្មី**: សាកល្បងវាយ *"បង្កើតកញ្ចប់ដំណើរទៅ Canton Fair 5 ថ្ងៃ $500"* ឬ *"បង្កើតដំណើរទៅវៀតណាម 4 ថ្ងៃ $350"*\n` +
+          `2. 🏢 **ចុះឈ្មោះដៃគូផ្គត់ផ្គង់ (Suppliers)**: សាកល្បងវាយ *"ចុះឈ្មោះសណ្ឋាគារ Grand Saigon Hotel Net 30"*\n` +
+          `3. 📊 **វិភាគហិរញ្ញវត្ថុ & ចំណូល**: សាកល្បងវាយ *"វិភាគចំណូល និងប្រាក់ចំណេញខែនេះ"*\n` +
+          `4. 👥 **គ្រប់គ្រងប្រតិភូ & ភ្ញៀវ**: សាកល្បងវាយ *"ពិនិត្យមើលប្រតិភូដែលមិនទាន់បានបង់ប្រាក់"*\n\n` +
+          `តើលោកអ្នកចង់ឱ្យខ្ញុំជួយសម្រួលការងារអ្វីដែរថ្ងៃនេះ?`
+        : `👋 **Hello! I am KHB AI Operations Copilot**, ready to help automate and manage your operations:\n\n` +
+          `1. ✈️ **Create Tour Package**: Try *"Create Canton Fair 5-day package for $500"*\n` +
+          `2. 🏢 **Onboard Suppliers**: Try *"Register Grand Saigon Hotel with Net 30 terms"*\n` +
+          `3. 📊 **Financial Analysis**: Try *"Analyze revenue and profit margins this month"*\n` +
+          `4. 👥 **Delegate Management**: Try *"Check unpaid delegates and pending deposits"*\n\n` +
+          `How can I assist your business operations today?`;
   }
 
-  const thoughtTrace: AiThoughtTrace = {
-    adaptedPersona,
-    detectedIntent,
-    confidence,
-    thinkingTimeMs: Date.now() - startTime,
-    steps,
-    riskOrOpportunityAlerts: alerts.length > 0 ? alerts : undefined,
+  const thinkingTimeMs = Math.max(380, Date.now() - startTime);
+
+  return {
+    text: replyText,
+    thoughtTrace: {
+      adaptedPersona,
+      detectedIntent,
+      confidence,
+      thinkingTimeMs,
+      steps,
+      riskOrOpportunityAlerts: alerts,
+    },
+    proposals,
   };
-
-  return { text: replyText, thoughtTrace, proposals };
 }
 
 /**
- * AI Service to Parse Unstructured Raw Text (Telegram message, Facebook post, Brochure, Itinerary flyer)
- * into a fully structured TourPackage object ready for live auto-input.
+ * Heuristic extractor for text-based tour package ingestion
  */
-export async function parseTourPackageFromText(
-  rawText: string,
-  lang: string = 'km'
-): Promise<{
-  success: boolean;
-  packageData: Partial<TourPackage>;
-  summary: string;
-  thoughtTrace?: AiThoughtTrace;
-}> {
-  const startTime = Date.now();
-
-  // 1. First try server-side Gemini endpoint
-  try {
-    const res = await fetch('/api/ai-parse-package', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: rawText, language: lang }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.mode === 'gemini_success' && data.package) {
-        return {
-          success: true,
-          packageData: data.package,
-          summary: data.summary || 'Extracted tour package attributes via Gemini AI.',
-          thoughtTrace: {
-            adaptedPersona: 'Chief Travel & Itinerary Architect',
-            detectedIntent: 'Raw Text Tour Package Analysis & Attribute Extraction',
-            confidence: 99,
-            thinkingTimeMs: Date.now() - startTime,
-            steps: [
-              {
-                phase: 'intent_extraction',
-                title: 'Unstructured Text Ingestion & Parsing',
-                detail: `Analyzed ${rawText.length} characters of unstructured tour brochure / announcement text.`,
-                insights: [
-                  `Title: ${data.package.title || 'Extracted Tour'}`,
-                  `Destination: ${data.package.destination || 'International'} (${data.package.country || 'Target Region'})`,
-                  `Price: $${data.package.priceUSD || 0} USD (Discount: $${data.package.discountPriceUSD || 'N/A'})`,
-                  `Duration: ${data.package.durationDays || 4} Days / ${data.package.durationNights || 3} Nights`,
-                ],
-              },
-              {
-                phase: 'strategic_reasoning',
-                title: 'Itinerary & Logistical Structuring',
-                detail: `Constructed ${data.package.itinerary?.length || 0} day-by-day programs with detailed hourly guide agendas and inclusions.`,
-              },
-            ],
-          },
-        };
-      }
-    }
-  } catch (err) {
-    console.info('Server AI parse failed, switching to resilient client cognitive extractor:', err);
-  }
-
-  // 2. Client-Side Cognitive Heuristic Parser Fallback
-  return extractPackageWithClientEngine(rawText, lang, startTime);
-}
-
-/**
- * Resilient Client-Side Heuristic Parser for Raw Tour Text
- */
-function extractPackageWithClientEngine(
+export function extractTourPackageHeuristically(
   text: string,
-  lang: string,
-  startTime: number
+  lang: 'km' | 'en' = 'km'
 ): {
   success: boolean;
   packageData: Partial<TourPackage>;
   summary: string;
   thoughtTrace: AiThoughtTrace;
 } {
+  const startTime = Date.now();
   const tLower = text.toLowerCase();
 
   // Price extraction
@@ -975,7 +863,7 @@ function extractPackageWithClientEngine(
     category = 'technology';
   }
 
-  // Title extraction: First non-empty meaningful line or synthesized title
+  // Title extraction
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
   let title = lines.length > 0 && lines[0].length < 120 ? lines[0].replace(/^[-*#•\d.)\s]+/, '') : `ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្ម ${destination} (${durationDays} ថ្ងៃ / ${durationNights} យប់)`;
 
@@ -1006,20 +894,17 @@ function extractPackageWithClientEngine(
 
   const exclusions: string[] = [
     'អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចផ្ទាល់ខ្លួន',
-    'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាបោកអ៊ុត)',
-    'ធានារ៉ាប់រងការធ្វើដំណើរក្រៅប្រទេសផ្ទាល់ខ្លួន'
+    'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាកម្មបន្ទប់, ទូរស័ព្ទ)',
+    'ថ្លៃទិដ្ឋាការ (Visa) សម្រាប់ជនបរទេស (ប្រសិនបើមាន)',
+    'ថ្លៃធានារ៉ាប់រងបន្ថែមលើសពីកញ្ចប់ស្តង់ដារ',
   ];
 
   const termsAndConditions: string[] = [
-    'លិខិតឆ្លងដែន (Passport) ត្រូវតែមានសុពលភាពយ៉ាងតិច ៦ ខែ គិតចាប់ពីថ្ងៃចេញដំណើរ។',
-    'ការកក់កន្លែង និងធានាសិទ្ធិចូលរួម ត្រូវតម្កល់ប្រាក់កក់យ៉ាងតិច 50% នៃតម្លៃសរុបពេលចុះឈ្មោះ។',
-    'ការបង់ប្រាក់បង្គ្រប់ 100% ត្រូវធ្វើឡើងយ៉ាងតិច ៧ ថ្ងៃ មុនកាលបរិច្ឆេទចេញដំណើរ។',
-    'ករណីលុបចោលការធ្វើដំណើរមុន ១៥ ថ្ងៃ នឹងទទួលបានការបង្វិលប្រាក់វិញ 70%។ ករណីលុបចោលក្រោម ៧ ថ្ងៃ មិនអាចបង្វិលប្រាក់បានទេ។',
-    'អ្នកចូលរួមត្រូវគោរពតាមពេលវេលា និងការណែនាំរបស់មគ្គុទ្ទេសក៍ និងអ្នកសម្របសម្រួលបេសកកម្ម។',
-    'ក្រុមហ៊ុនសូមរក្សាសិទ្ធិកែប្រែកាលវិភាគ ឬសណ្ឋាគារក្នុងកម្រិតស្មើគ្នា ករណីមានប្រធានសក្តិ ឬហេតុការណ៍ចៃដន្យ។'
+    'ការកក់នឹងមានសុពលភាពនៅពេលបានបង់ប្រាក់កក់យ៉ាងតិច 50%',
+    'ប្រាក់កក់មិនអាចដកវិញបានទេក្នុងករណីលុបចោលមុនចេញដំណើរក្រោម ៧ ថ្ងៃ',
+    'ក្រុមហ៊ុនរក្សាសិទ្ធិក្នុងការផ្លាស់ប្តូរកាលវិភាគអាស្រ័យលើអាកាសធាតុ និងជើងហោះហើរ',
   ];
 
-  // Dates
   const dateMatches = text.match(/\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b/g) ||
                       text.match(/\b\d{1,2}[-/]\d{1,2}[-/]\d{4}\b/g);
   const availableDates = dateMatches && dateMatches.length > 0
@@ -1136,4 +1021,326 @@ function extractPackageWithClientEngine(
     }
   };
 }
+
+/**
+ * AI-powered Tour Package Parser from Unstructured Text
+ */
+export async function parseTourPackageFromText(
+  text: string,
+  lang: 'km' | 'en' = 'km'
+): Promise<{
+  success: boolean;
+  packageData: Partial<TourPackage>;
+  summary: string;
+  thoughtTrace: AiThoughtTrace;
+}> {
+  if (!text || !text.trim()) {
+    return extractTourPackageHeuristically(text, lang);
+  }
+
+  try {
+    const res = await fetch('/api/ai-parse-package', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, lang })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.mode === 'gemini_success' && data.packageData) {
+        return {
+          success: true,
+          packageData: data.packageData,
+          summary: data.summary || (lang === 'km' ? '✨ បានទាញយកទិន្នន័យពីអត្ថបទដោយ AI ជោគជ័យ' : '✨ Successfully extracted package details via AI'),
+          thoughtTrace: data.thoughtTrace || {
+            adaptedPersona: 'Chief Travel & Itinerary Architect',
+            detectedIntent: 'Server AI Tour Package Extraction',
+            confidence: 98,
+            thinkingTimeMs: 450,
+            steps: [{ phase: 'intent_extraction', title: 'AI Extraction', detail: 'Extracted package via Gemini model' }]
+          }
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Server package parsing failed, falling back to heuristic client parser:', err);
+  }
+
+  return extractTourPackageHeuristically(text, lang);
+}
+
+/**
+ * Common Dictionary for fallback translations between Khmer, English, Chinese, Vietnamese
+ */
+const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> = {
+  // Khmer to English
+  "ភ្នំពេញ": { en: "Phnom Penh", zh: "金边", vi: "Phnôm Pênh" },
+  "ហូជីមិញ": { en: "Ho Chi Minh City", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
+  "កោះត្រល់": { en: "Phu Quoc Island", zh: "富国岛", vi: "Đảo Phú Quốc" },
+  "បាងកក": { en: "Bangkok", zh: "曼谷", vi: "Băng Cốc" },
+  "ក្វាងចូវ": { en: "Guangzhou", zh: "广州", vi: "Quảng Châu" },
+  "តូក្យូ": { en: "Tokyo", zh: "东京", vi: "Tokyo" },
+  "វៀតណាម": { en: "Vietnam", zh: "越南", vi: "Việt Nam" },
+  "ថៃ": { en: "Thailand", zh: "泰国", vi: "Thái Lan" },
+  "ចិន": { en: "China", zh: "中国", vi: "Trung Quốc" },
+  "ជប៉ុន": { en: "Japan", zh: "日本", vi: "Nhật Bản" },
+  "កម្ពុជា": { en: "Cambodia", zh: "柬埔寨", vi: "Campuchia" },
+  "ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្ម": { en: "Business Trade Mission", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
+  "ពិព័រណ៍": { en: "Trade Exhibition & Expo", zh: "国际博览会", vi: "Hội Chợ Triển Lãm" },
+  "សណ្ឋាគារ": { en: "Hotel", zh: "酒店", vi: "Khách sạn" },
+  "អាហារពេលព្រឹក": { en: "Breakfast", zh: "早餐", vi: "Bữa sáng" },
+  "អាហារថ្ងៃត្រង់": { en: "Lunch", zh: "午餐", vi: "Bữa trưa" },
+  "អាហារពេលល្ងាច": { en: "Dinner", zh: "晚餐", vi: "Bữa tối" },
+  "រថយន្តក្រុង VIP": { en: "VIP Luxury Coach", zh: "VIP豪华大巴", vi: "Xe Khách VIP" },
+  "មគ្គុទ្ទេសក៍ទេសចរណ៍": { en: "Tour Guide & Coordinator", zh: "随团导游与协调员", vi: "Hướng Dẫn Viên" },
+  "ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយ": { en: "4-Star Hotel Accommodation", zh: "4星级酒店住宿", vi: "Lưu trú khách sạn 4 sao" },
+  "សេវាសម្រួលបែបបទឆ្លងដែន VIP": { en: "VIP Fast-Track Border Clearance", zh: "VIP快速通关服务", vi: "Dịch vụ thông quan VIP nhanh" },
+  "លិខិតឆ្លងដែន": { en: "Passport", zh: "护照", vi: "Hộ chiếu" }
+};
+
+/**
+ * AI-powered Single Field Translator
+ */
+export async function translateTextField(
+  text: string,
+  targetLang: string = 'en',
+  sourceLang: string = 'auto',
+  fieldHint?: string
+): Promise<{ success: boolean; translatedText: string }> {
+  if (!text || !text.trim()) {
+    return { success: true, translatedText: '' };
+  }
+
+  try {
+    const res = await fetch('/api/ai-translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: text.trim(),
+        targetLang,
+        sourceLang,
+        fieldHint
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.mode === 'gemini_success' && typeof data.translatedText === 'string') {
+        return { success: true, translatedText: data.translatedText.trim() };
+      }
+    }
+  } catch (err) {
+    console.warn('Server translation request failed, using client adaptive rules:', err);
+  }
+
+  // Client Adaptive Fallback
+  let fallback = text.trim();
+  for (const [kmWord, translations] of Object.entries(TRAVEL_TRANSLATION_FALLBACK_DICT)) {
+    if (fallback.includes(kmWord) && translations[targetLang]) {
+      fallback = fallback.split(kmWord).join(translations[targetLang]);
+    }
+  }
+
+  return { success: true, translatedText: fallback };
+}
+
+/**
+ * AI-powered Array of Strings Translator (for Highlights, Inclusions, Exclusions, Terms, etc.)
+ */
+export async function translateArrayField(
+  items: string[],
+  targetLang: string = 'en',
+  sourceLang: string = 'auto',
+  fieldHint?: string
+): Promise<{ success: boolean; translatedItems: string[] }> {
+  if (!items || items.length === 0) {
+    return { success: true, translatedItems: [] };
+  }
+
+  try {
+    const res = await fetch('/api/ai-translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        texts: items,
+        targetLang,
+        sourceLang,
+        fieldHint
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.mode === 'gemini_success' && Array.isArray(data.translatedTexts)) {
+        return { success: true, translatedItems: data.translatedTexts };
+      }
+    }
+  } catch (err) {
+    console.warn('Server array translation failed, falling back to individual field processing:', err);
+  }
+
+  // Fallback: translate individual items concurrently
+  const translated = await Promise.all(
+    items.map(item => translateTextField(item, targetLang, sourceLang, fieldHint).then(r => r.translatedText))
+  );
+
+  return { success: true, translatedItems: translated };
+}
+
+/**
+ * AI-powered Full Package Translator (Batch translates all fields of a TourPackage)
+ */
+export async function translateEntirePackage(
+  pkgData: Partial<TourPackage>,
+  targetLang: string = 'en',
+  sourceLang: string = 'auto'
+): Promise<{ success: boolean; translatedPackage: Partial<TourPackage>; summary: string }> {
+  try {
+    const res = await fetch('/api/ai-translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        packageData: pkgData,
+        targetLang,
+        sourceLang
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.mode === 'gemini_success' && data.translatedPackage) {
+        return {
+          success: true,
+          translatedPackage: data.translatedPackage,
+          summary: data.summary || `Successfully translated entire package to ${targetLang}`
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Server full package translation failed, using client iterative translator:', err);
+  }
+
+  // Iterative translation fallback
+  const target = targetLang;
+  const [
+    transTitle,
+    transDest,
+    transCountry,
+    transCategory,
+    transDesc,
+    transHighlights,
+    transWho,
+    transWhy,
+    transInclusions,
+    transExclusions,
+    transTerms
+  ] = await Promise.all([
+    translateTextField(pkgData.title || '', target, sourceLang, 'Tour Package Title'),
+    translateTextField(pkgData.destination || '', target, sourceLang, 'Tour Destination'),
+    translateTextField(pkgData.country || '', target, sourceLang, 'Country Name'),
+    translateTextField(pkgData.category || '', target, sourceLang, 'Category'),
+    translateTextField(pkgData.description || '', target, sourceLang, 'Detailed Package Description'),
+    translateArrayField(pkgData.highlights || [], target, sourceLang, 'Package Highlights'),
+    translateArrayField(pkgData.whoShouldJoin || [], target, sourceLang, 'Target Audience'),
+    translateArrayField(pkgData.whyShouldJoin || [], target, sourceLang, 'Key Value Proposition'),
+    translateArrayField(pkgData.inclusions || [], target, sourceLang, 'Inclusions List'),
+    translateArrayField(pkgData.exclusions || [], target, sourceLang, 'Exclusions List'),
+    translateArrayField(pkgData.termsAndConditions || [], target, sourceLang, 'Terms & Conditions')
+  ]);
+
+  // Translate Itinerary Days
+  const translatedItinerary = await Promise.all(
+    (pkgData.itinerary || []).map(async (day) => {
+      const dayTitle = await translateTextField(day.title || '', target, sourceLang, 'Itinerary Day Title');
+      const dayDesc = await translateTextField(day.description || '', target, sourceLang, 'Itinerary Day Description');
+      const hotel = day.hotelName ? await translateTextField(day.hotelName, target, sourceLang, 'Hotel Name') : { translatedText: '' };
+      const assembly = day.assemblyPoint ? await translateTextField(day.assemblyPoint, target, sourceLang, 'Assembly Point') : { translatedText: '' };
+
+      const agenda = await Promise.all(
+        (day.guideAgenda || []).map(async (slot) => {
+          const act = await translateTextField(slot.activity, target, sourceLang, 'Agenda Activity');
+          const loc = slot.location ? await translateTextField(slot.location, target, sourceLang, 'Location') : { translatedText: slot.location || '' };
+          const notes = slot.notes ? await translateTextField(slot.notes, target, sourceLang, 'Notes') : { translatedText: slot.notes || '' };
+          return {
+            ...slot,
+            activity: act.translatedText,
+            location: loc.translatedText,
+            notes: notes.translatedText
+          };
+        })
+      );
+
+      return {
+        ...day,
+        title: dayTitle.translatedText,
+        description: dayDesc.translatedText,
+        hotelName: hotel.translatedText || day.hotelName,
+        assemblyPoint: assembly.translatedText || day.assemblyPoint,
+        guideAgenda: agenda
+      };
+    })
+  );
+
+  // Translate Guide Info
+  let translatedGuide = pkgData.tourGuide;
+  if (pkgData.tourGuide) {
+    const gTitle = await translateTextField(pkgData.tourGuide.title || '', target, sourceLang, 'Guide Title');
+    const gBio = await translateTextField(pkgData.tourGuide.bio || '', target, sourceLang, 'Guide Bio');
+    const gPoint = await translateTextField(pkgData.tourGuide.briefingMeetingPoint || '', target, sourceLang, 'Meeting Point');
+    const gTime = await translateTextField(pkgData.tourGuide.briefingTime || '', target, sourceLang, 'Briefing Time');
+
+    translatedGuide = {
+      ...pkgData.tourGuide,
+      title: gTitle.translatedText || pkgData.tourGuide.title,
+      bio: gBio.translatedText || pkgData.tourGuide.bio,
+      briefingMeetingPoint: gPoint.translatedText || pkgData.tourGuide.briefingMeetingPoint,
+      briefingTime: gTime.translatedText || pkgData.tourGuide.briefingTime
+    };
+  }
+
+  // Translate Optional Programs
+  const translatedOptProgs = await Promise.all(
+    (pkgData.optionalPrograms || []).map(async (prog) => {
+      const pTitle = await translateTextField(prog.title, target, sourceLang, 'Optional Tour Title');
+      const pDesc = await translateTextField(prog.description, target, sourceLang, 'Optional Tour Description');
+      const pAud = prog.recommendedAudience ? await translateTextField(prog.recommendedAudience, target, sourceLang, 'Audience') : { translatedText: prog.recommendedAudience || '' };
+      const pHl = await translateArrayField(prog.highlights || [], target, sourceLang, 'Optional Highlights');
+      const pMeals = await translateArrayField(prog.includedMeals || [], target, sourceLang, 'Meals');
+      const pMeeting = prog.meetingPoint ? await translateTextField(prog.meetingPoint, target, sourceLang, 'Meeting Point') : { translatedText: prog.meetingPoint || '' };
+
+      return {
+        ...prog,
+        title: pTitle.translatedText || prog.title,
+        description: pDesc.translatedText || prog.description,
+        recommendedAudience: pAud.translatedText || prog.recommendedAudience,
+        highlights: pHl.translatedItems,
+        includedMeals: pMeals.translatedItems,
+        meetingPoint: pMeeting.translatedText || prog.meetingPoint
+      };
+    })
+  );
+
+  return {
+    success: true,
+    summary: `✨ Completed iterative translation of all package components into ${target}`,
+    translatedPackage: {
+      ...pkgData,
+      title: transTitle.translatedText,
+      destination: transDest.translatedText,
+      country: transCountry.translatedText,
+      category: transCategory.translatedText,
+      description: transDesc.translatedText,
+      highlights: transHighlights.translatedItems,
+      whoShouldJoin: transWho.translatedItems,
+      whyShouldJoin: transWhy.translatedItems,
+      inclusions: transInclusions.translatedItems,
+      exclusions: transExclusions.translatedItems,
+      termsAndConditions: transTerms.translatedItems,
+      tourGuide: translatedGuide,
+      itinerary: translatedItinerary,
+      optionalPrograms: translatedOptProgs
+    }
+  };
+}
+
 
