@@ -1070,45 +1070,145 @@ export async function parseTourPackageFromText(
 }
 
 /**
+ * Smart Language Detector: Checks if text is primarily Khmer, English, or mixed
+ */
+export function detectTextLanguage(text: string): 'km' | 'en' | 'mixed' {
+  if (!text || !text.trim()) return 'en';
+  const hasKhmer = /[\u1780-\u17FF\u19E0-\u19FF]/.test(text);
+  const hasLatin = /[a-zA-Z]/.test(text);
+  if (hasKhmer && hasLatin) return 'mixed';
+  if (hasKhmer) return 'km';
+  return 'en';
+}
+
+/**
  * Common Dictionary for fallback translations between Khmer, English, Chinese, Vietnamese
  */
 const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> = {
-  // Khmer to English
+  // Cities & Regions
   "ភ្នំពេញ": { en: "Phnom Penh", zh: "金边", vi: "Phnôm Pênh" },
+  "Phnom Penh": { km: "ភ្នំពេញ", zh: "金边", vi: "Phnôm Pênh" },
   "ហូជីមិញ": { en: "Ho Chi Minh City", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
+  "Ho Chi Minh": { km: "ហូជីមិញ", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
+  "Ho Chi Minh City": { km: "ទីក្រុងហូជីមិញ", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
   "កោះត្រល់": { en: "Phu Quoc Island", zh: "富国岛", vi: "Đảo Phú Quốc" },
+  "Phu Quoc": { km: "កោះត្រល់", zh: "富国岛", vi: "Đảo Phú Quốc" },
+  "Phu Quoc Island": { km: "កោះត្រល់", zh: "富国岛", vi: "Đảo Phú Quốc" },
   "បាងកក": { en: "Bangkok", zh: "曼谷", vi: "Băng Cốc" },
+  "Bangkok": { km: "បាងកក", zh: "曼谷", vi: "Băng Cốc" },
   "ក្វាងចូវ": { en: "Guangzhou", zh: "广州", vi: "Quảng Châu" },
+  "Guangzhou": { km: "ក្វាងចូវ", zh: "广州", vi: "Quảng Châu" },
   "តូក្យូ": { en: "Tokyo", zh: "东京", vi: "Tokyo" },
+  "Tokyo": { km: "តូក្យូ", zh: "东京", vi: "Tokyo" },
+  "សៀមរាប": { en: "Siem Reap", zh: "暹粒", vi: "Siem Reap" },
+  "Siem Reap": { km: "សៀមរាប", zh: "暹粒", vi: "Siem Reap" },
+  "កំពត": { en: "Kampot", zh: "贡布", vi: "Kampot" },
+  "Kampot": { km: "កំពត", zh: "贡布", vi: "Kampot" },
+  "កែប": { en: "Kep", zh: "白马", vi: "Kep" },
+  "Kep": { km: "កែប", zh: "白马", vi: "Kep" },
+  "បាត់ដំបង": { en: "Battambang", zh: "马德望", vi: "Battambang" },
+  "Battambang": { km: "បាត់ដំបង", zh: "马德望", vi: "Battambang" },
+  "កូឡាឡាំពួរ": { en: "Kuala Lumpur", zh: "吉隆坡", vi: "Kuala Lumpur" },
+  "Kuala Lumpur": { km: "កូឡាឡាំពួរ", zh: "吉隆坡", vi: "Kuala Lumpur" },
+  "សិង្ហបុរី": { en: "Singapore", zh: "新加坡", vi: "Singapore" },
+  "Singapore": { km: "សិង្ហបុរី", zh: "新加坡", vi: "Singapore" },
+
+  // Countries
   "វៀតណាម": { en: "Vietnam", zh: "越南", vi: "Việt Nam" },
+  "Vietnam": { km: "វៀតណាម", zh: "越南", vi: "Việt Nam" },
   "ថៃ": { en: "Thailand", zh: "泰国", vi: "Thái Lan" },
+  "Thailand": { km: "ថៃ", zh: "泰国", vi: "Thái Lan" },
   "ចិន": { en: "China", zh: "中国", vi: "Trung Quốc" },
+  "China": { km: "ចិន", zh: "中国", vi: "Trung Quốc" },
   "ជប៉ុន": { en: "Japan", zh: "日本", vi: "Nhật Bản" },
+  "Japan": { km: "ជប៉ុន", zh: "日本", vi: "Nhật Bản" },
   "កម្ពុជា": { en: "Cambodia", zh: "柬埔寨", vi: "Campuchia" },
+  "Cambodia": { km: "កម្ពុជា", zh: "柬埔寨", vi: "Campuchia" },
+  "ម៉ាឡេស៊ី": { en: "Malaysia", zh: "马来西亚", vi: "Malaysia" },
+  "Malaysia": { km: "ម៉ាឡេស៊ី", zh: "马来西亚", vi: "Malaysia" },
+
+  // Business & Tourism Missions
   "ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្ម": { en: "Business Trade Mission", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
+  "Business Trade Mission": { km: "ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្ម", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
   "ពិព័រណ៍": { en: "Trade Exhibition & Expo", zh: "国际博览会", vi: "Hội Chợ Triển Lãm" },
+  "Exhibition": { km: "ពិព័រណ៍ពាណិជ្ជកម្ម", zh: "展览会", vi: "Triển lãm" },
+  "Trade Mission": { km: "បេសកកម្មពាណិជ្ជកម្ម", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
+  "Canton Fair": { km: "ពិព័រណ៍ Canton Fair ក្វាងចូវ", zh: "广交会", vi: "Hội chợ Canton Fair" },
+  "ពិព័រណ៍ក្វាងចូវ": { en: "Guangzhou Canton Fair", zh: "广州交易会", vi: "Hội chợ Quảng Châu" },
   "សណ្ឋាគារ": { en: "Hotel", zh: "酒店", vi: "Khách sạn" },
+  "Hotel": { km: "សណ្ឋាគារ", zh: "酒店", vi: "Khách sạn" },
+  "សណ្ឋាគារ ៤ ផ្កាយ": { en: "4-Star Hotel", zh: "4星级酒店", vi: "Khách sạn 4 sao" },
+  "4-Star Hotel": { km: "សណ្ឋាគារ ៤ ផ្កាយ", zh: "4星级酒店", vi: "Khách sạn 4 sao" },
   "អាហារពេលព្រឹក": { en: "Breakfast", zh: "早餐", vi: "Bữa sáng" },
+  "Breakfast": { km: "អាហារពេលព្រឹក", zh: "早餐", vi: "Bữa sáng" },
   "អាហារថ្ងៃត្រង់": { en: "Lunch", zh: "午餐", vi: "Bữa trưa" },
+  "Lunch": { km: "អាហារថ្ងៃត្រង់", zh: "午餐", vi: "Bữa trưa" },
   "អាហារពេលល្ងាច": { en: "Dinner", zh: "晚餐", vi: "Bữa tối" },
+  "Dinner": { km: "អាហារពេលល្ងាច", zh: "晚餐", vi: "Bữa tối" },
+  "Welcome Dinner": { km: "អាហារពេលល្ងាចទទួលស្វាគមន៍", zh: "欢迎晚宴", vi: "Tiệc tối chào mừng" },
+  "Buffet Breakfast": { km: "អាហារពេលព្រឹកប៊ូហ្វេ", zh: "自助早餐", vi: "Buffet sáng" },
   "រថយន្តក្រុង VIP": { en: "VIP Luxury Coach", zh: "VIP豪华大巴", vi: "Xe Khách VIP" },
+  "VIP Coach": { km: "រថយន្តក្រុង VIP", zh: "VIP大巴", vi: "Xe VIP" },
+  "VIP Luxury Coach": { km: "រថយន្តក្រុង VIP ទំនើប", zh: "VIP豪华大巴", vi: "Xe Khách VIP" },
   "មគ្គុទ្ទេសក៍ទេសចរណ៍": { en: "Tour Guide & Coordinator", zh: "随团导游与协调员", vi: "Hướng Dẫn Viên" },
+  "Tour Guide": { km: "មគ្គុទ្ទេសក៍ទេសចរណ៍", zh: "导游", vi: "Hướng Dẫn Viên" },
+  "Lead Coordinator": { km: "ប្រធានសម្របសម្រួលជាន់ខ្ពស់", zh: "首席协调员", vi: "Trưởng điều phối" },
   "ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយ": { en: "4-Star Hotel Accommodation", zh: "4星级酒店住宿", vi: "Lưu trú khách sạn 4 sao" },
+  "4-Star Hotel Accommodation": { km: "ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយ", zh: "4星级酒店住宿", vi: "Lưu trú khách sạn 4 sao" },
   "សេវាសម្រួលបែបបទឆ្លងដែន VIP": { en: "VIP Fast-Track Border Clearance", zh: "VIP快速通关服务", vi: "Dịch vụ thông quan VIP nhanh" },
-  "លិខិតឆ្លងដែន": { en: "Passport", zh: "护照", vi: "Hộ chiếu" }
+  "VIP Fast-Track Border Clearance": { km: "សេវាសម្រួលបែបបទឆ្លងដែន VIP", zh: "VIP快速通关服务", vi: "Dịch vụ thông quan VIP nhanh" },
+  "លិខិតឆ្លងដែន": { en: "Passport", zh: "护照", vi: "Hộ chiếu" },
+  "Passport": { km: "លិខិតឆ្លងដែន", zh: "护照", vi: "Hộ chiếu" },
+  "កាតចូលទស្សនាពិព័រណ៍": { en: "Official Expo Entry Pass", zh: "官方展会入场证", vi: "Thẻ tham quan hội chợ chính thức" },
+  "Official Expo Entry Pass": { km: "កាតផ្លូវការចូលទស្សនាពិព័រណ៍", zh: "官方展会入场证", vi: "Thẻ tham quan hội chợ chính thức" },
+  "ជើងហោះហើរ": { en: "Flight Ticket", zh: "机票", vi: "Vé máy bay" },
+  "Flight": { km: "ជើងហោះហើរ", zh: "航班", vi: "Chuyến bay" },
+  "Domestic Flight": { km: "ជើងហោះហើរក្នុងស្រុក", zh: "国内航班", vi: "Chuyến bay nội địa" },
+  "High-Speed Ferry": { km: "កប៉ាល់ល្បឿនលឿន", zh: "高速快艇", vi: "Tàu cao tốc" },
+  "High-Speed Train": { km: "រថភ្លើងល្បឿនលឿន", zh: "高铁", vi: "Tàu cao tốc" },
+  "រថភ្លើងល្បឿនលឿន": { en: "High-Speed Train", zh: "高铁", vi: "Tàu cao tốc" },
+
+  // Days & Itinerary
+  "ថ្ងៃទី 1": { en: "Day 1", zh: "第一天", vi: "Ngày 1" },
+  "ថ្ងៃទី 2": { en: "Day 2", zh: "第二天", vi: "Ngày 2" },
+  "ថ្ងៃទី 3": { en: "Day 3", zh: "第三天", vi: "Ngày 3" },
+  "ថ្ងៃទី 4": { en: "Day 4", zh: "第四天", vi: "Ngày 4" },
+  "ថ្ងៃទី 5": { en: "Day 5", zh: "第五天", vi: "Ngày 5" },
+  "Day 1": { km: "ថ្ងៃទី ១", zh: "第一天", vi: "Ngày 1" },
+  "Day 2": { km: "ថ្ងៃទី ២", zh: "第二天", vi: "Ngày 2" },
+  "Day 3": { km: "ថ្ងៃទី ៣", zh: "第三天", vi: "Ngày 3" },
+  "Day 4": { km: "ថ្ងៃទី ៤", zh: "第四天", vi: "Ngày 4" },
+  "Day 5": { km: "ថ្ងៃទី ៥", zh: "第五天", vi: "Ngày 5" }
 };
 
 /**
- * AI-powered Single Field Translator
+ * AI-powered Single Field Translator with Smart Bidirectional Language Detection
  */
 export async function translateTextField(
   text: string,
-  targetLang: string = 'en',
+  targetLang: string = 'auto',
   sourceLang: string = 'auto',
   fieldHint?: string
-): Promise<{ success: boolean; translatedText: string }> {
+): Promise<{ success: boolean; translatedText: string; detectedLang?: string }> {
   if (!text || !text.trim()) {
     return { success: true, translatedText: '' };
+  }
+
+  const trimmed = text.trim();
+  const detected = detectTextLanguage(trimmed);
+
+  // Smart Auto Language Direction:
+  // If text contains Khmer characters -> Source is Khmer ('km'), Target is English ('en') unless specified otherwise.
+  // If text contains English characters and no Khmer -> Source is English ('en'), Target is Khmer ('km') unless specified otherwise.
+  let resolvedSource = sourceLang;
+  let resolvedTarget = targetLang;
+
+  if (resolvedSource === 'auto' || !resolvedSource) {
+    resolvedSource = detected === 'km' ? 'km' : 'en';
+  }
+
+  if (resolvedTarget === 'auto' || !resolvedTarget || resolvedTarget === resolvedSource) {
+    resolvedTarget = resolvedSource === 'km' ? 'en' : 'km';
   }
 
   try {
@@ -1116,32 +1216,109 @@ export async function translateTextField(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: text.trim(),
-        targetLang,
-        sourceLang,
+        text: trimmed,
+        targetLang: resolvedTarget,
+        sourceLang: resolvedSource,
         fieldHint
       })
     });
 
     if (res.ok) {
       const data = await res.json();
-      if (data.mode === 'gemini_success' && typeof data.translatedText === 'string') {
-        return { success: true, translatedText: data.translatedText.trim() };
+      if (data.mode === 'gemini_success' && typeof data.translatedText === 'string' && data.translatedText.trim()) {
+        return {
+          success: true,
+          translatedText: data.translatedText.trim(),
+          detectedLang: data.detectedSourceLang || resolvedSource
+        };
       }
     }
   } catch (err) {
     console.warn('Server translation request failed, using client adaptive rules:', err);
   }
 
-  // Client Adaptive Fallback
-  let fallback = text.trim();
-  for (const [kmWord, translations] of Object.entries(TRAVEL_TRANSLATION_FALLBACK_DICT)) {
-    if (fallback.includes(kmWord) && translations[targetLang]) {
-      fallback = fallback.split(kmWord).join(translations[targetLang]);
+  // Client Adaptive Dictionary Fallback
+  let fallback = trimmed;
+
+  // Direct exact match
+  if (TRAVEL_TRANSLATION_FALLBACK_DICT[trimmed] && TRAVEL_TRANSLATION_FALLBACK_DICT[trimmed][resolvedTarget]) {
+    return {
+      success: true,
+      translatedText: TRAVEL_TRANSLATION_FALLBACK_DICT[trimmed][resolvedTarget],
+      detectedLang: resolvedSource
+    };
+  }
+
+  // Substring replacement
+  for (const [keyWord, translations] of Object.entries(TRAVEL_TRANSLATION_FALLBACK_DICT)) {
+    if (fallback.includes(keyWord) && translations[resolvedTarget]) {
+      fallback = fallback.split(keyWord).join(translations[resolvedTarget]);
     }
   }
 
-  return { success: true, translatedText: fallback };
+  return { success: true, translatedText: fallback, detectedLang: resolvedSource };
+}
+
+/**
+ * Smart Field Pair Bidirectional Translator
+ * Inspects both fields (Khmer & English):
+ * - If English is present and Khmer is blank: Auto-translates EN -> KM
+ * - If Khmer is present and English is blank: Auto-translates KM -> EN
+ * - If both are present: Translates the active or specified source
+ */
+export async function smartTranslateFieldPair(params: {
+  kmText?: string;
+  enText?: string;
+  fieldHint?: string;
+}): Promise<{
+  success: boolean;
+  targetField: 'km' | 'en' | 'none';
+  translatedText: string;
+  message: string;
+}> {
+  const km = (params.kmText || '').trim();
+  const en = (params.enText || '').trim();
+
+  // Condition 1: English has text, Khmer is blank -> Translate English to Khmer
+  if (en.length > 0 && km.length === 0) {
+    const res = await translateTextField(en, 'km', 'en', params.fieldHint);
+    return {
+      success: res.success,
+      targetField: 'km',
+      translatedText: res.translatedText,
+      message: `✨ Auto-translated English into Khmer (🇰🇭)`
+    };
+  }
+
+  // Condition 2: Khmer has text, English is blank -> Translate Khmer to English
+  if (km.length > 0 && en.length === 0) {
+    const res = await translateTextField(km, 'en', 'km', params.fieldHint);
+    return {
+      success: res.success,
+      targetField: 'en',
+      translatedText: res.translatedText,
+      message: `✨ Auto-translated Khmer into English (🇺🇸)`
+    };
+  }
+
+  // Condition 3: Both are present -> Check script or update English from Khmer by default
+  if (km.length > 0 && en.length > 0) {
+    // If one of them has Khmer and other is English, we can translate Khmer to English
+    const res = await translateTextField(km, 'en', 'km', params.fieldHint);
+    return {
+      success: res.success,
+      targetField: 'en',
+      translatedText: res.translatedText,
+      message: `✨ Re-synchronized Khmer ➔ English`
+    };
+  }
+
+  return {
+    success: false,
+    targetField: 'none',
+    translatedText: '',
+    message: 'Both fields are empty'
+  };
 }
 
 /**
@@ -1149,7 +1326,7 @@ export async function translateTextField(
  */
 export async function translateArrayField(
   items: string[],
-  targetLang: string = 'en',
+  targetLang: string = 'auto',
   sourceLang: string = 'auto',
   fieldHint?: string
 ): Promise<{ success: boolean; translatedItems: string[] }> {
@@ -1157,14 +1334,34 @@ export async function translateArrayField(
     return { success: true, translatedItems: [] };
   }
 
+  const validItems = items.filter(it => Boolean(it && it.trim()));
+  if (validItems.length === 0) {
+    return { success: true, translatedItems: [] };
+  }
+
+  // Detect dominant language of the array
+  const sampleText = validItems.join(' ');
+  const detected = detectTextLanguage(sampleText);
+
+  let resolvedSource = sourceLang;
+  let resolvedTarget = targetLang;
+
+  if (resolvedSource === 'auto' || !resolvedSource) {
+    resolvedSource = detected === 'km' ? 'km' : 'en';
+  }
+
+  if (resolvedTarget === 'auto' || !resolvedTarget || resolvedTarget === resolvedSource) {
+    resolvedTarget = resolvedSource === 'km' ? 'en' : 'km';
+  }
+
   try {
     const res = await fetch('/api/ai-translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        texts: items,
-        targetLang,
-        sourceLang,
+        texts: validItems,
+        targetLang: resolvedTarget,
+        sourceLang: resolvedSource,
         fieldHint
       })
     });
@@ -1181,7 +1378,7 @@ export async function translateArrayField(
 
   // Fallback: translate individual items concurrently
   const translated = await Promise.all(
-    items.map(item => translateTextField(item, targetLang, sourceLang, fieldHint).then(r => r.translatedText))
+    validItems.map(item => translateTextField(item, resolvedTarget, resolvedSource, fieldHint).then(r => r.translatedText))
   );
 
   return { success: true, translatedItems: translated };

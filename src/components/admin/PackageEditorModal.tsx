@@ -1308,15 +1308,14 @@ Highlights:
                           Tour Title (English / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={titleEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={titleKm || title}
+                          enText={titleEn}
                           fieldHint="Tour Package Title"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setTitleKm(trans);
                             setTitle(trans);
                           }}
+                          onTranslateToEn={(trans) => setTitleEn(trans)}
                         />
                       </div>
                       <input
@@ -1335,12 +1334,14 @@ Highlights:
                           Tour Title (ខ្មែរ / Khmer Secondary)
                         </label>
                         <FieldAiTranslator
-                          sourceText={titleKm || title}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={titleKm || title}
+                          enText={titleEn}
                           fieldHint="Tour Package Title"
-                          label="EN"
-                          onTranslatedText={(trans) => setTitleEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setTitleKm(trans);
+                            setTitle(trans);
+                          }}
+                          onTranslateToEn={(trans) => setTitleEn(trans)}
                         />
                       </div>
                       <input
@@ -1363,12 +1364,14 @@ Highlights:
                           Tour Title (ខ្មែរ / Khmer Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={titleKm || title}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={titleKm || title}
+                          enText={titleEn}
                           fieldHint="Tour Package Title"
-                          label="EN"
-                          onTranslatedText={(trans) => setTitleEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setTitleKm(trans);
+                            setTitle(trans);
+                          }}
+                          onTranslateToEn={(trans) => setTitleEn(trans)}
                         />
                       </div>
                       <input
@@ -1390,15 +1393,14 @@ Highlights:
                           Tour Title (English Title)
                         </label>
                         <FieldAiTranslator
-                          sourceText={titleEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={titleKm || title}
+                          enText={titleEn}
                           fieldHint="Tour Package Title"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setTitleKm(trans);
                             setTitle(trans);
                           }}
+                          onTranslateToEn={(trans) => setTitleEn(trans)}
                         />
                       </div>
                       <input
@@ -1421,15 +1423,14 @@ Highlights:
                           Destination City / Province (English / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={destinationEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={destinationKm || destination}
+                          enText={destinationEn}
                           fieldHint="Destination City or Province"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setDestinationKm(trans);
                             setDestination(trans);
                           }}
+                          onTranslateToEn={(trans) => setDestinationEn(trans)}
                         />
                       </div>
                       <input
@@ -1448,12 +1449,14 @@ Highlights:
                           Destination (ខ្មែរ / Khmer Secondary)
                         </label>
                         <FieldAiTranslator
-                          sourceText={destinationKm || destination}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={destinationKm || destination}
+                          enText={destinationEn}
                           fieldHint="Destination City or Province"
-                          label="EN"
-                          onTranslatedText={(trans) => setDestinationEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setDestinationKm(trans);
+                            setDestination(trans);
+                          }}
+                          onTranslateToEn={(trans) => setDestinationEn(trans)}
                         />
                       </div>
                       <input
@@ -1476,12 +1479,14 @@ Highlights:
                           Destination City / Province (ខ្មែរ / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={destinationKm || destination}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={destinationKm || destination}
+                          enText={destinationEn}
                           fieldHint="Destination City or Province"
-                          label="EN"
-                          onTranslatedText={(trans) => setDestinationEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setDestinationKm(trans);
+                            setDestination(trans);
+                          }}
+                          onTranslateToEn={(trans) => setDestinationEn(trans)}
                         />
                       </div>
                       <input
@@ -1503,15 +1508,14 @@ Highlights:
                           Destination (English)
                         </label>
                         <FieldAiTranslator
-                          sourceText={destinationEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={destinationKm || destination}
+                          enText={destinationEn}
                           fieldHint="Destination City or Province"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setDestinationKm(trans);
                             setDestination(trans);
                           }}
+                          onTranslateToEn={(trans) => setDestinationEn(trans)}
                         />
                       </div>
                       <input
@@ -1534,15 +1538,14 @@ Highlights:
                           Country (English / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={countryEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={countryKm || country}
+                          enText={countryEn}
                           fieldHint="Country Name"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setCountryKm(trans);
                             setCountry(trans);
                           }}
+                          onTranslateToEn={(trans) => setCountryEn(trans)}
                         />
                       </div>
                       <input
@@ -1561,12 +1564,14 @@ Highlights:
                           Country (ប្រទេស / Khmer Secondary)
                         </label>
                         <FieldAiTranslator
-                          sourceText={countryKm || country}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={countryKm || country}
+                          enText={countryEn}
                           fieldHint="Country Name"
-                          label="EN"
-                          onTranslatedText={(trans) => setCountryEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setCountryKm(trans);
+                            setCountry(trans);
+                          }}
+                          onTranslateToEn={(trans) => setCountryEn(trans)}
                         />
                       </div>
                       <input
@@ -1589,12 +1594,14 @@ Highlights:
                           Country (ប្រទេស / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={countryKm || country}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={countryKm || country}
+                          enText={countryEn}
                           fieldHint="Country Name"
-                          label="EN"
-                          onTranslatedText={(trans) => setCountryEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setCountryKm(trans);
+                            setCountry(trans);
+                          }}
+                          onTranslateToEn={(trans) => setCountryEn(trans)}
                         />
                       </div>
                       <input
@@ -1616,15 +1623,14 @@ Highlights:
                           Country (English)
                         </label>
                         <FieldAiTranslator
-                          sourceText={countryEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={countryKm || country}
+                          enText={countryEn}
                           fieldHint="Country Name"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setCountryKm(trans);
                             setCountry(trans);
                           }}
+                          onTranslateToEn={(trans) => setCountryEn(trans)}
                         />
                       </div>
                       <input
@@ -1958,15 +1964,14 @@ Highlights:
                           Full Package Overview (English / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={descriptionEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={descriptionKm || description}
+                          enText={descriptionEn}
                           fieldHint="Tour Package Full Description and Overview"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setDescriptionKm(trans);
                             setDescription(trans);
                           }}
+                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
                         />
                       </div>
                       <textarea
@@ -1985,12 +1990,14 @@ Highlights:
                           Full Package Overview (ខ្មែរ / Khmer Secondary)
                         </label>
                         <FieldAiTranslator
-                          sourceText={descriptionKm || description}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={descriptionKm || description}
+                          enText={descriptionEn}
                           fieldHint="Tour Package Full Description and Overview"
-                          label="EN"
-                          onTranslatedText={(trans) => setDescriptionEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setDescriptionKm(trans);
+                            setDescription(trans);
+                          }}
+                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
                         />
                       </div>
                       <textarea
@@ -2013,12 +2020,14 @@ Highlights:
                           Full Package Overview (ខ្មែរ / Primary) *
                         </label>
                         <FieldAiTranslator
-                          sourceText={descriptionKm || description}
-                          sourceLang="km"
-                          targetLang="en"
+                          kmText={descriptionKm || description}
+                          enText={descriptionEn}
                           fieldHint="Tour Package Full Description and Overview"
-                          label="EN"
-                          onTranslatedText={(trans) => setDescriptionEn(trans)}
+                          onTranslateToKm={(trans) => {
+                            setDescriptionKm(trans);
+                            setDescription(trans);
+                          }}
+                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
                         />
                       </div>
                       <textarea
@@ -2040,15 +2049,14 @@ Highlights:
                           Full Package Overview (English Description)
                         </label>
                         <FieldAiTranslator
-                          sourceText={descriptionEn}
-                          sourceLang="en"
-                          targetLang="km"
+                          kmText={descriptionKm || description}
+                          enText={descriptionEn}
                           fieldHint="Tour Package Full Description and Overview"
-                          label="ខ្មែរ"
-                          onTranslatedText={(trans) => {
+                          onTranslateToKm={(trans) => {
                             setDescriptionKm(trans);
                             setDescription(trans);
                           }}
+                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
                         />
                       </div>
                       <textarea
@@ -2302,19 +2310,14 @@ Highlights:
                     Tour Director / Lead Coordinator Name *
                   </label>
                   <FieldAiTranslator
-                    sourceText={isEnglishMain ? guideNameEn : (guideNameKm || guideName)}
-                    sourceLang={isEnglishMain ? 'en' : 'km'}
-                    targetLang={isEnglishMain ? 'km' : 'en'}
+                    kmText={guideNameKm || guideName}
+                    enText={guideNameEn}
                     fieldHint="Tour Director or Guide Full Name"
-                    label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                    onTranslatedText={(translated) => {
-                      if (isEnglishMain) {
-                        setGuideName(translated);
-                        setGuideNameKm(translated);
-                      } else {
-                        setGuideNameEn(translated);
-                      }
+                    onTranslateToKm={(trans) => {
+                      setGuideName(trans);
+                      setGuideNameKm(trans);
                     }}
+                    onTranslateToEn={(trans) => setGuideNameEn(trans)}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2391,19 +2394,14 @@ Highlights:
                     Official Title / Designation *
                   </label>
                   <FieldAiTranslator
-                    sourceText={isEnglishMain ? guideTitleEn : (guideTitleKm || guideTitle)}
-                    sourceLang={isEnglishMain ? 'en' : 'km'}
-                    targetLang={isEnglishMain ? 'km' : 'en'}
+                    kmText={guideTitleKm || guideTitle}
+                    enText={guideTitleEn}
                     fieldHint="Tour Director or Guide Professional Title"
-                    label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                    onTranslatedText={(translated) => {
-                      if (isEnglishMain) {
-                        setGuideTitle(translated);
-                        setGuideTitleKm(translated);
-                      } else {
-                        setGuideTitleEn(translated);
-                      }
+                    onTranslateToKm={(trans) => {
+                      setGuideTitle(trans);
+                      setGuideTitleKm(trans);
                     }}
+                    onTranslateToEn={(trans) => setGuideTitleEn(trans)}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2559,19 +2557,14 @@ Highlights:
                     Departure Assembly & Briefing Meeting Point
                   </label>
                   <FieldAiTranslator
-                    sourceText={isEnglishMain ? briefingMeetingPointEn : (briefingMeetingPointKm || briefingMeetingPoint)}
-                    sourceLang={isEnglishMain ? 'en' : 'km'}
-                    targetLang={isEnglishMain ? 'km' : 'en'}
+                    kmText={briefingMeetingPointKm || briefingMeetingPoint}
+                    enText={briefingMeetingPointEn}
                     fieldHint="Tour Departure Gathering Location or Meeting Point"
-                    label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                    onTranslatedText={(translated) => {
-                      if (isEnglishMain) {
-                        setBriefingMeetingPoint(translated);
-                        setBriefingMeetingPointKm(translated);
-                      } else {
-                        setBriefingMeetingPointEn(translated);
-                      }
+                    onTranslateToKm={(trans) => {
+                      setBriefingMeetingPoint(trans);
+                      setBriefingMeetingPointKm(trans);
                     }}
+                    onTranslateToEn={(trans) => setBriefingMeetingPointEn(trans)}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2662,19 +2655,14 @@ Highlights:
                     Coordinator Bio & Credentials
                   </label>
                   <FieldAiTranslator
-                    sourceText={isEnglishMain ? guideBioEn : (guideBioKm || guideBio)}
-                    sourceLang={isEnglishMain ? 'en' : 'km'}
-                    targetLang={isEnglishMain ? 'km' : 'en'}
+                    kmText={guideBioKm || guideBio}
+                    enText={guideBioEn}
                     fieldHint="Tour Director Professional Bio and Qualifications"
-                    label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                    onTranslatedText={(translated) => {
-                      if (isEnglishMain) {
-                        setGuideBio(translated);
-                        setGuideBioKm(translated);
-                      } else {
-                        setGuideBioEn(translated);
-                      }
+                    onTranslateToKm={(trans) => {
+                      setGuideBio(trans);
+                      setGuideBioKm(trans);
                     }}
+                    onTranslateToEn={(trans) => setGuideBioEn(trans)}
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2871,19 +2859,14 @@ Highlights:
                                 Day Title (Bilingual)
                               </label>
                               <FieldAiTranslator
-                                sourceText={isEnglishMain ? day.titleEn : (day.titleKm || day.title)}
-                                sourceLang={isEnglishMain ? 'en' : 'km'}
-                                targetLang={isEnglishMain ? 'km' : 'en'}
+                                kmText={day.titleKm || day.title}
+                                enText={day.titleEn}
                                 fieldHint={`Tour Itinerary Day ${day.day} Headline Title`}
-                                label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                                onTranslatedText={(translated) => {
-                                  if (isEnglishMain) {
-                                    handleUpdateDayField(dIdx, 'titleKm', translated);
-                                    handleUpdateDayField(dIdx, 'title', translated);
-                                  } else {
-                                    handleUpdateDayField(dIdx, 'titleEn', translated);
-                                  }
+                                onTranslateToKm={(trans) => {
+                                  handleUpdateDayField(dIdx, 'titleKm', trans);
+                                  handleUpdateDayField(dIdx, 'title', trans);
                                 }}
+                                onTranslateToEn={(trans) => handleUpdateDayField(dIdx, 'titleEn', trans)}
                               />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -3009,19 +2992,14 @@ Highlights:
                                 Day Overview Description (Bilingual)
                               </label>
                               <FieldAiTranslator
-                                sourceText={isEnglishMain ? day.descriptionEn : (day.descriptionKm || day.description)}
-                                sourceLang={isEnglishMain ? 'en' : 'km'}
-                                targetLang={isEnglishMain ? 'km' : 'en'}
+                                kmText={day.descriptionKm || day.description}
+                                enText={day.descriptionEn}
                                 fieldHint={`Tour Itinerary Day ${day.day} Full Day Description`}
-                                label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                                onTranslatedText={(translated) => {
-                                  if (isEnglishMain) {
-                                    handleUpdateDayField(dIdx, 'descriptionKm', translated);
-                                    handleUpdateDayField(dIdx, 'description', translated);
-                                  } else {
-                                    handleUpdateDayField(dIdx, 'descriptionEn', translated);
-                                  }
+                                onTranslateToKm={(trans) => {
+                                  handleUpdateDayField(dIdx, 'descriptionKm', trans);
+                                  handleUpdateDayField(dIdx, 'description', trans);
                                 }}
+                                onTranslateToEn={(trans) => handleUpdateDayField(dIdx, 'descriptionEn', trans)}
                               />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -3372,19 +3350,14 @@ Highlights:
                           Program Description (Bilingual)
                         </label>
                         <FieldAiTranslator
-                          sourceText={isEnglishMain ? prog.descriptionEn : (prog.descriptionKm || prog.description)}
-                          sourceLang={isEnglishMain ? 'en' : 'km'}
-                          targetLang={isEnglishMain ? 'km' : 'en'}
+                          kmText={prog.descriptionKm || prog.description}
+                          enText={prog.descriptionEn}
                           fieldHint="Tour Package Optional Add-on Program Description"
-                          label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                          onTranslatedText={(translated) => {
-                            if (isEnglishMain) {
-                              handleUpdateOptionalProgram(pIdx, 'descriptionKm', translated);
-                              handleUpdateOptionalProgram(pIdx, 'description', translated);
-                            } else {
-                              handleUpdateOptionalProgram(pIdx, 'descriptionEn', translated);
-                            }
+                          onTranslateToKm={(trans) => {
+                            handleUpdateOptionalProgram(pIdx, 'descriptionKm', trans);
+                            handleUpdateOptionalProgram(pIdx, 'description', trans);
                           }}
+                          onTranslateToEn={(trans) => handleUpdateOptionalProgram(pIdx, 'descriptionEn', trans)}
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

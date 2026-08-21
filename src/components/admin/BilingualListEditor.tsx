@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Pencil, Check, X, Sparkles, Languages, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, Sparkles, Languages, CheckCircle2, ArrowRightLeft } from 'lucide-react';
 import { FieldAiTranslator } from './FieldAiTranslator';
 import { translateArrayField, translateTextField } from '../../services/geminiService';
 import { useApp } from '../../context/AppContext';
@@ -139,7 +139,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
         <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           <span>🇰🇭 Khmer Version / ភាសាខ្មែរ {isEnglishMain ? '(Secondary)' : '(Primary)'} ({kmItems.length})</span>
         </label>
-        <span className="text-[10px] text-slate-400">Manual Edit & AI Sync</span>
+        <span className="text-[10px] text-slate-400">Smart Bi-directional Detection</span>
       </div>
 
       {/* Add Input */}
@@ -171,7 +171,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
       <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
         {kmItems.length === 0 ? (
           <p className="text-[11px] text-slate-400 italic text-center py-3">
-            {isEnglishMain ? 'No Khmer items yet. Click "AI Translate EN ➔ KM" above.' : 'មិនទាន់មានទិន្នន័យជាភាសាខ្មែរនៅឡើយទេ។'}
+            {isEnglishMain ? 'No Khmer items yet. Click "⚡ Auto-Translate All EN ➔ KM" above.' : 'មិនទាន់មានទិន្នន័យជាភាសាខ្មែរនៅឡើយទេ។'}
           </p>
         ) : (
           kmItems.map((item, i) => (
@@ -223,19 +223,18 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <FieldAiTranslator
-                      sourceText={item}
-                      sourceLang="km"
-                      targetLang="en"
+                      kmText={item}
+                      enText={enItems[i] || ''}
                       fieldHint={fieldCategoryHint}
-                      label="EN"
-                      onTranslatedText={(trans) => {
-                        if (enItems[i]) {
-                          const newEn = [...enItems];
-                          newEn[i] = trans;
-                          onEnChange(newEn);
-                        } else {
-                          onEnChange([...enItems, trans]);
-                        }
+                      onTranslateToEn={(trans) => {
+                        const newEn = [...enItems];
+                        newEn[i] = trans;
+                        onEnChange(newEn);
+                      }}
+                      onTranslateToKm={(trans) => {
+                        const newKm = [...kmItems];
+                        newKm[i] = trans;
+                        onKmChange(newKm);
                       }}
                     />
                     <button
@@ -274,7 +273,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
         <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           <span>🇺🇸 English Version {isEnglishMain ? '(Primary)' : '(Secondary)'} ({enItems.length})</span>
         </label>
-        <span className="text-[10px] text-slate-400">Manual Edit & AI Sync</span>
+        <span className="text-[10px] text-slate-400">Smart Bi-directional Detection</span>
       </div>
 
       {/* Add Input */}
@@ -308,7 +307,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
           <p className="text-[11px] text-slate-400 italic text-center py-3">
             {isEnglishMain
               ? 'No English items yet. Type above to add your first item.'
-              : 'No English items yet. Click "AI Translate KM ➔ EN" above or type manually.'}
+              : 'No English items yet. Click "⚡ Auto-Translate All KM ➔ EN" above or type manually.'}
           </p>
         ) : (
           enItems.map((item, i) => (
@@ -360,19 +359,18 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <FieldAiTranslator
-                      sourceText={item}
-                      sourceLang="en"
-                      targetLang="km"
+                      kmText={kmItems[i] || ''}
+                      enText={item}
                       fieldHint={fieldCategoryHint}
-                      label="KM"
-                      onTranslatedText={(trans) => {
-                        if (kmItems[i]) {
-                          const newKm = [...kmItems];
-                          newKm[i] = trans;
-                          onKmChange(newKm);
-                        } else {
-                          onKmChange([...kmItems, trans]);
-                        }
+                      onTranslateToKm={(trans) => {
+                        const newKm = [...kmItems];
+                        newKm[i] = trans;
+                        onKmChange(newKm);
+                      }}
+                      onTranslateToEn={(trans) => {
+                        const newEn = [...enItems];
+                        newEn[i] = trans;
+                        onEnChange(newEn);
                       }}
                     />
                     <button
@@ -422,54 +420,15 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* AI Batch Translate Buttons - Order adjusted based on platform language */}
-          {isEnglishMain ? (
-            <>
-              {enItems.length > 0 && (
-                <FieldAiTranslator
-                  sourceArray={enItems}
-                  sourceLang="en"
-                  targetLang="km"
-                  fieldHint={fieldCategoryHint}
-                  label="✨ AI Auto-Translate EN ➔ KM"
-                  onTranslatedArray={(translated) => onKmChange(translated)}
-                />
-              )}
-              {kmItems.length > 0 && (
-                <FieldAiTranslator
-                  sourceArray={kmItems}
-                  sourceLang="km"
-                  targetLang="en"
-                  fieldHint={fieldCategoryHint}
-                  label="✨ AI Translate KM ➔ EN"
-                  onTranslatedArray={(translated) => onEnChange(translated)}
-                />
-              )}
-            </>
-          ) : (
-            <>
-              {kmItems.length > 0 && (
-                <FieldAiTranslator
-                  sourceArray={kmItems}
-                  sourceLang="km"
-                  targetLang="en"
-                  fieldHint={fieldCategoryHint}
-                  label="✨ AI Translate KM ➔ EN"
-                  onTranslatedArray={(translated) => onEnChange(translated)}
-                />
-              )}
-              {enItems.length > 0 && (
-                <FieldAiTranslator
-                  sourceArray={enItems}
-                  sourceLang="en"
-                  targetLang="km"
-                  fieldHint={fieldCategoryHint}
-                  label="✨ AI Translate EN ➔ KM"
-                  onTranslatedArray={(translated) => onKmChange(translated)}
-                />
-              )}
-            </>
-          )}
+          {/* Smart Dual-Array AI Batch Translator */}
+          <FieldAiTranslator
+            kmArray={kmItems}
+            enArray={enItems}
+            fieldHint={fieldCategoryHint}
+            onTranslateArrayToKm={(translated) => onKmChange(translated)}
+            onTranslateArrayToEn={(translated) => onEnChange(translated)}
+            size="xs"
+          />
 
           {/* View Mode Toggle */}
           <div className="flex items-center bg-white dark:bg-slate-900 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
@@ -556,4 +515,3 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
     </div>
   );
 };
-

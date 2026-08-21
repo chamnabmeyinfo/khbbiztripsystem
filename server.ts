@@ -232,8 +232,8 @@ Please respond strictly with a valid JSON object in this schema:
   app.post("/api/ai-translate", async (req, res) => {
     try {
       const { text, texts, packageData, sourceLang, targetLang, fieldHint } = req.body;
-      const target = targetLang || "en";
-      const source = sourceLang || "auto";
+      let target = targetLang || "auto";
+      let source = sourceLang || "auto";
 
       const client = getAiClient();
       if (!client) {
@@ -246,7 +246,7 @@ Please respond strictly with a valid JSON object in this schema:
       // Case 1: Full Package Translation
       if (packageData && typeof packageData === "object") {
         const translatePkgPrompt = `You are a Master Multilingual Translator and Cross-Border Tourism & B2B Trade Specialist for KHB Events Business Trip System.
-Translate the following TourPackage object from ${source} to ${target}.
+Translate the following TourPackage object into target language: ${target === 'auto' ? 'English (or Khmer if input is English)' : target}.
 Maintain high professional quality, diplomatic tone, accurate business and tourism terminology, preserving emojis, formatting, numbers, currencies, and dates.
 
 SOURCE PACKAGE DATA:
@@ -261,7 +261,7 @@ TRANSLATION RULES:
 
 Respond strictly with valid JSON format:
 {
-  "summary": "1-line summary of package translation into ${target}",
+  "summary": "1-line summary of package translation",
   "translatedPackage": {
     ...complete translated package object matching the input structure...
   }
@@ -279,7 +279,7 @@ Respond strictly with valid JSON format:
             if (parsedPkg?.translatedPackage) {
               return res.json({
                 mode: "gemini_success",
-                summary: parsedPkg.summary || `Translated tour package to ${target}`,
+                summary: parsedPkg.summary || `Translated tour package`,
                 translatedPackage: parsedPkg.translatedPackage,
               });
             }
@@ -291,17 +291,17 @@ Respond strictly with valid JSON format:
 
       // Case 2: Array of texts translation
       else if (Array.isArray(texts)) {
-        const translateArrayPrompt = `You are a professional B2B business and travel translator.
-Translate the following array of strings from ${source} to ${target}.
+        const translateArrayPrompt = `You are an expert bilingual/multilingual translator for international B2B business trips and VIP travel delegations.
+Translate the following array of strings into target language: ${target === 'auto' ? 'English (or Khmer if input is in English)' : target} (Source: ${source}).
 Context / Field Type: ${fieldHint || "Tourism & business delegation content"}.
-Preserve emojis, bullet numbers, acronyms, and formatting intact.
+Preserve emojis, bullet numbers, acronyms, brand names, and formatting intact.
 
 STRINGS TO TRANSLATE:
 ${JSON.stringify(texts, null, 2)}
 
 Respond strictly in valid JSON format:
 {
-  "translatedTexts": [ ...translated strings in same array order... ]
+  "translatedTexts": [ ...translated strings in exact same array order... ]
 }`;
 
         const genResult = await generateWithModelFallback(client, translateArrayPrompt, {
@@ -325,12 +325,19 @@ Respond strictly in valid JSON format:
         }
       }
 
-      // Case 3: Single text translation
+      // Case 3: Single text translation with smart language detection
       else if (typeof text === "string" && text.trim()) {
-        const singlePrompt = `You are an expert professional translator for international B2B business trips and high-end tourism delegations.
-Translate the following text from ${source} to ${target}.
-Context / Field Type: ${fieldHint || "General travel and business text"}.
-Preserve tone, emojis, markdown formatting, brand names, and currency symbols.
+        const singlePrompt = `You are an expert professional translator specializing in English, Khmer (ភាសាខ្មែរ), Vietnamese, and Chinese for international B2B business missions and VIP tourism.
+Task: Translate the text below.
+Source Hint: ${source}
+Target Requested: ${target}
+Field Context: ${fieldHint || "General travel, business, and itinerary details"}
+
+SMART TRANSLATION INSTRUCTIONS:
+- If the source text is in English and target is 'km' or 'auto', translate naturally and accurately into fluent Khmer (ភាសាខ្មែរ).
+- If the source text is in Khmer and target is 'en' or 'auto', translate naturally and accurately into professional business English.
+- Preserve emojis, bullet points, numbers, currency symbols ($), and brand names.
+- Output only the translated text in the JSON structure.
 
 TEXT TO TRANSLATE:
 """
@@ -339,7 +346,9 @@ ${text}
 
 Respond strictly with valid JSON format:
 {
-  "translatedText": "Translated text string"
+  "detectedSourceLang": "en | km | zh | vi | other",
+  "targetLang": "en | km | zh | vi",
+  "translatedText": "Clean translated text string"
 }`;
 
         const genResult = await generateWithModelFallback(client, singlePrompt, {
@@ -354,6 +363,8 @@ Respond strictly with valid JSON format:
             if (typeof parsedSingle?.translatedText === "string") {
               return res.json({
                 mode: "gemini_success",
+                detectedSourceLang: parsedSingle.detectedSourceLang,
+                targetLang: parsedSingle.targetLang,
                 translatedText: parsedSingle.translatedText,
               });
             }
