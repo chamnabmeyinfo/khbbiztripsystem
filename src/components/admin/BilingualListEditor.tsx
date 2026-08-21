@@ -42,6 +42,51 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
   const [editingEnIdx, setEditingEnIdx] = useState<number | null>(null);
   const [editingEnText, setEditingEnText] = useState('');
 
+  // Add and Auto-Translate Handlers
+  const [isAddingWithTrans, setIsAddingWithTrans] = useState(false);
+
+  const handleAddKmWithTranslation = async () => {
+    if (!newKmText.trim() || isAddingWithTrans) return;
+    const kmStr = newKmText.trim();
+    setIsAddingWithTrans(true);
+    try {
+      const res = await translateTextField(kmStr, 'en', 'km', fieldCategoryHint);
+      const enStr = res.success && res.translatedText ? res.translatedText : '';
+      onKmChange([...kmItems, kmStr]);
+      if (enStr) {
+        onEnChange([...enItems, enStr]);
+      }
+      setNewKmText('');
+    } catch (e) {
+      console.warn('Translate on add failed:', e);
+      onKmChange([...kmItems, kmStr]);
+      setNewKmText('');
+    } finally {
+      setIsAddingWithTrans(false);
+    }
+  };
+
+  const handleAddEnWithTranslation = async () => {
+    if (!newEnText.trim() || isAddingWithTrans) return;
+    const enStr = newEnText.trim();
+    setIsAddingWithTrans(true);
+    try {
+      const res = await translateTextField(enStr, 'km', 'en', fieldCategoryHint);
+      const kmStr = res.success && res.translatedText ? res.translatedText : '';
+      onEnChange([...enItems, enStr]);
+      if (kmStr) {
+        onKmChange([...kmItems, kmStr]);
+      }
+      setNewEnText('');
+    } catch (e) {
+      console.warn('Translate on add failed:', e);
+      onEnChange([...enItems, enStr]);
+      setNewEnText('');
+    } finally {
+      setIsAddingWithTrans(false);
+    }
+  };
+
   // Add Item Handlers
   const handleAddKm = () => {
     if (!newKmText.trim()) return;
@@ -160,11 +205,24 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
         <button
           type="button"
           onClick={handleAddKm}
-          className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+          title="Add item (Khmer only)"
+          className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>+</span>
         </button>
+        {newKmText.trim() && (
+          <button
+            type="button"
+            onClick={handleAddKmWithTranslation}
+            disabled={isAddingWithTrans}
+            title="Add to Khmer list and auto-translate into English"
+            className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95 disabled:opacity-50"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>+ ➔ EN</span>
+          </button>
+        )}
       </div>
 
       {/* List */}
@@ -226,13 +284,16 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
                       kmText={item}
                       enText={enItems[i] || ''}
                       fieldHint={fieldCategoryHint}
+                      preferredDirection="km_to_en"
                       onTranslateToEn={(trans) => {
                         const newEn = [...enItems];
+                        while (newEn.length <= i) newEn.push('');
                         newEn[i] = trans;
                         onEnChange(newEn);
                       }}
                       onTranslateToKm={(trans) => {
                         const newKm = [...kmItems];
+                        while (newKm.length <= i) newKm.push('');
                         newKm[i] = trans;
                         onKmChange(newKm);
                       }}
@@ -294,11 +355,24 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
         <button
           type="button"
           onClick={handleAddEn}
-          className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+          title="Add item (English only)"
+          className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>+</span>
         </button>
+        {newEnText.trim() && (
+          <button
+            type="button"
+            onClick={handleAddEnWithTranslation}
+            disabled={isAddingWithTrans}
+            title="Add to English list and auto-translate into Khmer"
+            className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95 disabled:opacity-50"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>+ ➔ KM</span>
+          </button>
+        )}
       </div>
 
       {/* List */}
@@ -362,13 +436,16 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
                       kmText={kmItems[i] || ''}
                       enText={item}
                       fieldHint={fieldCategoryHint}
+                      preferredDirection="en_to_km"
                       onTranslateToKm={(trans) => {
                         const newKm = [...kmItems];
+                        while (newKm.length <= i) newKm.push('');
                         newKm[i] = trans;
                         onKmChange(newKm);
                       }}
                       onTranslateToEn={(trans) => {
                         const newEn = [...enItems];
+                        while (newEn.length <= i) newEn.push('');
                         newEn[i] = trans;
                         onEnChange(newEn);
                       }}

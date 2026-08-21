@@ -1070,13 +1070,12 @@ export async function parseTourPackageFromText(
 }
 
 /**
- * Smart Language Detector: Checks if text is primarily Khmer, English, or mixed
+ * Smart Language Detector: Checks if text contains Khmer script or English/Latin characters
  */
-export function detectTextLanguage(text: string): 'km' | 'en' | 'mixed' {
+export function detectTextLanguage(text: string): 'km' | 'en' {
   if (!text || !text.trim()) return 'en';
+  // Khmer Unicode ranges (\u1780-\u17FF for main block, \u19E0-\u19FF for Khmer symbols)
   const hasKhmer = /[\u1780-\u17FF\u19E0-\u19FF]/.test(text);
-  const hasLatin = /[a-zA-Z]/.test(text);
-  if (hasKhmer && hasLatin) return 'mixed';
   if (hasKhmer) return 'km';
   return 'en';
 }
@@ -1089,17 +1088,27 @@ const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> =
   "ភ្នំពេញ": { en: "Phnom Penh", zh: "金边", vi: "Phnôm Pênh" },
   "Phnom Penh": { km: "ភ្នំពេញ", zh: "金边", vi: "Phnôm Pênh" },
   "ហូជីមិញ": { en: "Ho Chi Minh City", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
+  "ទីក្រុងហូជីមិញ": { en: "Ho Chi Minh City", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
   "Ho Chi Minh": { km: "ហូជីមិញ", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
   "Ho Chi Minh City": { km: "ទីក្រុងហូជីមិញ", zh: "胡志明市", vi: "Thành phố Hồ Chí Minh" },
   "កោះត្រល់": { en: "Phu Quoc Island", zh: "富国岛", vi: "Đảo Phú Quốc" },
+  "ភូកុក": { en: "Phu Quoc Island", zh: "富国岛", vi: "Đảo Phú Quốc" },
   "Phu Quoc": { km: "កោះត្រល់", zh: "富国岛", vi: "Đảo Phú Quốc" },
   "Phu Quoc Island": { km: "កោះត្រល់", zh: "富国岛", vi: "Đảo Phú Quốc" },
   "បាងកក": { en: "Bangkok", zh: "曼谷", vi: "Băng Cốc" },
   "Bangkok": { km: "បាងកក", zh: "曼谷", vi: "Băng Cốc" },
+  "ប៉ាតាយ៉ា": { en: "Pattaya", zh: "芭提雅", vi: "Pattaya" },
+  "Pattaya": { km: "ប៉ាតាយ៉ា", zh: "芭提雅", vi: "Pattaya" },
   "ក្វាងចូវ": { en: "Guangzhou", zh: "广州", vi: "Quảng Châu" },
   "Guangzhou": { km: "ក្វាងចូវ", zh: "广州", vi: "Quảng Châu" },
+  "ស៊ិនជិន": { en: "Shenzhen", zh: "深圳", vi: "Thâm Quyến" },
+  "Shenzhen": { km: "ស៊ិនជិន", zh: "深圳", vi: "Thâm Quyến" },
+  "សៀងហៃ": { en: "Shanghai", zh: "上海", vi: "Thượng Hải" },
+  "Shanghai": { km: "សៀងហៃ", zh: "上海", vi: "Thượng Hải" },
   "តូក្យូ": { en: "Tokyo", zh: "东京", vi: "Tokyo" },
   "Tokyo": { km: "តូក្យូ", zh: "东京", vi: "Tokyo" },
+  "អូសាកា": { en: "Osaka", zh: "大阪", vi: "Osaka" },
+  "Osaka": { km: "អូសាកា", zh: "大阪", vi: "Osaka" },
   "សៀមរាប": { en: "Siem Reap", zh: "暹粒", vi: "Siem Reap" },
   "Siem Reap": { km: "សៀមរាប", zh: "暹粒", vi: "Siem Reap" },
   "កំពត": { en: "Kampot", zh: "贡布", vi: "Kampot" },
@@ -1122,6 +1131,8 @@ const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> =
   "China": { km: "ចិន", zh: "中国", vi: "Trung Quốc" },
   "ជប៉ុន": { en: "Japan", zh: "日本", vi: "Nhật Bản" },
   "Japan": { km: "ជប៉ុន", zh: "日本", vi: "Nhật Bản" },
+  "កូរ៉េខាងត្បូង": { en: "South Korea", zh: "韩国", vi: "Hàn Quốc" },
+  "South Korea": { km: "កូរ៉េខាងត្បូង", zh: "韩国", vi: "Hàn Quốc" },
   "កម្ពុជា": { en: "Cambodia", zh: "柬埔寨", vi: "Campuchia" },
   "Cambodia": { km: "កម្ពុជា", zh: "柬埔寨", vi: "Campuchia" },
   "ម៉ាឡេស៊ី": { en: "Malaysia", zh: "马来西亚", vi: "Malaysia" },
@@ -1129,7 +1140,8 @@ const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> =
 
   // Business & Tourism Missions
   "ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្ម": { en: "Business Trade Mission", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
-  "Business Trade Mission": { km: "ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្ម", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
+  "ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម": { en: "Business Trade Mission", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
+  "Business Trade Mission": { km: "ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
   "ពិព័រណ៍": { en: "Trade Exhibition & Expo", zh: "国际博览会", vi: "Hội Chợ Triển Lãm" },
   "Exhibition": { km: "ពិព័រណ៍ពាណិជ្ជកម្ម", zh: "展览会", vi: "Triển lãm" },
   "Trade Mission": { km: "បេសកកម្មពាណិជ្ជកម្ម", zh: "商务考察团", vi: "Đoàn Xúc Tiến Thương Mại" },
@@ -1137,36 +1149,49 @@ const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> =
   "ពិព័រណ៍ក្វាងចូវ": { en: "Guangzhou Canton Fair", zh: "广州交易会", vi: "Hội chợ Quảng Châu" },
   "សណ្ឋាគារ": { en: "Hotel", zh: "酒店", vi: "Khách sạn" },
   "Hotel": { km: "សណ្ឋាគារ", zh: "酒店", vi: "Khách sạn" },
-  "សណ្ឋាគារ ៤ ផ្កាយ": { en: "4-Star Hotel", zh: "4星级酒店", vi: "Khách sạn 4 sao" },
+  "សណ្ឋាគារ ៤ ផ្កាយ": { en: "4-Star Luxury Hotel", zh: "4星级豪华酒店", vi: "Khách sạn sang trọng 4 sao" },
+  "សណ្ឋាគារ ៥ ផ្កាយ": { en: "5-Star Luxury Hotel", zh: "5星级豪华酒店", vi: "Khách sạn sang trọng 5 sao" },
   "4-Star Hotel": { km: "សណ្ឋាគារ ៤ ផ្កាយ", zh: "4星级酒店", vi: "Khách sạn 4 sao" },
-  "អាហារពេលព្រឹក": { en: "Breakfast", zh: "早餐", vi: "Bữa sáng" },
+  "5-Star Hotel": { km: "សណ្ឋាគារ ៥ ផ្កាយ", zh: "5星级酒店", vi: "Khách sạn 5 sao" },
+  "អាហារពេលព្រឹក": { en: "Breakfast Included", zh: "含早餐", vi: "Bao gồm bữa sáng" },
   "Breakfast": { km: "អាហារពេលព្រឹក", zh: "早餐", vi: "Bữa sáng" },
-  "អាហារថ្ងៃត្រង់": { en: "Lunch", zh: "午餐", vi: "Bữa trưa" },
+  "អាហារថ្ងៃត្រង់": { en: "Lunch Included", zh: "含午餐", vi: "Bao gồm bữa trưa" },
   "Lunch": { km: "អាហារថ្ងៃត្រង់", zh: "午餐", vi: "Bữa trưa" },
-  "អាហារពេលល្ងាច": { en: "Dinner", zh: "晚餐", vi: "Bữa tối" },
+  "អាហារពេលល្ងាច": { en: "Dinner Included", zh: "含晚餐", vi: "Bao gồm bữa tối" },
   "Dinner": { km: "អាហារពេលល្ងាច", zh: "晚餐", vi: "Bữa tối" },
   "Welcome Dinner": { km: "អាហារពេលល្ងាចទទួលស្វាគមន៍", zh: "欢迎晚宴", vi: "Tiệc tối chào mừng" },
   "Buffet Breakfast": { km: "អាហារពេលព្រឹកប៊ូហ្វេ", zh: "自助早餐", vi: "Buffet sáng" },
-  "រថយន្តក្រុង VIP": { en: "VIP Luxury Coach", zh: "VIP豪华大巴", vi: "Xe Khách VIP" },
-  "VIP Coach": { km: "រថយន្តក្រុង VIP", zh: "VIP大巴", vi: "Xe VIP" },
+  "Gala Dinner": { km: "ពិធីជប់លៀង Gala Dinner ជាន់ខ្ពស់", zh: "高端晚宴", vi: "Tiệc tối Gala sang trọng" },
+  "រថយន្តក្រុង VIP": { en: "VIP Luxury Coach Transport", zh: "VIP豪华空调大巴接送", vi: "Xe Khách VIP Đưa Đón" },
+  "VIP Coach": { km: "រថយន្តក្រុង VIP ទំនើប", zh: "VIP大巴", vi: "Xe VIP" },
   "VIP Luxury Coach": { km: "រថយន្តក្រុង VIP ទំនើប", zh: "VIP豪华大巴", vi: "Xe Khách VIP" },
-  "មគ្គុទ្ទេសក៍ទេសចរណ៍": { en: "Tour Guide & Coordinator", zh: "随团导游与协调员", vi: "Hướng Dẫn Viên" },
+  "មគ្គុទ្ទេសក៍ទេសចរណ៍": { en: "Bilingual Tour Guide & Coordinator", zh: "双语导游与协调员", vi: "Hướng Dẫn Viên Song Ngữ" },
   "Tour Guide": { km: "មគ្គុទ្ទេសក៍ទេសចរណ៍", zh: "导游", vi: "Hướng Dẫn Viên" },
   "Lead Coordinator": { km: "ប្រធានសម្របសម្រួលជាន់ខ្ពស់", zh: "首席协调员", vi: "Trưởng điều phối" },
-  "ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយ": { en: "4-Star Hotel Accommodation", zh: "4星级酒店住宿", vi: "Lưu trú khách sạn 4 sao" },
+  "ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយ": { en: "4-Star Hotel Accommodation (Twin/Double)", zh: "4星级酒店双人标间住宿", vi: "Lưu trú khách sạn 4 sao phòng đôi" },
   "4-Star Hotel Accommodation": { km: "ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយ", zh: "4星级酒店住宿", vi: "Lưu trú khách sạn 4 sao" },
-  "សេវាសម្រួលបែបបទឆ្លងដែន VIP": { en: "VIP Fast-Track Border Clearance", zh: "VIP快速通关服务", vi: "Dịch vụ thông quan VIP nhanh" },
+  "សេវាសម្រួលបែបបទឆ្លងដែន VIP": { en: "VIP Fast-Track Border & Immigration Clearance", zh: "VIP快速通关服务", vi: "Dịch vụ thông quan VIP nhanh" },
   "VIP Fast-Track Border Clearance": { km: "សេវាសម្រួលបែបបទឆ្លងដែន VIP", zh: "VIP快速通关服务", vi: "Dịch vụ thông quan VIP nhanh" },
-  "លិខិតឆ្លងដែន": { en: "Passport", zh: "护照", vi: "Hộ chiếu" },
+  "លិខិតឆ្លងដែន": { en: "Passport (Minimum 6 Months Validity)", zh: "护照（有效期6个月以上）", vi: "Hộ chiếu (còn hạn trên 6 tháng)" },
   "Passport": { km: "លិខិតឆ្លងដែន", zh: "护照", vi: "Hộ chiếu" },
-  "កាតចូលទស្សនាពិព័រណ៍": { en: "Official Expo Entry Pass", zh: "官方展会入场证", vi: "Thẻ tham quan hội chợ chính thức" },
+  "កាតចូលទស្សនាពិព័រណ៍": { en: "Official VIP Expo Delegate Badge", zh: "官方VIP展会入场证", vi: "Thẻ đại biểu VIP tham quan hội chợ" },
   "Official Expo Entry Pass": { km: "កាតផ្លូវការចូលទស្សនាពិព័រណ៍", zh: "官方展会入场证", vi: "Thẻ tham quan hội chợ chính thức" },
-  "ជើងហោះហើរ": { en: "Flight Ticket", zh: "机票", vi: "Vé máy bay" },
+  "ជើងហោះហើរ": { en: "Round-Trip Flight Tickets", zh: "往返机票", vi: "Vé máy bay khứ hồi" },
   "Flight": { km: "ជើងហោះហើរ", zh: "航班", vi: "Chuyến bay" },
   "Domestic Flight": { km: "ជើងហោះហើរក្នុងស្រុក", zh: "国内航班", vi: "Chuyến bay nội địa" },
   "High-Speed Ferry": { km: "កប៉ាល់ល្បឿនលឿន", zh: "高速快艇", vi: "Tàu cao tốc" },
   "High-Speed Train": { km: "រថភ្លើងល្បឿនលឿន", zh: "高铁", vi: "Tàu cao tốc" },
-  "រថភ្លើងល្បឿនលឿន": { en: "High-Speed Train", zh: "高铁", vi: "Tàu cao tốc" },
+  "រថភ្លើងល្បឿនលឿន": { en: "High-Speed Train Ticket", zh: "高铁票", vi: "Vé tàu cao tốc" },
+  "ការធានារ៉ាប់រងការធ្វើដំណើរ": { en: "Comprehensive Travel & Medical Insurance", zh: "综合旅行与医疗保险", vi: "Bảo hiểm du lịch toàn diện" },
+  "Travel Insurance": { km: "ការធានារ៉ាប់រងការធ្វើដំណើរ", zh: "旅行保险", vi: "Bảo hiểm du lịch" },
+  "ទឹកបរិសុទ្ធ និងកន្សែងត្រជាក់": { en: "Complimentary Bottled Water & Refreshments", zh: "免费瓶装水与纸巾", vi: "Nước suối và khăn lạnh miễn phí" },
+  "Water & Towels": { km: "ទឹកបរិសុទ្ធ និងកន្សែងត្រជាក់", zh: "瓶装水与纸巾", vi: "Nước uống và khăn lạnh" },
+  "ជំនួបពាណិជ្ជកម្ម B2B": { en: "B2B Business Matchmaking & Networking Sessions", zh: "B2B商业对接会", vi: "Kết nối giao thương B2B" },
+  "B2B Matchmaking": { km: "ជំនួបពាណិជ្ជកម្ម និងផ្គូផ្គងដៃគូ B2B", zh: "B2B商业配对", vi: "Khớp nối giao thương B2B" },
+  "ទស្សនកិច្ចរោងចក្រ": { en: "Exclusive Industrial Factory Tour & Sourcing", zh: "实地工厂考察与采购", vi: "Tham quan nhà máy thực tế" },
+  "Factory Tour": { km: "ដំណើរទស្សនកិច្ចរោងចក្រផលិតផល", zh: "工厂参观", vi: "Tham quan nhà máy" },
+  "ការទិញសិទ្ធិអាជីវកម្ម Franchise": { en: "Franchise Licensing Opportunities & Consultation", zh: "特许经营加盟咨询与机会", vi: "Tư vấn nhượng quyền thương hiệu Franchise" },
+  "Franchise Licensing": { km: "ឱកាសទិញសិទ្ធិអាជីវកម្ម Franchise", zh: "特许经营加盟", vi: "Nhượng quyền thương hiệu" },
 
   // Days & Itinerary
   "ថ្ងៃទី 1": { en: "Day 1", zh: "第一天", vi: "Ngày 1" },
@@ -1174,11 +1199,15 @@ const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> =
   "ថ្ងៃទី 3": { en: "Day 3", zh: "第三天", vi: "Ngày 3" },
   "ថ្ងៃទី 4": { en: "Day 4", zh: "第四天", vi: "Ngày 4" },
   "ថ្ងៃទី 5": { en: "Day 5", zh: "第五天", vi: "Ngày 5" },
+  "ថ្ងៃទី 6": { en: "Day 6", zh: "第六天", vi: "Ngày 6" },
+  "ថ្ងៃទី 7": { en: "Day 7", zh: "第七天", vi: "Ngày 7" },
   "Day 1": { km: "ថ្ងៃទី ១", zh: "第一天", vi: "Ngày 1" },
   "Day 2": { km: "ថ្ងៃទី ២", zh: "第二天", vi: "Ngày 2" },
   "Day 3": { km: "ថ្ងៃទី ៣", zh: "第三天", vi: "Ngày 3" },
   "Day 4": { km: "ថ្ងៃទី ៤", zh: "第四天", vi: "Ngày 4" },
-  "Day 5": { km: "ថ្ងៃទី ៥", zh: "第五天", vi: "Ngày 5" }
+  "Day 5": { km: "ថ្ងៃទី ៥", zh: "第五天", vi: "Ngày 5" },
+  "Day 6": { km: "ថ្ងៃទី ៦", zh: "第六天", vi: "Ngày 6" },
+  "Day 7": { km: "ថ្ងៃទី ៧", zh: "第七天", vi: "Ngày 7" }
 };
 
 /**
@@ -1198,13 +1227,13 @@ export async function translateTextField(
   const detected = detectTextLanguage(trimmed);
 
   // Smart Auto Language Direction:
-  // If text contains Khmer characters -> Source is Khmer ('km'), Target is English ('en') unless specified otherwise.
-  // If text contains English characters and no Khmer -> Source is English ('en'), Target is Khmer ('km') unless specified otherwise.
+  // If text contains Khmer characters -> Source is Khmer ('km'), Target is English ('en') unless explicitly set to another language.
+  // If text is in Latin/English -> Source is English ('en'), Target is Khmer ('km') unless explicitly set.
   let resolvedSource = sourceLang;
   let resolvedTarget = targetLang;
 
   if (resolvedSource === 'auto' || !resolvedSource) {
-    resolvedSource = detected === 'km' ? 'km' : 'en';
+    resolvedSource = detected;
   }
 
   if (resolvedTarget === 'auto' || !resolvedTarget || resolvedTarget === resolvedSource) {
@@ -1249,11 +1278,34 @@ export async function translateTextField(
     };
   }
 
+  // Case-insensitive / whitespace-tolerant match
+  for (const [keyWord, translations] of Object.entries(TRAVEL_TRANSLATION_FALLBACK_DICT)) {
+    if (keyWord.toLowerCase() === trimmed.toLowerCase() && translations[resolvedTarget]) {
+      return {
+        success: true,
+        translatedText: translations[resolvedTarget],
+        detectedLang: resolvedSource
+      };
+    }
+  }
+
   // Substring replacement
   for (const [keyWord, translations] of Object.entries(TRAVEL_TRANSLATION_FALLBACK_DICT)) {
     if (fallback.includes(keyWord) && translations[resolvedTarget]) {
       fallback = fallback.split(keyWord).join(translations[resolvedTarget]);
     }
+  }
+
+  // Day pattern conversion (e.g. Day 1 -> ថ្ងៃទី 1 or ថ្ងៃទី 1 -> Day 1)
+  if (resolvedTarget === 'km') {
+    fallback = fallback.replace(/\bDay\s*(\d+)\b/gi, 'ថ្ងៃទី $1');
+  } else if (resolvedTarget === 'en') {
+    fallback = fallback.replace(/ថ្ងៃទី\s*(\d+)/gi, 'Day $1');
+    fallback = fallback.replace(/ថ្ងៃទី\s*([០-៩]+)/gi, (_m, khmerNum) => {
+      const kmToNum: Record<string, string> = { '០': '0', '១': '1', '២': '2', '៣': '3', '៤': '4', '៥': '5', '៦': '6', '៧': '7', '៨': '8', '៩': '9' };
+      const engNum = khmerNum.split('').map((c: string) => kmToNum[c] || c).join('');
+      return `Day ${engNum}`;
+    });
   }
 
   return { success: true, translatedText: fallback, detectedLang: resolvedSource };
@@ -1264,12 +1316,13 @@ export async function translateTextField(
  * Inspects both fields (Khmer & English):
  * - If English is present and Khmer is blank: Auto-translates EN -> KM
  * - If Khmer is present and English is blank: Auto-translates KM -> EN
- * - If both are present: Translates the active or specified source
+ * - If both are present: Translates based on specified direction or default
  */
 export async function smartTranslateFieldPair(params: {
   kmText?: string;
   enText?: string;
   fieldHint?: string;
+  forceDirection?: 'km_to_en' | 'en_to_km' | 'auto';
 }): Promise<{
   success: boolean;
   targetField: 'km' | 'en' | 'none';
@@ -1278,6 +1331,28 @@ export async function smartTranslateFieldPair(params: {
 }> {
   const km = (params.kmText || '').trim();
   const en = (params.enText || '').trim();
+  const dir = params.forceDirection || 'auto';
+
+  // Explicit forced direction
+  if (dir === 'en_to_km' && en.length > 0) {
+    const res = await translateTextField(en, 'km', 'en', params.fieldHint);
+    return {
+      success: res.success,
+      targetField: 'km',
+      translatedText: res.translatedText,
+      message: `✨ Translated English ➔ Khmer (🇰🇭)`
+    };
+  }
+
+  if (dir === 'km_to_en' && km.length > 0) {
+    const res = await translateTextField(km, 'en', 'km', params.fieldHint);
+    return {
+      success: res.success,
+      targetField: 'en',
+      translatedText: res.translatedText,
+      message: `✨ Translated Khmer ➔ English (🇺🇸)`
+    };
+  }
 
   // Condition 1: English has text, Khmer is blank -> Translate English to Khmer
   if (en.length > 0 && km.length === 0) {
@@ -1301,9 +1376,9 @@ export async function smartTranslateFieldPair(params: {
     };
   }
 
-  // Condition 3: Both are present -> Check script or update English from Khmer by default
+  // Condition 3: Both are present -> Translate based on script content
   if (km.length > 0 && en.length > 0) {
-    // If one of them has Khmer and other is English, we can translate Khmer to English
+    // If en is actually English and km is Khmer, translate Khmer to English
     const res = await translateTextField(km, 'en', 'km', params.fieldHint);
     return {
       success: res.success,
