@@ -1,0 +1,6 @@
+{
+  "name": "KHB EVENTS - Tour Package Booking & Management Platform",
+  "description": "Full-stack travel booking platform with marketing website, customer booking portal, and admin back-office for KHB EVENTS with invoicing and tax reporting.",
+  "requestFramePermissions": ["geolocation", "notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

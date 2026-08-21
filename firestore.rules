@@ -1,0 +1,137 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Connection health check
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Global Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'chamnabmey.info@gmail.com' ||
+        request.auth.token.email == 'vutha.tim@khbmedia.asia' ||
+        request.auth.token.email.matches('.*@khbmedia\\.asia$') ||
+        request.auth.token.email.matches('.*@khbevents\\.com$') ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+    
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Expedition Tour Packages Catalog
+    match /packages/{packageId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Bookings & Reservations
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Tax & VAT Invoices
+    match /invoices/{invoiceId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Concierge Support Messages & Chats
+    match /support_messages/{messageId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /support_chats/{chatId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ── ERP: A-to-Z Trip Business Management ──────────────────────────────────────────────
+
+    // Suppliers Registry
+    match /suppliers/{supplierId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Cost Templates (per-package costing)
+    match /cost_templates/{templateId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Purchase Orders
+    match /purchase_orders/{poId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Customer Payments (inbound)
+    match /customer_payments/{paymentId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Supplier Payments (outbound)
+    match /supplier_payments/{paymentId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Expenses
+    match /expenses/{expenseId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Cash Flow Entries
+    match /cash_flow_entries/{entryId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Security & Administrative Audit Logs
+    match /audit_logs/{logId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // System Settings & Global Config
+    match /system_settings/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Deleted Items (Trash Bin & Soft Delete Records)
+    match /deleted_items/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

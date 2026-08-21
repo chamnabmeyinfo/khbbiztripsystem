@@ -1,0 +1,223 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and traveler preferences",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "name": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["customer", "admin", "agent"] },
+        "preferredCurrency": { "type": "string", "enum": ["USD", "EUR", "GBP", "JPY", "AED", "ILS"] },
+        "preferredLanguage": { "type": "string", "enum": ["en", "ar", "he", "es", "ja", "km"] },
+        "biometricEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "email", "name", "role"]
+    },
+    "TourPackage": {
+      "title": "TourPackage",
+      "description": "Expedition tour package inventory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "destination": { "type": "string", "maxLength": 128 },
+        "country": { "type": "string", "maxLength": 128 },
+        "durationDays": { "type": "number" },
+        "priceUSD": { "type": "number" },
+        "discountPriceUSD": { "type": "number" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "description": { "type": "string", "maxLength": 2048 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "title", "destination", "country", "priceUSD", "durationDays"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Traveler tour reservation with voucher & payment info",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "bookingCode": { "type": "string", "maxLength": 64 },
+        "packageId": { "type": "string", "maxLength": 128 },
+        "packageTitle": { "type": "string", "maxLength": 256 },
+        "packageDestination": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 128 },
+        "userEmail": { "type": "string", "maxLength": 256 },
+        "userPhone": { "type": "string", "maxLength": 64 },
+        "totalPriceUSD": { "type": "number" },
+        "status": { "type": "string", "enum": ["confirmed", "pending", "completed", "cancelled"] },
+        "startDate": { "type": "string", "maxLength": 64 },
+        "endDate": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "bookingCode", "packageId", "userId", "userName", "userEmail", "totalPriceUSD", "status"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Statutory tax invoice for VAT & tourism levies",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "invoiceNumber": { "type": "string", "maxLength": 64 },
+        "bookingId": { "type": "string", "maxLength": 128 },
+        "bookingCode": { "type": "string", "maxLength": 64 },
+        "customerName": { "type": "string", "maxLength": 128 },
+        "customerEmail": { "type": "string", "maxLength": 256 },
+        "subtotalUSD": { "type": "number" },
+        "taxRatePercent": { "type": "number" },
+        "taxAmountUSD": { "type": "number" },
+        "totalUSD": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["paid", "pending", "refunded"] },
+        "issueDate": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "invoiceNumber", "bookingId", "totalUSD", "paymentStatus"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Vendor and partner profile registry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string" },
+        "country": { "type": "string" },
+        "city": { "type": "string" },
+        "contactName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "status": { "type": "string" },
+        "totalPOsUSD": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "name", "type", "country", "status"]
+    },
+    "CostTemplate": {
+      "title": "CostTemplate",
+      "description": "Per-package cost breakdown and markup calculation template",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "packageId": { "type": "string", "maxLength": 128 },
+        "packageTitle": { "type": "string", "maxLength": 256 },
+        "minGroupSize": { "type": "number" },
+        "adultMarginPercent": { "type": "number" },
+        "recommendedPriceAdultUSD": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "packageId", "packageTitle"]
+    },
+    "PurchaseOrder": {
+      "title": "PurchaseOrder",
+      "description": "Procurement orders issued to suppliers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "poNumber": { "type": "string", "maxLength": 64 },
+        "supplierId": { "type": "string", "maxLength": 128 },
+        "supplierName": { "type": "string", "maxLength": 128 },
+        "totalUSD": { "type": "number" },
+        "status": { "type": "string" },
+        "issueDate": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "poNumber", "supplierId", "totalUSD", "status"]
+    },
+    "CustomerPayment": {
+      "title": "CustomerPayment",
+      "description": "Inbound client settlements & deposits",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "bookingId": { "type": "string", "maxLength": 128 },
+        "amountUSD": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "bookingId", "amountUSD", "status"]
+    },
+    "SupplierPayment": {
+      "title": "SupplierPayment",
+      "description": "Outbound vendor disbursements",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "poId": { "type": "string", "maxLength": 128 },
+        "supplierId": { "type": "string", "maxLength": 128 },
+        "amountUSD": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "poId", "supplierId", "amountUSD", "status"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Direct operational trip expenses and administrative overhead",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "description": { "type": "string", "maxLength": 256 },
+        "category": { "type": "string" },
+        "amountUSD": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "description", "category", "amountUSD", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "User" },
+      "description": "User profiles and settings restricted to owner and admin"
+    },
+    "/packages/{packageId}": {
+      "schema": { "$ref": "TourPackage" },
+      "description": "Global expedition packages catalog readable by all, writable by admin"
+    },
+    "/bookings/{bookingId}": {
+      "schema": { "$ref": "Booking" },
+      "description": "Reservations created and accessed by customer owner or tour desk admin"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": { "$ref": "Invoice" },
+      "description": "VAT & tax receipts accessible by booking owner or admin"
+    },
+    "/suppliers/{supplierId}": {
+      "schema": { "$ref": "Supplier" },
+      "description": "Supplier & vendor partner master directory"
+    },
+    "/cost_templates/{templateId}": {
+      "schema": { "$ref": "CostTemplate" },
+      "description": "Per-package cost breakdown templates"
+    },
+    "/purchase_orders/{poId}": {
+      "schema": { "$ref": "PurchaseOrder" },
+      "description": "Purchase orders issued to suppliers"
+    },
+    "/customer_payments/{paymentId}": {
+      "schema": { "$ref": "CustomerPayment" },
+      "description": "Client payments and receipts"
+    },
+    "/supplier_payments/{paymentId}": {
+      "schema": { "$ref": "SupplierPayment" },
+      "description": "Supplier payment disbursements"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "Expense" },
+      "description": "Operational expense logs and receipts"
+    },
+    "/system_settings/{docId}": {
+      "schema": { "$ref": "SystemSettings" },
+      "description": "Global system configuration, payment gateway keys, and VAT tax parameters"
+    },
+    "/deleted_items/{docId}": {
+      "schema": { "$ref": "DeletedItemRecord" },
+      "description": "Soft deleted items and trash bin recovery logs"
+    }
+  }
+}

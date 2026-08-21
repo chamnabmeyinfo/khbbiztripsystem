@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-khmer {
+    font-family: 'Hanuman', 'Battambang', 'Kantumruy Pro', system-ui, -apple-system, sans-serif;
+  }
+  .font-hanuman {
+    font-family: 'Hanuman', 'Battambang', system-ui, -apple-system, sans-serif;
+  }
+  .font-battambang {
+    font-family: 'Battambang', 'Hanuman', system-ui, -apple-system, sans-serif;
+  }
+  .font-arabic {
+    font-family: 'Noto Sans Arabic', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  }
+  .font-hebrew {
+    font-family: 'Noto Sans Hebrew', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  }
+  .font-japanese {
+    font-family: 'Noto Sans JP', system-ui, -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  }
+
+  /* Universal button and badge flex alignment utility */
+  .btn-flex,
+  .btn-unified {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-flex > svg,
+  .btn-unified > svg,
+  .btn-icon-wrapper > svg,
+  button > svg {
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+
+  .btn-label,
+  .btn-text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  .btn-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    height: 22px !important;
+    padding: 0 10px !important;
+    border-radius: 9999px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Global button and interactive element flex-alignment defaults */
+button,
+[role="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+button svg,
+[role="button"] svg {
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  html, body {
+    width: 210mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+  img {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    max-width: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+  }
+  .pdf-a4-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    padding: 14mm 16mm 12mm 16mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    page-break-before: auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  .pdf-a4-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-bottom: 0 !important;
+  }
+  [data-pdf-block] {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
