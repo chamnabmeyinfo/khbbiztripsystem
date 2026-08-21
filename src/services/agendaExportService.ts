@@ -3,7 +3,16 @@ import html2canvas from 'html2canvas';
 import { TourPackage, ItineraryStep, GuideScheduleSlot, TourGuide, LanguageCode, SystemSettings } from '../types';
 import { getLocalizedPackage } from '../utils/packageLocalization';
 import { getPdfLabels, PdfLabels } from './pdfTranslations';
-import { getThemeColors, getTypographySettings, generateThemeCssString, ThemePalette } from './aiThemeService';
+import {
+  getThemeColors,
+  getTypographySettings,
+  generateThemeCssString,
+  getResolvedThemePalette,
+  getResolvedTypography,
+  getThemeGoogleFontsUrl,
+  generateThemeCssVariables,
+  ThemePalette,
+} from './aiThemeService';
 
 import notoSansKhmerRegular from '@expo-google-fonts/noto-sans-khmer/400Regular/NotoSansKhmer_400Regular.ttf';
 import notoSansKhmerBold from '@expo-google-fonts/noto-sans-khmer/700Bold/NotoSansKhmer_700Bold.ttf';
@@ -35,12 +44,12 @@ export interface AgendaExportOptions {
 }
 
 export function getExportColors(settings?: SystemSettings) {
-  const colors = getThemeColors(settings);
+  const palette = getResolvedThemePalette(settings);
   return {
-    navy: colors.secondary || '#0f172a',
-    sky: colors.primary || '#0284c7',
-    skyDark: colors.primaryHover || '#0369a1',
-    skyLight: '#bae6fd',
+    navy: palette.secondary || '#0f172a',
+    sky: palette.primary || '#0284c7',
+    skyDark: palette.primaryHover || palette.primary || '#0369a1',
+    skyLight: palette.presetKey === 'emerald' ? '#d1fae5' : palette.presetKey === 'crimson' ? '#ffe4e6' : palette.presetKey === 'indigo' ? '#e0e7ff' : palette.presetKey === 'amber' ? '#fef3c7' : palette.presetKey === 'cyan' ? '#cffafe' : '#bae6fd',
     slate50: '#f8fafc',
     slate100: '#f1f5f9',
     slate200: '#e2e8f0',
@@ -50,9 +59,9 @@ export function getExportColors(settings?: SystemSettings) {
     slate600: '#475569',
     slate700: '#334155',
     slate800: '#1e293b',
-    amber50: '#fef3c7',
+    amber50: '#fffbeb',
     amber200: '#fde68a',
-    amber500: colors.accent || '#f59e0b',
+    amber500: palette.accent || '#f59e0b',
     amber800: '#92400e',
     emerald50: '#f0fdf4',
     emerald200: '#bbf7d0',
@@ -66,9 +75,12 @@ export function getExportColors(settings?: SystemSettings) {
     blue200: '#bfdbfe',
     blue900: '#1e3a8a',
     white: '#ffffff',
-    indigo: '#6366f1',
+    indigo: palette.presetKey === 'indigo' ? palette.primary : '#6366f1',
+    accentGlow: palette.accentGlow || 'rgba(245, 158, 11, 0.25)',
   };
 }
+
+let C = getExportColors();
 
 function escapeHtml(text: string): string {
   return String(text || '')
@@ -111,20 +123,17 @@ function getStepAgendaSlots(step: ItineraryStep, labels: PdfLabels): GuideSchedu
   ];
 }
 
-function getFontFamily(lang: LanguageCode): string {
-  if (lang === 'km') return "'Noto Sans Khmer', Arial, sans-serif";
+function getFontFamily(lang: LanguageCode, settings?: SystemSettings): string {
+  const typo = getResolvedTypography(settings);
+  if (lang === 'km') return typo.khmerFont;
   if (lang === 'ar') return "'Noto Sans Arabic', Arial, sans-serif";
   if (lang === 'he') return "'Noto Sans Hebrew', Arial, sans-serif";
   if (lang === 'ja') return "'Noto Sans JP', Arial, sans-serif";
-  return "Arial, 'Helvetica Neue', Helvetica, sans-serif";
+  return typo.latinFont;
 }
 
-function getGoogleFontsHref(lang: LanguageCode): string {
-  if (lang === 'km') return 'https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;700&display=swap';
-  if (lang === 'ar') return 'https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap';
-  if (lang === 'he') return 'https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;700&display=swap';
-  if (lang === 'ja') return 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap';
-  return '';
+function getGoogleFontsHref(lang?: LanguageCode): string {
+  return getThemeGoogleFontsUrl();
 }
 
 function buildFontFaceCSS(lang: LanguageCode): string {
@@ -586,6 +595,10 @@ function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels, settings?
 }
 
 function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; selectedOptionalProgramIds: string[]; watermark?: WatermarkOptions; systemSettings?: SystemSettings }, lang: LanguageCode = 'en'): string[] {
+  // Sync color palette for this render pass
+  C = getExportColors(opts.systemSettings);
+  const typo = getResolvedTypography(opts.systemSettings);
+
   const dir = (lang === 'ar' || lang === 'he') ? 'rtl' : 'ltr';
   const docRef = `KHB-AGN-${pkg.id.slice(0, 8).toUpperCase()}`;
 
@@ -610,7 +623,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     itineraryPages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13.5px;font-weight:bold;color:${getExportColors(opts.systemSettings).navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
+        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
         ${buildItineraryDays(itinerarySteps, labels, opts.systemSettings)}
       </div>
     `);
@@ -618,14 +631,14 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     itineraryPages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13.5px;font-weight:bold;color:${getExportColors(opts.systemSettings).navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 1)</div>
+        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 1)</div>
         ${buildItineraryDays(itinerarySteps.slice(0, 2), labels, opts.systemSettings)}
       </div>
     `);
     itineraryPages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13.5px;font-weight:bold;color:${getExportColors(opts.systemSettings).navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 2)</div>
+        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 2)</div>
         ${buildItineraryDays(itinerarySteps.slice(2), labels, opts.systemSettings)}
       </div>
     `);
@@ -690,7 +703,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   return allPageBodies.map((content, idx) => {
     const pageNum = idx + 1;
     return `
-    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang)};width:100%;max-width:794px;min-height:1123px;padding:32px 36px 30px 36px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:30px;">
+    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:32px 36px 30px 36px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:30px;">
       ${watermarkHtml}
       <div style="flex:1;display:flex;flex-direction:column;margin-bottom:24px;width:100%;box-sizing:border-box;position:relative;z-index:1;">
         ${content}
@@ -740,9 +753,9 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
   const cleanTitle = escapeHtml(pkg.title);
   const cleanDesc = escapeHtml(`📍 ${pkg.destination}, ${pkg.country} • 🗓️ ${pkg.durationDays} Days / ${pkg.durationNights} Nights • 💼 Official B2B Trade Mission Agenda`);
   const cleanImage = escapeHtml(pkg.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80');
-
-  const colors = getThemeColors(settings);
-  const themeCss = generateThemeCssString(settings);
+  const palette = getResolvedThemePalette(settings);
+  const typo = getResolvedTypography(settings);
+  const themeCss = generateThemeCssVariables(settings);
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
@@ -766,7 +779,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
 <meta name="twitter:description" content="${cleanDesc}">
 <meta name="twitter:image" content="${cleanImage}">
 
-<meta name="theme-color" content="${colors.secondary}">
+<meta name="theme-color" content="${palette.secondary}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
@@ -777,7 +790,6 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
 
 <style>
   ${themeCss}
-
   * { 
     box-sizing: border-box; 
     -webkit-print-color-adjust: exact !important;
@@ -791,17 +803,17 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
   body { 
     margin: 0; 
     padding: 20px 12px 40px 12px; 
-    background: ${colors.bgLight || '#e2e8f0'}; 
-    font-family: ${lang === 'km' ? 'var(--font-family-khmer)' : 'var(--font-family-latin)'}; 
-    letter-spacing: var(--font-letter-spacing, 0em);
-    line-height: var(--font-line-height, 1.55);
+    background: #e2e8f0; 
+    font-family: ${getFontFamily(lang, settings)}; 
+    letter-spacing: ${typo.letterSpacing};
+    line-height: ${typo.lineHeight};
     -webkit-font-smoothing: antialiased;
     -webkit-overflow-scrolling: touch;
     overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6, .font-heading {
-    font-family: var(--font-family-heading, inherit);
-    font-weight: var(--font-heading-weight, 700);
+    font-family: ${typo.headingFont};
+    font-weight: ${typo.headingWeight};
   }
   .no-print-toolbar {
     position: sticky;
@@ -811,7 +823,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     width: 100%;
     margin: 0 auto 16px auto;
     padding: 10px 16px;
-    background: ${colors.secondary};
+    background: ${palette.secondary};
     color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.18);
@@ -822,7 +834,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     gap: 12px;
   }
   .no-print-toolbar button {
-    background: linear-gradient(135deg, ${colors.primary}, ${colors.primaryHover});
+    background: linear-gradient(135deg, ${palette.primary}, ${palette.primaryHover});
     color: #ffffff;
     border: none;
     padding: 8px 16px;
@@ -834,7 +846,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     align-items: center;
     justify-content: center;
     gap: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
   }
@@ -905,12 +917,12 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     top: 0 !important;
   }
   .pdf-tag-pill-sky {
-    background: ${colors.primary} !important;
+    background: ${palette.primary} !important;
     color: #ffffff !important;
   }
   .pdf-tag-pill-amber {
-    background: ${colors.accent} !important;
-    color: ${colors.secondary} !important;
+    background: ${palette.accent} !important;
+    color: ${palette.secondary} !important;
   }
   .pdf-tag-pill-emerald {
     background: #059669 !important;
@@ -1310,6 +1322,7 @@ export function getAgendaPreviewHtml(options: AgendaExportOptions & { format?: E
   if (format === 'doc') {
     const fontsHref = getGoogleFontsHref(language);
     const fontsLink = fontsHref ? `<link href="${fontsHref}" rel="stylesheet">` : '';
+    const palette = getResolvedThemePalette(systemSettings);
     return `<!DOCTYPE html>
 <html lang="${language}">
 <head>
@@ -1338,7 +1351,7 @@ ${fontsLink}
   .doc-header-strip {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-left: 4px solid #0284c7;
+    border-left: 4px solid ${palette.primary};
     padding: 12px 18px;
     margin-bottom: 24px;
     border-radius: 4px;

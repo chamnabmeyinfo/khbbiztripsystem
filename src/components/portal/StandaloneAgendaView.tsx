@@ -15,7 +15,7 @@ const LANGUAGE_OPTIONS: { code: LanguageCode; label: string; flag: string }[] = 
 ];
 
 export const StandaloneAgendaView: React.FC = () => {
-  const { packages, language: defaultLang } = useApp();
+  const { packages, language: defaultLang, systemSettings } = useApp();
   
   const parsed = useMemo(() => {
     return parseAgendaUrlParams(
@@ -123,8 +123,9 @@ export const StandaloneAgendaView: React.FC = () => {
       selectedOptionalProgramIds: selectedOptions,
       language: currentLang,
       format: 'html',
+      systemSettings,
     });
-  }, [pkg, date, travelerName, selectedOptions, currentLang]);
+  }, [pkg, date, travelerName, selectedOptions, currentLang, systemSettings]);
 
   if (!pkg) {
     return (

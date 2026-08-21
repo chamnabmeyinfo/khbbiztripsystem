@@ -336,6 +336,121 @@ export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): vo
 }
 
 /**
+ * Returns fully resolved color palette from SystemSettings with fallbacks
+ */
+export function getResolvedThemePalette(settings?: Partial<SystemSettings>): ThemePalette {
+  const presetKey = settings?.themePreset || 'navy';
+  const basePalette = THEME_PRESETS[presetKey] || THEME_PRESETS.navy;
+
+  const primary = settings?.primaryColor || settings?.customPalette?.primary || basePalette.primary;
+  const secondary = settings?.secondaryColor || settings?.customPalette?.secondary || basePalette.secondary;
+  const accent = settings?.accentColor || settings?.customPalette?.accent || basePalette.accent;
+  const primaryHover = settings?.customPalette?.primaryHover || basePalette.primaryHover;
+  const accentGlow = settings?.customPalette?.accentGlow || basePalette.accentGlow;
+
+  return {
+    ...basePalette,
+    primary,
+    primaryHover,
+    secondary,
+    accent,
+    accentGlow,
+    themeName: settings?.customPalette?.themeName || basePalette.themeName,
+    presetKey: presetKey as any,
+  };
+}
+
+/**
+ * Returns fully resolved font stacks and typography metrics from SystemSettings
+ */
+export function getResolvedTypography(settings?: Partial<SystemSettings>): {
+  latinFont: string;
+  khmerFont: string;
+  headingFont: string;
+  headingWeight: string;
+  letterSpacing: string;
+  lineHeight: string;
+  fontSize: string;
+} {
+  const latinFont = FONT_LATIN_OPTIONS.find((f) => f.key === settings?.fontFamilyLatin)?.fontStack || FONT_LATIN_OPTIONS[0].fontStack;
+  const khmerFont = FONT_KHMER_OPTIONS.find((f) => f.key === settings?.fontFamilyKhmer)?.fontStack || FONT_KHMER_OPTIONS[0].fontStack;
+  const headingFont = FONT_HEADING_OPTIONS.find((f) => f.key === settings?.fontFamilyHeading)?.fontStack || 'inherit';
+
+  const headingWeightMap: Record<string, string> = {
+    normal: '400',
+    semibold: '600',
+    bold: '700',
+    black: '900',
+  };
+  const headingWeight = headingWeightMap[settings?.headingFontWeight || 'bold'] || '700';
+
+  const letterSpacingMap: Record<string, string> = {
+    tight: '-0.025em',
+    normal: '0em',
+    wide: '0.025em',
+    widest: '0.05em',
+  };
+  const letterSpacing = letterSpacingMap[settings?.fontLetterSpacing || 'normal'] || '0em';
+
+  const lineHeightMap: Record<string, string> = {
+    snug: '1.4',
+    normal: '1.55',
+    relaxed: '1.7',
+  };
+  const lineHeight = lineHeightMap[settings?.fontLineHeight || 'normal'] || '1.55';
+
+  const scale = settings?.fontSizeScale || 'normal';
+  let fontSize = '16px';
+  if (scale === 'compact') fontSize = '14.5px';
+  else if (scale === 'comfortable') fontSize = '16.5px';
+  else if (scale === 'large') fontSize = '17.5px';
+
+  return {
+    latinFont,
+    khmerFont,
+    headingFont,
+    headingWeight,
+    letterSpacing,
+    lineHeight,
+    fontSize,
+  };
+}
+
+/**
+ * Generates the complete Google Fonts stylesheet link tag for any custom HTML/PDF export
+ */
+export function getThemeGoogleFontsUrl(): string {
+  return 'https://fonts.googleapis.com/css2?family=Battambang:wght@300;400;700;900&family=Cinzel:wght@500;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,800;1,9..40,400&family=Hanuman:wght@300;400;700;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Koulen&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Hebrew:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+Khmer:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Siemreap&display=swap';
+}
+
+/**
+ * Returns CSS variables and style block for embedded standalone HTML documents and prints
+ */
+export function generateThemeCssVariables(settings?: Partial<SystemSettings>): string {
+  const palette = getResolvedThemePalette(settings);
+  const typo = getResolvedTypography(settings);
+
+  return `
+    :root {
+      --color-primary: ${palette.primary};
+      --color-primary-hover: ${palette.primaryHover};
+      --color-secondary: ${palette.secondary};
+      --color-accent: ${palette.accent};
+      --color-accent-glow: ${palette.accentGlow};
+      --color-bg-dark: ${palette.bgDark};
+      --color-bg-light: ${palette.bgLight};
+      --font-family-latin: ${typo.latinFont};
+      --font-family-khmer: ${typo.khmerFont};
+      --font-family-heading: ${typo.headingFont};
+      --font-heading-weight: ${typo.headingWeight};
+      --font-letter-spacing: ${typo.letterSpacing};
+      --font-line-height: ${typo.lineHeight};
+      --base-font-size: ${typo.fontSize};
+    }
+  `;
+}
+
+/**
  * Calls Gemini server endpoint or uses intelligent client heuristic to detect theme from text/image
  */
 export async function detectColorThemeAI(params: {
