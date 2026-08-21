@@ -235,37 +235,37 @@ function buildHeader(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: 
   const perPersonText = labels.perPerson.startsWith('/') ? labels.perPerson : `/ ${labels.perPerson}`;
 
   const priceHtml = hasDiscount ? `
-    <div class="header-price-row" style="font-size:13.5px;color:${C.emerald500};font-weight:bold;margin-top:6px;display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;">
-      <span>$${price} USD ${escapeHtml(perPersonText)}</span>
-      <span style="font-size:11px;color:${C.slate400};text-decoration:line-through;">$${pkg.priceUSD}</span>
+    <div class="header-price-row" style="font-size:13.5px;color:#ffffff;font-weight:bold;margin-top:6px;display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;">
+      <span style="color:#ffffff;">$${price} USD ${escapeHtml(perPersonText)}</span>
+      <span style="font-size:11px;color:rgba(255,255,255,0.75);text-decoration:line-through;">$${pkg.priceUSD}</span>
       <span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.emerald600};color:${C.white};font-size:9.5px;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(labels.saveDiscount)} $${pkg.priceUSD - (pkg.discountPriceUSD || 0)}</span></span>
     </div>
   ` : `
-    <div style="font-size:13.5px;color:${C.emerald500};font-weight:bold;margin-top:6px;">$${price} USD ${escapeHtml(perPersonText)}</div>
+    <div style="font-size:13.5px;color:#ffffff;font-weight:bold;margin-top:6px;">$${price} USD ${escapeHtml(perPersonText)}</div>
   `;
 
   return `
-  <div class="header-main-box" data-pdf-block="1" style="background:linear-gradient(135deg, ${C.navy} 0%, ${C.skyDark} 100%);border-radius:12px;overflow:hidden;padding:22px 24px;border-left:5px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;box-sizing:border-box;">
+  <div class="header-main-box" data-pdf-block="1" style="background:linear-gradient(135deg, ${C.navy} 0%, ${C.skyDark} 100%);border-radius:12px;overflow:hidden;padding:22px 24px;border-left:5px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;box-sizing:border-box;color:#ffffff;">
     <div class="header-brand-box" style="flex:1;min-width:0;display:flex;align-items:center;gap:14px;">
       ${logoHtml}
       <div style="min-width:0;flex:1;">
-        <div style="font-size:19px;font-weight:bold;color:${C.white};line-height:1.3;word-break:break-word;">${escapeHtml(companyName)}</div>
-        <div style="font-size:12.5px;color:${C.skyLight};margin-top:4px;line-height:1.4;">${escapeHtml(companyTagline)}</div>
-        <div style="font-size:10px;color:${C.slate400};margin-top:5px;line-height:1.4;">
+        <div style="font-size:19px;font-weight:bold;color:#ffffff;line-height:1.3;word-break:break-word;">${escapeHtml(companyName)}</div>
+        <div style="font-size:12.5px;color:#ffffff;opacity:0.95;margin-top:4px;line-height:1.4;">${escapeHtml(companyTagline)}</div>
+        <div style="font-size:10px;color:#ffffff;opacity:0.85;margin-top:5px;line-height:1.4;">
           ${escapeHtml(labels.operationsSubtitle)}
-          ${taxVat ? ` • <span style="color:${C.skyLight};">VAT: ${escapeHtml(taxVat)}</span>` : ''}
-          ${mocReg ? ` • <span>MoC: ${escapeHtml(mocReg)}</span>` : ''}
+          ${taxVat ? ` • <span style="color:#ffffff;font-weight:600;">VAT: ${escapeHtml(taxVat)}</span>` : ''}
+          ${mocReg ? ` • <span style="color:#ffffff;">MoC: ${escapeHtml(mocReg)}</span>` : ''}
         </div>
         ${cantonHtml}
       </div>
     </div>
     <div class="header-meta-box" style="text-align:right;flex-shrink:0;max-width:280px;width:auto;word-break:break-word;">
       <div style="font-size:11px;color:${C.amber500};font-weight:bold;">${escapeHtml(labels.verifiedBriefing)}</div>
-      <div style="font-size:10px;color:${C.white};margin-top:5px;word-break:break-all;">${escapeHtml(labels.docRef)}: ${escapeHtml(opts.docRef)}</div>
-      <div style="font-size:10px;color:${C.white};margin-top:2px;">${escapeHtml(labels.issueDate)}: ${escapeHtml(issueDate)}</div>
+      <div style="font-size:10px;color:#ffffff;margin-top:5px;word-break:break-all;">${escapeHtml(labels.docRef)}: <strong style="color:#ffffff;">${escapeHtml(opts.docRef)}</strong></div>
+      <div style="font-size:10px;color:#ffffff;margin-top:2px;">${escapeHtml(labels.issueDate)}: <strong style="color:#ffffff;">${escapeHtml(issueDate)}</strong></div>
       ${priceHtml}
-      <div style="font-size:10px;color:${C.skyLight};margin-top:4px;">${escapeHtml(labels.departureDate)}: ${escapeHtml(opts.selectedDate)}</div>
-      <div style="font-size:10px;color:${C.skyLight};margin-top:2px;word-break:break-word;">${escapeHtml(labels.delegateSignature)}: ${escapeHtml(opts.travelerName)}</div>
+      <div style="font-size:10px;color:#ffffff;opacity:0.95;margin-top:4px;">${escapeHtml(labels.departureDate)}: <strong style="color:#ffffff;">${escapeHtml(opts.selectedDate)}</strong></div>
+      <div style="font-size:10px;color:#ffffff;opacity:0.95;margin-top:2px;word-break:break-word;">${escapeHtml(labels.delegateSignature)}: <strong style="color:#ffffff;">${escapeHtml(opts.travelerName)}</strong></div>
     </div>
   </div>`;
 }
@@ -882,6 +882,19 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     page-break-after: avoid !important;
     break-after: avoid !important;
     margin-bottom: 0 !important;
+  }
+  .header-main-box {
+    color: #ffffff !important;
+  }
+  .header-main-box div,
+  .header-main-box span {
+    color: inherit;
+  }
+  .header-main-box .pdf-tag-pill-emerald {
+    color: #ffffff !important;
+  }
+  .header-main-box .pdf-tag-pill-amber {
+    color: #0f172a !important;
   }
   .pdf-tag-pill {
     display: inline-flex !important;
