@@ -1,9 +1,20 @@
 @import "tailwindcss";
 
 :root {
+  --color-primary: #0284c7;
+  --color-primary-hover: #0369a1;
+  --color-secondary: #0f172a;
+  --color-accent: #f59e0b;
+  --color-accent-glow: rgba(245, 158, 11, 0.25);
+  --color-bg-dark: #0b1120;
+  --color-bg-light: #f8fafc;
+  --color-card-dark: #0f172a;
+  --color-card-light: #ffffff;
+  --color-text-contrast: #ffffff;
   --font-family-latin: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-family-khmer: 'Kantumruy Pro', 'Hanuman', 'Battambang', system-ui, sans-serif;
   --font-family-heading: inherit;
+  --font-heading-weight: 700;
   --font-letter-spacing: 0em;
   --font-line-height: 1.55;
 }
@@ -16,13 +27,84 @@ body {
 
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-family-heading, inherit);
+  font-weight: var(--font-heading-weight, 700);
 }
 
 .font-bold-boost {
   -webkit-text-stroke: 0.25px currentColor;
 }
 
+/* Dynamic Theme Colors and Background Utilities */
+.bg-theme-primary {
+  background-color: var(--color-primary, #0284c7) !important;
+}
+
+.bg-theme-primary-hover:hover {
+  background-color: var(--color-primary-hover, #0369a1) !important;
+}
+
+.text-theme-primary {
+  color: var(--color-primary, #0284c7) !important;
+}
+
+.border-theme-primary {
+  border-color: var(--color-primary, #0284c7) !important;
+}
+
+.ring-theme-primary {
+  --tw-ring-color: var(--color-primary, #0284c7) !important;
+}
+
+.bg-theme-secondary {
+  background-color: var(--color-secondary, #0f172a) !important;
+}
+
+.text-theme-secondary {
+  color: var(--color-secondary, #0f172a) !important;
+}
+
+.border-theme-secondary {
+  border-color: var(--color-secondary, #0f172a) !important;
+}
+
+.bg-theme-accent {
+  background-color: var(--color-accent, #f59e0b) !important;
+}
+
+.text-theme-accent {
+  color: var(--color-accent, #f59e0b) !important;
+}
+
+.border-theme-accent {
+  border-color: var(--color-accent, #f59e0b) !important;
+}
+
+.theme-gradient-hero {
+  background: linear-gradient(135deg, var(--color-secondary, #0f172a) 0%, color-mix(in srgb, var(--color-secondary, #0f172a) 70%, var(--color-primary, #0284c7) 30%) 50%, var(--color-secondary, #0f172a) 100%) !important;
+}
+
+.theme-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary, #0284c7) 0%, var(--color-primary-hover, #0369a1) 100%) !important;
+}
+
+.theme-gradient-accent {
+  background: linear-gradient(135deg, var(--color-accent, #f59e0b) 0%, #d97706 100%) !important;
+}
+
+.theme-btn-primary {
+  background-color: var(--color-primary, #0284c7);
+  color: #ffffff;
+  transition: all 0.15s ease-in-out;
+}
+
+.theme-btn-primary:hover {
+  background-color: var(--color-primary-hover, #0369a1);
+}
+
 @layer utilities {
+  .font-latin {
+    font-family: var(--font-family-latin, 'Plus Jakarta Sans', system-ui, sans-serif);
+  }
   .font-khmer {
     font-family: var(--font-family-khmer, 'Kantumruy Pro', 'Hanuman', 'Battambang', system-ui, sans-serif);
   }

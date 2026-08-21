@@ -21,6 +21,7 @@ import {
   Check
 } from 'lucide-react';
 import { formatMoney } from '../../services/currencyService';
+import { getFontFamilyClass } from '../../i18n/translations';
 import { QRCodeSVG } from 'qrcode.react';
 
 export const VoucherModal: React.FC = () => {
@@ -54,15 +55,15 @@ export const VoucherModal: React.FC = () => {
         {/* Modal Controls Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/90 print:hidden shrink-0">
           <div className="flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <QrCode className="w-5 h-5 text-theme-primary" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white font-heading">
               Official Delegation VIP Travel Pass & Voucher
             </h3>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-theme-primary hover:bg-theme-primary-hover text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / Save PDF</span>
@@ -77,7 +78,7 @@ export const VoucherModal: React.FC = () => {
         </div>
 
         {/* Printable Voucher Body */}
-        <div id="printable-voucher" className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white text-slate-900 print-friendly-headers">
+        <div id="printable-voucher" className={`p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white text-slate-900 print-friendly-headers ${getFontFamilyClass(language)}`}>
           {/* Voucher Header with Brand & Status */}
           <div className="flex items-start justify-between border-b border-slate-200 pb-6 print-friendly-headers">
             <div className="flex items-center gap-3">
@@ -90,12 +91,12 @@ export const VoucherModal: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 via-teal-500 to-amber-500 flex items-center justify-center text-white font-bold shadow-md shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-theme-primary text-white flex items-center justify-center font-bold shadow-md shrink-0">
                   <Compass className="w-7 h-7" />
                 </div>
               )}
               <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-heading">
                   {systemSettings?.companyName || 'KHB Events Co., Ltd.'}
                 </h1>
                 <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">
@@ -118,10 +119,10 @@ export const VoucherModal: React.FC = () => {
           {/* Core Booking Summary & QR Code Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center p-5 rounded-2xl bg-slate-50 border border-slate-200 print-friendly-summary">
             <div className="sm:col-span-2 space-y-3">
-              <span className="text-xs font-bold text-sky-600 uppercase tracking-wider">
+              <span className="text-xs font-bold text-theme-primary uppercase tracking-wider">
                 {booking.packageDestination}
               </span>
-              <h2 className="text-lg font-black text-slate-900 leading-tight">
+              <h2 className="text-lg font-black text-slate-900 leading-tight font-heading">
                 {booking.packageTitle}
               </h2>
 
@@ -156,7 +157,7 @@ export const VoucherModal: React.FC = () => {
                 includeMargin={false}
                 className="w-26 h-26 rounded-lg"
               />
-              <span className="text-[9.5px] font-mono font-bold text-sky-700 mt-2 uppercase tracking-wide">
+              <span className="text-[9.5px] font-mono font-bold text-theme-primary mt-2 uppercase tracking-wide">
                 Scan for VIP Badge
               </span>
               <span className="text-[8.5px] text-slate-400 font-mono">
@@ -188,7 +189,7 @@ export const VoucherModal: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Open in Portal"
-                  className="px-2 py-1 rounded-md bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                  className="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-theme-primary text-[10px] font-bold flex items-center gap-1 transition-colors"
                 >
                   <span>Verify</span>
                   <ExternalLink className="w-3 h-3" />

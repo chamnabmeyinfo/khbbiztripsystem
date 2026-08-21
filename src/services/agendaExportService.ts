@@ -1,8 +1,9 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { TourPackage, ItineraryStep, GuideScheduleSlot, TourGuide, LanguageCode } from '../types';
+import { TourPackage, ItineraryStep, GuideScheduleSlot, TourGuide, LanguageCode, SystemSettings } from '../types';
 import { getLocalizedPackage } from '../utils/packageLocalization';
 import { getPdfLabels, PdfLabels } from './pdfTranslations';
+import { getThemeColors, getTypographySettings, generateThemeCssString, ThemePalette } from './aiThemeService';
 
 import notoSansKhmerRegular from '@expo-google-fonts/noto-sans-khmer/400Regular/NotoSansKhmer_400Regular.ttf';
 import notoSansKhmerBold from '@expo-google-fonts/noto-sans-khmer/700Bold/NotoSansKhmer_700Bold.ttf';
@@ -30,18 +31,44 @@ export interface AgendaExportOptions {
   selectedOptionalProgramIds?: string[];
   language?: LanguageCode;
   watermark?: WatermarkOptions;
+  systemSettings?: SystemSettings;
 }
 
-const C = {
-  navy: '#0f172a', sky: '#0ea5e9', skyDark: '#0284c7', skyLight: '#bae6fd',
-  slate50: '#f8fafc', slate100: '#f1f5f9', slate200: '#e2e8f0', slate300: '#cbd5e1',
-  slate400: '#94a3b8', slate500: '#64748b', slate600: '#475569', slate700: '#334155',
-  slate800: '#1e293b', amber50: '#fef3c7', amber200: '#fde68a', amber500: '#f59e0b', amber800: '#92400e',
-  emerald50: '#f0fdf4', emerald200: '#bbf7d0', emerald500: '#16a34a', emerald600: '#059669',
-  rose50: '#fef2f2', rose200: '#fecaca', rose600: '#dc2626', rose800: '#991b1b',
-  blue50: '#eff6ff', blue200: '#bfdbfe', blue900: '#1e3a8a', white: '#ffffff',
-  indigo: '#6366f1',
-};
+export function getExportColors(settings?: SystemSettings) {
+  const colors = getThemeColors(settings);
+  return {
+    navy: colors.secondary || '#0f172a',
+    sky: colors.primary || '#0284c7',
+    skyDark: colors.primaryHover || '#0369a1',
+    skyLight: '#bae6fd',
+    slate50: '#f8fafc',
+    slate100: '#f1f5f9',
+    slate200: '#e2e8f0',
+    slate300: '#cbd5e1',
+    slate400: '#94a3b8',
+    slate500: '#64748b',
+    slate600: '#475569',
+    slate700: '#334155',
+    slate800: '#1e293b',
+    amber50: '#fef3c7',
+    amber200: '#fde68a',
+    amber500: colors.accent || '#f59e0b',
+    amber800: '#92400e',
+    emerald50: '#f0fdf4',
+    emerald200: '#bbf7d0',
+    emerald500: '#16a34a',
+    emerald600: '#059669',
+    rose50: '#fef2f2',
+    rose200: '#fecaca',
+    rose600: '#dc2626',
+    rose800: '#991b1b',
+    blue50: '#eff6ff',
+    blue200: '#bfdbfe',
+    blue900: '#1e3a8a',
+    white: '#ffffff',
+    indigo: '#6366f1',
+  };
+}
 
 function escapeHtml(text: string): string {
   return String(text || '')
@@ -130,12 +157,13 @@ function getGalleryImages(pkg: TourPackage): string[] {
   return combined.slice(0, count);
 }
 
-function buildImageGallery(pkg: TourPackage, labels: PdfLabels): string {
+function buildImageGallery(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const allImages = getGalleryImages(pkg);
   if (allImages.length === 0) return '';
 
   const mainImg = allImages[0];
-  const subImgs = allImages.slice(1); // 3 to 6 images (Total: 4 to 7 images)
+  const subImgs = allImages.slice(1); 
 
   const subHtml = subImgs.map((img, idx) => `
     <div data-bg-img="${escapeHtml(img)}" class="gallery-thumb-item" style="border-radius:7px;border:1px solid ${C.slate200};overflow:hidden;background:${C.slate100} url('${escapeHtml(img)}') no-repeat center center / cover;position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.03);aspect-ratio:16/10;">
@@ -150,29 +178,41 @@ function buildImageGallery(pkg: TourPackage, labels: PdfLabels): string {
       <span style="font-size:9.5px;color:${C.slate400};font-weight:normal;">1 Featured + ${subImgs.length} Mission Photos (${allImages.length} Photos Total)</span>
     </div>
 
-    <!-- 1 Primary Feature Hero Image with Anti-Stretch Protection -->
     <div data-bg-img="${escapeHtml(mainImg)}" class="gallery-hero-box" style="width:100%;height:160px;border-radius:9px;border:1px solid ${C.slate200};position:relative;overflow:hidden;background:${C.slate100} url('${escapeHtml(mainImg)}') no-repeat center center / cover;margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
       <img src="${escapeHtml(mainImg)}" alt="Featured ${escapeHtml(pkg.destination)}" crossOrigin="anonymous" referrerPolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;" />
       <div class="gallery-hero-badge-left" style="position:absolute;bottom:8px;left:10px;max-width:calc(100% - 20px);background:rgba(15,23,42,0.88);color:#fff;padding:4px 10px;border-radius:6px;font-size:9px;font-weight:bold;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         <span>📍</span>
         <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(pkg.destination)}, ${escapeHtml(pkg.country)} (Mission Center)</span>
       </div>
-      <div class="gallery-hero-badge-right" style="position:absolute;top:8px;right:10px;background:rgba(2,132,199,0.92);color:#fff;padding:0 8px;height:18px;border-radius:5px;font-size:8.5px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;text-align:center;text-transform:uppercase;letter-spacing:0.4px;box-sizing:border-box;vertical-align:middle;white-space:nowrap;">
+      <div class="gallery-hero-badge-right" style="position:absolute;top:8px;right:10px;background:${C.sky};color:#fff;padding:0 8px;height:18px;border-radius:5px;font-size:8.5px;font-weight:bold;display:inline-flex;align-items:center;justify-content:center;text-align:center;text-transform:uppercase;letter-spacing:0.4px;box-sizing:border-box;vertical-align:middle;white-space:nowrap;">
         <span class="pdf-pill-text">★ Featured</span>
       </div>
     </div>
 
-    <!-- Sub-gallery Row: 3 to 6 Accompanying Images -->
     <div class="gallery-sub-grid" style="display:grid;grid-template-columns:repeat(${Math.min(subImgs.length, 6)}, 1fr);gap:6px;width:100%;">
       ${subHtml}
     </div>
   </div>`;
 }
 
-function buildHeader(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; docRef: string }): string {
+function buildHeader(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; docRef: string; systemSettings?: SystemSettings }): string {
+  const C = getExportColors(opts.systemSettings);
+  const settings = opts.systemSettings;
+  const companyName = settings?.companyName || labels.systemName;
+  const companyTagline = settings?.companyTagline || labels.officialAgenda;
+  const companyLogo = settings?.companyLogoUrl;
+  const taxVat = settings?.taxVatNumber || 'VAT-KHB-2026';
+  const mocReg = settings?.companyRegistrationNumber;
+
   const issueDate = new Date().toISOString().split('T')[0];
   const price = pkg.discountPriceUSD || pkg.priceUSD;
   const hasDiscount = pkg.discountPriceUSD && pkg.discountPriceUSD < pkg.priceUSD;
+
+  const logoHtml = companyLogo ? `
+    <div style="width:48px;height:48px;border-radius:10px;background:#ffffff;padding:2px;box-shadow:0 2px 6px rgba(0,0,0,0.15);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+      <img src="${escapeHtml(companyLogo)}" alt="Logo" style="width:100%;height:100%;object-fit:contain;display:block;" />
+    </div>
+  ` : '';
 
   const cantonHtml = pkg.isCantonFair ? `
     <div class="pdf-tag-pill pdf-tag-pill-amber" style="min-height:22px;height:auto;display:inline-flex;align-items:center;gap:4px;background:${C.amber500};color:${C.navy};padding:2px 10px;border-radius:5px;font-size:10px;font-weight:bold;margin-top:8px;box-sizing:border-box;max-width:100%;flex-wrap:wrap;">
@@ -196,12 +236,19 @@ function buildHeader(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: 
   `;
 
   return `
-  <div class="header-main-box" data-pdf-block="1" style="background:${C.navy};border-radius:12px;overflow:hidden;padding:22px 24px;border-left:5px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;box-sizing:border-box;">
-    <div class="header-brand-box" style="flex:1;min-width:0;">
-      <div style="font-size:19px;font-weight:bold;color:${C.white};line-height:1.3;word-break:break-word;">${escapeHtml(labels.systemName)}</div>
-      <div style="font-size:12.5px;color:${C.skyLight};margin-top:5px;line-height:1.4;">${escapeHtml(labels.officialAgenda)}</div>
-      <div style="font-size:10px;color:${C.slate400};margin-top:6px;line-height:1.4;">${escapeHtml(labels.operationsSubtitle)}</div>
-      ${cantonHtml}
+  <div class="header-main-box" data-pdf-block="1" style="background:linear-gradient(135deg, ${C.navy} 0%, ${C.skyDark} 100%);border-radius:12px;overflow:hidden;padding:22px 24px;border-left:5px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;box-sizing:border-box;">
+    <div class="header-brand-box" style="flex:1;min-width:0;display:flex;align-items:center;gap:14px;">
+      ${logoHtml}
+      <div style="min-width:0;flex:1;">
+        <div style="font-size:19px;font-weight:bold;color:${C.white};line-height:1.3;word-break:break-word;">${escapeHtml(companyName)}</div>
+        <div style="font-size:12.5px;color:${C.skyLight};margin-top:4px;line-height:1.4;">${escapeHtml(companyTagline)}</div>
+        <div style="font-size:10px;color:${C.slate400};margin-top:5px;line-height:1.4;">
+          ${escapeHtml(labels.operationsSubtitle)}
+          ${taxVat ? ` • <span style="color:${C.skyLight};">VAT: ${escapeHtml(taxVat)}</span>` : ''}
+          ${mocReg ? ` • <span>MoC: ${escapeHtml(mocReg)}</span>` : ''}
+        </div>
+        ${cantonHtml}
+      </div>
     </div>
     <div class="header-meta-box" style="text-align:right;flex-shrink:0;max-width:280px;width:auto;word-break:break-word;">
       <div style="font-size:11px;color:${C.amber500};font-weight:bold;">${escapeHtml(labels.verifiedBriefing)}</div>
@@ -214,13 +261,14 @@ function buildHeader(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: 
   </div>`;
 }
 
-function buildTitleBlock(pkg: TourPackage, labels: PdfLabels): string {
+function buildTitleBlock(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const cat = pkg.category || labels.officialAgenda;
   const stars = pkg.rating ? '★'.repeat(Math.round(pkg.rating)) : '';
   const ratingHtml = pkg.rating ? `<span style="display:inline-flex;align-items:center;gap:4px;vertical-align:middle;"><span style="color:${C.amber500};font-size:13px;line-height:1;">${stars}</span><span style="color:${C.slate500};font-size:10.5px;line-height:1;">${pkg.rating} (${pkg.reviewCount} ${escapeHtml(labels.reviewsCount || 'reviews')})</span></span>` : '';
-  const tagsHtml = pkg.tags?.length ? pkg.tags.map(tag => `<span class="pdf-tag-pill pdf-tag-pill-sky" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.sky};color:${C.white};padding:0 8px;border-radius:4px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:8.5px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin-right:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(tag)}</span></span>`).join('') : '';
-  const bookedHtml = pkg.bookedThisMonth ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:rgba(5,150,105,0.12);border:1px solid rgba(5,150,105,0.25);color:${C.emerald600};font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:10px;font-weight:bold;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🔥 ${pkg.bookedThisMonth} ${escapeHtml(labels.bookedThisMonth || 'booked this month')}</span></span>` : '';
-  const cantonBadge = pkg.isCantonFair ? `<span class="pdf-tag-pill pdf-tag-pill-amber" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.amber500};color:${C.navy};padding:0 8px;border-radius:4px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:8.5px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin-right:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🏛️ Canton Fair</span></span>` : '';
+  const tagsHtml = pkg.tags?.length ? pkg.tags.map(tag => `<span class="pdf-tag-pill pdf-tag-pill-sky" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.sky};color:${C.white};padding:0 8px;border-radius:4px;font-size:8.5px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin-right:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(tag)}</span></span>`).join('') : '';
+  const bookedHtml = pkg.bookedThisMonth ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:rgba(5,150,105,0.12);border:1px solid rgba(5,150,105,0.25);color:${C.emerald600};font-size:10px;font-weight:bold;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🔥 ${pkg.bookedThisMonth} ${escapeHtml(labels.bookedThisMonth || 'booked this month')}</span></span>` : '';
+  const cantonBadge = pkg.isCantonFair ? `<span class="pdf-tag-pill pdf-tag-pill-amber" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.amber500};color:${C.navy};padding:0 8px;border-radius:4px;font-size:8.5px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin-right:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🏛️ Canton Fair</span></span>` : '';
 
   return `
   <div data-pdf-block="1" style="background:${C.slate50};border:1px solid ${C.slate200};border-radius:10px;padding:18px 20px;margin-top:16px;width:100%;box-sizing:border-box;">
@@ -237,8 +285,8 @@ function buildTitleBlock(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-function buildBadges(pkg: TourPackage, labels: PdfLabels, selectedDate: string): string {
-  const price = pkg.discountPriceUSD || pkg.priceUSD;
+function buildBadges(pkg: TourPackage, labels: PdfLabels, selectedDate: string, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const badges = [
     { label: labels.destination, value: `${pkg.destination}`, color: C.skyDark, icon: '📍' },
     { label: labels.duration, value: `${pkg.durationDays}D / ${pkg.durationNights}N`, color: C.indigo, icon: '⏱️' },
@@ -258,13 +306,21 @@ function buildBadges(pkg: TourPackage, labels: PdfLabels, selectedDate: string):
   return `<div class="badges-row" data-pdf-block="1" style="display:flex;gap:8px;margin-top:14px;width:100%;box-sizing:border-box;">${badgeDivs}</div>`;
 }
 
-function buildTourDirector(pkg: TourPackage, labels: PdfLabels): string {
+function buildTourDirector(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const guide = pkg.tourGuide || buildDefaultGuide(labels);
-  const bioHtml = guide.bio ? `<div style="font-size:11px;color:${C.slate600};margin-top:10px;line-height:1.6;font-style:italic;border-top:1px dashed ${C.amber200};padding-top:8px;">"${escapeHtml(guide.bio)}"</div>` : '';
+  const name = settings?.leadCoordinatorName || guide.name;
+  const title = settings?.leadCoordinatorTitle || guide.title;
+  const phone = settings?.leadCoordinatorPhone || guide.phone;
+  const telegram = settings?.leadCoordinatorTelegram || guide.telegram || '@VuthaTim';
+  const photoUrl = settings?.leadCoordinatorAvatar || guide.photoUrl;
+  const bio = settings?.leadCoordinatorBio || guide.bio;
+
+  const bioHtml = bio ? `<div style="font-size:11px;color:${C.slate600};margin-top:10px;line-height:1.6;font-style:italic;border-top:1px dashed ${C.amber200};padding-top:8px;">"${escapeHtml(bio)}"</div>` : '';
   const langsHtml = guide.languages?.length ? `<div style="font-size:11px;color:${C.slate600};margin-top:5px;line-height:1.4;">${escapeHtml(labels.languages || 'Languages')}: <strong>${guide.languages.map(escapeHtml).join(', ')}</strong></div>` : '';
-  const photoHtml = guide.photoUrl ? `
+  const photoHtml = photoUrl ? `
     <div class="guide-photo-box" style="width:64px;height:64px;border-radius:12px;border:2px solid ${C.amber500};overflow:hidden;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.08);background:${C.slate100};">
-      <img src="${escapeHtml(guide.photoUrl)}" alt="${escapeHtml(guide.name)}" crossOrigin="anonymous" referrerPolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;display:block;" />
+      <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" crossOrigin="anonymous" referrerPolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;display:block;" />
     </div>
   ` : '';
 
@@ -274,10 +330,10 @@ function buildTourDirector(pkg: TourPackage, labels: PdfLabels): string {
       ${photoHtml}
       <div class="guide-details-box" style="flex:1;min-width:0;">
         <div style="font-size:10.5px;font-weight:bold;color:${C.amber800};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.designatedDirector)}</div>
-        <div style="font-size:14.5px;font-weight:bold;color:${C.navy};margin-top:3px;word-break:break-word;">${escapeHtml(guide.name)} <span style="font-size:11.5px;font-weight:normal;color:${C.slate500};">(${escapeHtml(guide.title)})</span></div>
+        <div style="font-size:14.5px;font-weight:bold;color:${C.navy};margin-top:3px;word-break:break-word;">${escapeHtml(name)} <span style="font-size:11.5px;font-weight:normal;color:${C.slate500};">(${escapeHtml(title)})</span></div>
         <div class="guide-contacts-row" style="font-size:11.5px;color:${C.slate600};margin-top:5px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 10px;">
-          <span>${escapeHtml(labels.directPhone)}: <strong>${escapeHtml(guide.phone)}</strong></span>
-          <span>${escapeHtml(labels.telegram)}: <strong>${escapeHtml(guide.telegram || '@VuthaTim')}</strong></span>
+          <span>${escapeHtml(labels.directPhone)}: <strong>${escapeHtml(phone)}</strong></span>
+          <span>${escapeHtml(labels.telegram)}: <strong>${escapeHtml(telegram)}</strong></span>
           <span>${escapeHtml(labels.badgeNumber)}: <strong style="font-family:monospace;color:${C.amber800};">${escapeHtml(guide.badgeNumber || 'KHB-TG-2026')}</strong></span>
         </div>
         ${langsHtml}
@@ -291,7 +347,8 @@ function buildTourDirector(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-function buildDescription(pkg: TourPackage, labels: PdfLabels): string {
+function buildDescription(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   return `
   <div data-pdf-block="1" style="margin-top:20px;width:100%;box-sizing:border-box;">
     <div style="font-size:13.5px;font-weight:bold;color:${C.navy};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.missionDescription)}</div>
@@ -299,7 +356,8 @@ function buildDescription(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-function buildHighlights(pkg: TourPackage, labels: PdfLabels): string {
+function buildHighlights(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   if (!pkg.highlights || pkg.highlights.length === 0) return '';
   const items = pkg.highlights.map(h => `<div data-pdf-break="1" class="highlight-item-card" style="flex:1 1 45%;min-width:260px;background:${C.slate50};border:1px solid ${C.slate200};border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;color:${C.slate800};line-height:1.55;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;"><span style="color:${C.sky};font-weight:bold;flex-shrink:0;margin-top:2px;">&#9679;</span><span style="flex:1;">${escapeHtml(h)}</span></div>`);
   return `
@@ -309,7 +367,8 @@ function buildHighlights(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-function buildWhoShouldJoin(pkg: TourPackage, labels: PdfLabels): string {
+function buildWhoShouldJoin(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   if (!pkg.whoShouldJoin || pkg.whoShouldJoin.length === 0) return '';
   const items = pkg.whoShouldJoin.map(item => `
     <div data-pdf-break="1" class="who-should-join-card" style="flex:1 1 45%;min-width:260px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;color:${C.slate800};line-height:1.55;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;">
@@ -324,7 +383,8 @@ function buildWhoShouldJoin(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-function buildWhyShouldJoin(pkg: TourPackage, labels: PdfLabels): string {
+function buildWhyShouldJoin(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   if (!pkg.whyShouldJoin || pkg.whyShouldJoin.length === 0) return '';
   const items = pkg.whyShouldJoin.map(item => `
     <div data-pdf-break="1" class="why-should-join-card" style="flex:1 1 45%;min-width:260px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;color:${C.slate800};line-height:1.55;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;">
@@ -339,18 +399,18 @@ function buildWhyShouldJoin(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-
-function buildOptionalPrograms(pkg: TourPackage, labels: PdfLabels, selectedIds: string[]): string {
+function buildOptionalPrograms(pkg: TourPackage, labels: PdfLabels, selectedIds: string[], settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   if (!pkg.optionalPrograms || pkg.optionalPrograms.length === 0) return '';
   const progs = pkg.optionalPrograms.map(p => {
     const sel = selectedIds.includes(p.id);
     const bg = sel ? C.emerald50 : C.white;
     const border = sel ? C.emerald500 : C.slate200;
-    const badge = sel ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.emerald600};color:${C.white};padding:0 8px;border-radius:4px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:9px;font-weight:bold;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">✓ ${escapeHtml(labels.includedInDelegation)}</span></span>` : '';
+    const badge = sel ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.emerald600};color:${C.white};padding:0 8px;border-radius:4px;font-size:9px;font-weight:bold;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">✓ ${escapeHtml(labels.includedInDelegation)}</span></span>` : '';
     
     const highlightsHtml = p.highlights?.length ? `
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">
-        ${p.highlights.map(h => `<span class="pdf-tag-pill pdf-tag-pill-slate" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.slate100};border:1px solid ${C.slate200};color:${C.slate700};font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;font-size:9px;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">• ${escapeHtml(h)}</span></span>`).join('')}
+        ${p.highlights.map(h => `<span class="pdf-tag-pill pdf-tag-pill-slate" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.slate100};border:1px solid ${C.slate200};color:${C.slate700};font-size:9px;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">• ${escapeHtml(h)}</span></span>`).join('')}
       </div>
     ` : '';
 
@@ -376,7 +436,8 @@ function buildOptionalPrograms(pkg: TourPackage, labels: PdfLabels, selectedIds:
   return `<div style="margin-top:22px;width:100%;box-sizing:border-box;"><div data-pdf-block="1" data-pdf-keep-next="1" style="font-size:13.5px;font-weight:bold;color:${C.navy};margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.optionalPrograms)}</div>${progs}</div>`;
 }
 
-function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels): string {
+function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const incs = pkg.inclusions.map(i => `<div data-pdf-break="1" style="font-size:11.5px;color:${C.slate700};margin-top:7px;line-height:1.6;word-break:break-word;"><span style="color:${C.emerald500};font-weight:bold;">&#10003;</span> ${escapeHtml(i)}</div>`).join('');
   const excs = pkg.exclusions.map(e => `<div data-pdf-break="1" style="font-size:11.5px;color:${C.slate700};margin-top:7px;line-height:1.6;word-break:break-word;"><span style="color:${C.rose600};font-weight:bold;">&#10005;</span> ${escapeHtml(e)}</div>`).join('');
   return `
@@ -392,8 +453,10 @@ function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels): string 
   </div>`;
 }
 
-function buildEmergency(pkg: TourPackage, labels: PdfLabels): string {
+function buildEmergency(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const e = pkg.emergencyContact;
+  const hotline = settings?.emergencyHotline || settings?.companyPhone || '060 815 515';
   return `
   <div data-pdf-block="1" style="background:${C.blue50};border:1px solid ${C.blue200};border-radius:10px;padding:18px 20px;margin-top:20px;width:100%;box-sizing:border-box;">
     <div style="font-size:12.5px;font-weight:bold;color:${C.blue900};text-transform:uppercase;letter-spacing:0.5px;">🚨 ${escapeHtml(labels.emergencyAssistance)} (${escapeHtml(e.country)})</div>
@@ -404,14 +467,21 @@ function buildEmergency(pkg: TourPackage, labels: PdfLabels): string {
     </div>
     <div style="font-size:11.5px;color:${C.slate700};margin-top:6px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 10px;word-break:break-word;">
       <span>${escapeHtml(labels.embassySupport)}: <strong>${escapeHtml(e.embassySupport)}</strong></span>
-      <span>${escapeHtml(labels.khbDispatch)}: <strong>060 815 515</strong></span>
+      <span>${escapeHtml(labels.khbDispatch)}: <strong>${escapeHtml(hotline)}</strong></span>
     </div>
   </div>`;
 }
 
-function buildTerms(pkg: TourPackage, labels: PdfLabels, travelerName: string): string {
+function buildTerms(pkg: TourPackage, labels: PdfLabels, travelerName: string, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const terms = (pkg.termsAndConditions?.length ? pkg.termsAndConditions : labels.defaultTerms);
   const items = terms.map(t => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:7px;line-height:1.7;word-break:break-word;"><span style="color:${C.amber500}; font-weight:bold;">&#8226;</span> ${escapeHtml(t)}</div>`).join('');
+  const signatureImg = settings?.leadCoordinatorSignatureUrl ? `
+    <div style="margin-top:4px;">
+      <img src="${escapeHtml(settings.leadCoordinatorSignatureUrl)}" alt="Signature" style="max-height:36px;object-fit:contain;display:inline-block;" />
+    </div>
+  ` : '';
+
   return `
   <div data-pdf-block="1" style="background:${C.amber50};border:1px solid #fbbf24;border-radius:10px;padding:18px 20px;margin-top:20px;width:100%;box-sizing:border-box;">
     <div style="font-size:12.5px;font-weight:bold;color:${C.amber800};text-transform:uppercase;letter-spacing:0.5px;">📜 ${escapeHtml(labels.termsAndConditions)}</div>
@@ -419,15 +489,20 @@ function buildTerms(pkg: TourPackage, labels: PdfLabels, travelerName: string): 
   </div>
   <div class="signatures-row" data-pdf-block="1" style="display:flex;justify-content:space-between;margin-top:24px;border-top:1px dashed ${C.slate300};padding-top:14px;width:100%;box-sizing:border-box;flex-wrap:wrap;gap:8px;">
     <div style="flex:1;min-width:180px;font-size:11px;color:${C.slate500};word-break:break-word;">${escapeHtml(labels.delegateSignature)}: <strong>${escapeHtml(travelerName)}</strong></div>
-    <div style="flex:1;min-width:180px;text-align:right;font-size:11px;color:${C.slate500};word-break:break-word;">${escapeHtml(labels.operationsSeal)}: <strong>KHB OPERATIONS DIRECTORY</strong></div>
+    <div style="flex:1;min-width:180px;text-align:right;font-size:11px;color:${C.slate500};word-break:break-word;">
+      <div>${escapeHtml(labels.operationsSeal)}: <strong>${escapeHtml(settings?.companyName || 'KHB OPERATIONS DIRECTORY')}</strong></div>
+      ${signatureImg}
+    </div>
   </div>`;
 }
 
-function buildPageHeader(pkg: TourPackage, labels: PdfLabels): string {
+function buildPageHeader(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
+  const companyName = settings?.companyName || labels.systemName;
   return `
   <div class="page-top-header" style="background:${C.navy};border-radius:8px;padding:10px 16px;border-left:4px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;box-sizing:border-box;width:100%;">
     <div style="font-size:12px;font-weight:bold;color:${C.white};display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap;">
-      <span>${escapeHtml(labels.systemName)}</span>
+      <span>${escapeHtml(companyName)}</span>
       <span style="color:${C.skyLight};">•</span>
       <span style="color:${C.skyLight};font-weight:normal;word-break:break-word;">${escapeHtml(pkg.title)}</span>
     </div>
@@ -437,15 +512,19 @@ function buildPageHeader(pkg: TourPackage, labels: PdfLabels): string {
   </div>`;
 }
 
-function buildPageFooter(pkg: TourPackage, labels: PdfLabels, pageNum: number, totalPages: number): string {
+function buildPageFooter(pkg: TourPackage, labels: PdfLabels, pageNum: number, totalPages: number, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
+  const hotline = settings?.emergencyHotline || settings?.companyPhone || '+855 60 815 515';
+  const telegram = settings?.leadCoordinatorTelegram || settings?.telegramChannel || '@VuthaTim';
   return `
   <div class="page-bottom-footer" style="border-top:1px solid ${C.slate200};padding-top:10px;margin-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:${C.slate400};box-sizing:border-box;width:100%;flex-wrap:wrap;gap:6px;">
-    <div style="word-break:break-word;">${escapeHtml(labels.hotline)}: <strong>+855 60 815 515</strong> • Telegram: <strong>@VuthaTim</strong></div>
+    <div style="word-break:break-word;">${escapeHtml(labels.hotline)}: <strong>${escapeHtml(hotline)}</strong> • Telegram: <strong>${escapeHtml(telegram)}</strong></div>
     <div>${escapeHtml(labels.confidentialDocument)} • ${escapeHtml(labels.page)} ${pageNum} / ${totalPages}</div>
   </div>`;
 }
 
-function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels): string {
+function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels, settings?: SystemSettings): string {
+  const C = getExportColors(settings);
   const daysHtml = steps.map(step => {
     const slots = getStepAgendaSlots(step, labels);
     
@@ -506,7 +585,7 @@ function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels): string {
   return daysHtml;
 }
 
-function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; selectedOptionalProgramIds: string[]; watermark?: WatermarkOptions }, lang: LanguageCode = 'en'): string[] {
+function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; selectedOptionalProgramIds: string[]; watermark?: WatermarkOptions; systemSettings?: SystemSettings }, lang: LanguageCode = 'en'): string[] {
   const dir = (lang === 'ar' || lang === 'he') ? 'rtl' : 'ltr';
   const docRef = `KHB-AGN-${pkg.id.slice(0, 8).toUpperCase()}`;
 
@@ -516,12 +595,12 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   // PAGE 1: Cover & Mission Executive Profile
   const page1Content = `
     <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-      ${buildHeader(pkg, labels, { selectedDate: opts.selectedDate, travelerName: opts.travelerName, docRef })}
-      ${buildImageGallery(pkg, labels)}
-      ${buildTitleBlock(pkg, labels)}
-      ${buildBadges(pkg, labels, opts.selectedDate)}
-      ${buildTourDirector(pkg, labels)}
-      ${buildDescription(pkg, labels)}
+      ${buildHeader(pkg, labels, { selectedDate: opts.selectedDate, travelerName: opts.travelerName, docRef, systemSettings: opts.systemSettings })}
+      ${buildImageGallery(pkg, labels, opts.systemSettings)}
+      ${buildTitleBlock(pkg, labels, opts.systemSettings)}
+      ${buildBadges(pkg, labels, opts.selectedDate, opts.systemSettings)}
+      ${buildTourDirector(pkg, labels, opts.systemSettings)}
+      ${buildDescription(pkg, labels, opts.systemSettings)}
     </div>
   `;
 
@@ -530,24 +609,24 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   if (!multiDay) {
     itineraryPages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
-        ${buildItineraryDays(itinerarySteps, labels)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        <div style="font-size:13.5px;font-weight:bold;color:${getExportColors(opts.systemSettings).navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
+        ${buildItineraryDays(itinerarySteps, labels, opts.systemSettings)}
       </div>
     `);
   } else {
     itineraryPages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 1)</div>
-        ${buildItineraryDays(itinerarySteps.slice(0, 2), labels)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        <div style="font-size:13.5px;font-weight:bold;color:${getExportColors(opts.systemSettings).navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 1)</div>
+        ${buildItineraryDays(itinerarySteps.slice(0, 2), labels, opts.systemSettings)}
       </div>
     `);
     itineraryPages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 2)</div>
-        ${buildItineraryDays(itinerarySteps.slice(2), labels)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        <div style="font-size:13.5px;font-weight:bold;color:${getExportColors(opts.systemSettings).navy};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 2)</div>
+        ${buildItineraryDays(itinerarySteps.slice(2), labels, opts.systemSettings)}
       </div>
     `);
   }
@@ -562,36 +641,34 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   const hasMissionBenefits = hasHighlights || hasWhoShouldJoin || hasWhyShouldJoin;
 
   if (hasMissionBenefits && hasPrograms) {
-    // Page for Highlights, Who Should Join, and Why Should Join
     middlePages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        ${buildHighlights(pkg, labels)}
-        ${buildWhoShouldJoin(pkg, labels)}
-        ${buildWhyShouldJoin(pkg, labels)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        ${buildHighlights(pkg, labels, opts.systemSettings)}
+        ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
+        ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
       </div>
     `);
-    // Dedicated Page for Optional Programs
     middlePages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings)}
       </div>
     `);
   } else if (hasMissionBenefits) {
     middlePages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        ${buildHighlights(pkg, labels)}
-        ${buildWhoShouldJoin(pkg, labels)}
-        ${buildWhyShouldJoin(pkg, labels)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        ${buildHighlights(pkg, labels, opts.systemSettings)}
+        ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
+        ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
       </div>
     `);
   } else if (hasPrograms) {
     middlePages.push(`
       <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels)}
-        ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds)}
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings)}
       </div>
     `);
   }
@@ -599,10 +676,10 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   // FINAL PAGE: Inclusions, Exclusions, Emergency Assistance, Terms & Signatures
   const finalContent = `
     <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-      ${buildPageHeader(pkg, labels)}
-      ${buildInclusionsExclusions(pkg, labels)}
-      ${buildEmergency(pkg, labels)}
-      ${buildTerms(pkg, labels, opts.travelerName)}
+      ${buildPageHeader(pkg, labels, opts.systemSettings)}
+      ${buildInclusionsExclusions(pkg, labels, opts.systemSettings)}
+      ${buildEmergency(pkg, labels, opts.systemSettings)}
+      ${buildTerms(pkg, labels, opts.travelerName, opts.systemSettings)}
     </div>
   `;
 
@@ -619,7 +696,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
         ${content}
       </div>
       <div style="position:relative;z-index:2;">
-        ${buildPageFooter(pkg, labels, pageNum, totalPages)}
+        ${buildPageFooter(pkg, labels, pageNum, totalPages, opts.systemSettings)}
       </div>
     </div>`;
   });
@@ -642,7 +719,6 @@ function buildWatermarkHtml(watermark?: WatermarkOptions): string {
       </div>
     `;
   }
-
   const rotation = layout === 'center_stamp' ? '0deg' : '-32deg';
 
   return `
@@ -654,29 +730,30 @@ function buildWatermarkHtml(watermark?: WatermarkOptions): string {
   `;
 }
 
-function buildAgendaBody(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; selectedOptionalProgramIds: string[]; watermark?: WatermarkOptions }, lang: LanguageCode = 'en'): string {
+function buildAgendaBody(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate: string; travelerName: string; selectedOptionalProgramIds: string[]; watermark?: WatermarkOptions; systemSettings?: SystemSettings }, lang: LanguageCode = 'en'): string {
   const pages = buildA4Pages(pkg, labels, opts, lang);
   return `<div id="agenda-content" style="width:100%;">${pages.join('\n')}</div>`;
 }
 
-function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: LanguageCode, title: string): string {
+function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: LanguageCode, title: string, settings?: SystemSettings): string {
   const labels = getPdfLabels(lang);
-  const fontsHref = getGoogleFontsHref(lang);
-  const fontsLink = fontsHref ? `<link href="${fontsHref}" rel="stylesheet">` : '';
   const cleanTitle = escapeHtml(pkg.title);
   const cleanDesc = escapeHtml(`📍 ${pkg.destination}, ${pkg.country} • 🗓️ ${pkg.durationDays} Days / ${pkg.durationNights} Nights • 💼 Official B2B Trade Mission Agenda`);
   const cleanImage = escapeHtml(pkg.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80');
+
+  const colors = getThemeColors(settings);
+  const themeCss = generateThemeCssString(settings);
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>${cleanTitle} | KHB Business Trips</title>
+<title>${cleanTitle} | ${escapeHtml(settings?.companyName || 'KHB Business Trips')}</title>
 <meta name="description" content="${cleanDesc}">
 
 <!-- Open Graph / Social Media Preview (Telegram, WhatsApp, Facebook, LinkedIn) -->
-<meta property="og:site_name" content="KHB Business Trips">
+<meta property="og:site_name" content="${escapeHtml(settings?.companyName || 'KHB Business Trips')}">
 <meta property="og:title" content="${cleanTitle}">
 <meta property="og:description" content="${cleanDesc}">
 <meta property="og:image" content="${cleanImage}">
@@ -689,12 +766,18 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
 <meta name="twitter:description" content="${cleanDesc}">
 <meta name="twitter:image" content="${cleanImage}">
 
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="${colors.secondary}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
-${fontsLink}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Battambang:wght@300;400;700;900&family=Cinzel:wght@500;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,800;1,9..40,400&family=Hanuman:wght@300;400;700;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Koulen&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+Hebrew:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Siemreap&display=swap" rel="stylesheet">
+
 <style>
+  ${themeCss}
+
   * { 
     box-sizing: border-box; 
     -webkit-print-color-adjust: exact !important;
@@ -708,11 +791,17 @@ ${fontsLink}
   body { 
     margin: 0; 
     padding: 20px 12px 40px 12px; 
-    background: #e2e8f0; 
-    font-family: ${getFontFamily(lang)}; 
+    background: ${colors.bgLight || '#e2e8f0'}; 
+    font-family: ${lang === 'km' ? 'var(--font-family-khmer)' : 'var(--font-family-latin)'}; 
+    letter-spacing: var(--font-letter-spacing, 0em);
+    line-height: var(--font-line-height, 1.55);
     -webkit-font-smoothing: antialiased;
     -webkit-overflow-scrolling: touch;
     overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-family-heading, inherit);
+    font-weight: var(--font-heading-weight, 700);
   }
   .no-print-toolbar {
     position: sticky;
@@ -722,7 +811,7 @@ ${fontsLink}
     width: 100%;
     margin: 0 auto 16px auto;
     padding: 10px 16px;
-    background: #0f172a;
+    background: ${colors.secondary};
     color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.18);
@@ -733,7 +822,7 @@ ${fontsLink}
     gap: 12px;
   }
   .no-print-toolbar button {
-    background: linear-gradient(135deg, #0284c7, #4f46e5);
+    background: linear-gradient(135deg, ${colors.primary}, ${colors.primaryHover});
     color: #ffffff;
     border: none;
     padding: 8px 16px;
@@ -745,7 +834,7 @@ ${fontsLink}
     align-items: center;
     justify-content: center;
     gap: 6px;
-    box-shadow: 0 2px 8px rgba(2,132,199,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
   }
@@ -792,7 +881,7 @@ ${fontsLink}
     line-height: 1 !important;
     padding: 0 8px !important;
     border-radius: 4px !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-family: inherit !important;
     font-size: 8.5px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
@@ -816,12 +905,12 @@ ${fontsLink}
     top: 0 !important;
   }
   .pdf-tag-pill-sky {
-    background: #0284c7 !important;
+    background: ${colors.primary} !important;
     color: #ffffff !important;
   }
   .pdf-tag-pill-amber {
-    background: #f59e0b !important;
-    color: #0f172a !important;
+    background: ${colors.accent} !important;
+    color: ${colors.secondary} !important;
   }
   .pdf-tag-pill-emerald {
     background: #059669 !important;
@@ -842,7 +931,7 @@ ${fontsLink}
     line-height: 1 !important;
     padding: 0 7px !important;
     border-radius: 4px !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-family: inherit !important;
     font-size: 9px !important;
     box-sizing: border-box !important;
     white-space: nowrap !important;
@@ -857,14 +946,14 @@ ${fontsLink}
     line-height: 1 !important;
     padding: 0 8px !important;
     border-radius: 4px !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-family: inherit !important;
     font-size: 9.5px !important;
     font-weight: 700 !important;
     box-sizing: border-box !important;
     white-space: nowrap !important;
   }
 
-  /* HTML2Canvas Rasterization Correction (Applied strictly during PDF image generation) */
+  /* HTML2Canvas Rasterization Correction */
   body.pdf-canvas-export .pdf-tag-pill,
   body.pdf-canvas-export .day-meta-pill,
   body.pdf-canvas-export .day-number-badge,
@@ -894,7 +983,7 @@ ${fontsLink}
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  /* Responsive Tablet Styling (769px to 1024px) */
+  /* Responsive Tablet Styling */
   @media screen and (min-width: 769px) and (max-width: 1024px) {
     body {
       padding: 16px 12px 36px 12px !important;
@@ -908,7 +997,7 @@ ${fontsLink}
       width: 145px !important;
     }
   }
-  /* Responsive Mobile & Telegram In-App Browser Styling (<= 768px) */
+  /* Responsive Mobile & Telegram In-App Browser Styling */
   @media screen and (max-width: 768px) {
     body {
       padding: 6px 4px 24px 4px !important;
@@ -1149,7 +1238,7 @@ ${fontsLink}
 <body>
   <div class="no-print-toolbar no-print">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <strong>${escapeHtml(labels.systemName)}</strong> • <span>${escapeHtml(pkg.title)}</span>
+      <strong>${escapeHtml(settings?.companyName || labels.systemName)}</strong> • <span>${escapeHtml(pkg.title)}</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);">
@@ -1175,7 +1264,7 @@ ${fontsLink}
       }
       try {
         var url = new URL(window.location.href);
-        if (url.searchParams.has('agenda') || url.searchParams.has('pkg')) {
+        if (url.searchParams.has('agenda') || url.searchParams.has('pkg') || url.searchParams.has('a') || url.searchParams.has('p')) {
           url.searchParams.set('lang', newLang);
           window.location.href = url.toString();
         }
@@ -1211,12 +1300,12 @@ function downloadBlob(content: string, filename: string, mimeType: string): void
 }
 
 export function getAgendaPreviewHtml(options: AgendaExportOptions & { format?: ExportFormat }): string {
-  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', format = 'html_pdf', watermark } = options;
+  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', format = 'html_pdf', watermark, systemSettings } = options;
   const labels = getPdfLabels(language);
   const pkg = getLocalizedPackage(rawPkg, language);
   const date = selectedDate || pkg.availableDates[0] || '2026-09-15';
   const name = travelerName || labels.defaultTravelerName;
-  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark }, language);
+  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark, systemSettings }, language);
 
   if (format === 'doc') {
     const fontsHref = getGoogleFontsHref(language);
@@ -1284,29 +1373,29 @@ ${fontsLink}
 </html>`;
   }
 
-  return buildStandaloneHtmlDocument(body, pkg, language, `${labels.systemName} - ${pkg.title}`);
+  return buildStandaloneHtmlDocument(body, pkg, language, `${systemSettings?.companyName || labels.systemName} - ${pkg.title}`, systemSettings);
 }
 
 export async function downloadAgendaHtml(options: AgendaExportOptions): Promise<void> {
-  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark } = options;
+  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark, systemSettings } = options;
   const labels = getPdfLabels(language);
   const pkg = getLocalizedPackage(rawPkg, language);
   const date = selectedDate || pkg.availableDates[0] || '2026-09-15';
   const name = travelerName || labels.defaultTravelerName;
-  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark }, language);
-  const fullDoc = buildStandaloneHtmlDocument(body, pkg, language, `${labels.systemName} - ${pkg.title}`);
+  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark, systemSettings }, language);
+  const fullDoc = buildStandaloneHtmlDocument(body, pkg, language, `${systemSettings?.companyName || labels.systemName} - ${pkg.title}`, systemSettings);
   const safeDest = sanitizeFilename(pkg.destination);
   downloadBlob(fullDoc, `KHB_Tour_Agenda_${safeDest}.html`, 'text/html');
 }
 
 export async function downloadAgendaDoc(options: AgendaExportOptions): Promise<void> {
-  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark } = options;
+  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark, systemSettings } = options;
   const labels = getPdfLabels(language);
   const pkg = getLocalizedPackage(rawPkg, language);
   const date = selectedDate || pkg.availableDates[0] || '2026-09-15';
   const name = travelerName || labels.defaultTravelerName;
-  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark }, language);
-  const docContent = buildDocDocument(body, `${labels.systemName} - ${pkg.title}`);
+  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark, systemSettings }, language);
+  const docContent = buildDocDocument(body, `${systemSettings?.companyName || labels.systemName} - ${pkg.title}`);
   const safeDest = sanitizeFilename(pkg.destination);
   downloadBlob(docContent, `KHB_Tour_Agenda_${safeDest}.doc`, 'application/msword');
 }
@@ -1351,14 +1440,14 @@ export async function downloadAgendaImagePdf(options: AgendaExportOptions): Prom
 }
 
 export async function downloadAgendaHtmlToPdf(options: AgendaExportOptions): Promise<void> {
-  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark } = options;
+  const { packageData: rawPkg, selectedDate, travelerName, selectedOptionalProgramIds = [], language = 'en', watermark, systemSettings } = options;
   const labels = getPdfLabels(language);
   const pkg = getLocalizedPackage(rawPkg, language);
   const date = selectedDate || pkg.availableDates[0] || '2026-09-15';
   const name = travelerName || labels.defaultTravelerName;
 
-  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark }, language);
-  const fullHtml = buildStandaloneHtmlDocument(body, pkg, language, `${labels.systemName} - ${pkg.title}`);
+  const body = buildAgendaBody(pkg, labels, { selectedDate: date, travelerName: name, selectedOptionalProgramIds, watermark, systemSettings }, language);
+  const fullHtml = buildStandaloneHtmlDocument(body, pkg, language, `${systemSettings?.companyName || labels.systemName} - ${pkg.title}`, systemSettings);
 
   let iframe: HTMLIFrameElement | null = null;
 

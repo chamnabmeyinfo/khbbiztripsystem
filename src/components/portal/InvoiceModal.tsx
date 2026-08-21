@@ -52,15 +52,15 @@ export const InvoiceModal: React.FC = () => {
         {/* Controls Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/90 print:hidden shrink-0">
           <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <FileText className="w-5 h-5 text-theme-primary" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white font-heading">
               Official Tax & VAT Invoice ({invoice.invoiceNumber})
             </h3>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-theme-primary hover:bg-theme-primary-hover text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / Save PDF</span>
@@ -88,12 +88,12 @@ export const InvoiceModal: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sky-600 via-teal-500 to-amber-500 flex items-center justify-center text-white font-bold shadow-md shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-theme-primary text-white flex items-center justify-center font-bold shadow-md shrink-0">
                   <Compass className="w-8 h-8" />
                 </div>
               )}
               <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-heading">
                   {systemSettings?.companyName || 'KHB Events Co., Ltd.'}
                 </h1>
                 <p className="text-xs text-slate-600 font-medium">
@@ -112,7 +112,7 @@ export const InvoiceModal: React.FC = () => {
               </span>
               <div className="text-xs text-slate-500">Invoice Number: <strong className="text-slate-900 font-mono">{invoice.invoiceNumber}</strong></div>
               <div className="text-xs text-slate-500">Issue Date: <span className="text-slate-800 font-medium">{invoice.issueDate}</span></div>
-              <div className="text-xs text-slate-500">Booking Ref: <strong className="text-sky-600 font-mono">{invoice.bookingCode}</strong></div>
+              <div className="text-xs text-slate-500">Booking Ref: <strong className="text-theme-primary font-mono">{invoice.bookingCode}</strong></div>
             </div>
           </div>
 
@@ -179,7 +179,7 @@ export const InvoiceModal: React.FC = () => {
           {/* Financial Calculation Totals Box & QR Code Verification Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-stretch print-friendly-summary">
             {/* Direct Portal Verification QR Code Card */}
-            <div className="sm:col-span-7 p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-sky-50/40 border border-slate-200 flex flex-col justify-between gap-3 text-xs">
+            <div className="sm:col-span-7 p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between gap-3 text-xs">
               <div className="flex items-start gap-3.5">
                 <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-2xs shrink-0 flex flex-col items-center">
                   <QRCodeSVG
@@ -189,7 +189,7 @@ export const InvoiceModal: React.FC = () => {
                     includeMargin={false}
                     className="w-20 h-20"
                   />
-                  <span className="text-[8.5px] font-mono font-bold text-sky-700 mt-1 uppercase tracking-tight">
+                  <span className="text-[8.5px] font-mono font-bold text-theme-primary mt-1 uppercase tracking-tight">
                     Scan to Verify
                   </span>
                 </div>
@@ -230,7 +230,7 @@ export const InvoiceModal: React.FC = () => {
                   href={verificationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[10.5px] font-bold flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-theme-primary border border-slate-200 text-[10.5px] font-bold flex items-center gap-1 transition-colors"
                 >
                   <span>Open Online</span>
                   <ExternalLink className="w-3 h-3" />
@@ -250,7 +250,7 @@ export const InvoiceModal: React.FC = () => {
               </div>
               <div className="pt-2 border-t border-slate-300 flex justify-between font-bold text-slate-900 text-sm">
                 <span>Grand Total (USD)</span>
-                <span className="font-mono text-base text-sky-600">${invoice.totalUSD.toFixed(2)}</span>
+                <span className="font-mono text-base text-theme-primary font-heading">${invoice.totalUSD.toFixed(2)}</span>
               </div>
               <div className="pt-1 flex justify-between text-slate-500 text-[11px]">
                 <span>Paid in {invoice.paidCurrency}</span>

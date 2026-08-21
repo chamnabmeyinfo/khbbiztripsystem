@@ -9,7 +9,8 @@ export type ButtonVariant =
   | 'emerald'
   | 'amber'
   | 'sky'
-  | 'navy';
+  | 'navy'
+  | 'theme';
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'pill';
 
@@ -34,6 +35,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   amber: 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-900 font-semibold shadow-sm border border-transparent',
   sky: 'bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white shadow-sm border border-transparent',
   navy: 'bg-[#0f172a] hover:bg-[#1e293b] active:bg-[#020617] text-white shadow-sm border border-transparent',
+  theme: 'theme-btn-primary shadow-sm hover:shadow border border-transparent',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {

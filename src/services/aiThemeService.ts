@@ -165,28 +165,133 @@ export const FONT_HEADING_OPTIONS: FontOption[] = [
 ];
 
 /**
+ * Resolves full active color theme palette with fallbacks
+ */
+export function getThemeColors(settings?: SystemSettings): ThemePalette {
+  if (!settings) return THEME_PRESETS.navy;
+  const presetKey = settings.themePreset || 'navy';
+  const base = THEME_PRESETS[presetKey] || THEME_PRESETS.navy;
+  const custom = settings.customPalette;
+
+  return {
+    themeName: custom?.themeName || base.themeName,
+    presetKey: (settings.themePreset as any) || 'navy',
+    primary: settings.primaryColor || custom?.primary || base.primary,
+    primaryHover: custom?.primaryHover || base.primaryHover,
+    secondary: settings.secondaryColor || custom?.secondary || base.secondary,
+    accent: settings.accentColor || custom?.accent || base.accent,
+    accentGlow: custom?.accentGlow || base.accentGlow,
+    bgDark: custom?.bgDark || base.bgDark,
+    bgLight: custom?.bgLight || base.bgLight,
+    cardDark: custom?.cardDark || base.cardDark,
+    cardLight: custom?.cardLight || base.cardLight,
+    textContrast: custom?.textContrast || base.textContrast,
+    description: custom?.rationale || base.description,
+    rationale: custom?.rationale || base.rationale,
+    fontScaleRecommendation: settings.fontSizeScale || base.fontScaleRecommendation || 'normal'
+  };
+}
+
+/**
+ * Resolves complete typography parameters and CSS font stacks
+ */
+export function getTypographySettings(settings?: SystemSettings) {
+  const latinOption = FONT_LATIN_OPTIONS.find(f => f.key === settings?.fontFamilyLatin) || FONT_LATIN_OPTIONS[0];
+  const khmerOption = FONT_KHMER_OPTIONS.find(f => f.key === settings?.fontFamilyKhmer) || FONT_KHMER_OPTIONS[0];
+  const headingOption = FONT_HEADING_OPTIONS.find(f => f.key === settings?.fontFamilyHeading) || FONT_HEADING_OPTIONS[0];
+
+  const letterSpacingMap: Record<string, string> = {
+    tight: '-0.025em',
+    normal: '0em',
+    wide: '0.025em',
+    widest: '0.05em',
+  };
+
+  const lineHeightMap: Record<string, string> = {
+    snug: '1.4',
+    normal: '1.55',
+    relaxed: '1.7',
+  };
+
+  const fontWeightMap: Record<string, number> = {
+    normal: 400,
+    semibold: 600,
+    bold: 700,
+    black: 900,
+  };
+
+  return {
+    fontFamilyLatin: settings?.fontFamilyLatin || 'plus-jakarta',
+    fontFamilyKhmer: settings?.fontFamilyKhmer || 'kantumruy-pro',
+    fontFamilyHeading: settings?.fontFamilyHeading || 'inherit',
+    headingFontWeight: settings?.headingFontWeight || 'bold',
+    headingFontWeightNum: fontWeightMap[settings?.headingFontWeight || 'bold'] || 700,
+    fontLineHeight: settings?.fontLineHeight || 'normal',
+    lineHeightCss: lineHeightMap[settings?.fontLineHeight || 'normal'] || '1.55',
+    fontLetterSpacing: settings?.fontLetterSpacing || 'normal',
+    letterSpacingCss: letterSpacingMap[settings?.fontLetterSpacing || 'normal'] || '0em',
+    fontSizeScale: settings?.fontSizeScale || 'normal',
+    fontSmoothing: settings?.fontSmoothing || 'antialiased',
+    fontBoldBoost: !!settings?.fontBoldBoost,
+    latinStack: latinOption.fontStack,
+    khmerStack: khmerOption.fontStack,
+    headingStack: headingOption.fontStack,
+  };
+}
+
+/**
+ * Generates raw CSS variables string for injection into standalone HTML exports and print previews
+ */
+export function generateThemeCssString(settings?: SystemSettings): string {
+  const colors = getThemeColors(settings);
+  const typo = getTypographySettings(settings);
+
+  return `
+    :root {
+      --color-primary: ${colors.primary};
+      --color-primary-hover: ${colors.primaryHover};
+      --color-secondary: ${colors.secondary};
+      --color-accent: ${colors.accent};
+      --color-accent-glow: ${colors.accentGlow};
+      --color-bg-dark: ${colors.bgDark};
+      --color-bg-light: ${colors.bgLight};
+      --color-card-dark: ${colors.cardDark};
+      --color-card-light: ${colors.cardLight};
+      --color-text-contrast: ${colors.textContrast};
+      --font-family-latin: ${typo.latinStack};
+      --font-family-khmer: ${typo.khmerStack};
+      --font-family-heading: ${typo.headingStack};
+      --font-heading-weight: ${typo.headingFontWeightNum};
+      --font-line-height: ${typo.lineHeightCss};
+      --font-letter-spacing: ${typo.letterSpacingCss};
+    }
+  `;
+}
+
+/**
  * Applies dynamic CSS variables and dataset attributes to document root
  */
 export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): void {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
-  const presetKey = settings.themePreset || 'navy';
-  const basePalette = THEME_PRESETS[presetKey] || THEME_PRESETS.navy;
-
-  const primary = settings.primaryColor || settings.customPalette?.primary || basePalette.primary;
-  const secondary = settings.secondaryColor || settings.customPalette?.secondary || basePalette.secondary;
-  const accent = settings.accentColor || settings.customPalette?.accent || basePalette.accent;
+  const colors = getThemeColors(settings);
+  const typo = getTypographySettings(settings);
 
   // Set CSS custom properties
-  root.style.setProperty('--color-primary', primary);
-  root.style.setProperty('--color-secondary', secondary);
-  root.style.setProperty('--color-accent', accent);
-  root.style.setProperty('--color-primary-hover', settings.customPalette?.primaryHover || basePalette.primaryHover);
-  root.style.setProperty('--color-accent-glow', settings.customPalette?.accentGlow || basePalette.accentGlow);
+  root.style.setProperty('--color-primary', colors.primary);
+  root.style.setProperty('--color-secondary', colors.secondary);
+  root.style.setProperty('--color-accent', colors.accent);
+  root.style.setProperty('--color-primary-hover', colors.primaryHover);
+  root.style.setProperty('--color-accent-glow', colors.accentGlow);
+  root.style.setProperty('--color-bg-dark', colors.bgDark);
+  root.style.setProperty('--color-bg-light', colors.bgLight);
+  root.style.setProperty('--color-card-dark', colors.cardDark);
+  root.style.setProperty('--color-card-light', colors.cardLight);
+  root.style.setProperty('--color-text-contrast', colors.textContrast);
 
   // Set data attributes for global component styling
-  root.dataset.themePreset = presetKey;
+  root.dataset.themePreset = colors.presetKey;
   root.dataset.fontSizeScale = settings.fontSizeScale || 'normal';
 
   // Apply Font Size scaling
@@ -202,35 +307,17 @@ export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): vo
   }
 
   // Apply Font Families
-  const latinFont = FONT_LATIN_OPTIONS.find((f) => f.key === settings.fontFamilyLatin)?.fontStack || FONT_LATIN_OPTIONS[0].fontStack;
-  const khmerFont = FONT_KHMER_OPTIONS.find((f) => f.key === settings.fontFamilyKhmer)?.fontStack || FONT_KHMER_OPTIONS[0].fontStack;
-  const headingFont = FONT_HEADING_OPTIONS.find((f) => f.key === settings.fontFamilyHeading)?.fontStack || 'inherit';
-
-  root.style.setProperty('--font-family-latin', latinFont);
-  root.style.setProperty('--font-family-khmer', khmerFont);
-  root.style.setProperty('--font-family-heading', headingFont);
-
-  // Apply Letter Spacing
-  const letterSpacingMap: Record<string, string> = {
-    tight: '-0.025em',
-    normal: '0em',
-    wide: '0.025em',
-    widest: '0.05em',
-  };
-  const letterSpacing = letterSpacingMap[settings.fontLetterSpacing || 'normal'] || '0em';
-  root.style.setProperty('--font-letter-spacing', letterSpacing);
-
-  // Apply Line Height
-  const lineHeightMap: Record<string, string> = {
-    snug: '1.4',
-    normal: '1.55',
-    relaxed: '1.7',
-  };
-  const lineHeight = lineHeightMap[settings.fontLineHeight || 'normal'] || '1.55';
-  root.style.setProperty('--font-line-height', lineHeight);
+  root.style.setProperty('--font-family-latin', typo.latinStack);
+  root.style.setProperty('--font-family-khmer', typo.khmerStack);
+  root.style.setProperty('--font-family-heading', typo.headingStack);
+  root.style.setProperty('--font-heading-weight', String(typo.headingFontWeightNum));
+  root.style.setProperty('--font-letter-spacing', typo.letterSpacingCss);
+  root.style.setProperty('--font-line-height', typo.lineHeightCss);
 
   // Apply Body Font Stack
-  root.style.fontFamily = latinFont;
+  root.style.fontFamily = typo.latinStack;
+  root.style.letterSpacing = typo.letterSpacingCss;
+  root.style.lineHeight = typo.lineHeightCss;
 
   // Smoothing & High Contrast Boost
   if (settings.fontSmoothing === 'subpixel') {
