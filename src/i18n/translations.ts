@@ -123,6 +123,14 @@ export interface TranslationDictionary {
   viewPublicSite: string;
   quickActions: string;
   backOfficeManagement: string;
+  startingFrom?: string;
+  selectCurrency?: string;
+  reconnect?: string;
+  saveAmount?: string;
+  pdfDossier?: string;
+  salesPage?: string;
+  allMissions?: string;
+  verifiedBadge?: string;
 }
 
 export const translations: Record<LanguageCode, TranslationDictionary> = {
@@ -150,6 +158,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     viewDetails: "View Itinerary & Details",
     bookNow: "Reserve Trip",
     instantBooking: "Instant Confirmation & Free Cancellation up to 7 days",
+    verifiedReview: "Verified Traveler Review",
     highlights: "Package Highlights",
     whoShouldJoin: "Who Should Join?",
     whyShouldJoin: "Why You Should Join",
@@ -158,6 +167,14 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     exclusions: "Not Included",
     selectDates: "Choose Departure Date",
     totalPrice: "Grand Total",
+    startingFrom: "Starting From",
+    selectCurrency: "Select Currency",
+    reconnect: "Reconnect",
+    saveAmount: "Save",
+    pdfDossier: "PDF Dossier",
+    salesPage: "Sales Page",
+    allMissions: "All Trade Delegations",
+    verifiedBadge: "Verified",
     taxesAndFees: "Taxes & Local Tourism VAT included",
     subtotal: "Subtotal",
     proceedToPayment: "Continue to Secure Checkout",
@@ -863,7 +880,15 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navSettings: "⚙️ ការកំណត់ & ការគ្រប់គ្រង",
     viewPublicSite: "មើលគេហទំព័រសាធារណៈ",
     quickActions: "សកម្មភាពរហ័ស",
-    backOfficeManagement: "ការិយាល័យគ្រប់គ្រងទូទៅ"
+    backOfficeManagement: "ការិយាល័យគ្រប់គ្រងទូទៅ",
+    startingFrom: "តម្លៃចាប់ពី",
+    selectCurrency: "ជ្រើសរើសរូបិយប័ណ្ណ",
+    reconnect: "ភ្ជាប់ឡើងវិញ",
+    saveAmount: "សន្សំបាន",
+    pdfDossier: "ឯកសារ PDF កម្មវិធី",
+    salesPage: "ទំព័រព័ត៌មាន",
+    allMissions: "កម្មវិធីបេសកកម្មទាំងអស់",
+    verifiedBadge: "បានផ្ទៀងផ្ទាត់"
   }
 };
 

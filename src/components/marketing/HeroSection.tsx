@@ -178,9 +178,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
               >
                 <Users className="w-4 h-4 text-teal-500 absolute left-3 top-3" />
                 <span>
-                  {adultsCount} Adults{childrenCount > 0 ? `, ${childrenCount} Kids` : ''}
+                  {language === 'km'
+                    ? `${adultsCount} នាក់ (ពេញវ័យ)${childrenCount > 0 ? `, ${childrenCount} កុមារ` : ''}`
+                    : `${adultsCount} Adults${childrenCount > 0 ? `, ${childrenCount} Kids` : ''}`}
                 </span>
-                <span className="text-[10px] text-slate-400">Edit ▾</span>
+                <span className="text-[10px] text-slate-400">{language === 'km' ? 'កែប្រែ ▾' : 'Edit ▾'}</span>
               </button>
 
               {/* Travelers Counter Dropdown */}
@@ -188,14 +190,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
                 <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-3 z-50 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Adults</div>
-                      <div className="text-[10px] text-slate-400">Ages 12+</div>
+                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {language === 'km' ? 'មនុស្សពេញវ័យ' : 'Adults'}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {language === 'km' ? 'អាយុ ១២+ ឆ្នាំ' : 'Ages 12+'}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setAdultsCount(Math.max(1, adultsCount - 1))}
-                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700"
+                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                       >
                         -
                       </button>
@@ -203,7 +209,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
                       <button
                         type="button"
                         onClick={() => setAdultsCount(Math.min(10, adultsCount + 1))}
-                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700"
+                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                       >
                         +
                       </button>
@@ -212,14 +218,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
 
                   <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
                     <div>
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Children</div>
-                      <div className="text-[10px] text-slate-400">Ages 0-11 (30% off)</div>
+                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {language === 'km' ? 'កុមារ' : 'Children'}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {language === 'km' ? 'អាយុ ០-១១ ឆ្នាំ (បញ្ចុះតម្លៃ ៣០%)' : 'Ages 0-11 (30% off)'}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
-                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700"
+                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                       >
                         -
                       </button>
@@ -227,7 +237,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
                       <button
                         type="button"
                         onClick={() => setChildrenCount(Math.min(6, childrenCount + 1))}
-                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700"
+                        className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                       >
                         +
                       </button>
@@ -239,7 +249,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
                     onClick={() => setShowTravelersDropdown(false)}
                     className="w-full py-1.5 rounded-lg bg-sky-50 dark:bg-slate-700 text-sky-600 dark:text-sky-400 font-bold text-xs hover:bg-sky-100 cursor-pointer"
                   >
-                    Done
+                    {language === 'km' ? 'រួចរាល់' : 'Done'}
                   </button>
                 </div>
               )}
@@ -252,14 +262,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
                 className="w-full mt-4 md:mt-0 py-3 rounded-2xl bg-gradient-to-r from-sky-600 via-teal-600 to-sky-700 hover:from-sky-700 hover:to-teal-700 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Search className="w-4 h-4" />
-                <span>Search</span>
+                <span>{language === 'km' ? 'ស្វែងរក' : 'Search'}</span>
               </button>
             </div>
           </form>
 
           {/* Quick Destination Chips */}
           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 flex-wrap text-xs">
-            <span className="text-slate-400 font-medium text-[11px] mr-1">Trending:</span>
+            <span className="text-slate-400 font-medium text-[11px] mr-1">
+              {language === 'km' ? 'ពេញនិយម:' : 'Trending:'}
+            </span>
             {packages.slice(0, 5).map(pkg => (
               <button
                 key={pkg.id}

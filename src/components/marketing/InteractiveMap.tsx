@@ -485,7 +485,9 @@ export const InteractiveMap: React.FC = () => {
 
                   <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-800/80">
                     <div>
-                      <span className="text-[9px] text-slate-400 block leading-tight">Investment / Seat</span>
+                      <span className="text-[9px] text-slate-400 block leading-tight">
+                        {language === 'km' ? 'តម្លៃក្នុងម្នាក់' : 'Investment / Seat'}
+                      </span>
                       <div className="text-sm font-black text-emerald-400 font-mono">
                         {formatMoney(activePkg.discountPriceUSD || activePkg.priceUSD, currency, language)}
                       </div>

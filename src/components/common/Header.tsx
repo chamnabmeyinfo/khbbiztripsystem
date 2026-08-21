@@ -80,7 +80,7 @@ export const Header: React.FC = () => {
             onClick={toggleOfflineMode}
             className="underline hover:text-white ml-2 text-xs cursor-pointer"
           >
-            Reconnect
+            {t('reconnect') || 'Reconnect'}
           </button>
         </div>
       )}
@@ -111,7 +111,7 @@ export const Header: React.FC = () => {
                   {systemSettings?.companyName ? systemSettings.companyName.split('—')[0].trim() : t('appName')}
                 </span>
                 <span className="hidden sm:block text-[10px] text-slate-600 dark:text-slate-300 font-bold tracking-wide uppercase truncate max-w-[220px]">
-                  {systemSettings?.companyTagline || 'B2B Trade Delegation'}
+                  {systemSettings?.companyTagline || t('tagline')}
                 </span>
               </div>
             </button>
@@ -194,7 +194,7 @@ export const Header: React.FC = () => {
                   className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95`}
                 >
                   <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
-                    Select Currency
+                    {t('selectCurrency') || 'Select Currency'}
                   </div>
                   {Object.values(CURRENCY_CONFIGS).map(curr => (
                     <button
@@ -224,7 +224,7 @@ export const Header: React.FC = () => {
                       }}
                       className="w-full text-center py-1 text-xs text-sky-600 dark:text-sky-400 font-semibold hover:underline cursor-pointer"
                     >
-                      Open Currency Converter ↗
+                      {language === 'km' ? 'កម្មវិធីគណនាប្តូរប្រាក់ ↗' : 'Open Currency Converter ↗'}
                     </button>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { SEED_REVIEWS } from '../../services/mockData';
 import { Star, ShieldCheck, Quote, ThumbsUp } from 'lucide-react';
 
 export const Testimonials: React.FC = () => {
-  const { t } = useApp();
+  const { t, language } = useApp();
 
   if (!SEED_REVIEWS || SEED_REVIEWS.length === 0) {
     return null;
@@ -16,7 +16,7 @@ export const Testimonials: React.FC = () => {
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold mb-3">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>100% Verified Traveler Reviews</span>
+            <span>{language === 'km' ? 'មតិយោបល់ពិតពីប្រតិភូដែលបានចូលរួម ១០០%' : '100% Verified Traveler Reviews'}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {t('testimonialsTitle')}
@@ -42,7 +42,7 @@ export const Testimonials: React.FC = () => {
                   </div>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
                     <ShieldCheck className="w-3 h-3" />
-                    Verified
+                    {t('verifiedBadge') || 'Verified'}
                   </span>
                 </div>
 

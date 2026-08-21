@@ -1084,7 +1084,7 @@ export const PackageSalesLandingPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <div>
               <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                Total Delegate Investment
+                {language === 'km' ? 'តម្លៃវិនិយោគសរុប' : 'Total Delegate Investment'}
               </span>
               <div className="flex items-baseline gap-2">
                 <span className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white">
@@ -1099,7 +1099,7 @@ export const PackageSalesLandingPage: React.FC = () => {
             </div>
 
             <div className="hidden md:block pl-4 border-l border-slate-200 dark:border-slate-800 text-xs text-slate-500">
-              <span>📅 Departure: </span>
+              <span>{language === 'km' ? '📅 ថ្ងៃចេញដំណើរ: ' : '📅 Departure: '}</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{selectedDepartureDate}</span>
             </div>
           </div>
@@ -1110,7 +1110,7 @@ export const PackageSalesLandingPage: React.FC = () => {
               className="hidden sm:flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer"
             >
               <Download className="w-4 h-4" />
-              <span>Dossier</span>
+              <span>{t('pdfDossier') || 'Dossier'}</span>
             </button>
 
             <button

@@ -54,20 +54,36 @@ export const LandingPage: React.FC = () => {
 
   const faqs = [
     {
-      q: 'How does automated tax and VAT invoicing work on TripDesk?',
-      a: 'Upon booking confirmation, TripDesk automatically calculates local municipal tourism levies and standard VAT (7.5%), generating a statutory PDF invoice and receipts formatted for individual travelers and corporate tax deductions.'
+      q: language === 'km'
+        ? 'តើការចេញវិក្កយបត្រពន្ធ VAT និងការគណនាពន្ធស្វ័យប្រវត្តិកើតឡើងយ៉ាងដូចម្តេច?'
+        : 'How does automated tax and VAT invoicing work on TripDesk?',
+      a: language === 'km'
+        ? 'នៅពេលការកក់ត្រូវបានបញ្ជាក់ ប្រព័ន្ធនឹងគណនាពន្ធអាករលើតម្លៃបន្ថែម (VAT 7.5%) និងកម្រៃសេវាទេសចរណ៍ដោយស្វ័យប្រវត្តិ រួមទាំងបង្កើតវិក្កយបត្រ PDF ផ្លូវការស្របតាមស្តង់ដារគណនេយ្យសម្រាប់ក្រុមហ៊ុន និងបុគ្គល។'
+        : 'Upon booking confirmation, TripDesk automatically calculates local municipal tourism levies and standard VAT (7.5%), generating a statutory PDF invoice and receipts formatted for individual travelers and corporate tax deductions.'
     },
     {
-      q: 'What is included in the small-group package price?',
-      a: 'All our featured packages include boutique 4/5-star accommodations, daily artisanal breakfasts and dinners, certified private local guides, airport chauffeur transfers, and flight booking allowances where indicated.'
+      q: language === 'km'
+        ? 'តើតម្លៃកញ្ចប់ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មរួមបញ្ចូលអ្វីខ្លះ?'
+        : 'What is included in the small-group package price?',
+      a: language === 'km'
+        ? 'កញ្ចប់ដំណើរកម្សាន្តនីមួយៗរួមបញ្ចូល៖ ការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤-៥ ផ្កាយ, អាហារប្រចាំថ្ងៃ, មគ្គុទ្ទេសក៍ទេសចរណ៍និងអ្នកបកប្រែជំនាញ, រថយន្ត VIP ទទួល-ជូនដំណើរ, និងការរៀបចំជំនួបពាណិជ្ជកម្មតាមការកំណត់។'
+        : 'All our featured packages include boutique 4/5-star accommodations, daily artisanal breakfasts and dinners, certified private local guides, airport chauffeur transfers, and flight booking allowances where indicated.'
     },
     {
-      q: 'Can I modify my departure dates after booking?',
-      a: 'Yes! You can reschedule your trip directly from your traveler portal. If the new departure date is within our confirmed operator schedule, rebooking is free with zero penalty.'
+      q: language === 'km'
+        ? 'តើខ្ញុំអាចកែប្រែកាលបរិច្ឆេទចេញដំណើរក្រោយពេលកក់បានទេ?'
+        : 'Can I modify my departure dates after booking?',
+      a: language === 'km'
+        ? 'បាន! លោកអ្នកអាចស្នើសុំប្តូរកាលបរិច្ឆេទធ្វើដំណើរបានដោយផ្ទាល់តាមរយៈទំព័រគ្រប់គ្រង (Traveler Portal) ដោយឥតគិតថ្លៃ ប្រសិនបើកាលបរិច្ឆេទថ្មីនោះស្ថិតក្នុងតារាងដំណើរការរបស់ក្រុមហ៊ុន។'
+        : 'Yes! You can reschedule your trip directly from your traveler portal. If the new departure date is within our confirmed operator schedule, rebooking is free with zero penalty.'
     },
     {
-      q: 'Are offline itineraries available during my trip?',
-      a: 'Yes. Your booked itinerary, day-by-day routes, flight gates, hotel confirmation vouchers, and local emergency contact helplines are cached offline in the web app for instant access without roaming data.'
+      q: language === 'km'
+        ? 'តើខ្ញុំអាចមើលកម្មវិធីធ្វើដំណើរដោយគ្មានអ៊ីនធឺណិត (Offline) បានទេ?'
+        : 'Are offline itineraries available during my trip?',
+      a: language === 'km'
+        ? 'បាន! កម្មវិធីដំណើរទស្សនកិច្ចប្រចាំថ្ងៃ ប័ណ្ណសណ្ឋាគារ ព័ត៌មានជើងហោះហើរ និងលេខទូរស័ព្ទសង្គ្រោះបន្ទាន់ ត្រូវបានរក្សាទុកក្នុងទូរស័ព្ទរបស់អ្នកដោយស្វ័យប្រវត្តិ អាចបើកមើលបានទោះគ្មានអ៊ីនធឺណិត។'
+        : 'Yes. Your booked itinerary, day-by-day routes, flight gates, hotel confirmation vouchers, and local emergency contact helplines are cached offline in the web app for instant access without roaming data.'
     }
   ];
 
@@ -83,24 +99,28 @@ export const LandingPage: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Search Results for "{searchResults.query}"
+                  {language === 'km' ? `លទ្ធផលស្វែងរកសម្រាប់ "${searchResults.query}"` : `Search Results for "${searchResults.query}"`}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {searchResults.items.length} matching verified luxury departures found
+                  {language === 'km'
+                    ? `បានរកឃើញ ${searchResults.items.length} កញ្ចប់បេសកកម្មពាណិជ្ជកម្មដែលត្រូវគ្នា`
+                    : `${searchResults.items.length} matching verified luxury departures found`}
                 </p>
               </div>
               <button
                 onClick={() => setSearchResults(null)}
                 className="text-xs text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer"
               >
-                Clear Search
+                {language === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear Search'}
               </button>
             </div>
 
             {searchResults.items.length === 0 ? (
               <div className="text-center py-10 bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700">
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  No direct matches for "{searchResults.query}". Browse our popular packages below!
+                  {language === 'km'
+                    ? `មិនមានកញ្ចប់ដំណើរកម្សាន្តត្រូវនឹង "${searchResults.query}" ទេ។ សូមពិនិត្យកញ្ចប់ពេញនិយមខាងក្រោម!`
+                    : `No direct matches for "${searchResults.query}". Browse our popular packages below!`}
                 </p>
               </div>
             ) : (
@@ -130,7 +150,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-slate-400">From</span>
+                          <span className="text-[10px] text-slate-400">{t('startingFrom') || 'From'}</span>
                           <div className="font-mono font-bold text-slate-900 dark:text-white text-sm">
                             {formatMoney(pkg.discountPriceUSD || pkg.priceUSD, currency, language)}
                           </div>
@@ -140,9 +160,9 @@ export const LandingPage: React.FC = () => {
                             setSelectedPackage(pkg);
                             setActiveModal('package_detail');
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-sky-600 text-white font-bold text-xs"
+                          className="px-3 py-1.5 rounded-xl bg-sky-600 text-white font-bold text-xs cursor-pointer hover:bg-sky-700 transition-colors"
                         >
-                          View Details
+                          {t('viewDetails') || 'View Details'}
                         </button>
                       </div>
                     </div>
@@ -164,10 +184,12 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Automated Tax Invoicing
+                  {language === 'km' ? 'វិក្កយបត្រពន្ធអាករ VAT ស្វ័យប្រវត្តិ' : 'Automated Tax Invoicing'}
                 </h4>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Compliant VAT calculation and instant official PDF receipts for expense filing.
+                  {language === 'km'
+                    ? 'គណនាពន្ធអាករ VAT ត្រឹមត្រូវ និងទាញយកបង្កាន់ដៃផ្លូវការជា PDF ភ្លាមៗសម្រាប់ការទូទាត់ចំណាយក្រុមហ៊ុន។'
+                    : 'Compliant VAT calculation and instant official PDF receipts for expense filing.'}
                 </p>
               </div>
             </div>
@@ -178,10 +200,12 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                  100% Guaranteed Departures
+                  {language === 'km' ? 'ធានាចេញដំណើរ ១០០%' : '100% Guaranteed Departures'}
                 </h4>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Every listed date is backed by confirmed boutique hotel & tour guide allocations.
+                  {language === 'km'
+                    ? 'រាល់កាលបរិច្ឆេទដែលបានបង្ហាញ ត្រូវបានធានាដោយការកក់សណ្ឋាគារ និងការរៀបចំមគ្គុទ្ទេសក៍ជាមុនរួចរាល់។'
+                    : 'Every listed date is backed by confirmed boutique hotel & tour guide allocations.'}
                 </p>
               </div>
             </div>
@@ -192,10 +216,12 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Multi-Currency & RTL
+                  {language === 'km' ? 'ពហុរូបិយប័ណ្ណ & អត្រាប្តូរប្រាក់ផ្ទាល់' : 'Multi-Currency & RTL'}
                 </h4>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Pay smoothly in USD, EUR, GBP, JPY, AED, or ILS with real-time rate transparency.
+                  {language === 'km'
+                    ? 'ទូទាត់ប្រាក់យ៉ាងងាយស្រួលជា USD, KHR, EUR, JPY, ឬ AED ជាមួយតម្លាភាពនៃអត្រាប្តូរប្រាក់បច្ចុប្បន្ន។'
+                    : 'Pay smoothly in USD, EUR, GBP, JPY, AED, or ILS with real-time rate transparency.'}
                 </p>
               </div>
             </div>
@@ -206,10 +232,12 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                  24/7 Dedicated Concierge
+                  {language === 'km' ? 'សេវាជំនួយ ២៤/៧' : '24/7 Dedicated Concierge'}
                 </h4>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Direct live chat with your travel manager and offline emergency contact links.
+                  {language === 'km'
+                    ? 'ការសន្ទនាផ្ទាល់ជាមួយអ្នកគ្រប់គ្រងដំណើរកម្សាន្ត និងលេខទូរស័ព្ទទាន់ហេតុការណ៍ពេលមានអាសន្ន។'
+                    : 'Direct live chat with your travel manager and offline emergency contact links.'}
                 </p>
               </div>
             </div>
@@ -231,10 +259,12 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Frequently Asked Questions
+              {language === 'km' ? 'សំណួរដែលសួរញឹកញាប់ (FAQs)' : 'Frequently Asked Questions'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Everything you need to know about booking with TripDesk.
+              {language === 'km'
+                ? 'ព័ត៌មានលម្អិត និងចម្លើយសំខាន់ៗអំពីការកក់ដំណើរកម្សាន្តជាមួយ KHB Events & Tours'
+                : 'Everything you need to know about booking with TripDesk.'}
             </p>
           </div>
 
