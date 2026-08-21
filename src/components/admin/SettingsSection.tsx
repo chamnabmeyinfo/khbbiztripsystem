@@ -45,9 +45,19 @@ import {
   Type,
   CaseSensitive,
   AlignLeft,
+  AlignCenter,
+  AlignJustify,
+  Maximize2,
+  Minimize2,
+  Square,
   Sparkle,
   Layers,
-  Eye
+  Eye,
+  Sun,
+  Moon,
+  Contrast,
+  FileText,
+  Space
 } from 'lucide-react';
 import { SystemSettings } from '../../types';
 import { AiThemeColorDetectorModal } from './AiThemeColorDetectorModal';
@@ -56,6 +66,9 @@ import {
   FONT_LATIN_OPTIONS,
   FONT_KHMER_OPTIONS,
   FONT_HEADING_OPTIONS,
+  getContrastTextColor,
+  getOptimalBadgeStyle,
+  isColorDark,
 } from '../../services/aiThemeService';
 
 const LOGO_PRESETS = [
@@ -1737,15 +1750,15 @@ export const SettingsSection: React.FC = () => {
             </div>
           </div>
 
-          {/* 5. Typography Baseline, Line Height & Letter Spacing Controls */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+          {/* 5. Typography Baseline, Alignment, Spacing, Padding & Shape Geometry */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 space-y-6">
             <div>
               <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-emerald-500" />
-                <span>Rhythm, Line Height & Kerning Calibration</span>
+                <span>Typography, Spacing, Alignment & Geometry Studio</span>
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Fine-tune optical readability, character spacing, line height, and baseline scaling.
+                Fine-tune optical readability, text alignment, paragraph margins, card padding, line height, and corner geometry.
               </p>
             </div>
 
@@ -1754,12 +1767,13 @@ export const SettingsSection: React.FC = () => {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 Baseline Font Scale
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
                 {[
-                  { key: 'compact', label: 'Compact (14.5px)', desc: 'High ERP table data density', scale: '90%' },
+                  { key: 'compact', label: 'Compact (14.5px)', desc: 'High ERP table density', scale: '90%' },
                   { key: 'normal', label: 'Normal (16px)', desc: 'Default standard balanced layout', scale: '100%' },
-                  { key: 'comfortable', label: 'Comfortable (16.5px)', desc: 'Enhanced mobile & portal legibility', scale: '105%' },
+                  { key: 'comfortable', label: 'Comfortable (16.5px)', desc: 'Enhanced mobile legibility', scale: '105%' },
                   { key: 'large', label: 'Large (17.5px)', desc: 'Executive high-visibility mode', scale: '115%' },
+                  { key: 'extra-large', label: 'Extra Large (19px)', desc: 'Ultra-clear presentation mode', scale: '125%' },
                 ].map((opt) => {
                   const isSelected = (formData.fontSizeScale || 'normal') === opt.key;
                   return (
@@ -1776,7 +1790,7 @@ export const SettingsSection: React.FC = () => {
                         setIsSaved(true);
                         setTimeout(() => setIsSaved(false), 2000);
                       }}
-                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-amber-950 dark:text-amber-200 font-bold ring-2 ring-amber-500/20'
                           : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
@@ -1793,18 +1807,257 @@ export const SettingsSection: React.FC = () => {
               </div>
             </div>
 
+            {/* Row: Text Alignment & Paragraph Spacing */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+              {/* Text Alignment */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <AlignLeft className="w-4 h-4 text-blue-500" />
+                  <span>Document & Text Alignment</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'left', label: 'Left Aligned', icon: AlignLeft },
+                    { key: 'center', label: 'Centered', icon: AlignCenter },
+                    { key: 'justify', label: 'Justified', icon: AlignJustify },
+                  ].map((align) => {
+                    const isSelected = (formData.textAlign || 'left') === align.key;
+                    const IconComp = align.icon;
+                    return (
+                      <button
+                        key={align.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, textAlign: align.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-2 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <IconComp className="w-3.5 h-3.5" />
+                        <span>{align.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Paragraph Spacing */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-emerald-500" />
+                  <span>Paragraph Spacing (Margin Bottom)</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { key: 'compact', label: 'Compact', val: '0.5rem' },
+                    { key: 'normal', label: 'Normal', val: '0.875rem' },
+                    { key: 'relaxed', label: 'Relaxed', val: '1.25rem' },
+                    { key: 'loose', label: 'Loose', val: '1.75rem' },
+                  ].map((ps) => {
+                    const isSelected = (formData.paragraphSpacing || 'normal') === ps.key;
+                    return (
+                      <button
+                        key={ps.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, paragraphSpacing: ps.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-1 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <div>{ps.label}</div>
+                        <div className="text-[9px] opacity-75 font-mono">{ps.val}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Row: Content Padding & Corner Radius */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+              {/* Card / Content Padding Scale */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Maximize2 className="w-4 h-4 text-amber-500" />
+                  <span>Card & Container Padding</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { key: 'compact', label: 'Compact', val: '12px' },
+                    { key: 'normal', label: 'Normal', val: '20px' },
+                    { key: 'spacious', label: 'Spacious', val: '28px' },
+                    { key: 'generous', label: 'Generous', val: '36px' },
+                  ].map((cp) => {
+                    const isSelected = (formData.contentPadding || 'normal') === cp.key;
+                    return (
+                      <button
+                        key={cp.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, contentPadding: cp.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-1 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-amber-600 bg-amber-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <div>{cp.label}</div>
+                        <div className="text-[9px] opacity-75 font-mono">{cp.val}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Corner Radius & Geometry */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Square className="w-4 h-4 text-purple-500" />
+                  <span>Border Radius & Corner Geometry</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { key: 'none', label: 'Sharp', val: '0px' },
+                    { key: 'subtle', label: 'Subtle', val: '8px' },
+                    { key: 'rounded', label: 'Rounded', val: '16px' },
+                    { key: 'pill', label: 'Pill / Soft', val: '24px' },
+                  ].map((br) => {
+                    const isSelected = (formData.borderRadiusPreset || 'rounded') === br.key;
+                    return (
+                      <button
+                        key={br.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, borderRadiusPreset: br.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-1 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <div>{br.label}</div>
+                        <div className="text-[9px] opacity-75 font-mono">{br.val}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Row: Heading Transform & Heading Letter Spacing */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Type className="w-4 h-4 text-indigo-500" />
+                  <span>Heading Text Transform</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { key: 'none', label: 'Normal Case' },
+                    { key: 'uppercase', label: 'UPPERCASE' },
+                    { key: 'capitalize', label: 'Capitalize' },
+                  ].map((ht) => {
+                    const isSelected = (formData.headingTransform || 'none') === ht.key;
+                    return (
+                      <button
+                        key={ht.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, headingTransform: ht.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-2 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {ht.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <CaseSensitive className="w-4 h-4 text-cyan-500" />
+                  <span>Heading Tracking (Kerning)</span>
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { key: 'tight', label: 'Tight' },
+                    { key: 'normal', label: '0 Normal' },
+                    { key: 'wide', label: '+0.05 Wide' },
+                    { key: 'widest', label: '+0.10 Exp' },
+                  ].map((ls) => {
+                    const isSelected = (formData.headingLetterSpacing || 'normal') === ls.key;
+                    return (
+                      <button
+                        key={ls.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...formData, headingLetterSpacing: ls.key as any };
+                          setFormData(updated);
+                          updateSystemSettings(updated);
+                          setIsSaved(true);
+                          setTimeout(() => setIsSaved(false), 2000);
+                        }}
+                        className={`py-2 px-1 text-center rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-cyan-600 bg-cyan-600 text-white shadow-sm'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        {ls.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {/* Line Height & Letter Spacing */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100 dark:border-slate-700">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <AlignLeft className="w-4 h-4 text-teal-500" />
-                  <span>Line Height (Leading)</span>
+                  <span>Body Line Height (Leading)</span>
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {[
                     { key: 'snug', label: 'Snug (1.4x)' },
                     { key: 'normal', label: 'Normal (1.55x)' },
                     { key: 'relaxed', label: 'Relaxed (1.7x)' },
+                    { key: 'loose', label: 'Loose (1.9x)' },
                   ].map((lh) => {
                     const isSelected = (formData.fontLineHeight || 'normal') === lh.key;
                     return (
@@ -1834,11 +2087,11 @@ export const SettingsSection: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <CaseSensitive className="w-4 h-4 text-purple-500" />
-                  <span>Letter Spacing (Kerning Tracking)</span>
+                  <span>Body Letter Spacing (Tracking)</span>
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {[
-                    { key: 'tight', label: 'Tight' },
+                    { key: 'tight', label: 'Tight (-0.025)' },
                     { key: 'normal', label: '0 Normal' },
                     { key: 'wide', label: '+0.025' },
                     { key: 'widest', label: '+0.05' },
@@ -1869,7 +2122,109 @@ export const SettingsSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Legibility & Contrast Boost Toggle */}
+            {/* Anti-Blend Text Color on Colored Backgrounds & Contrast Protection */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                    <Contrast className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Anti-Blend Font Color & Shape Background Contrast</span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        WCAG 2.1 AAA
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Automatically resolves text color on all colored background shapes and buttons so font never blends with background
+                    </div>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.highContrastText !== false}
+                    onChange={(e) => {
+                      const updated = { ...formData, highContrastText: e.target.checked };
+                      setFormData(updated);
+                      updateSystemSettings(updated);
+                      setIsSaved(true);
+                      setTimeout(() => setIsSaved(false), 2000);
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              {/* Live Shape Contrast Diagnostic Badges */}
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Live Shape Background Anti-Blend Contrast Verification:
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Primary Color Badge */}
+                  {(() => {
+                    const bg = formData.primaryColor || '#0284c7';
+                    const textColor = getContrastTextColor(bg);
+                    return (
+                      <span
+                        className="px-3 py-1 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+                        style={{ backgroundColor: bg, color: textColor }}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Primary Shape ({textColor === '#ffffff' ? 'Light Font' : 'Dark Font'})</span>
+                      </span>
+                    );
+                  })()}
+
+                  {/* Secondary Color Badge */}
+                  {(() => {
+                    const bg = formData.secondaryColor || '#0f172a';
+                    const textColor = getContrastTextColor(bg);
+                    return (
+                      <span
+                        className="px-3 py-1 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+                        style={{ backgroundColor: bg, color: textColor }}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Secondary ({textColor === '#ffffff' ? 'Light Font' : 'Dark Font'})</span>
+                      </span>
+                    );
+                  })()}
+
+                  {/* Accent Color Badge */}
+                  {(() => {
+                    const bg = formData.accentColor || '#f59e0b';
+                    const textColor = getContrastTextColor(bg);
+                    return (
+                      <span
+                        className="px-3 py-1 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+                        style={{ backgroundColor: bg, color: textColor }}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Accent ({textColor === '#ffffff' ? 'Light Font' : 'Dark Font'})</span>
+                      </span>
+                    );
+                  })()}
+
+                  {/* Emerald Badge */}
+                  <span className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Confirmed Pass</span>
+                  </span>
+
+                  {/* Amber Badge */}
+                  <span className="px-3 py-1 rounded-xl text-xs font-bold bg-amber-500 text-slate-900 shadow-sm flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>VIP Badge</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* High-Contrast Bold Stroke Boost */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold text-slate-900 dark:text-white">
@@ -1903,7 +2258,7 @@ export const SettingsSection: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4 text-emerald-500" />
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Live Typography & Theme Real-Time Sandbox
+                  Live Interactive Typography & Shape Sandbox
                 </h4>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
@@ -1911,12 +2266,25 @@ export const SettingsSection: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-4">
+            <div
+              className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-4 transition-all"
+              style={{
+                borderRadius: formData.borderRadiusPreset === 'none' ? '0px' : formData.borderRadiusPreset === 'subtle' ? '8px' : formData.borderRadiusPreset === 'pill' ? '24px' : '16px',
+                padding: formData.contentPadding === 'compact' ? '12px' : formData.contentPadding === 'spacious' ? '28px' : formData.contentPadding === 'generous' ? '36px' : '20px',
+                textAlign: (formData.textAlign || 'left') as any,
+              }}
+            >
               <div>
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                  Headline Font Rendering:
+                  Headline Font & Case Transform:
                 </span>
-                <h2 className="text-xl font-heading text-slate-900 dark:text-white mt-1">
+                <h2
+                  className="text-xl font-heading text-slate-900 dark:text-white mt-1"
+                  style={{
+                    letterSpacing: formData.headingLetterSpacing === 'tight' ? '-0.025em' : formData.headingLetterSpacing === 'wide' ? '0.05em' : formData.headingLetterSpacing === 'widest' ? '0.1em' : '0em',
+                    textTransform: (formData.headingTransform || 'none') as any,
+                  }}
+                >
                   KHB Events &bull; 137th Canton Fair International Trade Expedition
                 </h2>
               </div>
@@ -1925,37 +2293,66 @@ export const SettingsSection: React.FC = () => {
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
                   Khmer Script Rendering (អក្សរខ្មែរ):
                 </span>
-                <p className="text-base font-khmer text-slate-800 dark:text-slate-200 mt-1">
+                <p
+                  className="text-base font-khmer text-slate-800 dark:text-slate-200 mt-1"
+                  style={{
+                    marginBottom: formData.paragraphSpacing === 'compact' ? '0.5rem' : formData.paragraphSpacing === 'relaxed' ? '1.25rem' : formData.paragraphSpacing === 'loose' ? '1.75rem' : '0.875rem',
+                  }}
+                >
                   បេសកកម្មពាណិជ្ជកម្មកម្ពុជា-ចិន ដំណើរកម្សាន្តធុរកិច្ច VIP និងកិច្ចប្រជុំផ្គូផ្គងដៃគូយុទ្ធសាស្ត្រ
                 </p>
               </div>
 
               <div>
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                  Body Typography & UI Elements:
+                  Body Typography & Spacing:
                 </span>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                <p
+                  className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed"
+                  style={{
+                    marginBottom: formData.paragraphSpacing === 'compact' ? '0.5rem' : formData.paragraphSpacing === 'relaxed' ? '1.25rem' : formData.paragraphSpacing === 'loose' ? '1.75rem' : '0.875rem',
+                  }}
+                >
                   Join over 1,500 delegates across ASEAN for 5 days of bilateral networking, B2B matchmaking sessions, automated tax-compliant invoicing, and guided VIP factory tours.
                 </p>
               </div>
 
               <div className="pt-2 flex items-center gap-3 flex-wrap">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-xl text-white text-xs font-bold shadow-sm transition-transform active:scale-95"
-                  style={{ backgroundColor: formData.primaryColor || '#0284c7' }}
-                >
-                  Register Delegation Seat
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded-xl text-slate-900 text-xs font-bold shadow-sm"
-                  style={{ backgroundColor: formData.accentColor || '#f59e0b' }}
-                >
-                  ★ VIP Express Pass ($3,500)
-                </button>
+                {(() => {
+                  const primaryBg = formData.primaryColor || '#0284c7';
+                  const primaryText = getContrastTextColor(primaryBg);
+                  const accentBg = formData.accentColor || '#f59e0b';
+                  const accentText = getContrastTextColor(accentBg);
+
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-xs font-bold shadow-sm transition-transform active:scale-95"
+                        style={{
+                          backgroundColor: primaryBg,
+                          color: primaryText,
+                          borderRadius: formData.borderRadiusPreset === 'none' ? '0px' : formData.borderRadiusPreset === 'subtle' ? '6px' : formData.borderRadiusPreset === 'pill' ? '9999px' : '12px',
+                        }}
+                      >
+                        Register Delegation Seat
+                      </button>
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-xs font-bold shadow-sm"
+                        style={{
+                          backgroundColor: accentBg,
+                          color: accentText,
+                          borderRadius: formData.borderRadiusPreset === 'none' ? '0px' : formData.borderRadiusPreset === 'subtle' ? '6px' : formData.borderRadiusPreset === 'pill' ? '9999px' : '12px',
+                        }}
+                      >
+                        ★ VIP Express Pass ($3,500)
+                      </button>
+                    </>
+                  );
+                })()}
                 <span className="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
-                  Font: {formData.fontFamilyLatin || 'plus-jakarta'} / Khmer: {formData.fontFamilyKhmer || 'kantumruy-pro'}
+                  Alignment: {formData.textAlign || 'left'} &bull; Radius: {formData.borderRadiusPreset || 'rounded'} &bull; Padding: {formData.contentPadding || 'normal'}
                 </span>
               </div>
             </div>

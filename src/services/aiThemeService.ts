@@ -15,7 +15,7 @@ export interface ThemePalette {
   textContrast: string;
   description: string;
   rationale?: string;
-  fontScaleRecommendation?: 'compact' | 'normal' | 'comfortable' | 'large';
+  fontScaleRecommendation?: 'compact' | 'normal' | 'comfortable' | 'large' | 'extra-large';
 }
 
 export const THEME_PRESETS: Record<string, ThemePalette> = {
@@ -165,6 +165,78 @@ export const FONT_HEADING_OPTIONS: FontOption[] = [
 ];
 
 /**
+ * Calculates relative luminance and optimal anti-blend high-contrast text color (WCAG 2.1)
+ */
+export function hexToRgb(hex?: string): { r: number; g: number; b: number } | null {
+  if (!hex) return null;
+  const sanitized = hex.replace('#', '').trim();
+  if (sanitized.length === 3) {
+    return {
+      r: parseInt(sanitized[0] + sanitized[0], 16),
+      g: parseInt(sanitized[1] + sanitized[1], 16),
+      b: parseInt(sanitized[2] + sanitized[2], 16),
+    };
+  }
+  if (sanitized.length === 6) {
+    return {
+      r: parseInt(sanitized.substring(0, 2), 16),
+      g: parseInt(sanitized.substring(2, 4), 16),
+      b: parseInt(sanitized.substring(4, 6), 16),
+    };
+  }
+  return null;
+}
+
+export function getLuminance(r: number, g: number, b: number): number {
+  const a = [r, g, b].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+}
+
+/**
+ * Returns non-blending high-contrast text color (#ffffff or #0f172a) for any background color
+ */
+export function getContrastTextColor(hexColor?: string, darkText = '#0f172a', lightText = '#ffffff'): string {
+  if (!hexColor) return lightText;
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return lightText;
+  const lum = getLuminance(rgb.r, rgb.g, rgb.b);
+  return lum > 0.45 ? darkText : lightText;
+}
+
+export function isColorDark(hexColor?: string): boolean {
+  if (!hexColor) return true;
+  const rgb = hexToRgb(hexColor);
+  if (!rgb) return true;
+  return getLuminance(rgb.r, rgb.g, rgb.b) <= 0.45;
+}
+
+/**
+ * Generates guaranteed high-contrast styling for badge shapes, tag pills, and colored buttons
+ */
+export function getOptimalBadgeStyle(bgHex?: string, isDark = false): {
+  bg: string;
+  text: string;
+  border: string;
+  badgeGlow: string;
+} {
+  const safeBg = bgHex || '#0284c7';
+  const isBgDark = isColorDark(safeBg);
+  const text = isBgDark ? '#ffffff' : '#0f172a';
+  const border = isBgDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(15, 23, 42, 0.15)';
+  const badgeGlow = isBgDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.05)';
+
+  return {
+    bg: safeBg,
+    text,
+    border,
+    badgeGlow,
+  };
+}
+
+/**
  * Resolves full active color theme palette with fallbacks
  */
 export function getThemeColors(settings?: SystemSettings): ThemePalette {
@@ -173,19 +245,25 @@ export function getThemeColors(settings?: SystemSettings): ThemePalette {
   const base = THEME_PRESETS[presetKey] || THEME_PRESETS.navy;
   const custom = settings.customPalette;
 
+  const primary = settings.primaryColor || custom?.primary || base.primary;
+  const secondary = settings.secondaryColor || custom?.secondary || base.secondary;
+  const accent = settings.accentColor || custom?.accent || base.accent;
+
+  const textContrast = getContrastTextColor(primary, '#0f172a', '#ffffff');
+
   return {
     themeName: custom?.themeName || base.themeName,
     presetKey: (settings.themePreset as any) || 'navy',
-    primary: settings.primaryColor || custom?.primary || base.primary,
+    primary,
     primaryHover: custom?.primaryHover || base.primaryHover,
-    secondary: settings.secondaryColor || custom?.secondary || base.secondary,
-    accent: settings.accentColor || custom?.accent || base.accent,
+    secondary,
+    accent,
     accentGlow: custom?.accentGlow || base.accentGlow,
     bgDark: custom?.bgDark || base.bgDark,
     bgLight: custom?.bgLight || base.bgLight,
     cardDark: custom?.cardDark || base.cardDark,
     cardLight: custom?.cardLight || base.cardLight,
-    textContrast: custom?.textContrast || base.textContrast,
+    textContrast: custom?.textContrast || textContrast,
     description: custom?.rationale || base.description,
     rationale: custom?.rationale || base.rationale,
     fontScaleRecommendation: settings.fontSizeScale || base.fontScaleRecommendation || 'normal'
@@ -193,7 +271,7 @@ export function getThemeColors(settings?: SystemSettings): ThemePalette {
 }
 
 /**
- * Resolves complete typography parameters and CSS font stacks
+ * Resolves complete typography parameters, alignment, spacing, padding, and CSS font stacks
  */
 export function getTypographySettings(settings?: SystemSettings) {
   const latinOption = FONT_LATIN_OPTIONS.find(f => f.key === settings?.fontFamilyLatin) || FONT_LATIN_OPTIONS[0];
@@ -207,10 +285,18 @@ export function getTypographySettings(settings?: SystemSettings) {
     widest: '0.05em',
   };
 
+  const headingLetterSpacingMap: Record<string, string> = {
+    tight: '-0.025em',
+    normal: '0em',
+    wide: '0.05em',
+    widest: '0.1em',
+  };
+
   const lineHeightMap: Record<string, string> = {
     snug: '1.4',
     normal: '1.55',
     relaxed: '1.7',
+    loose: '1.9',
   };
 
   const fontWeightMap: Record<string, number> = {
@@ -218,6 +304,33 @@ export function getTypographySettings(settings?: SystemSettings) {
     semibold: 600,
     bold: 700,
     black: 900,
+  };
+
+  const paragraphSpacingMap: Record<string, string> = {
+    compact: '0.5rem',
+    normal: '0.875rem',
+    relaxed: '1.25rem',
+    loose: '1.75rem',
+  };
+
+  const contentPaddingMap: Record<string, string> = {
+    compact: '0.75rem',
+    normal: '1.25rem',
+    spacious: '1.75rem',
+    generous: '2.25rem',
+  };
+
+  const borderRadiusMap: Record<string, string> = {
+    none: '0px',
+    subtle: '8px',
+    rounded: '16px',
+    pill: '24px',
+  };
+
+  const cardBorderWidthMap: Record<string, string> = {
+    none: '0px',
+    thin: '1px',
+    medium: '2px',
   };
 
   return {
@@ -230,9 +343,23 @@ export function getTypographySettings(settings?: SystemSettings) {
     lineHeightCss: lineHeightMap[settings?.fontLineHeight || 'normal'] || '1.55',
     fontLetterSpacing: settings?.fontLetterSpacing || 'normal',
     letterSpacingCss: letterSpacingMap[settings?.fontLetterSpacing || 'normal'] || '0em',
+    headingLetterSpacing: settings?.headingLetterSpacing || 'normal',
+    headingLetterSpacingCss: headingLetterSpacingMap[settings?.headingLetterSpacing || 'normal'] || '0em',
+    headingTransform: settings?.headingTransform || 'none',
+    textAlign: settings?.textAlign || 'left',
+    paragraphSpacing: settings?.paragraphSpacing || 'normal',
+    paragraphSpacingCss: paragraphSpacingMap[settings?.paragraphSpacing || 'normal'] || '0.875rem',
+    contentPadding: settings?.contentPadding || 'normal',
+    contentPaddingCss: contentPaddingMap[settings?.contentPadding || 'normal'] || '1.25rem',
+    borderRadiusPreset: settings?.borderRadiusPreset || 'rounded',
+    borderRadiusCss: borderRadiusMap[settings?.borderRadiusPreset || 'rounded'] || '16px',
+    cardBorderWidth: settings?.cardBorderWidth || 'thin',
+    cardBorderWidthCss: cardBorderWidthMap[settings?.cardBorderWidth || 'thin'] || '1px',
     fontSizeScale: settings?.fontSizeScale || 'normal',
     fontSmoothing: settings?.fontSmoothing || 'antialiased',
     fontBoldBoost: !!settings?.fontBoldBoost,
+    highContrastText: settings?.highContrastText !== false,
+    textShadowPreset: settings?.textShadowPreset || 'none',
     latinStack: latinOption.fontStack,
     khmerStack: khmerOption.fontStack,
     headingStack: headingOption.fontStack,
@@ -245,13 +372,19 @@ export function getTypographySettings(settings?: SystemSettings) {
 export function generateThemeCssString(settings?: SystemSettings): string {
   const colors = getThemeColors(settings);
   const typo = getTypographySettings(settings);
+  const primaryContrast = getContrastTextColor(colors.primary);
+  const secondaryContrast = getContrastTextColor(colors.secondary);
+  const accentContrast = getContrastTextColor(colors.accent);
 
   return `
     :root {
       --color-primary: ${colors.primary};
       --color-primary-hover: ${colors.primaryHover};
+      --color-primary-contrast: ${primaryContrast};
       --color-secondary: ${colors.secondary};
+      --color-secondary-contrast: ${secondaryContrast};
       --color-accent: ${colors.accent};
+      --color-accent-contrast: ${accentContrast};
       --color-accent-glow: ${colors.accentGlow};
       --color-bg-dark: ${colors.bgDark};
       --color-bg-light: ${colors.bgLight};
@@ -264,12 +397,19 @@ export function generateThemeCssString(settings?: SystemSettings): string {
       --font-heading-weight: ${typo.headingFontWeightNum};
       --font-line-height: ${typo.lineHeightCss};
       --font-letter-spacing: ${typo.letterSpacingCss};
+      --heading-letter-spacing: ${typo.headingLetterSpacingCss};
+      --heading-transform: ${typo.headingTransform};
+      --text-align-default: ${typo.textAlign};
+      --paragraph-spacing: ${typo.paragraphSpacingCss};
+      --content-padding: ${typo.contentPaddingCss};
+      --border-radius-preset: ${typo.borderRadiusCss};
+      --card-border-width: ${typo.cardBorderWidthCss};
     }
   `;
 }
 
 /**
- * Applies dynamic CSS variables and dataset attributes to document root
+ * Applies dynamic CSS variables, high-contrast anti-blend rules, and dataset attributes to document root
  */
 export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): void {
   if (typeof document === 'undefined') return;
@@ -278,11 +418,18 @@ export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): vo
   const colors = getThemeColors(settings);
   const typo = getTypographySettings(settings);
 
-  // Set CSS custom properties
+  const primaryContrast = getContrastTextColor(colors.primary);
+  const secondaryContrast = getContrastTextColor(colors.secondary);
+  const accentContrast = getContrastTextColor(colors.accent);
+
+  // Set CSS custom properties for Colors & Anti-Blend Contrast
   root.style.setProperty('--color-primary', colors.primary);
-  root.style.setProperty('--color-secondary', colors.secondary);
-  root.style.setProperty('--color-accent', colors.accent);
   root.style.setProperty('--color-primary-hover', colors.primaryHover);
+  root.style.setProperty('--color-primary-contrast', primaryContrast);
+  root.style.setProperty('--color-secondary', colors.secondary);
+  root.style.setProperty('--color-secondary-contrast', secondaryContrast);
+  root.style.setProperty('--color-accent', colors.accent);
+  root.style.setProperty('--color-accent-contrast', accentContrast);
   root.style.setProperty('--color-accent-glow', colors.accentGlow);
   root.style.setProperty('--color-bg-dark', colors.bgDark);
   root.style.setProperty('--color-bg-light', colors.bgLight);
@@ -302,19 +449,28 @@ export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): vo
     root.style.fontSize = '16.5px';
   } else if (scale === 'large') {
     root.style.fontSize = '17.5px';
+  } else if (scale === 'extra-large') {
+    root.style.fontSize = '19px';
   } else {
     root.style.fontSize = '16px';
   }
 
-  // Apply Font Families
+  // Apply Font Families and Typography detail metrics
   root.style.setProperty('--font-family-latin', typo.latinStack);
   root.style.setProperty('--font-family-khmer', typo.khmerStack);
   root.style.setProperty('--font-family-heading', typo.headingStack);
   root.style.setProperty('--font-heading-weight', String(typo.headingFontWeightNum));
   root.style.setProperty('--font-letter-spacing', typo.letterSpacingCss);
   root.style.setProperty('--font-line-height', typo.lineHeightCss);
+  root.style.setProperty('--heading-letter-spacing', typo.headingLetterSpacingCss);
+  root.style.setProperty('--heading-transform', typo.headingTransform);
+  root.style.setProperty('--text-align-default', typo.textAlign);
+  root.style.setProperty('--paragraph-spacing', typo.paragraphSpacingCss);
+  root.style.setProperty('--content-padding', typo.contentPaddingCss);
+  root.style.setProperty('--border-radius-preset', typo.borderRadiusCss);
+  root.style.setProperty('--card-border-width', typo.cardBorderWidthCss);
 
-  // Apply Body Font Stack
+  // Apply Body Font Stack and Alignment Defaults
   root.style.fontFamily = typo.latinStack;
   root.style.letterSpacing = typo.letterSpacingCss;
   root.style.lineHeight = typo.lineHeightCss;
@@ -332,6 +488,12 @@ export function applyThemeToDOM(settings: SystemSettings, darkMode: boolean): vo
     root.classList.add('font-bold-boost');
   } else {
     root.classList.remove('font-bold-boost');
+  }
+
+  if (settings.highContrastText !== false) {
+    root.classList.add('high-contrast-mode');
+  } else {
+    root.classList.remove('high-contrast-mode');
   }
 }
 
@@ -371,6 +533,14 @@ export function getResolvedTypography(settings?: Partial<SystemSettings>): {
   letterSpacing: string;
   lineHeight: string;
   fontSize: string;
+  headingLetterSpacing: string;
+  headingTransform: string;
+  textAlign: string;
+  paragraphSpacing: string;
+  contentPadding: string;
+  borderRadius: string;
+  cardBorderWidth: string;
+  highContrastText: boolean;
 } {
   const latinFont = FONT_LATIN_OPTIONS.find((f) => f.key === settings?.fontFamilyLatin)?.fontStack || FONT_LATIN_OPTIONS[0].fontStack;
   const khmerFont = FONT_KHMER_OPTIONS.find((f) => f.key === settings?.fontFamilyKhmer)?.fontStack || FONT_KHMER_OPTIONS[0].fontStack;
@@ -392,18 +562,59 @@ export function getResolvedTypography(settings?: Partial<SystemSettings>): {
   };
   const letterSpacing = letterSpacingMap[settings?.fontLetterSpacing || 'normal'] || '0em';
 
+  const headingLetterSpacingMap: Record<string, string> = {
+    tight: '-0.025em',
+    normal: '0em',
+    wide: '0.05em',
+    widest: '0.1em',
+  };
+  const headingLetterSpacing = headingLetterSpacingMap[settings?.headingLetterSpacing || 'normal'] || '0em';
+
   const lineHeightMap: Record<string, string> = {
     snug: '1.4',
     normal: '1.55',
     relaxed: '1.7',
+    loose: '1.9',
   };
   const lineHeight = lineHeightMap[settings?.fontLineHeight || 'normal'] || '1.55';
+
+  const paragraphSpacingMap: Record<string, string> = {
+    compact: '0.5rem',
+    normal: '0.875rem',
+    relaxed: '1.25rem',
+    loose: '1.75rem',
+  };
+  const paragraphSpacing = paragraphSpacingMap[settings?.paragraphSpacing || 'normal'] || '0.875rem';
+
+  const contentPaddingMap: Record<string, string> = {
+    compact: '0.75rem',
+    normal: '1.25rem',
+    spacious: '1.75rem',
+    generous: '2.25rem',
+  };
+  const contentPadding = contentPaddingMap[settings?.contentPadding || 'normal'] || '1.25rem';
+
+  const borderRadiusMap: Record<string, string> = {
+    none: '0px',
+    subtle: '8px',
+    rounded: '16px',
+    pill: '24px',
+  };
+  const borderRadius = borderRadiusMap[settings?.borderRadiusPreset || 'rounded'] || '16px';
+
+  const cardBorderWidthMap: Record<string, string> = {
+    none: '0px',
+    thin: '1px',
+    medium: '2px',
+  };
+  const cardBorderWidth = cardBorderWidthMap[settings?.cardBorderWidth || 'thin'] || '1px';
 
   const scale = settings?.fontSizeScale || 'normal';
   let fontSize = '16px';
   if (scale === 'compact') fontSize = '14.5px';
   else if (scale === 'comfortable') fontSize = '16.5px';
   else if (scale === 'large') fontSize = '17.5px';
+  else if (scale === 'extra-large') fontSize = '19px';
 
   return {
     latinFont,
@@ -413,6 +624,14 @@ export function getResolvedTypography(settings?: Partial<SystemSettings>): {
     letterSpacing,
     lineHeight,
     fontSize,
+    headingLetterSpacing,
+    headingTransform: settings?.headingTransform || 'none',
+    textAlign: settings?.textAlign || 'left',
+    paragraphSpacing,
+    contentPadding,
+    borderRadius,
+    cardBorderWidth,
+    highContrastText: settings?.highContrastText !== false,
   };
 }
 
@@ -429,13 +648,19 @@ export function getThemeGoogleFontsUrl(): string {
 export function generateThemeCssVariables(settings?: Partial<SystemSettings>): string {
   const palette = getResolvedThemePalette(settings);
   const typo = getResolvedTypography(settings);
+  const primaryContrast = getContrastTextColor(palette.primary);
+  const secondaryContrast = getContrastTextColor(palette.secondary);
+  const accentContrast = getContrastTextColor(palette.accent);
 
   return `
     :root {
       --color-primary: ${palette.primary};
       --color-primary-hover: ${palette.primaryHover};
+      --color-primary-contrast: ${primaryContrast};
       --color-secondary: ${palette.secondary};
+      --color-secondary-contrast: ${secondaryContrast};
       --color-accent: ${palette.accent};
+      --color-accent-contrast: ${accentContrast};
       --color-accent-glow: ${palette.accentGlow};
       --color-bg-dark: ${palette.bgDark};
       --color-bg-light: ${palette.bgLight};
@@ -446,6 +671,13 @@ export function generateThemeCssVariables(settings?: Partial<SystemSettings>): s
       --font-letter-spacing: ${typo.letterSpacing};
       --font-line-height: ${typo.lineHeight};
       --base-font-size: ${typo.fontSize};
+      --heading-letter-spacing: ${typo.headingLetterSpacing};
+      --heading-transform: ${typo.headingTransform};
+      --text-align-default: ${typo.textAlign};
+      --paragraph-spacing: ${typo.paragraphSpacing};
+      --content-padding: ${typo.contentPadding};
+      --border-radius-preset: ${typo.borderRadius};
+      --card-border-width: ${typo.cardBorderWidth};
     }
   `;
 }

@@ -743,15 +743,26 @@ export interface SystemSettings {
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;
-  fontSizeScale?: 'compact' | 'normal' | 'comfortable' | 'large';
+  fontSizeScale?: 'compact' | 'normal' | 'comfortable' | 'large' | 'extra-large';
   fontFamilyLatin?: 'plus-jakarta' | 'inter' | 'outfit' | 'poppins' | 'playfair' | 'merriweather' | 'dm-sans' | 'jetbrains-mono' | 'system';
   fontFamilyKhmer?: 'kantumruy-pro' | 'hanuman' | 'battambang' | 'koulen' | 'siemreap';
   fontFamilyHeading?: 'inherit' | 'playfair' | 'cinzel' | 'outfit' | 'plus-jakarta' | 'poppins' | 'jetbrains-mono';
   headingFontWeight?: 'normal' | 'semibold' | 'bold' | 'black';
-  fontLineHeight?: 'snug' | 'normal' | 'relaxed';
+  fontLineHeight?: 'snug' | 'normal' | 'relaxed' | 'loose';
   fontLetterSpacing?: 'tight' | 'normal' | 'wide' | 'widest';
   fontSmoothing?: 'antialiased' | 'subpixel';
   fontBoldBoost?: boolean;
+  
+  // Advanced Typography & Layout Detail Adjustments
+  textAlign?: 'left' | 'center' | 'justify';
+  paragraphSpacing?: 'compact' | 'normal' | 'relaxed' | 'loose';
+  contentPadding?: 'compact' | 'normal' | 'spacious' | 'generous';
+  borderRadiusPreset?: 'none' | 'subtle' | 'rounded' | 'pill';
+  headingTransform?: 'none' | 'uppercase' | 'capitalize';
+  headingLetterSpacing?: 'tight' | 'normal' | 'wide' | 'widest';
+  highContrastText?: boolean;
+  cardBorderWidth?: 'none' | 'thin' | 'medium';
+  textShadowPreset?: 'none' | 'subtle' | 'crisp';
   customPalette?: {
     themeName?: string;
     primary: string;

@@ -1492,5 +1492,14 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   fontLetterSpacing: 'normal',
   fontSmoothing: 'antialiased',
   fontBoldBoost: false,
+  textAlign: 'left',
+  paragraphSpacing: 'normal',
+  contentPadding: 'normal',
+  borderRadiusPreset: 'rounded',
+  headingTransform: 'none',
+  headingLetterSpacing: 'normal',
+  highContrastText: true,
+  cardBorderWidth: 'thin',
+  textShadowPreset: 'none',
 };
 
