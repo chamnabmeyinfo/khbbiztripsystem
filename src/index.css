@@ -51,6 +51,32 @@ p:last-child {
   margin-bottom: 0 !important;
 }
 
+@keyframes flightDash {
+  0% {
+    stroke-dashoffset: 136;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-flight-dash {
+  animation: flightDash 2.4s linear infinite;
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
+}
+
 .font-bold-boost {
   -webkit-text-stroke: 0.35px currentColor;
 }
