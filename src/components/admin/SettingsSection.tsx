@@ -124,10 +124,26 @@ export const SettingsSection: React.FC = () => {
     resetSystemSettings,
     exportSystemBackupJSON,
     importSystemBackupJSON,
+    settingsSubTab,
+    setSettingsSubTab,
     addNotification
   } = useApp();
 
-  const [activeSubTab, setActiveSubTab] = useState<'features' | 'payments' | 'branding' | 'theme' | 'financials' | 'security' | 'backup'>('features');
+  type SubTabType = 'features' | 'payments' | 'branding' | 'theme' | 'financials' | 'security' | 'backup';
+  const [activeSubTab, setActiveSubTabState] = useState<SubTabType>(
+    (settingsSubTab as SubTabType) || 'features'
+  );
+
+  const setActiveSubTab = (tab: SubTabType) => {
+    setActiveSubTabState(tab);
+    setSettingsSubTab(tab);
+  };
+
+  useEffect(() => {
+    if (settingsSubTab && ['features', 'payments', 'branding', 'theme', 'financials', 'security', 'backup'].includes(settingsSubTab)) {
+      setActiveSubTabState(settingsSubTab as SubTabType);
+    }
+  }, [settingsSubTab]);
   const [formData, setFormData] = useState<SystemSettings>(systemSettings);
   const [jsonInput, setJsonInput] = useState('');
   const [showJsonModal, setShowJsonModal] = useState(false);

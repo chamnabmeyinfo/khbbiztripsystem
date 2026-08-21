@@ -251,6 +251,11 @@ interface AppContextType {
   resetSystemSettings: () => void;
   exportSystemBackupJSON: () => void;
   importSystemBackupJSON: (jsonString: string) => boolean;
+  adminActiveTab: string;
+  setAdminActiveTab: (tab: string) => void;
+  settingsSubTab: string;
+  setSettingsSubTab: (subTab: string) => void;
+  navigateToSettings: (subTab?: string) => void;
 
   // Helper
   t: (key: keyof typeof translations['en']) => string;
@@ -441,10 +446,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [systemSettings, darkMode]);
 
   const [activeView, setActiveView] = useState<ActiveView>('marketing');
+  const [adminActiveTab, setAdminActiveTab] = useState<string>('overview');
+  const [settingsSubTab, setSettingsSubTab] = useState<string>('features');
   const [selectedPackage, setSelectedPackage] = useState<TourPackage | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  const navigateToSettings = (subTab?: string) => {
+    if (subTab) {
+      setSettingsSubTab(subTab);
+    }
+    setAdminActiveTab('settings');
+    // Ensure user has admin capability to access back-office settings
+    if (!currentUser || currentUser.role === 'traveler') {
+      const adminUser = users.find(u => u.role === 'admin' || u.role === 'super_admin') || SEED_USERS[0];
+      setCurrentUser(adminUser);
+    }
+    setActiveView('admin_dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const openPackageSalesPage = (pkgOrId: TourPackage | string) => {
     let targetPkg: TourPackage | null = null;
@@ -2598,6 +2619,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         resetSystemSettings,
         exportSystemBackupJSON,
         importSystemBackupJSON,
+        adminActiveTab,
+        setAdminActiveTab,
+        settingsSubTab,
+        setSettingsSubTab,
+        navigateToSettings,
         addSupplier, updateSupplier, deleteSupplier,
         saveCostTemplate, updateCostTemplate, deleteCostTemplate, getCostTemplateForPackage,
         createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, updatePOStatus,

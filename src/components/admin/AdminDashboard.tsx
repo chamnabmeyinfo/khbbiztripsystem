@@ -84,6 +84,8 @@ export const AdminDashboard: React.FC = () => {
     currency,
     language,
     logout,
+    adminActiveTab,
+    setAdminActiveTab,
     t
   } = useApp();
 
@@ -104,7 +106,8 @@ export const AdminDashboard: React.FC = () => {
     | 'ai_copilot'
     | 'settings';
 
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const activeTab = (adminActiveTab as AdminTab) || 'overview';
+  const setActiveTab = (tab: AdminTab) => setAdminActiveTab(tab);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [bookingSearch, setBookingSearch] = useState('');
