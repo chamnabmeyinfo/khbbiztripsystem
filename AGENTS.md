@@ -1,5 +1,6 @@
 # Custom Instructions
 
+- **Mandatory GitHub Update Pre-Check**: At the start of EVERY turn/task before performing any code modifications or processing requests, you MUST ALWAYS check for new remote updates from the GitHub repository (`https://github.com/chamnabmeyinfo/khbbiztripsystem.git`) on `origin/main` using `GITHUB_TOKEN`. If any new commits or updates are found on the remote repository, you MUST pull and merge the latest updates first before proceeding with any other task.
 - **Pre-Review Quality, Anti-Crash & State Persistence Verification**: Every time before presenting work or sending changes to the user for review, you MUST test, double-check, and triple-check all modified files and code paths. Always ensure:
   1. Complete state persistence across page refreshes (LocalStorage & Cloud Firestore two-way sync).
   2. Zero Firestore write crashes (all payloads strictly sanitized with no `undefined` values).
