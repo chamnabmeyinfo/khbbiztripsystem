@@ -120,11 +120,40 @@ export const CrmIntegrationSection: React.FC = () => {
   }, [systemSettings.crmConfig]);
 
   // Preset generator for the simulator
-  const loadPreset = (presetType: 'confirm_booking' | 'cancel_booking' | 'flight_delay' | 'vip_upgrade' | 'broadcast') => {
+  const loadPreset = (presetType: 'deal_won' | 'confirm_booking' | 'cancel_booking' | 'flight_delay' | 'vip_upgrade' | 'broadcast') => {
     const sampleBooking = bookings[0] || { bookingCode: 'TRP-84920', id: 'b_sample_1' };
     const sampleUser = users[0] || { name: 'Ouk Dara', email: 'ouk.dara@khbmedia.asia' };
 
     switch (presetType) {
+      case 'deal_won':
+        setSimEventType('deal.won');
+        setSimCustomMessage('CRM Sales: Deal Closed Won for 4 Trade Delegates (Canton Fair Phase 1)');
+        setSimPayloadJson(JSON.stringify({
+          deal: {
+            dealId: 'DEAL-KHB-2026-089',
+            dealTitle: 'VIP Delegation Package - Sourcing & Machinery',
+            packageId: 'pkg_canton_fair_2026_phase1',
+            packageTitle: 'Canton Fair 2026 Phase 1 (Electronics & Machinery)',
+            destination: 'Guangzhou, China',
+            startDate: '2026-10-29',
+            endDate: '2026-11-02',
+            numberOfAdults: 4,
+            numberOfChildren: 0,
+            dealAmountUSD: 1400,
+            paidAmountUSD: 1400,
+            salesRep: 'Sophea Sok (Senior B2B Consultant)',
+            notes: 'Client registered 4 company directors. Hotel twin-sharing requested.'
+          },
+          customer: {
+            name: 'Lok Chumteav Heng Linda',
+            email: 'linda.heng@khb-investments.com',
+            phone: '+855 12 888 777',
+            company: 'Royal Mekong Import-Export Co., Ltd.',
+            jobTitle: 'Managing Director & Founder',
+            role: 'traveler'
+          }
+        }, null, 2));
+        break;
       case 'confirm_booking':
         setSimEventType('booking.status_updated');
         setSimCustomMessage(`CRM: Verified & Confirmed Booking ${sampleBooking.bookingCode}`);
@@ -879,7 +908,16 @@ export const CrmIntegrationSection: React.FC = () => {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Select Test Scenario Preset
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadPreset('deal_won')}
+                  className="p-3 text-left rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/30 hover:border-emerald-500 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition text-xs space-y-1"
+                >
+                  <div className="font-bold text-emerald-700 dark:text-emerald-300">🤝 Deal Closed Won</div>
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400">Auto-provisions booking & invoice</div>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => loadPreset('confirm_booking')}
@@ -938,6 +976,7 @@ export const CrmIntegrationSection: React.FC = () => {
                   onChange={e => setSimEventType(e.target.value as any)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
+                  <option value="deal.won">deal.won (Deal Closed Won & Provision Booking)</option>
                   <option value="booking.status_updated">booking.status_updated</option>
                   <option value="booking.cancelled">booking.cancelled</option>
                   <option value="flight.status_changed">flight.status_changed</option>

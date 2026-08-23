@@ -808,6 +808,8 @@ export interface CrmConfig {
 }
 
 export type CrmWebhookEventType =
+  | 'deal.won'
+  | 'crm.deal_closed'
   | 'booking.status_updated'
   | 'booking.payment_received'
   | 'booking.cancelled'

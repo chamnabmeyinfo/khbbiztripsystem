@@ -2634,7 +2634,150 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const processWebhookEvent = (event: CrmWebhookEvent) => {
     if (!event) return;
 
-    if (event.eventType === 'booking.status_updated' || event.eventType === 'booking.cancelled') {
+    // ── Deal Won / Closed in CRM -> Auto-Provision Delegate Profile, Booking & Invoice ──
+    if (event.eventType === 'deal.won' || event.eventType === 'crm.deal_closed') {
+      const payload = event.payload || {};
+      const customerData = payload.customer || payload.delegate || payload;
+      const dealData = payload.deal || payload;
+
+      const customerEmail = customerData.email || `delegate_${Date.now()}@khb-trade.com`;
+      const customerName = customerData.name || customerData.customerName || 'Trade Mission Delegate';
+      const customerPhone = customerData.phone || '+855 23 999 888';
+      const companyName = customerData.company || customerData.organization || 'Cambodia Trade Delegation';
+
+      // 1. Find or create user
+      let targetUser = users.find(u => u.email.toLowerCase() === customerEmail.toLowerCase());
+      if (!targetUser) {
+        targetUser = {
+          id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          role: 'traveler',
+          department: 'Trade Delegates',
+          jobTitle: customerData.jobTitle || 'Executive Delegate',
+          preferredLanguage: 'km',
+          preferredCurrency: 'USD',
+          createdAt: new Date().toISOString(),
+        };
+        setUsers(prev => [targetUser!, ...prev]);
+        try {
+          setDoc(doc(db, 'users', targetUser.id), targetUser, { merge: true });
+        } catch (e) {
+          console.warn('CRM User auto-provision notice:', e);
+        }
+      }
+
+      // 2. Resolve package
+      const matchedPkg = packages.find(p => p.id === dealData.packageId || p.title.toLowerCase().includes((dealData.packageTitle || '').toLowerCase())) || packages[0];
+      const adults = Number(dealData.numberOfAdults || dealData.adults || dealData.numberOfPax || 1);
+      const children = Number(dealData.numberOfChildren || dealData.children || 0);
+      const startDate = dealData.startDate || dealData.travelDate || matchedPkg.availableDates?.[0] || '2026-10-29';
+      
+      const startObj = new Date(startDate);
+      startObj.setDate(startObj.getDate() + (matchedPkg.durationDays || 5));
+      const endDate = dealData.endDate || startObj.toISOString().split('T')[0];
+
+      const totalPriceUSD = Number(dealData.dealAmountUSD || dealData.amountUSD || matchedPkg.priceUSD * adults);
+      const paidAmount = Number(dealData.paidAmountUSD || dealData.depositPaidUSD || totalPriceUSD);
+      const randomCodeSuffix = Math.floor(10000 + Math.random() * 90000);
+      const bookingCode = dealData.bookingCode || `TRP-${randomCodeSuffix}`;
+      const bookingId = `b_crm_${Date.now()}`;
+      const txId = `tx_crm_${Date.now()}`;
+
+      const newBooking: Booking = {
+        id: bookingId,
+        bookingCode,
+        userId: targetUser.id,
+        userName: targetUser.name,
+        userEmail: targetUser.email,
+        userPhone: targetUser.phone,
+        packageId: matchedPkg.id,
+        packageTitle: matchedPkg.title,
+        packageDestination: matchedPkg.destination,
+        packageImage: matchedPkg.images?.[0] || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+        startDate,
+        endDate,
+        numberOfAdults: adults,
+        numberOfChildren: children,
+        specialRequests: `Provisioned from CRM Deal: ${dealData.dealTitle || dealData.dealId || 'Closed Won'}. Company: ${companyName}`,
+        status: 'confirmed',
+        basePriceUSD: totalPriceUSD,
+        taxAmountUSD: Math.round(totalPriceUSD * 0.07 * 100) / 100,
+        totalPriceUSD,
+        paidAmount,
+        paidCurrency: 'USD',
+        exchangeRateUsed: 1,
+        createdAt: new Date().toISOString(),
+        paymentMethod: 'bank_wire',
+        paymentTransactionId: txId,
+        flightStatus: matchedPkg.flightIncluded ? {
+          flightNumber: 'TD 742',
+          airline: 'TripDesk Global Skyways',
+          departureAirport: 'Phnom Penh (PNH)',
+          departureTime: `${startDate} 08:30 AM`,
+          arrivalAirport: `${matchedPkg.destination.split(',')[0]} International`,
+          arrivalTime: `${startDate} 01:15 PM`,
+          status: 'Scheduled',
+          gate: 'A12',
+          terminal: 'International T1'
+        } : undefined,
+        hotelStatus: {
+          hotelName: matchedPkg.itinerary[0]?.hotelName || `${matchedPkg.destination} Grand Executive Hotel (4-Star)`,
+          checkInDate: startDate,
+          checkOutDate: endDate,
+          roomType: 'Deluxe B2B Delegation Room',
+          confirmationCode: `HTL-CRM-${Math.floor(100000 + Math.random() * 900000)}`,
+          status: 'Confirmed',
+          address: `${matchedPkg.destination} City Center`
+        }
+      };
+
+      const invoiceNumber = `INV-CRM-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const newInvoice: Invoice = {
+        id: `inv_crm_${Date.now()}`,
+        invoiceNumber,
+        bookingId,
+        bookingCode,
+        customerName: targetUser.name,
+        customerEmail: targetUser.email,
+        customerAddress: companyName,
+        issueDate: new Date().toISOString().split('T')[0],
+        dueDate: new Date().toISOString().split('T')[0],
+        items: [
+          {
+            description: `${matchedPkg.title} (${adults} Adults${children > 0 ? `, ${children} Children` : ''}) - CRM Deal ${dealData.dealId || ''}`,
+            quantity: adults + children,
+            unitPriceUSD: Math.round(totalPriceUSD / (adults + children)),
+            totalUSD: totalPriceUSD,
+          }
+        ],
+        subtotalUSD: totalPriceUSD,
+        taxRatePercent: 7.0,
+        taxAmountUSD: Math.round(totalPriceUSD * 0.07 * 100) / 100,
+        totalUSD: totalPriceUSD,
+        paidCurrency: 'USD',
+        totalPaidInCurrency: paidAmount,
+        paymentStatus: paidAmount >= totalPriceUSD ? 'paid' : 'pending',
+        gatewayTxId: txId,
+      };
+
+      setBookings(prev => [newBooking, ...prev]);
+      setInvoices(prev => [newInvoice, ...prev]);
+
+      try {
+        setDoc(doc(db, 'bookings', bookingId), newBooking, { merge: true });
+        setDoc(doc(db, 'invoices', newInvoice.id), newInvoice, { merge: true });
+      } catch (err) {
+        console.warn('Firestore CRM booking auto-provision notice:', err);
+      }
+
+      addNotification(
+        `🤝 CRM Deal Closed: ${targetUser.name}`,
+        `New booking ${bookingCode} provisioned for "${matchedPkg.title}" (${adults} Pax, $${totalPriceUSD}). Itinerary & vouchers ready for operations!`,
+        'booking'
+      );
+    } else if (event.eventType === 'booking.status_updated' || event.eventType === 'booking.cancelled') {
       const targetCode = event.affectedEntityId || event.payload?.bookingCode || event.payload?.bookingId;
       const targetStatus: BookingStatus = event.eventType === 'booking.cancelled' ? 'cancelled' : (event.payload?.status || 'confirmed');
 
