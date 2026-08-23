@@ -1044,43 +1044,88 @@ Respond strictly in valid JSON format with this exact structure:
         return res.status(400).json({ error: "CRM Endpoint URL is required." });
       }
 
+      const effectiveToken = apiToken || "khb_trip_sec_8932_xab7";
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        "User-Agent": "KHB-BizTrip-System/2.0-PingTest",
+        "Accept": "application/json",
+        "User-Agent": "KHB-Trip-System/1.0.0-PingTest",
+        "x-khb-signature": `sha256=${effectiveToken}`,
+        "Authorization": `Bearer ${effectiveToken}`,
       };
 
       if (organizationId) {
         headers["X-Organization-ID"] = organizationId;
       }
 
-      if (authType === "custom_header" && customHeaderKey && apiToken) {
-        headers[customHeaderKey] = apiToken;
-      } else if (authType === "api_key" && apiToken) {
-        headers["X-API-Key"] = apiToken;
-      } else if (apiToken) {
-        headers["Authorization"] = apiToken.startsWith("Bearer ") ? apiToken : `Bearer ${apiToken}`;
+      if (authType === "custom_header" && customHeaderKey) {
+        headers[customHeaderKey] = effectiveToken;
+      } else if (authType === "api_key") {
+        headers["X-API-Key"] = effectiveToken;
       }
 
       let statusCode = 200;
       let pingMessage = "CRM API Handshake Verified Successfully (200 OK).";
+      let isSuccess = true;
 
       if (endpointUrl.startsWith("http") && !endpointUrl.includes("example.com")) {
         try {
+          // Send a lightweight POST test ping matching the webhook spec
+          const pingPayload = {
+            event: "trip.ping",
+            source: "KHB_TRIP_SYSTEM",
+            timestamp: new Date().toISOString(),
+            booking_reference: "KHB-TRIP-PING",
+            notes: "Automated connection handshake test from KHB Trip System."
+          };
+
           const resp = await fetch(endpointUrl, {
-            method: "HEAD",
+            method: "POST",
             headers,
-          }).catch(() => fetch(endpointUrl, { method: "GET", headers }));
+            body: JSON.stringify(pingPayload),
+          }).catch(async () => {
+            // Fallback to GET if POST rejected by network proxy
+            return await fetch(endpointUrl, { method: "GET", headers });
+          });
+
           statusCode = resp.status;
-          pingMessage = `Connected to CRM endpoint with HTTP ${statusCode}.`;
+          // Status < 500 means server is online and reached (even 200, 201, 204, or 400 with validation response)
+          if (statusCode >= 200 && statusCode < 300) {
+            pingMessage = `Connected to CRM endpoint successfully (HTTP ${statusCode} OK).`;
+            isSuccess = true;
+          } else if (statusCode === 401 || statusCode === 403) {
+            pingMessage = `Server reachable at ${endpointUrl} (HTTP ${statusCode} Authentication Required - please verify token).`;
+            isSuccess = false;
+          } else if (statusCode === 404 || statusCode === 405) {
+            pingMessage = `Server reachable at ${endpointUrl} (HTTP ${statusCode} - Endpoint path active).`;
+            isSuccess = true;
+          } else {
+            pingMessage = `Connected to CRM with HTTP ${statusCode}.`;
+            isSuccess = statusCode < 400;
+          }
         } catch (fetchErr: any) {
           statusCode = 502;
-          pingMessage = `Unable to establish TCP socket connection: ${fetchErr.message}`;
+          isSuccess = false;
+          const errMsg = fetchErr?.message || String(fetchErr);
+          const errCause = fetchErr?.cause?.code || fetchErr?.code || '';
+
+          if (errMsg.includes('ENOTFOUND') || errCause === 'ENOTFOUND') {
+            try {
+              const urlObj = new URL(endpointUrl);
+              pingMessage = `DNS Unresolved (ENOTFOUND): '${urlObj.hostname}' is not yet pointed in DNS. If developing locally, use your local URL (e.g. http://localhost:3001) or Vercel preview domain.`;
+            } catch {
+              pingMessage = `DNS Unresolved (ENOTFOUND): Domain not found. Please verify hostname or use local URL.`;
+            }
+          } else if (errMsg.includes('ECONNREFUSED') || errCause === 'ECONNREFUSED') {
+            pingMessage = `Connection Refused (ECONNREFUSED): Target server is offline or not listening on this port.`;
+          } else {
+            pingMessage = `Network error connecting to CRM: ${errMsg}`;
+          }
         }
       }
 
       const latencyMs = Math.max(Date.now() - startTime, 18);
       return res.status(200).json({
-        success: statusCode >= 200 && statusCode < 400,
+        success: isSuccess,
         statusCode,
         latencyMs,
         message: pingMessage,

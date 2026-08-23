@@ -741,11 +741,35 @@ export const CrmIntegrationSection: React.FC = () => {
                   type="url"
                   value={crmConfig.crmEndpointUrl}
                   onChange={e => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: e.target.value }))}
-                  placeholder="https://api.crm.example.com/v1/trade-delegations"
+                  placeholder="https://crm.khbevents.com/api/webhooks/inbound"
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                 />
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-slate-400 font-semibold">Quick Endpoints:</span>
+                  <button
+                    type="button"
+                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://crm.khbevents.com/api/webhooks/inbound' }))}
+                    className="text-[10px] px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 font-mono font-bold hover:bg-sky-100 transition"
+                  >
+                    crm.khbevents.com (Production)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'http://localhost:3001/api/webhooks/inbound' }))}
+                    className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono hover:bg-slate-200 transition"
+                  >
+                    localhost:3001
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'http://localhost:8000/api/webhooks/inbound' }))}
+                    className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono hover:bg-slate-200 transition"
+                  >
+                    localhost:8000
+                  </button>
+                </div>
                 <p className="text-[11px] text-slate-400">
-                  Target REST webhook/endpoint accepting delegation and booking JSON objects.
+                  Target REST webhook endpoint accepting delegation and booking JSON objects.
                 </p>
               </div>
 
