@@ -1504,11 +1504,11 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
 
   // CRM & Webhook Integration
   crmConfig: {
-    crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound',
-    crmApiToken: 'khb_trip_sec_8932_xab7',
-    crmAuthType: 'bearer',
-    crmHeaderKey: 'Authorization',
-    crmWebhookSecret: 'khb_trip_sec_8932_xab7',
+    crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/v1/bookings',
+    crmApiToken: 'khb_live_api_key_2026_master',
+    crmAuthType: 'api_key',
+    crmHeaderKey: 'x-api-key',
+    crmWebhookSecret: 'khb_live_api_key_2026_master',
     crmAutoSyncBookings: true,
     crmAutoSyncCustomers: true,
     crmOrganizationId: 'KHB-DELEGATION-HQ',
