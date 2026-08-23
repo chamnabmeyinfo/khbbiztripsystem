@@ -9,9 +9,22 @@ dotenv.config();
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  // CORS Middleware for CRM & Cross-Domain Linkage
+  app.use((req, res, next) => {
+    res.setHeader("X-Powered-By", "KHB Biz Trip Backend Engine");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-khb-event, x-khb-signature, x-khb-timestamp, x-crm-token, x-crm-signature, x-crm-source, x-user-email, x-user-role");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
 
 // Shared Gemini client utility on the server with User-Agent telemetry
   const getAiClient = () => {
