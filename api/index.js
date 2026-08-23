@@ -989,7 +989,11 @@ app.get(["/api/crm/clients", "/crm/clients"], async (req, res) => {
   }
 });
 var app_default = app;
+
+// api/handler.ts
+function handler(req, res) {
+  return app_default(req, res);
+}
 export {
-  app,
-  app_default as default
+  handler as default
 };

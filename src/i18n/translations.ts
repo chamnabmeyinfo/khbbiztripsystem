@@ -111,6 +111,7 @@ export interface TranslationDictionary {
   navCashFlow: string;
   navInvoices: string;
   navPackages: string;
+  navInboundLeads?: string;
   navBookings: string;
   navCosting: string;
   navSuppliers: string;
@@ -253,6 +254,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navCashFlow: "Cash Flow & Runway",
     navInvoices: "Tax Invoices",
     navPackages: "Tour Packages",
+    navInboundLeads: "Inbound CRM Leads",
     navBookings: "Bookings & Delegates",
     navCosting: "Costing & Pricing Engine",
     navSuppliers: "Suppliers Directory",
@@ -869,6 +871,7 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navCashFlow: "លំហូរសាច់ប្រាក់ & ដើមទុន",
     navInvoices: "វិក្កយបត្រពន្ធ (VAT)",
     navPackages: "កញ្ចប់ដំណើរកម្សាន្ត",
+    navInboundLeads: "ប្រតិភូនាំចូលពី CRM (Won)",
     navBookings: "ការកក់ & បញ្ជីប្រតិភូ",
     navCosting: "ការគណនាថ្លៃដើម & កំណត់តម្លៃ",
     navSuppliers: "បញ្ជីឈ្មោះអ្នកផ្គត់ផ្គង់",

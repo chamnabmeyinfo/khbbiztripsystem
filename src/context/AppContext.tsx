@@ -35,6 +35,9 @@ import {
   CrmWebhookEvent,
   CrmSyncLog,
   CrmWebhookEventType,
+  InboundWonLead,
+  LeadPassenger,
+  LeadOperationalStage,
 } from '../types';
 import {
   SEED_USERS,
@@ -59,6 +62,10 @@ import {
   fetchServerWebhookEvents,
   getStoredCrmLogs,
   getStoredWebhookEvents,
+  getStoredInboundLeads,
+  saveStoredInboundLead,
+  saveAllStoredInboundLeads,
+  pushLeadUpdateToCrm,
   DEFAULT_CRM_CONFIG,
 } from '../services/crmIntegrationService';
 import { isStaffMember, userHasPermission, userCanAccessTab, isAllowedGoogleDomain, ROLE_CONFIGS } from '../services/rolePermissions';
@@ -274,6 +281,16 @@ interface AppContextType {
   // CRM & Webhook Integration Suite
   crmEvents: CrmWebhookEvent[];
   crmSyncLogs: CrmSyncLog[];
+  inboundLeads: InboundWonLead[];
+  addInboundLead: (lead: Omit<InboundWonLead, 'id' | 'createdAt' | 'updatedAt'>) => InboundWonLead;
+  updateInboundLead: (lead: InboundWonLead) => void;
+  updateLeadOperationalStage: (leadId: string, stage: LeadOperationalStage) => void;
+  updateLeadManifest: (leadId: string, manifest: LeadPassenger[]) => void;
+  syncLeadToCrm: (
+    leadId: string,
+    eventType: 'trip.booking_confirmed' | 'trip.passenger_manifest_updated' | 'trip.payment_confirmed'
+  ) => Promise<{ success: boolean; message: string }>;
+  deleteInboundLead: (leadId: string) => void;
   processWebhookEvent: (event: CrmWebhookEvent) => void;
   pushBookingToCrm: (bookingId: string) => Promise<boolean>;
   pushCustomerToCrm: (userId: string) => Promise<boolean>;
@@ -315,6 +332,7 @@ const STORAGE_KEYS = {
   DELETED_ITEMS: 'tripdesk_deleted_items_prod',
   DELETED_IDS: 'tripdesk_deleted_ids_prod',
   SETTINGS: 'tripdesk_settings_prod',
+  INBOUND_LEADS: 'tripdesk_inbound_leads_prod',
 };
 
 const INITIAL_AUDIT_LOGS: UserAuditLog[] = [
@@ -479,6 +497,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // CRM & Webhook Inbound & Outbound Sync State
   const [crmEvents, setCrmEvents] = useState<CrmWebhookEvent[]>(() => getStoredWebhookEvents());
   const [crmSyncLogs, setCrmSyncLogs] = useState<CrmSyncLog[]>(() => getStoredCrmLogs());
+  const [inboundLeads, setInboundLeads] = useState<InboundWonLead[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.INBOUND_LEADS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return getStoredInboundLeads();
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.INBOUND_LEADS, JSON.stringify(inboundLeads));
+    } catch (e) {
+      console.warn('Failed to save inbound leads to LocalStorage:', e);
+    }
+  }, [inboundLeads]);
 
   const [activeView, setActiveView] = useState<ActiveView>('marketing');
   const [adminActiveTab, setAdminActiveTab] = useState<string>('overview');
@@ -822,7 +858,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       });
       return () => unsubscribe();
     } catch (err) {
-      console.warn('Firestore audit logs sync fallback to local store');
+      console.warn('Audit logs sync fallback to local store');
+    }
+  }, []);
+
+  // Firestore Real-Time Inbound Won Leads Sync
+  useEffect(() => {
+    try {
+      const q = query(collection(db, 'inbound_leads'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const remoteLeads: InboundWonLead[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as InboundWonLead;
+            if (data && data.id) {
+              remoteLeads.push(data);
+            }
+          });
+          if (remoteLeads.length > 0) {
+            setInboundLeads(prev => {
+              const remoteIds = new Set(remoteLeads.map(l => l.id));
+              const merged = [...remoteLeads, ...prev.filter(l => !remoteIds.has(l.id))];
+              merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+              return merged;
+            });
+          }
+        }
+      }, (err) => {
+        console.warn('Inbound leads snapshot notice:', err.message);
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Firestore inbound leads sync fallback to local store');
     }
   }, []);
 
@@ -2772,18 +2839,126 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setBookings(prev => [newBooking, ...prev]);
       setInvoices(prev => [newInvoice, ...prev]);
 
+      // 3. Provision / Update Inbound Won Lead Record
+      const crmLeadId = payload.crm_lead_id || payload.lead_id || payload.id || `lead_${Date.now()}`;
+      const tripCategory = eventType || matchedPkg.category || matchedPkg.title;
+      
+      const newWonLead: InboundWonLead = {
+        id: `inb_${crmLeadId}`,
+        crmLeadId,
+        clientName: customerName,
+        clientCompany: companyName,
+        clientEmail: customerEmail,
+        clientPhone: customerPhone,
+        assignedAgent,
+        tripCategory,
+        dealTitle: dealData.dealTitle || `${tripCategory} - ${companyName}`,
+        dealValueUSD: totalPriceUSD,
+        commissionRate: payload.commission_rate || dealData.commissionRate || 0.08,
+        paxCount: adults + children,
+        departureDate: startDate,
+        bookingCode,
+        bookingId,
+        invoiceId: newInvoice.id,
+        packageId: matchedPkg.id,
+        operationalStage: 'won_ingested',
+        manifest: [
+          {
+            id: `pax_lead_${Date.now()}`,
+            name: customerName,
+            jobTitle: customerData.jobTitle || 'Executive Delegate Leader',
+            passportNumber: customerData.passportNumber || '',
+            passportExpiry: customerData.passportExpiry || '',
+            nationality: 'Cambodian',
+            roomType: 'single',
+            badgeIssued: false,
+            phone: customerPhone,
+            email: customerEmail,
+          }
+        ],
+        paymentStatus: paidAmount >= totalPriceUSD ? 'fully_paid' : paidAmount > 0 ? 'deposit_paid' : 'unpaid',
+        depositPaidUSD: paidAmount,
+        crmSyncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString(),
+        notes,
+        specialRequests: `Provisioned from CRM Won Lead: ${dealData.dealTitle || dealData.dealId || 'Closed Won'}. Company: ${companyName}`,
+        hotelStatus: newBooking.hotelStatus,
+        flightStatus: newBooking.flightStatus,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setInboundLeads(prev => {
+        const filtered = prev.filter(l => l.crmLeadId !== crmLeadId && l.id !== newWonLead.id);
+        const updated = [newWonLead, ...filtered];
+        saveAllStoredInboundLeads(updated);
+        return updated;
+      });
+
       try {
-        setDoc(doc(db, 'bookings', bookingId), newBooking, { merge: true });
-        setDoc(doc(db, 'invoices', newInvoice.id), newInvoice, { merge: true });
+        setDoc(doc(db, 'bookings', bookingId), sanitizeForFirestore(newBooking), { merge: true });
+        setDoc(doc(db, 'invoices', newInvoice.id), sanitizeForFirestore(newInvoice), { merge: true });
+        setDoc(doc(db, 'inbound_leads', newWonLead.id), sanitizeForFirestore(newWonLead), { merge: true });
       } catch (err) {
         console.warn('Firestore CRM booking auto-provision notice:', err);
       }
 
       addNotification(
-        `🤝 CRM Deal Closed: ${targetUser.name}`,
-        `New booking ${bookingCode} provisioned for "${matchedPkg.title}" (${adults} Pax, $${totalPriceUSD}). Itinerary & vouchers ready for operations!`,
+        `🤝 CRM Lead Won: ${companyName}`,
+        `New Won Lead ${bookingCode} (${customerName}, ${adults} Pax, $${totalPriceUSD}) organized in Inbound Operations!`,
         'booking'
       );
+    } else if (event.eventType === 'trip.passenger_manifest_updated') {
+      const targetCode = event.affectedEntityId || event.payload?.booking_reference || event.payload?.bookingCode;
+      const manifestData = event.payload?.manifest || [];
+      if (targetCode && Array.isArray(manifestData) && manifestData.length > 0) {
+        setInboundLeads(prev => prev.map(l => {
+          if (l.bookingCode === targetCode || l.crmLeadId === targetCode || l.id === targetCode) {
+            const updated: InboundWonLead = {
+              ...l,
+              manifest: manifestData,
+              paxCount: manifestData.length,
+              operationalStage: l.operationalStage === 'won_ingested' ? 'manifest_pending' : l.operationalStage,
+              updatedAt: new Date().toISOString()
+            };
+            try {
+              setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+            } catch (err) {
+              console.warn('Firestore manifest update notice:', err);
+            }
+            return updated;
+          }
+          return l;
+        }));
+        addNotification(
+          `Passenger Manifest Updated`,
+          `Updated ${manifestData.length} delegate manifests for booking ${targetCode}.`,
+          'system'
+        );
+      }
+    } else if (event.eventType === 'trip.payment_confirmed' || event.eventType === 'booking.payment_received') {
+      const targetCode = event.affectedEntityId || event.payload?.booking_reference || event.payload?.bookingCode;
+      const paidAmount = Number(event.payload?.deal_value || event.payload?.paid_amount || event.payload?.amount || 0);
+      if (targetCode) {
+        setInboundLeads(prev => prev.map(l => {
+          if (l.bookingCode === targetCode || l.crmLeadId === targetCode || l.id === targetCode) {
+            const updated: InboundWonLead = {
+              ...l,
+              paymentStatus: 'fully_paid',
+              depositPaidUSD: paidAmount || l.dealValueUSD,
+              operationalStage: l.operationalStage === 'won_ingested' || l.operationalStage === 'manifest_pending' ? 'finance_settled' : l.operationalStage,
+              updatedAt: new Date().toISOString()
+            };
+            try {
+              setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+            } catch (err) {
+              console.warn('Firestore payment update notice:', err);
+            }
+            return updated;
+          }
+          return l;
+        }));
+      }
     } else if (event.eventType === 'booking.status_updated' || event.eventType === 'booking.cancelled') {
       const targetCode = event.affectedEntityId || event.payload?.bookingCode || event.payload?.bookingId;
       const targetStatus: BookingStatus = event.eventType === 'booking.cancelled' ? 'cancelled' : (event.payload?.status || 'confirmed');
@@ -2953,6 +3128,151 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return false;
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Inbound CRM Won Leads Operations & Manifest Management
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const addInboundLead = (leadData: Omit<InboundWonLead, 'id' | 'createdAt' | 'updatedAt'>): InboundWonLead => {
+    const newLead: InboundWonLead = {
+      ...leadData,
+      id: `inb_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setInboundLeads(prev => [newLead, ...prev]);
+    saveStoredInboundLead(newLead);
+
+    try {
+      setDoc(doc(db, 'inbound_leads', newLead.id), sanitizeForFirestore(newLead), { merge: true });
+    } catch (e) {
+      console.warn('Firestore add inbound lead notice:', e);
+    }
+
+    logUserAudit(
+      'Inbound CRM Lead Added',
+      `Registered Won Lead ${newLead.bookingCode} for ${newLead.clientCompany} ($${newLead.dealValueUSD}, ${newLead.paxCount} Pax).`,
+      'info'
+    );
+
+    return newLead;
+  };
+
+  const updateInboundLead = (lead: InboundWonLead) => {
+    const updated: InboundWonLead = {
+      ...lead,
+      updatedAt: new Date().toISOString()
+    };
+
+    setInboundLeads(prev => prev.map(l => l.id === updated.id ? updated : l));
+    saveStoredInboundLead(updated);
+
+    try {
+      setDoc(doc(db, 'inbound_leads', updated.id), sanitizeForFirestore(updated), { merge: true });
+    } catch (e) {
+      console.warn('Firestore update inbound lead notice:', e);
+    }
+  };
+
+  const updateLeadOperationalStage = (leadId: string, stage: LeadOperationalStage) => {
+    setInboundLeads(prev => prev.map(l => {
+      if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        const updated: InboundWonLead = {
+          ...l,
+          operationalStage: stage,
+          updatedAt: new Date().toISOString()
+        };
+        try {
+          setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.warn('Firestore stage update notice:', e);
+        }
+        return updated;
+      }
+      return l;
+    }));
+
+    addNotification(
+      `Operational Stage Updated`,
+      `Lead stage advanced to "${stage.replace(/_/g, ' ').toUpperCase()}".`,
+      'system'
+    );
+  };
+
+  const updateLeadManifest = (leadId: string, manifest: LeadPassenger[]) => {
+    setInboundLeads(prev => prev.map(l => {
+      if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        const updated: InboundWonLead = {
+          ...l,
+          manifest,
+          paxCount: manifest.length || l.paxCount,
+          updatedAt: new Date().toISOString()
+        };
+        try {
+          setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.warn('Firestore manifest update notice:', e);
+        }
+        return updated;
+      }
+      return l;
+    }));
+  };
+
+  const syncLeadToCrm = async (
+    leadId: string,
+    eventType: 'trip.booking_confirmed' | 'trip.passenger_manifest_updated' | 'trip.payment_confirmed'
+  ): Promise<{ success: boolean; message: string }> => {
+    const targetLead = inboundLeads.find(l => l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId);
+    if (!targetLead) {
+      return { success: false, message: 'Inbound lead record not found.' };
+    }
+
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+    const res = await pushLeadUpdateToCrm(targetLead, eventType, config);
+
+    // Update CRM sync timestamp
+    if (res.success) {
+      updateInboundLead({
+        ...targetLead,
+        crmSyncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString()
+      });
+      addNotification(
+        `2-Way CRM Sync Successful`,
+        `Dispatched "${eventType}" to CRM for booking ${targetLead.bookingCode}.`,
+        'system'
+      );
+    } else {
+      updateInboundLead({
+        ...targetLead,
+        crmSyncStatus: 'error'
+      });
+      addNotification(
+        `CRM Sync Warning`,
+        res.message || `Failed to sync ${eventType} with CRM.`,
+        'system'
+      );
+    }
+
+    setCrmSyncLogs(getStoredCrmLogs());
+    return { success: res.success, message: res.message };
+  };
+
+  const deleteInboundLead = (leadId: string) => {
+    const target = inboundLeads.find(l => l.id === leadId || l.bookingCode === leadId);
+    if (!target) return;
+
+    setInboundLeads(prev => prev.filter(l => l.id !== target.id));
+    try {
+      deleteDoc(doc(db, 'inbound_leads', target.id));
+    } catch (e) {
+      console.warn('Firestore delete inbound lead notice:', e);
+    }
+
+    logUserAudit('Inbound CRM Lead Deleted', `Removed lead ${target.bookingCode} (${target.clientCompany})`, 'warning');
+  };
+
   // Dynamically compute fully localized representations of packages based on the active language
   const localizedPackages = useMemo(() => {
     return packages.map(pkg => getLocalizedPackage(pkg, language));
@@ -3061,6 +3381,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         // CRM & Webhook Suite
         crmEvents,
         crmSyncLogs,
+        inboundLeads,
+        addInboundLead,
+        updateInboundLead,
+        updateLeadOperationalStage,
+        updateLeadManifest,
+        syncLeadToCrm,
+        deleteInboundLead,
         processWebhookEvent,
         pushBookingToCrm,
         pushCustomerToCrm,

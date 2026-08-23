@@ -57,6 +57,7 @@ import { SettingsSection } from './SettingsSection';
 import { UserManagementSection } from './UserManagementSection';
 import { PackageManagementSection } from './PackageManagementSection';
 import { CrmIntegrationSection } from './CrmIntegrationSection';
+import { InboundWonLeadsSection } from './InboundWonLeadsSection';
 import { ROLE_CONFIGS } from '../../services/rolePermissions';
 
 export const AdminDashboard: React.FC = () => {
@@ -76,6 +77,7 @@ export const AdminDashboard: React.FC = () => {
     expenses,
     deletedItems,
     crmEvents,
+    inboundLeads,
     pushBookingToCrm,
     updateBookingStatusByAdmin,
     addPackage,
@@ -97,6 +99,7 @@ export const AdminDashboard: React.FC = () => {
   type AdminTab =
     | 'overview'
     | 'users'
+    | 'inbound_leads'
     | 'bookings'
     | 'packages'
     | 'invoices'
@@ -195,6 +198,14 @@ export const AdminDashboard: React.FC = () => {
     {
       groupTitle: t('navGroupTrips'),
       items: [
+        {
+          id: 'inbound_leads' as AdminTab,
+          label: language === 'km' ? 'ប្រតិភូនាំចូលពី CRM' : 'Inbound CRM Leads',
+          icon: Webhook,
+          count: inboundLeads.length,
+          highlight: inboundLeads.length > 0,
+          badgeColor: 'bg-emerald-500 text-white animate-pulse'
+        },
         { id: 'packages' as AdminTab, label: t('navPackages'), icon: Plane, count: packages.length },
         { id: 'bookings' as AdminTab, label: t('navBookings'), icon: Briefcase, count: bookings.length },
         { id: 'costing' as AdminTab, label: t('navCosting'), icon: Calculator }
