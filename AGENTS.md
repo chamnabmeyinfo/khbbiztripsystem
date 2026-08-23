@@ -10,4 +10,5 @@
   2. The precise root cause or requirement addressed.
   3. The exact code logic/fields changed, added, or removed.
   4. Clear verification results confirming that the changes were tested and work as expected.
-- **Git Push Notification**: Whenever you finish implementing, updating, or fixing any features in the codebase, always explicitly ask the user whether they would like you to push the latest changes to their GitHub repository (`https://github.com/chamnabmeyinfo/khbbiztripsystem.git`) using their `GITHUB_TOKEN`.
+- **Git Push Notification & Execution**: Whenever you finish implementing, updating, or fixing any features in the codebase, always explicitly ask the user whether they would like you to push the latest changes to their GitHub repository (`https://github.com/chamnabmeyinfo/khbbiztripsystem.git`) using their `GITHUB_TOKEN`.
+- **Git Command Permissions**: Whenever running commands related to Git and GitHub (including `git status`, `git add`, `git commit`, `git push`, `git pull`, `git fetch`, `git diff`, etc.), always automatically proceed and execute them directly without hesitation.
