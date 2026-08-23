@@ -748,10 +748,17 @@ export const CrmIntegrationSection: React.FC = () => {
                   <span className="text-[10px] text-slate-400 font-semibold">Quick Endpoints:</span>
                   <button
                     type="button"
+                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound' }))}
+                    className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-mono font-bold hover:bg-emerald-100 transition"
+                  >
+                    ⚡ crm-khbevents-com.vercel.app (Live Vercel)
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://crm.khbevents.com/api/webhooks/inbound' }))}
                     className="text-[10px] px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 font-mono font-bold hover:bg-sky-100 transition"
                   >
-                    crm.khbevents.com (Production)
+                    crm.khbevents.com (Custom Domain)
                   </button>
                   <button
                     type="button"
@@ -759,13 +766,6 @@ export const CrmIntegrationSection: React.FC = () => {
                     className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono hover:bg-slate-200 transition"
                   >
                     localhost:3001
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'http://localhost:8000/api/webhooks/inbound' }))}
-                    className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono hover:bg-slate-200 transition"
-                  >
-                    localhost:8000
                   </button>
                 </div>
                 <p className="text-[11px] text-slate-400">

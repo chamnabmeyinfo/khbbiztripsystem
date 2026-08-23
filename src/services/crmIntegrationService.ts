@@ -11,7 +11,7 @@ const CRM_SYNC_LOGS_KEY = 'khb_crm_sync_logs';
 const CRM_WEBHOOK_EVENTS_KEY = 'khb_crm_webhook_events';
 
 export const DEFAULT_CRM_CONFIG: CrmConfig = {
-  crmEndpointUrl: 'https://crm.khbevents.com/api/webhooks/inbound',
+  crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound',
   crmApiToken: 'khb_trip_sec_8932_xab7',
   crmAuthType: 'bearer',
   crmHeaderKey: 'Authorization',

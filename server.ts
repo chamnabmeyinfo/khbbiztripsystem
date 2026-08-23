@@ -837,7 +837,7 @@ Respond strictly in valid JSON format with this exact structure:
         return res.status(400).json({ error: "Missing booking object or booking code." });
       }
 
-      const effectiveEndpoint = endpointUrl || "https://crm.khbevents.com/api/webhooks/inbound";
+      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/webhooks/inbound";
       const token = apiToken || "khb_trip_sec_8932_xab7";
 
       const headers: Record<string, string> = {
@@ -1087,8 +1087,14 @@ Respond strictly in valid JSON format with this exact structure:
             return await fetch(endpointUrl, { method: "GET", headers });
           });
 
+          let respText = '';
+          try {
+            respText = await resp.text();
+          } catch {
+            // ignore
+          }
+
           statusCode = resp.status;
-          // Status < 500 means server is online and reached (even 200, 201, 204, or 400 with validation response)
           if (statusCode >= 200 && statusCode < 300) {
             pingMessage = `Connected to CRM endpoint successfully (HTTP ${statusCode} OK).`;
             isSuccess = true;
@@ -1098,8 +1104,11 @@ Respond strictly in valid JSON format with this exact structure:
           } else if (statusCode === 404 || statusCode === 405) {
             pingMessage = `Server reachable at ${endpointUrl} (HTTP ${statusCode} - Endpoint path active).`;
             isSuccess = true;
+          } else if (statusCode === 500 && respText.includes('FUNCTION_INVOCATION_FAILED')) {
+            pingMessage = `Vercel Server Reached (HTTP 500 FUNCTION_INVOCATION_FAILED): Serverless function at ${endpointUrl} received the request, but encountered an error in the CRM code. Please check CRM Vercel Runtime Logs.`;
+            isSuccess = false;
           } else {
-            pingMessage = `Connected to CRM with HTTP ${statusCode}.`;
+            pingMessage = `Connected to CRM server with HTTP ${statusCode}.`;
             isSuccess = statusCode < 400;
           }
         } catch (fetchErr: any) {
