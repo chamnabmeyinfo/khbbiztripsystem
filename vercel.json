@@ -21,7 +21,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, x-khb-event, x-khb-signature, x-khb-timestamp, x-crm-token, x-crm-signature, x-crm-source, x-user-email, x-user-role"
+          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization, x-khb-event, x-khb-signature, x-khb-timestamp, x-crm-token, x-crm-signature, x-crm-source, x-user-email, x-user-role, x-api-key"
         }
       ]
     },
@@ -37,11 +37,7 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
