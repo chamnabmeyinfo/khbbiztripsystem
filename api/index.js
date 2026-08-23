@@ -715,7 +715,7 @@ app.post(["/api/crm/push-booking", "/crm/push-booking"], async (req, res) => {
     if (!booking || !booking.bookingCode) {
       return res.status(400).json({ error: "Missing booking object or booking code." });
     }
-    const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/bookings";
+    const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/v1/bookings";
     const token = apiToken || "khb_live_api_key_2026_master";
     const headers = {
       "Content-Type": "application/json",
@@ -807,7 +807,7 @@ app.post(["/api/crm/push-customer", "/crm/push-customer"], async (req, res) => {
     if (!customer || !customer.email) {
       return res.status(400).json({ error: "Missing customer object or email." });
     }
-    const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/clients";
+    const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/v1/clients";
     const token = apiToken || "khb_live_api_key_2026_master";
     const headers = {
       "Content-Type": "application/json",
@@ -883,7 +883,7 @@ app.post(["/api/crm/push-inbound-sync", "/crm/push-inbound-sync"], async (req, r
   const startTime = Date.now();
   try {
     const { endpointUrl, apiToken, payload } = req.body;
-    const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/webhooks/inbound";
+    const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/webhooks/inbound";
     const token = apiToken || "khb_trip_sec_8932_xab7";
     const headers = {
       "Content-Type": "application/json",
@@ -945,7 +945,7 @@ app.post(["/api/crm/test-connection", "/crm/test-connection"], async (req, res) 
   const startTime = Date.now();
   try {
     const { endpointUrl, apiToken, authType, customHeaderKey, organizationId } = req.body;
-    const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/ping";
+    const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/v1/ping";
     const effectiveToken = apiToken || "khb_live_api_key_2026_master";
     const headers = {
       "Content-Type": "application/json",
@@ -1029,7 +1029,7 @@ app.get(["/api/crm/clients", "/crm/clients"], async (req, res) => {
   try {
     const search = req.query.search || "";
     const eventType = req.query.eventType || "";
-    const crmBase = process.env.CRM_API_BASE_URL || "https://crm-khbevents-com.vercel.app/api/v1/clients";
+    const crmBase = process.env.CRM_API_BASE_URL || "https://khbcrm.vercel.app/api/v1/clients";
     const token = process.env.CRM_MASTER_API_KEY || "khb_live_api_key_2026_master";
     const url = new URL(crmBase);
     if (search) url.searchParams.append("search", search);

@@ -63,7 +63,7 @@ export const CrmIntegrationSection: React.FC = () => {
 
   // Form configuration state
   const [crmConfig, setCrmConfig] = useState<CrmConfig>(() => ({
-    crmEndpointUrl: systemSettings?.crmConfig?.crmEndpointUrl || 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound',
+    crmEndpointUrl: systemSettings?.crmConfig?.crmEndpointUrl || 'https://khbcrm.vercel.app/api/webhooks/inbound',
     crmApiToken: systemSettings?.crmConfig?.crmApiToken || 'khb_crm_live_tok_9948271049281746',
     crmAuthType: systemSettings?.crmConfig?.crmAuthType || 'bearer',
     crmHeaderKey: systemSettings?.crmConfig?.crmHeaderKey || 'Authorization',
@@ -763,21 +763,21 @@ export const CrmIntegrationSection: React.FC = () => {
                   type="url"
                   value={crmConfig.crmEndpointUrl || ''}
                   onChange={e => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: e.target.value }))}
-                  placeholder="https://crm.khbevents.com/api/webhooks/inbound"
+                  placeholder="https://khbcrm.vercel.app/api/webhooks/inbound"
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                 />
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[10px] text-slate-400 font-semibold">Quick Endpoints:</span>
                   <button
                     type="button"
-                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound' }))}
+                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://khbcrm.vercel.app/api/webhooks/inbound' }))}
                     className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-mono font-bold hover:bg-emerald-100 transition"
                   >
                     ⚡ crm-khbevents-com.vercel.app (Live Vercel)
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://crm.khbevents.com/api/webhooks/inbound' }))}
+                    onClick={() => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: 'https://khbcrm.vercel.app/api/webhooks/inbound' }))}
                     className="text-[10px] px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 font-mono font-bold hover:bg-sky-100 transition"
                   >
                     crm.khbevents.com (Custom Domain)

@@ -15,7 +15,7 @@ const CRM_WEBHOOK_EVENTS_KEY = 'khb_crm_webhook_events';
 const CRM_INBOUND_LEADS_KEY = 'khb_crm_inbound_leads';
 
 export const DEFAULT_CRM_CONFIG: CrmConfig = {
-  crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/v1/bookings',
+  crmEndpointUrl: 'https://khbcrm.vercel.app/api/v1/bookings',
   crmApiToken: 'khb_live_api_key_2026_master',
   crmAuthType: 'api_key',
   crmHeaderKey: 'x-api-key',
@@ -576,7 +576,7 @@ export async function pushLeadUpdateToCrm(
   config: CrmConfig = DEFAULT_CRM_CONFIG
 ): Promise<PushResult> {
   const startTime = Date.now();
-  const endpoint = (config.crmEndpointUrl || 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound')
+  const endpoint = (config.crmEndpointUrl || 'https://khbcrm.vercel.app/api/webhooks/inbound')
     .replace(/\/api\/v1\/bookings/g, '/api/webhooks/inbound');
 
   const payload: any = {

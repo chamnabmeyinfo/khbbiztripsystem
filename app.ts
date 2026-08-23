@@ -850,7 +850,7 @@ Respond strictly in valid JSON format with this exact structure:
         return res.status(400).json({ error: "Missing booking object or booking code." });
       }
 
-      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/bookings";
+      const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/v1/bookings";
       const token = apiToken || "khb_live_api_key_2026_master";
 
       const headers: Record<string, string> = {
@@ -963,7 +963,7 @@ Respond strictly in valid JSON format with this exact structure:
         return res.status(400).json({ error: "Missing customer object or email." });
       }
 
-      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/clients";
+      const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/v1/clients";
       const token = apiToken || "khb_live_api_key_2026_master";
 
       const headers: Record<string, string> = {
@@ -1048,7 +1048,7 @@ Respond strictly in valid JSON format with this exact structure:
     const startTime = Date.now();
     try {
       const { endpointUrl, apiToken, payload } = req.body;
-      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/webhooks/inbound";
+      const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/webhooks/inbound";
       const token = apiToken || "khb_trip_sec_8932_xab7";
 
       const headers: Record<string, string> = {
@@ -1117,7 +1117,7 @@ Respond strictly in valid JSON format with this exact structure:
     try {
       const { endpointUrl, apiToken, authType, customHeaderKey, organizationId } = req.body;
 
-      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/ping";
+      const effectiveEndpoint = endpointUrl || "https://khbcrm.vercel.app/api/v1/ping";
       const effectiveToken = apiToken || "khb_live_api_key_2026_master";
 
       const headers: Record<string, string> = {
@@ -1213,7 +1213,7 @@ Respond strictly in valid JSON format with this exact structure:
     try {
       const search = req.query.search as string || "";
       const eventType = req.query.eventType as string || "";
-      const crmBase = process.env.CRM_API_BASE_URL || "https://crm-khbevents-com.vercel.app/api/v1/clients";
+      const crmBase = process.env.CRM_API_BASE_URL || "https://khbcrm.vercel.app/api/v1/clients";
       const token = process.env.CRM_MASTER_API_KEY || "khb_live_api_key_2026_master";
 
       const url = new URL(crmBase);

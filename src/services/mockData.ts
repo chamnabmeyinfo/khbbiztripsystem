@@ -1504,7 +1504,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
 
   // CRM & Webhook Integration
   crmConfig: {
-    crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/v1/bookings',
+    crmEndpointUrl: 'https://khbcrm.vercel.app/api/v1/bookings',
     crmApiToken: 'khb_live_api_key_2026_master',
     crmAuthType: 'api_key',
     crmHeaderKey: 'x-api-key',
