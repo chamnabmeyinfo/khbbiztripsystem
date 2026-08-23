@@ -2634,16 +2634,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const processWebhookEvent = (event: CrmWebhookEvent) => {
     if (!event) return;
 
-    // ── Deal Won / Closed in CRM -> Auto-Provision Delegate Profile, Booking & Invoice ──
-    if (event.eventType === 'deal.won' || event.eventType === 'crm.deal_closed') {
+    // ── Deal Won / Lead Won in CRM -> Auto-Provision Delegate Profile, Booking & Invoice ──
+    if (event.eventType === 'lead.won' || event.eventType === 'deal.won' || event.eventType === 'crm.deal_closed') {
       const payload = event.payload || {};
       const customerData = payload.customer || payload.delegate || payload;
       const dealData = payload.deal || payload;
 
-      const customerEmail = customerData.email || `delegate_${Date.now()}@khb-trade.com`;
-      const customerName = customerData.name || customerData.customerName || 'Trade Mission Delegate';
-      const customerPhone = customerData.phone || '+855 23 999 888';
-      const companyName = customerData.company || customerData.organization || 'Cambodia Trade Delegation';
+      const customerEmail = customerData.email || payload.email || `delegate_${Date.now()}@khb-trade.com`;
+      const customerName = customerData.name || payload.name || payload.customerName || 'Trade Mission Delegate';
+      const customerPhone = customerData.phone || payload.phone || '+855 12 888 999';
+      const companyName = customerData.company || payload.company || 'Phnom Penh Logistics Group';
+      const assignedAgent = payload.assigned_agent || dealData.salesRep || 'Sophea Chamnab';
 
       // 1. Find or create user
       let targetUser = users.find(u => u.email.toLowerCase() === customerEmail.toLowerCase());
@@ -2654,7 +2655,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           email: customerEmail,
           phone: customerPhone,
           role: 'traveler',
-          department: 'Trade Delegates',
+          department: companyName || 'Trade Delegates',
           jobTitle: customerData.jobTitle || 'Executive Delegate',
           preferredLanguage: 'km',
           preferredCurrency: 'USD',
@@ -2668,22 +2669,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       }
 
-      // 2. Resolve package
-      const matchedPkg = packages.find(p => p.id === dealData.packageId || p.title.toLowerCase().includes((dealData.packageTitle || '').toLowerCase())) || packages[0];
-      const adults = Number(dealData.numberOfAdults || dealData.adults || dealData.numberOfPax || 1);
+      // 2. Resolve package based on event_type or packageTitle
+      const eventType = payload.event_type || dealData.event_type || dealData.packageTitle || '';
+      const matchedPkg = packages.find(p => 
+        (eventType && (p.title.toLowerCase().includes(eventType.toLowerCase()) || p.destination.toLowerCase().includes(eventType.toLowerCase()))) ||
+        p.id === dealData.packageId ||
+        p.title.toLowerCase().includes((dealData.packageTitle || '').toLowerCase())
+      ) || packages[0];
+
+      const adults = Number(payload.pax_count || dealData.numberOfAdults || dealData.adults || dealData.numberOfPax || 1);
       const children = Number(dealData.numberOfChildren || dealData.children || 0);
-      const startDate = dealData.startDate || dealData.travelDate || matchedPkg.availableDates?.[0] || '2026-10-29';
+      const startDate = payload.tour_departure_date || dealData.startDate || dealData.travelDate || matchedPkg.availableDates?.[0] || '2026-10-15';
       
       const startObj = new Date(startDate);
       startObj.setDate(startObj.getDate() + (matchedPkg.durationDays || 5));
       const endDate = dealData.endDate || startObj.toISOString().split('T')[0];
 
-      const totalPriceUSD = Number(dealData.dealAmountUSD || dealData.amountUSD || matchedPkg.priceUSD * adults);
+      const totalPriceUSD = Number(payload.deal_value || dealData.dealAmountUSD || dealData.amountUSD || matchedPkg.priceUSD * adults);
       const paidAmount = Number(dealData.paidAmountUSD || dealData.depositPaidUSD || totalPriceUSD);
-      const randomCodeSuffix = Math.floor(10000 + Math.random() * 90000);
-      const bookingCode = dealData.bookingCode || `TRP-${randomCodeSuffix}`;
+      const bookingCode = payload.booking_reference || dealData.bookingCode || `KHB-TRIP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
       const bookingId = `b_crm_${Date.now()}`;
       const txId = `tx_crm_${Date.now()}`;
+      const notes = payload.notes || dealData.notes || `Agent: ${assignedAgent}. Company: ${companyName}`;
 
       const newBooking: Booking = {
         id: bookingId,

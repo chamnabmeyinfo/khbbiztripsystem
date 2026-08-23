@@ -109,8 +109,8 @@ export const CrmIntegrationSection: React.FC = () => {
 
   // Default origin webhook URL
   const webhookUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/api/webhooks/crm`
-    : 'https://khbbiztripsystem.com/api/webhooks/crm';
+    ? `${window.location.origin}/api/webhooks/crm-leads`
+    : 'https://trip.khbevents.com/api/webhooks/crm-leads';
 
   // Synchronize form if systemSettings changes externally
   useEffect(() => {
@@ -121,36 +121,34 @@ export const CrmIntegrationSection: React.FC = () => {
 
   // Preset generator for the simulator
   const loadPreset = (presetType: 'deal_won' | 'confirm_booking' | 'cancel_booking' | 'flight_delay' | 'vip_upgrade' | 'broadcast') => {
-    const sampleBooking = bookings[0] || { bookingCode: 'TRP-84920', id: 'b_sample_1' };
-    const sampleUser = users[0] || { name: 'Ouk Dara', email: 'ouk.dara@khbmedia.asia' };
+    const sampleBooking = bookings[0] || { bookingCode: 'KHB-TRIP-2026-8912', id: 'b_sample_1' };
+    const sampleUser = users[0] || { name: 'Ouk Seyha', email: 'seyha@pplogistics.com.kh' };
 
     switch (presetType) {
       case 'deal_won':
-        setSimEventType('deal.won');
-        setSimCustomMessage('CRM Sales: Deal Closed Won for 4 Trade Delegates (Canton Fair Phase 1)');
+        setSimEventType('lead.won');
+        setSimCustomMessage('KHB Events CRM: Lead Won (Ouk Seyha - China Business Trip $16,000)');
         setSimPayloadJson(JSON.stringify({
-          deal: {
-            dealId: 'DEAL-KHB-2026-089',
-            dealTitle: 'VIP Delegation Package - Sourcing & Machinery',
-            packageId: 'pkg_canton_fair_2026_phase1',
-            packageTitle: 'Canton Fair 2026 Phase 1 (Electronics & Machinery)',
-            destination: 'Guangzhou, China',
-            startDate: '2026-10-29',
-            endDate: '2026-11-02',
-            numberOfAdults: 4,
-            numberOfChildren: 0,
-            dealAmountUSD: 1400,
-            paidAmountUSD: 1400,
-            salesRep: 'Sophea Sok (Senior B2B Consultant)',
-            notes: 'Client registered 4 company directors. Hotel twin-sharing requested.'
-          },
-          customer: {
-            name: 'Lok Chumteav Heng Linda',
-            email: 'linda.heng@khb-investments.com',
-            phone: '+855 12 888 777',
-            company: 'Royal Mekong Import-Export Co., Ltd.',
-            jobTitle: 'Managing Director & Founder',
-            role: 'traveler'
+          event: 'lead.won',
+          timestamp: new Date().toISOString(),
+          source: 'KHB_EVENTS_CRM',
+          data: {
+            crm_lead_id: `lead_${Date.now()}_ab12`,
+            name: 'Ouk Seyha',
+            company: 'Phnom Penh Logistics Group',
+            email: 'seyha@pplogistics.com.kh',
+            phone: '+855 12 888 999',
+            event_type: 'China Business Trip',
+            deal_value: 16000,
+            commission_rate: 0.08,
+            status: 'Won',
+            assigned_agent: 'Sophea Chamnab',
+            booking_reference: 'KHB-TRIP-2026-8912',
+            pax_count: 4,
+            tour_departure_date: '2026-10-15',
+            notes: 'Client requested 4 VIP executive delegation passes with translator support.',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         }, null, 2));
         break;
@@ -914,8 +912,8 @@ export const CrmIntegrationSection: React.FC = () => {
                   onClick={() => loadPreset('deal_won')}
                   className="p-3 text-left rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/30 hover:border-emerald-500 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition text-xs space-y-1"
                 >
-                  <div className="font-bold text-emerald-700 dark:text-emerald-300">🤝 Deal Closed Won</div>
-                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400">Auto-provisions booking & invoice</div>
+                  <div className="font-bold text-emerald-700 dark:text-emerald-300">🤝 CRM Lead Won</div>
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400">Ouk Seyha ($16k China Trip)</div>
                 </button>
 
                 <button
@@ -976,7 +974,10 @@ export const CrmIntegrationSection: React.FC = () => {
                   onChange={e => setSimEventType(e.target.value as any)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
+                  <option value="lead.won">lead.won (KHB Events CRM Lead Won & Provision)</option>
                   <option value="deal.won">deal.won (Deal Closed Won & Provision Booking)</option>
+                  <option value="trip.booking_confirmed">trip.booking_confirmed (Trip Portal Booking Confirmed)</option>
+                  <option value="trip.payment_confirmed">trip.payment_confirmed (Deposit / Full Payment Received)</option>
                   <option value="booking.status_updated">booking.status_updated</option>
                   <option value="booking.cancelled">booking.cancelled</option>
                   <option value="flight.status_changed">flight.status_changed</option>

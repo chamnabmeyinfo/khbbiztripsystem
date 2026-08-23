@@ -11,11 +11,11 @@ const CRM_SYNC_LOGS_KEY = 'khb_crm_sync_logs';
 const CRM_WEBHOOK_EVENTS_KEY = 'khb_crm_webhook_events';
 
 export const DEFAULT_CRM_CONFIG: CrmConfig = {
-  crmEndpointUrl: 'https://api.crm.khbevents.com/v1/trade-delegations',
-  crmApiToken: 'khb_crm_live_tok_9948271049281746',
+  crmEndpointUrl: 'https://crm.khbevents.com/api/webhooks/inbound',
+  crmApiToken: 'khb_trip_sec_8932_xab7',
   crmAuthType: 'bearer',
   crmHeaderKey: 'Authorization',
-  crmWebhookSecret: 'khb_crm_secret_2026',
+  crmWebhookSecret: 'khb_trip_sec_8932_xab7',
   crmAutoSyncBookings: true,
   crmAutoSyncCustomers: true,
   crmOrganizationId: 'KHB-DELEGATION-HQ',

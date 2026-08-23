@@ -808,8 +808,13 @@ export interface CrmConfig {
 }
 
 export type CrmWebhookEventType =
+  | 'lead.won'
   | 'deal.won'
   | 'crm.deal_closed'
+  | 'trip.booking_confirmed'
+  | 'trip.passenger_manifest_updated'
+  | 'trip.payment_confirmed'
+  | 'lead.created'
   | 'booking.status_updated'
   | 'booking.payment_received'
   | 'booking.cancelled'
