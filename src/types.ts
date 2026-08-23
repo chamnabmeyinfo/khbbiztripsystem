@@ -783,7 +783,62 @@ export interface SystemSettings {
   restrictAdminDomain: boolean;
   allowedAdminDomain: string;
   enableBiometricAuth: boolean;
+
+  // CRM & Webhook Integration
+  crmConfig?: CrmConfig;
 }
 
 export type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package_sales_page';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// CRM & Webhook Integration Suite
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CrmConfig {
+  crmEndpointUrl: string; // e.g. "https://api.crm.example.com/v1"
+  crmApiToken: string; // Bearer token or API key
+  crmAuthType: 'bearer' | 'api_key' | 'custom_header';
+  crmHeaderKey?: string; // e.g. "X-CRM-Token" or "Authorization"
+  crmWebhookSecret: string; // Secret for validating inbound webhooks
+  crmAutoSyncBookings: boolean; // Auto push booking creations/updates to CRM
+  crmAutoSyncCustomers: boolean; // Auto push customer registrations/updates to CRM
+  crmOrganizationId?: string;
+  lastSyncAt?: string;
+  syncStatus?: 'connected' | 'error' | 'idle';
+}
+
+export type CrmWebhookEventType =
+  | 'booking.status_updated'
+  | 'booking.payment_received'
+  | 'booking.cancelled'
+  | 'customer.vip_upgraded'
+  | 'customer.profile_updated'
+  | 'flight.status_changed'
+  | 'notification.broadcast'
+  | 'custom.event';
+
+export interface CrmWebhookEvent {
+  id: string;
+  eventType: CrmWebhookEventType;
+  timestamp: string;
+  source: string;
+  payload: any;
+  status: 'processed' | 'ignored' | 'failed';
+  message: string;
+  affectedEntityId?: string;
+}
+
+export interface CrmSyncLog {
+  id: string;
+  timestamp: string;
+  direction: 'outbound' | 'inbound';
+  entityType: 'booking' | 'customer' | 'payment' | 'test' | 'webhook';
+  entityId?: string;
+  endpoint: string;
+  status: 'success' | 'failed';
+  statusCode: number;
+  requestPayload?: any;
+  responsePayload?: any;
+  durationMs: number;
+  errorMessage?: string;
+}

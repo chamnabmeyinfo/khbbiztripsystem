@@ -30,7 +30,11 @@ import {
   DeletedItemRecord,
   RecoverableEntityType,
   SystemSettings,
-  ActiveView
+  ActiveView,
+  CrmConfig,
+  CrmWebhookEvent,
+  CrmSyncLog,
+  CrmWebhookEventType,
 } from '../types';
 import {
   SEED_USERS,
@@ -47,6 +51,16 @@ import {
   SEED_DELETED_ITEMS,
   DEFAULT_SYSTEM_SETTINGS
 } from '../services/mockData';
+import {
+  pushBookingToExternalCrm,
+  pushCustomerToExternalCrm,
+  testCrmApiConnection,
+  simulateCrmWebhook,
+  fetchServerWebhookEvents,
+  getStoredCrmLogs,
+  getStoredWebhookEvents,
+  DEFAULT_CRM_CONFIG,
+} from '../services/crmIntegrationService';
 import { isStaffMember, userHasPermission, userCanAccessTab, isAllowedGoogleDomain, ROLE_CONFIGS } from '../services/rolePermissions';
 import { CURRENCY_CONFIGS, convertFromUSD } from '../services/currencyService';
 import { isRTL, translations } from '../i18n/translations';
@@ -257,6 +271,23 @@ interface AppContextType {
   setSettingsSubTab: (subTab: string) => void;
   navigateToSettings: (subTab?: string) => void;
 
+  // CRM & Webhook Integration Suite
+  crmEvents: CrmWebhookEvent[];
+  crmSyncLogs: CrmSyncLog[];
+  processWebhookEvent: (event: CrmWebhookEvent) => void;
+  pushBookingToCrm: (bookingId: string) => Promise<boolean>;
+  pushCustomerToCrm: (userId: string) => Promise<boolean>;
+  syncAllBookingsToCrm: () => Promise<{ total: number; success: number }>;
+  syncAllCustomersToCrm: () => Promise<{ total: number; success: number }>;
+  testCrmConnection: (config?: CrmConfig) => Promise<{ success: boolean; latencyMs: number; message: string }>;
+  simulateWebhookTrigger: (
+    eventType: CrmWebhookEventType,
+    payload: any,
+    source?: string,
+    customMessage?: string
+  ) => Promise<boolean>;
+  refreshWebhookEvents: () => Promise<void>;
+
   // Helper
   t: (key: keyof typeof translations['en']) => string;
 }
@@ -444,6 +475,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
     applyThemeToDOM(systemSettings, darkMode);
   }, [systemSettings, darkMode]);
+
+  // CRM & Webhook Inbound & Outbound Sync State
+  const [crmEvents, setCrmEvents] = useState<CrmWebhookEvent[]>(() => getStoredWebhookEvents());
+  const [crmSyncLogs, setCrmSyncLogs] = useState<CrmSyncLog[]>(() => getStoredCrmLogs());
 
   const [activeView, setActiveView] = useState<ActiveView>('marketing');
   const [adminActiveTab, setAdminActiveTab] = useState<string>('overview');
@@ -1527,6 +1562,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       'booking'
     );
 
+    // Auto-sync booking to external CRM if configured
+    if (systemSettings.crmConfig?.crmAutoSyncBookings) {
+      const activeUserObj = users.find(u => u.id === newBooking.userId);
+      pushBookingToExternalCrm(newBooking, activeUserObj, systemSettings.crmConfig)
+        .then(() => setCrmSyncLogs(getStoredCrmLogs()))
+        .catch(err => console.warn('Background auto CRM push:', err));
+    }
+
     return newBooking;
   };
 
@@ -1640,6 +1683,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             `Hotel reservation status: ${hotelUpdates.status}.`,
             'hotel'
           );
+        }
+
+        // Auto-sync booking status update to external CRM if configured
+        if (systemSettings.crmConfig?.crmAutoSyncBookings) {
+          const uObj = users.find(u => u.id === updated.userId || u.email === updated.userEmail);
+          pushBookingToExternalCrm(updated, uObj, systemSettings.crmConfig)
+            .then(() => setCrmSyncLogs(getStoredCrmLogs()))
+            .catch(err => console.warn('Background auto CRM status update:', err));
         }
 
         return updated;
@@ -2560,6 +2611,198 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // CRM Webhook Receiver & Outbound Sync Orchestrator
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const refreshWebhookEvents = async () => {
+    try {
+      const serverEvents = await fetchServerWebhookEvents();
+      if (serverEvents && serverEvents.length > 0) {
+        setCrmEvents(serverEvents);
+      }
+      setCrmSyncLogs(getStoredCrmLogs());
+    } catch (e) {
+      console.warn('Could not refresh webhook events:', e);
+    }
+  };
+
+  useEffect(() => {
+    refreshWebhookEvents();
+  }, []);
+
+  const processWebhookEvent = (event: CrmWebhookEvent) => {
+    if (!event) return;
+
+    if (event.eventType === 'booking.status_updated' || event.eventType === 'booking.cancelled') {
+      const targetCode = event.affectedEntityId || event.payload?.bookingCode || event.payload?.bookingId;
+      const targetStatus: BookingStatus = event.eventType === 'booking.cancelled' ? 'cancelled' : (event.payload?.status || 'confirmed');
+
+      if (targetCode) {
+        setBookings(prev => prev.map(b => {
+          if (b.bookingCode === targetCode || b.id === targetCode) {
+            const updated: Booking = { ...b, status: targetStatus };
+            try {
+              setDoc(doc(db, 'bookings', b.id), { status: targetStatus }, { merge: true });
+            } catch (err) {
+              console.warn('CRM Webhook Firestore update error:', err);
+            }
+            return updated;
+          }
+          return b;
+        }));
+
+        addNotification(
+          `CRM Sync: Booking ${targetCode}`,
+          `Status updated to "${targetStatus.toUpperCase()}" via external CRM webhook.`,
+          'booking'
+        );
+      }
+    } else if (event.eventType === 'flight.status_changed') {
+      const targetCode = event.affectedEntityId || event.payload?.bookingCode;
+      if (targetCode && event.payload?.flightStatus) {
+        setBookings(prev => prev.map(b => {
+          if (b.bookingCode === targetCode || b.id === targetCode) {
+            const updated = { ...b, flightStatus: { ...b.flightStatus, ...event.payload.flightStatus } };
+            try {
+              setDoc(doc(db, 'bookings', b.id), { flightStatus: updated.flightStatus }, { merge: true });
+            } catch (err) {
+              console.warn('CRM Webhook flight update error:', err);
+            }
+            return updated;
+          }
+          return b;
+        }));
+        addNotification(
+          `Flight Update (CRM)`,
+          `Flight status changed: ${event.payload.flightStatus.flightNumber || 'Flight'} is ${event.payload.flightStatus.status || 'Updated'}.`,
+          'flight'
+        );
+      }
+    } else if (event.eventType === 'customer.vip_upgraded' || event.eventType === 'customer.profile_updated') {
+      const targetName = event.payload?.name || event.payload?.customerName || 'Trade Delegate';
+      addNotification(
+        `CRM Delegate Sync: ${targetName}`,
+        `Delegate record synchronized with CRM (${event.payload?.vipTag || 'VIP Platinum Tier'}).`,
+        'system'
+      );
+    } else if (event.eventType === 'notification.broadcast') {
+      addNotification(
+        event.payload?.title || 'Trade Mission Alert',
+        event.payload?.message || event.message || 'Delegation advisory update received from CRM.',
+        event.payload?.type || 'system'
+      );
+    }
+
+    setCrmEvents(prev => [event, ...prev.filter(e => e.id !== event.id)].slice(0, 100));
+    setCrmSyncLogs(getStoredCrmLogs());
+  };
+
+  const pushBookingToCrm = async (bookingId: string): Promise<boolean> => {
+    const booking = bookings.find(b => b.id === bookingId || b.bookingCode === bookingId);
+    if (!booking) {
+      addNotification('CRM Push Error', `Booking "${bookingId}" not found.`, 'system');
+      return false;
+    }
+    const customer = users.find(u => u.id === booking.userId || u.email === booking.userEmail);
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+
+    addNotification('CRM Sync Initiated', `Pushing booking ${booking.bookingCode} to CRM...`, 'system');
+    const result = await pushBookingToExternalCrm(booking, customer, config);
+
+    if (result.success) {
+      addNotification(
+        'CRM Sync Success',
+        `Booking ${booking.bookingCode} successfully synchronized with external CRM (${result.durationMs}ms).`,
+        'booking'
+      );
+    } else {
+      addNotification(
+        'CRM Sync Warning',
+        `Failed to push ${booking.bookingCode}: ${result.message}`,
+        'system'
+      );
+    }
+    setCrmSyncLogs(getStoredCrmLogs());
+    return result.success;
+  };
+
+  const pushCustomerToCrm = async (userId: string): Promise<boolean> => {
+    const customer = users.find(u => u.id === userId || u.email === userId);
+    if (!customer) {
+      addNotification('CRM Push Error', `User "${userId}" not found.`, 'system');
+      return false;
+    }
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+
+    const result = await pushCustomerToExternalCrm(customer, config);
+    if (result.success) {
+      addNotification(
+        'CRM Delegate Synced',
+        `Delegate ${customer.name} pushed to CRM pipeline (${result.durationMs}ms).`,
+        'system'
+      );
+    } else {
+      addNotification('CRM Delegate Sync Warning', `Failed to push delegate: ${result.message}`, 'system');
+    }
+    setCrmSyncLogs(getStoredCrmLogs());
+    return result.success;
+  };
+
+  const syncAllBookingsToCrm = async (): Promise<{ total: number; success: number }> => {
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+    let successCount = 0;
+    for (const b of bookings) {
+      const customer = users.find(u => u.id === b.userId || u.email === b.userEmail);
+      const res = await pushBookingToExternalCrm(b, customer, config);
+      if (res.success) successCount++;
+    }
+    addNotification(
+      'Bulk CRM Sync Complete',
+      `Synchronized ${successCount}/${bookings.length} trade mission bookings with CRM.`,
+      'system'
+    );
+    setCrmSyncLogs(getStoredCrmLogs());
+    return { total: bookings.length, success: successCount };
+  };
+
+  const syncAllCustomersToCrm = async (): Promise<{ total: number; success: number }> => {
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+    let successCount = 0;
+    for (const u of users) {
+      const res = await pushCustomerToExternalCrm(u, config);
+      if (res.success) successCount++;
+    }
+    addNotification(
+      'Bulk CRM Delegate Sync Complete',
+      `Synchronized ${successCount}/${users.length} delegates and customer profiles with CRM.`,
+      'system'
+    );
+    setCrmSyncLogs(getStoredCrmLogs());
+    return { total: users.length, success: successCount };
+  };
+
+  const testCrmConnection = async (config?: CrmConfig) => {
+    const activeConfig = config || systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+    const res = await testCrmApiConnection(activeConfig);
+    setCrmSyncLogs(getStoredCrmLogs());
+    return res;
+  };
+
+  const simulateWebhookTrigger = async (
+    eventType: CrmWebhookEventType,
+    payload: any,
+    source = 'Admin Webhook Simulator',
+    customMessage?: string
+  ): Promise<boolean> => {
+    const res = await simulateCrmWebhook(eventType, payload, source, customMessage);
+    if (res.success && res.event) {
+      processWebhookEvent(res.event);
+      return true;
+    }
+    return false;
+  };
+
   // Dynamically compute fully localized representations of packages based on the active language
   const localizedPackages = useMemo(() => {
     return packages.map(pkg => getLocalizedPackage(pkg, language));
@@ -2665,6 +2908,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         markNotificationsAsRead,
         getMonthlyFinancialSummary,
         exportMonthlyReportCSV,
+        // CRM & Webhook Suite
+        crmEvents,
+        crmSyncLogs,
+        processWebhookEvent,
+        pushBookingToCrm,
+        pushCustomerToCrm,
+        syncAllBookingsToCrm,
+        syncAllCustomersToCrm,
+        testCrmConnection,
+        simulateWebhookTrigger,
+        refreshWebhookEvents,
         t,
       }}
     >

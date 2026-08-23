@@ -1501,5 +1501,19 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   highContrastText: true,
   cardBorderWidth: 'thin',
   textShadowPreset: 'none',
+
+  // CRM & Webhook Integration
+  crmConfig: {
+    crmEndpointUrl: 'https://api.crm.khbevents.com/v1/trade-delegations',
+    crmApiToken: 'khb_crm_live_tok_9948271049281746',
+    crmAuthType: 'bearer',
+    crmHeaderKey: 'Authorization',
+    crmWebhookSecret: 'khb_crm_secret_2026',
+    crmAutoSyncBookings: true,
+    crmAutoSyncCustomers: true,
+    crmOrganizationId: 'KHB-DELEGATION-HQ',
+    lastSyncAt: '2026-08-23T12:00:00.000Z',
+    syncStatus: 'connected',
+  },
 };
 

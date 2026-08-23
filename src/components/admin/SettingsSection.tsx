@@ -57,10 +57,12 @@ import {
   Moon,
   Contrast,
   FileText,
-  Space
+  Space,
+  Webhook
 } from 'lucide-react';
 import { SystemSettings } from '../../types';
 import { AiThemeColorDetectorModal } from './AiThemeColorDetectorModal';
+import { CrmIntegrationSection } from './CrmIntegrationSection';
 import {
   THEME_PRESETS,
   FONT_LATIN_OPTIONS,
@@ -129,7 +131,7 @@ export const SettingsSection: React.FC = () => {
     addNotification
   } = useApp();
 
-  type SubTabType = 'features' | 'payments' | 'branding' | 'theme' | 'financials' | 'security' | 'backup';
+  type SubTabType = 'features' | 'crm' | 'payments' | 'branding' | 'theme' | 'financials' | 'security' | 'backup';
   const [activeSubTab, setActiveSubTabState] = useState<SubTabType>(
     (settingsSubTab as SubTabType) || 'features'
   );
@@ -140,7 +142,7 @@ export const SettingsSection: React.FC = () => {
   };
 
   useEffect(() => {
-    if (settingsSubTab && ['features', 'payments', 'branding', 'theme', 'financials', 'security', 'backup'].includes(settingsSubTab)) {
+    if (settingsSubTab && ['features', 'crm', 'payments', 'branding', 'theme', 'financials', 'security', 'backup'].includes(settingsSubTab)) {
       setActiveSubTabState(settingsSubTab as SubTabType);
     }
   }, [settingsSubTab]);
@@ -256,6 +258,7 @@ export const SettingsSection: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: 'features', label: '⚡ Feature Toggles', icon: Sliders },
+          { id: 'crm', label: '🔗 CRM & Webhook API', icon: Webhook },
           { id: 'payments', label: '💳 Payment Gateways', icon: CreditCard },
           { id: 'branding', label: '🏢 Trade Mission Branding', icon: Building2 },
           { id: 'theme', label: '🎨 Theme & Typography', icon: Palette },
@@ -281,6 +284,9 @@ export const SettingsSection: React.FC = () => {
           );
         })}
       </div>
+
+      {/* ── TAB: CRM & WEBHOOK INTEGRATION SUITE ───────────────────────── */}
+      {activeSubTab === 'crm' && <CrmIntegrationSection />}
 
       {/* ── TAB 1: FEATURE TOGGLES ────────────────────────────────────── */}
       {activeSubTab === 'features' && (

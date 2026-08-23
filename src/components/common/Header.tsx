@@ -32,7 +32,8 @@ import {
   Database,
   Lock,
   ArrowRight,
-  Receipt
+  Receipt,
+  Webhook
 } from 'lucide-react';
 import { AiThemeColorDetectorModal } from '../admin/AiThemeColorDetectorModal';
 
@@ -443,6 +444,30 @@ export const Header: React.FC = () => {
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+
+                    {/* Option: CRM & Webhook Real-time API */}
+                    <button
+                      onClick={() => {
+                        setShowSettingsDropdown(false);
+                        navigateToSettings('crm');
+                      }}
+                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-200 dark:border-sky-800/60 group-hover:scale-105 transition-transform">
+                          <Webhook className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                            {language === 'km' ? 'សមាហរណកម្ម CRM & Webhooks' : 'CRM & Webhooks Integration'}
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                            {language === 'km' ? 'ទទួល Real-time Webhook, ផ្ញើការកក់ & Delegate' : 'Inbound Listener, Outbound Token API & Simulator'}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition-all" />
                     </button>
 
                     {/* Option 4: Payment Gateways */}

@@ -39,7 +39,9 @@ import {
   Layers,
   Menu,
   X,
-  Compass
+  Compass,
+  Webhook,
+  Send
 } from 'lucide-react';
 import { BookingStatus, TourPackage } from '../../types';
 import { SuppliersSection } from './SuppliersSection';
@@ -54,6 +56,7 @@ import { AiCopilotSection } from './AiCopilotSection';
 import { SettingsSection } from './SettingsSection';
 import { UserManagementSection } from './UserManagementSection';
 import { PackageManagementSection } from './PackageManagementSection';
+import { CrmIntegrationSection } from './CrmIntegrationSection';
 import { ROLE_CONFIGS } from '../../services/rolePermissions';
 
 export const AdminDashboard: React.FC = () => {
@@ -72,6 +75,8 @@ export const AdminDashboard: React.FC = () => {
     purchaseOrders,
     expenses,
     deletedItems,
+    crmEvents,
+    pushBookingToCrm,
     updateBookingStatusByAdmin,
     addPackage,
     deletePackage,
@@ -104,6 +109,7 @@ export const AdminDashboard: React.FC = () => {
     | 'cash_flow'
     | 'recycle_bin'
     | 'ai_copilot'
+    | 'crm'
     | 'settings';
 
   const activeTab = (adminActiveTab as AdminTab) || 'overview';
@@ -213,6 +219,7 @@ export const AdminDashboard: React.FC = () => {
       groupTitle: language === 'km' ? 'អភិបាលកិច្ច & សុវត្ថិភាព' : 'Governance & Security',
       items: [
         { id: 'users' as AdminTab, label: language === 'km' ? 'គ្រប់គ្រងអ្នកប្រើប្រាស់ & RBAC' : 'User Management (RBAC)', icon: Users, count: users.length },
+        { id: 'crm' as AdminTab, label: language === 'km' ? 'សមាហរណកម្ម CRM & Webhooks' : 'CRM & Webhooks', icon: Webhook, count: crmEvents.length },
         { id: 'ai_copilot' as AdminTab, label: t('navAiCopilot'), icon: Sparkles, highlight: true },
         { id: 'settings' as AdminTab, label: t('navSettings'), icon: Settings }
       ]
@@ -816,36 +823,46 @@ export const AdminDashboard: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-3 text-right">
-                          {deletingBookingId === b.id ? (
-                            <div className="flex items-center justify-end gap-1.5 animate-in fade-in duration-150">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  deleteBooking(b.id);
-                                  setDeletingBookingId(null);
-                                }}
-                                className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
-                              >
-                                Confirm
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setDeletingBookingId(null)}
-                                className="px-2 py-1 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               type="button"
-                              onClick={() => setDeletingBookingId(b.id)}
-                              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
-                              title="Delete Booking"
+                              onClick={() => pushBookingToCrm(b.id)}
+                              className="p-1.5 rounded-lg text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors cursor-pointer"
+                              title="Push to CRM via Secure Token API"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Send className="w-3.5 h-3.5" />
                             </button>
-                          )}
+                            {deletingBookingId === b.id ? (
+                              <div className="flex items-center justify-end gap-1.5 animate-in fade-in duration-150">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    deleteBooking(b.id);
+                                    setDeletingBookingId(null);
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeletingBookingId(null)}
+                                  className="px-2 py-1 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-[11px] font-semibold transition-colors cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setDeletingBookingId(b.id)}
+                                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                                title="Delete Booking"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -938,6 +955,7 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'cash_flow' && <div className="animate-in fade-in duration-200"><CashFlowSection /></div>}
         {activeTab === 'recycle_bin' && <div className="animate-in fade-in duration-200"><RecycleBinSection /></div>}
         {activeTab === 'ai_copilot' && <div className="animate-in fade-in duration-200"><AiCopilotSection /></div>}
+        {activeTab === 'crm' && <div className="animate-in fade-in duration-200"><CrmIntegrationSection /></div>}
         {activeTab === 'settings' && <div className="animate-in fade-in duration-200"><SettingsSection /></div>}
 
         {/* ── CREATE TOUR PACKAGE MODAL ─────────────────────────────────── */}
