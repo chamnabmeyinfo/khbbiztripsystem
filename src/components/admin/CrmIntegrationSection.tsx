@@ -45,6 +45,8 @@ export const CrmIntegrationSection: React.FC = () => {
     users,
     crmEvents,
     crmSyncLogs,
+    inboundLeads,
+    setAdminActiveTab,
     pushBookingToCrm,
     pushCustomerToCrm,
     syncAllBookingsToCrm,
@@ -483,6 +485,17 @@ export const CrmIntegrationSection: React.FC = () => {
           Real-Time Sync Audit Logs
           <span className="px-1.5 py-0.5 text-xs rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono">
             {crmSyncLogs.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setAdminActiveTab('inbound_leads')}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 transition-all cursor-pointer ml-auto"
+        >
+          <Sparkles className="w-4 h-4 text-emerald-500" />
+          <span>Won Leads Operations Hub</span>
+          <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500 text-white font-mono font-bold animate-pulse">
+            {inboundLeads.length}
           </span>
         </button>
       </div>

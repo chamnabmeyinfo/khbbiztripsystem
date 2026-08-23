@@ -957,6 +957,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* ── ERP & GOVERNANCE SUB-SECTIONS ───────────────────────────── */}
         {activeTab === 'users' && <div className="animate-in fade-in duration-200"><UserManagementSection /></div>}
+        {activeTab === 'inbound_leads' && <div className="animate-in fade-in duration-200"><InboundWonLeadsSection /></div>}
         {activeTab === 'suppliers' && <div className="animate-in fade-in duration-200"><SuppliersSection /></div>}
         {activeTab === 'costing' && <div className="animate-in fade-in duration-200"><CostingSection /></div>}
         {activeTab === 'purchase_orders' && <div className="animate-in fade-in duration-200"><PurchaseOrdersSection /></div>}

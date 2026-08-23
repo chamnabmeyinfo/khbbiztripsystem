@@ -128,6 +128,12 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    // Inbound Won Leads & Delegations (from CRM)
+    match /inbound_leads/{leadId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Deleted Items (Trash Bin & Soft Delete Records)
     match /deleted_items/{docId} {
       allow read: if true;
