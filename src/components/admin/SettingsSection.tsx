@@ -2402,7 +2402,7 @@ export const SettingsSection: React.FC = () => {
               <input
                 type="number"
                 step="0.1"
-                value={formData.taxRatePercent}
+                value={formData.taxRatePercent ?? 0}
                 onChange={(e) => handleChange('taxRatePercent', parseFloat(e.target.value) || 0)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold font-mono"
               />
@@ -2414,7 +2414,7 @@ export const SettingsSection: React.FC = () => {
               </label>
               <input
                 type="number"
-                value={formData.defaultAdultMarginPercent}
+                value={formData.defaultAdultMarginPercent ?? 15}
                 onChange={(e) => handleChange('defaultAdultMarginPercent', parseInt(e.target.value, 10) || 0)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold font-mono"
               />
@@ -2426,7 +2426,7 @@ export const SettingsSection: React.FC = () => {
               </label>
               <input
                 type="number"
-                value={formData.defaultChildDiscountPercent}
+                value={formData.defaultChildDiscountPercent ?? 20}
                 onChange={(e) => handleChange('defaultChildDiscountPercent', parseInt(e.target.value, 10) || 0)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold font-mono"
               />
@@ -2438,7 +2438,7 @@ export const SettingsSection: React.FC = () => {
               </label>
               <input
                 type="number"
-                value={formData.defaultMinGroupSize}
+                value={formData.defaultMinGroupSize ?? 30}
                 onChange={(e) => handleChange('defaultMinGroupSize', parseInt(e.target.value, 10) || 30)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold font-mono"
               />
@@ -2471,7 +2471,7 @@ export const SettingsSection: React.FC = () => {
               </div>
               <input
                 type="text"
-                value={formData.allowedAdminDomain}
+                value={formData.allowedAdminDomain || ''}
                 onChange={(e) => handleChange('allowedAdminDomain', e.target.value)}
                 className="w-48 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold font-mono text-right"
               />

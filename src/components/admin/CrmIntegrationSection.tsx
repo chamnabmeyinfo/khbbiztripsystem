@@ -60,20 +60,18 @@ export const CrmIntegrationSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('inbound_webhooks');
 
   // Form configuration state
-  const [crmConfig, setCrmConfig] = useState<CrmConfig>(
-    systemSettings.crmConfig || {
-      crmEndpointUrl: 'https://api.crm.khbevents.com/v1/trade-delegations',
-      crmApiToken: 'khb_crm_live_tok_9948271049281746',
-      crmAuthType: 'bearer',
-      crmHeaderKey: 'Authorization',
-      crmWebhookSecret: 'khb_crm_secret_2026',
-      crmAutoSyncBookings: true,
-      crmAutoSyncCustomers: true,
-      crmOrganizationId: 'KHB-DELEGATION-HQ',
-      lastSyncAt: new Date().toISOString(),
-      syncStatus: 'connected',
-    }
-  );
+  const [crmConfig, setCrmConfig] = useState<CrmConfig>(() => ({
+    crmEndpointUrl: systemSettings?.crmConfig?.crmEndpointUrl || 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound',
+    crmApiToken: systemSettings?.crmConfig?.crmApiToken || 'khb_crm_live_tok_9948271049281746',
+    crmAuthType: systemSettings?.crmConfig?.crmAuthType || 'bearer',
+    crmHeaderKey: systemSettings?.crmConfig?.crmHeaderKey || 'Authorization',
+    crmWebhookSecret: systemSettings?.crmConfig?.crmWebhookSecret || 'khb_crm_secret_2026',
+    crmAutoSyncBookings: systemSettings?.crmConfig?.crmAutoSyncBookings ?? true,
+    crmAutoSyncCustomers: systemSettings?.crmConfig?.crmAutoSyncCustomers ?? true,
+    crmOrganizationId: systemSettings?.crmConfig?.crmOrganizationId || 'KHB-DELEGATION-HQ',
+    lastSyncAt: systemSettings?.crmConfig?.lastSyncAt || new Date().toISOString(),
+    syncStatus: systemSettings?.crmConfig?.syncStatus || 'connected',
+  }));
 
   const [showApiToken, setShowApiToken] = useState(false);
   const [showWebhookSecret, setShowWebhookSecret] = useState(false);
@@ -114,10 +112,21 @@ export const CrmIntegrationSection: React.FC = () => {
 
   // Synchronize form if systemSettings changes externally
   useEffect(() => {
-    if (systemSettings.crmConfig) {
-      setCrmConfig(systemSettings.crmConfig);
+    if (systemSettings?.crmConfig) {
+      setCrmConfig(prev => ({
+        ...prev,
+        ...systemSettings.crmConfig,
+        crmEndpointUrl: systemSettings.crmConfig.crmEndpointUrl || prev.crmEndpointUrl || '',
+        crmApiToken: systemSettings.crmConfig.crmApiToken || prev.crmApiToken || '',
+        crmAuthType: systemSettings.crmConfig.crmAuthType || prev.crmAuthType || 'bearer',
+        crmHeaderKey: systemSettings.crmConfig.crmHeaderKey || prev.crmHeaderKey || 'Authorization',
+        crmWebhookSecret: systemSettings.crmConfig.crmWebhookSecret || prev.crmWebhookSecret || '',
+        crmOrganizationId: systemSettings.crmConfig.crmOrganizationId || prev.crmOrganizationId || '',
+        crmAutoSyncBookings: systemSettings.crmConfig.crmAutoSyncBookings ?? prev.crmAutoSyncBookings ?? true,
+        crmAutoSyncCustomers: systemSettings.crmConfig.crmAutoSyncCustomers ?? prev.crmAutoSyncCustomers ?? true,
+      }));
     }
-  }, [systemSettings.crmConfig]);
+  }, [systemSettings?.crmConfig]);
 
   // Preset generator for the simulator
   const loadPreset = (presetType: 'deal_won' | 'confirm_booking' | 'cancel_booking' | 'flight_delay' | 'vip_upgrade' | 'broadcast') => {
@@ -539,7 +548,7 @@ export const CrmIntegrationSection: React.FC = () => {
                   <div className="relative flex-1">
                     <input
                       type={showWebhookSecret ? 'text' : 'password'}
-                      value={crmConfig.crmWebhookSecret}
+                      value={crmConfig.crmWebhookSecret || ''}
                       onChange={e => setCrmConfig(prev => ({ ...prev, crmWebhookSecret: e.target.value }))}
                       className="w-full p-2.5 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
@@ -739,7 +748,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 </label>
                 <input
                   type="url"
-                  value={crmConfig.crmEndpointUrl}
+                  value={crmConfig.crmEndpointUrl || ''}
                   onChange={e => setCrmConfig(prev => ({ ...prev, crmEndpointUrl: e.target.value }))}
                   placeholder="https://crm.khbevents.com/api/webhooks/inbound"
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
@@ -778,7 +787,7 @@ export const CrmIntegrationSection: React.FC = () => {
                   Authentication Scheme
                 </label>
                 <select
-                  value={crmConfig.crmAuthType}
+                  value={crmConfig.crmAuthType || 'bearer'}
                   onChange={e => setCrmConfig(prev => ({ ...prev, crmAuthType: e.target.value as any }))}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
@@ -795,7 +804,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 <div className="relative">
                   <input
                     type={showApiToken ? 'text' : 'password'}
-                    value={crmConfig.crmApiToken}
+                    value={crmConfig.crmApiToken || ''}
                     onChange={e => setCrmConfig(prev => ({ ...prev, crmApiToken: e.target.value }))}
                     placeholder="khb_crm_live_tok_..."
                     className="w-full p-2.5 pr-10 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
@@ -834,7 +843,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 <label className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={crmConfig.crmAutoSyncBookings}
+                    checked={!!crmConfig.crmAutoSyncBookings}
                     onChange={e => setCrmConfig(prev => ({ ...prev, crmAutoSyncBookings: e.target.checked }))}
                     className="mt-0.5 rounded text-sky-500 focus:ring-sky-500"
                   />
@@ -851,7 +860,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 <label className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={crmConfig.crmAutoSyncCustomers}
+                    checked={!!crmConfig.crmAutoSyncCustomers}
                     onChange={e => setCrmConfig(prev => ({ ...prev, crmAutoSyncCustomers: e.target.checked }))}
                     className="mt-0.5 rounded text-sky-500 focus:ring-sky-500"
                   />
@@ -994,7 +1003,7 @@ export const CrmIntegrationSection: React.FC = () => {
                   Event Type
                 </label>
                 <select
-                  value={simEventType}
+                  value={simEventType || 'booking.status_updated'}
                   onChange={e => setSimEventType(e.target.value as any)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
@@ -1017,7 +1026,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={simCustomMessage}
+                  value={simCustomMessage || ''}
                   onChange={e => setSimCustomMessage(e.target.value)}
                   placeholder="CRM Trade Mission Sync Notice"
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -1032,7 +1041,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 <span className="text-[11px] text-slate-400 font-normal">Editable JSON object</span>
               </label>
               <textarea
-                value={simPayloadJson}
+                value={simPayloadJson || ''}
                 onChange={e => setSimPayloadJson(e.target.value)}
                 rows={8}
                 className="w-full p-3 bg-slate-950 text-emerald-400 border border-slate-800 rounded-xl font-mono text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -1087,7 +1096,7 @@ export const CrmIntegrationSection: React.FC = () => {
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={logSearch}
+                    value={logSearch || ''}
                     onChange={e => setLogSearch(e.target.value)}
                     placeholder="Search logs..."
                     className="pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -1095,7 +1104,7 @@ export const CrmIntegrationSection: React.FC = () => {
                 </div>
 
                 <select
-                  value={logFilter}
+                  value={logFilter || 'all'}
                   onChange={e => setLogFilter(e.target.value as any)}
                   className="px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >

@@ -62,7 +62,23 @@ export const SuppliersSection: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   
-  const [formData, setFormData] = useState<Partial<Supplier>>({});
+  const defaultSupplierForm: Partial<Supplier> = {
+    name: '',
+    type: 'hotel',
+    country: '',
+    city: '',
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    website: '',
+    status: 'active',
+    paymentTerms: 'net_30',
+    defaultCurrency: 'USD',
+    rating: 4,
+    notes: ''
+  };
+
+  const [formData, setFormData] = useState<Partial<Supplier>>(defaultSupplierForm);
 
   const handleOpenModal = (supplier?: Supplier) => {
     if (supplier) {
@@ -70,19 +86,7 @@ export const SuppliersSection: React.FC = () => {
       setFormData(supplier);
     } else {
       setEditingSupplier(null);
-      setFormData({
-        name: '',
-        type: 'hotel',
-        country: '',
-        city: '',
-        contactName: '',
-        contactEmail: '',
-        contactPhone: '',
-        status: 'active',
-        paymentTerms: 'net_30',
-        defaultCurrency: 'USD',
-        rating: 4,
-      });
+      setFormData(defaultSupplierForm);
     }
     setShowModal(true);
   };
@@ -90,7 +94,7 @@ export const SuppliersSection: React.FC = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingSupplier(null);
-    setFormData({});
+    setFormData(defaultSupplierForm);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -324,7 +328,7 @@ export const SuppliersSection: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Type*</label>
-                  <select required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value as SupplierType})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
+                  <select required value={formData.type || 'hotel'} onChange={(e) => setFormData({...formData, type: e.target.value as SupplierType})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
                     <option value="hotel">Hotel</option>
                     <option value="airline">Airline</option>
                     <option value="transport">Transport</option>
@@ -337,7 +341,7 @@ export const SuppliersSection: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status*</label>
-                  <select required value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value as SupplierStatus})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
+                  <select required value={formData.status || 'active'} onChange={(e) => setFormData({...formData, status: e.target.value as SupplierStatus})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                     <option value="blacklisted">Blacklisted</option>
@@ -376,7 +380,7 @@ export const SuppliersSection: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Payment Terms*</label>
-                  <select required value={formData.paymentTerms} onChange={(e) => setFormData({...formData, paymentTerms: e.target.value as PaymentTerms})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
+                  <select required value={formData.paymentTerms || 'net_30'} onChange={(e) => setFormData({...formData, paymentTerms: e.target.value as PaymentTerms})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
                     <option value="prepaid">Prepaid</option>
                     <option value="net_15">Net 15</option>
                     <option value="net_30">Net 30</option>
@@ -387,7 +391,7 @@ export const SuppliersSection: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Default Currency*</label>
-                  <select required value={formData.defaultCurrency} onChange={(e) => setFormData({...formData, defaultCurrency: e.target.value as CurrencyCode})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
+                  <select required value={formData.defaultCurrency || 'USD'} onChange={(e) => setFormData({...formData, defaultCurrency: e.target.value as CurrencyCode})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white outline-none">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                     <option value="GBP">GBP</option>

@@ -2532,7 +2532,7 @@ Highlights:
                     )}
                     <input
                       type="url"
-                      value={guidePhoto}
+                      value={guidePhoto || ''}
                       onChange={(e) => setGuidePhoto(e.target.value)}
                       placeholder="Paste photo URL..."
                       className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
@@ -2576,7 +2576,7 @@ Highlights:
                         </label>
                         <input
                           type="text"
-                          value={briefingMeetingPointEn}
+                          value={briefingMeetingPointEn || ''}
                           onChange={(e) => setBriefingMeetingPointEn(e.target.value)}
                           className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                           placeholder="e.g. Phnom Penh KHB Head Office Departure Bay"
@@ -2588,7 +2588,7 @@ Highlights:
                         </label>
                         <input
                           type="text"
-                          value={briefingMeetingPointKm || briefingMeetingPoint}
+                          value={briefingMeetingPointKm || briefingMeetingPoint || ''}
                           onChange={(e) => {
                             setBriefingMeetingPoint(e.target.value);
                             setBriefingMeetingPointKm(e.target.value);
@@ -2606,7 +2606,7 @@ Highlights:
                         </label>
                         <input
                           type="text"
-                          value={briefingMeetingPointKm || briefingMeetingPoint}
+                          value={briefingMeetingPointKm || briefingMeetingPoint || ''}
                           onChange={(e) => {
                             setBriefingMeetingPoint(e.target.value);
                             setBriefingMeetingPointKm(e.target.value);
@@ -2621,7 +2621,7 @@ Highlights:
                         </label>
                         <input
                           type="text"
-                          value={briefingMeetingPointEn}
+                          value={briefingMeetingPointEn || ''}
                           onChange={(e) => setBriefingMeetingPointEn(e.target.value)}
                           className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                           placeholder="e.g. Phnom Penh KHB Head Office Departure Bay"
@@ -2641,7 +2641,7 @@ Highlights:
                 </div>
                 <input
                   type="text"
-                  value={briefingTime}
+                  value={briefingTime || ''}
                   onChange={(e) => setBriefingTime(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
                   placeholder="e.g. 06:00 AM (ថ្ងៃទី 29/10/2026)"
@@ -3092,7 +3092,7 @@ Highlights:
                                   <div className="sm:col-span-3">
                                     <input
                                       type="text"
-                                      value={slot.time}
+                                      value={slot.time || ''}
                                       onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'time', e.target.value)}
                                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
                                       placeholder="08:30 AM"
@@ -3101,7 +3101,7 @@ Highlights:
                                   <div className="sm:col-span-5">
                                     <input
                                       type="text"
-                                      value={slot.activity}
+                                      value={slot.activity || ''}
                                       onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value)}
                                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                                       placeholder="Activity description..."
@@ -3272,7 +3272,7 @@ Highlights:
                         <input
                           type="number"
                           min={0}
-                          value={prog.additionalCostUSD}
+                          value={prog.additionalCostUSD ?? 0}
                           onChange={(e) => handleUpdateOptionalProgram(pIdx, 'additionalCostUSD', Number(e.target.value))}
                           className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400"
                         />
@@ -3284,7 +3284,7 @@ Highlights:
                         <input
                           type="number"
                           min={1}
-                          value={prog.durationHours}
+                          value={prog.durationHours ?? 1}
                           onChange={(e) => handleUpdateOptionalProgram(pIdx, 'durationHours', Number(e.target.value))}
                           className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
                         />
@@ -3476,7 +3476,7 @@ Highlights:
                   </label>
                   <input
                     type="text"
-                    value={emergencyCountry}
+                    value={emergencyCountry || ''}
                     onChange={(e) => setEmergencyCountry(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                   />
@@ -3488,7 +3488,7 @@ Highlights:
                   </label>
                   <input
                     type="text"
-                    value={emergencyPolice}
+                    value={emergencyPolice || ''}
                     onChange={(e) => setEmergencyPolice(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
                   />
@@ -3500,7 +3500,7 @@ Highlights:
                   </label>
                   <input
                     type="text"
-                    value={emergencyAmbulance}
+                    value={emergencyAmbulance || ''}
                     onChange={(e) => setEmergencyAmbulance(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
                   />
@@ -3512,7 +3512,7 @@ Highlights:
                   </label>
                   <input
                     type="text"
-                    value={emergencyHelpline}
+                    value={emergencyHelpline || ''}
                     onChange={(e) => setEmergencyHelpline(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                   />
@@ -3524,7 +3524,7 @@ Highlights:
                   </label>
                   <input
                     type="text"
-                    value={emergencyEmbassy}
+                    value={emergencyEmbassy || ''}
                     onChange={(e) => setEmergencyEmbassy(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
                   />
@@ -3539,7 +3539,7 @@ Highlights:
                     <input
                       type="number"
                       step="any"
-                      value={lat}
+                      value={lat ?? 0}
                       onChange={(e) => setLat(Number(e.target.value))}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
                     />
@@ -3551,7 +3551,7 @@ Highlights:
                     <input
                       type="number"
                       step="any"
-                      value={lng}
+                      value={lng ?? 0}
                       onChange={(e) => setLng(Number(e.target.value))}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
                     />
@@ -3562,7 +3562,7 @@ Highlights:
                     </label>
                     <input
                       type="number"
-                      value={mapX}
+                      value={mapX ?? 0}
                       onChange={(e) => setMapX(Number(e.target.value))}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
                     />
@@ -3573,7 +3573,7 @@ Highlights:
                     </label>
                     <input
                       type="number"
-                      value={mapY}
+                      value={mapY ?? 0}
                       onChange={(e) => setMapY(Number(e.target.value))}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
                     />
