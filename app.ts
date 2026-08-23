@@ -850,8 +850,8 @@ Respond strictly in valid JSON format with this exact structure:
         return res.status(400).json({ error: "Missing booking object or booking code." });
       }
 
-      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/webhooks/inbound";
-      const token = apiToken || "khb_trip_sec_8932_xab7";
+      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/bookings";
+      const token = apiToken || "khb_live_api_key_2026_master";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -963,48 +963,44 @@ Respond strictly in valid JSON format with this exact structure:
         return res.status(400).json({ error: "Missing customer object or email." });
       }
 
+      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/clients";
+      const token = apiToken || "khb_live_api_key_2026_master";
+
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "User-Agent": "KHB-BizTrip-System/2.0-OutboundCRM",
+        "x-api-key": token,
+        "Authorization": `Bearer ${token}`,
       };
 
       if (organizationId) {
         headers["X-Organization-ID"] = organizationId;
       }
 
-      if (authType === "custom_header" && customHeaderKey && apiToken) {
-        headers[customHeaderKey] = apiToken;
-      } else if (authType === "api_key" && apiToken) {
-        headers["X-API-Key"] = apiToken;
-      } else if (apiToken) {
-        headers["Authorization"] = apiToken.startsWith("Bearer ") ? apiToken : `Bearer ${apiToken}`;
+      if (authType === "custom_header" && customHeaderKey) {
+        headers[customHeaderKey] = token;
+      } else if (authType === "api_key") {
+        headers["X-API-Key"] = token;
       }
 
       const crmCustomerPayload = {
-        action: "upsert_trade_delegate_lead",
-        sourceSystem: "KHB Events BizTrip Portal",
-        timestamp: new Date().toISOString(),
-        delegate: {
-          id: customer.id,
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone,
-          role: customer.role,
-          department: customer.department || "Trade Delegates",
-          jobTitle: customer.jobTitle || "Business Delegate",
-          status: customer.status || "active",
-          preferredLanguage: customer.preferredLanguage || "km",
-          preferredCurrency: customer.preferredCurrency || "USD",
-          vipTag: "KHB-Trade-Mission-2026",
-        },
+        name: customer.name || "Trade Delegate",
+        company: customer.company || customer.department || "Enterprise Delegate Partner",
+        email: customer.email,
+        phone: customer.phone || "",
+        eventType: "China Business Trip",
+        dealValue: 5000,
+        status: "New",
+        notes: `Customer profile synchronized from KHB Trip System. Role: ${customer.role || 'Delegate'}`,
       };
 
       let responseData: any = null;
       let statusCode = 200;
 
-      if (endpointUrl && endpointUrl.startsWith("http") && !endpointUrl.includes("example.com")) {
+      if (effectiveEndpoint && effectiveEndpoint.startsWith("http") && !effectiveEndpoint.includes("example.com")) {
         try {
-          const crmResp = await fetch(endpointUrl, {
+          const crmResp = await fetch(effectiveEndpoint, {
             method: "POST",
             headers,
             body: JSON.stringify(crmCustomerPayload),
@@ -1034,7 +1030,7 @@ Respond strictly in valid JSON format with this exact structure:
         statusCode,
         durationMs,
         crmResponse: responseData,
-        message: `Successfully synchronized delegate ${customer.name} with external CRM.`,
+        message: `Successfully synchronized delegate ${customer.name} with CRM Master Data Center.`,
         payloadTransmitted: crmCustomerPayload,
       });
     } catch (err: any) {
@@ -1053,17 +1049,16 @@ Respond strictly in valid JSON format with this exact structure:
     try {
       const { endpointUrl, apiToken, authType, customHeaderKey, organizationId } = req.body;
 
-      if (!endpointUrl) {
-        return res.status(400).json({ error: "CRM Endpoint URL is required." });
-      }
+      const effectiveEndpoint = endpointUrl || "https://crm-khbevents-com.vercel.app/api/v1/ping";
+      const effectiveToken = apiToken || "khb_live_api_key_2026_master";
 
-      const effectiveToken = apiToken || "khb_trip_sec_8932_xab7";
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "User-Agent": "KHB-Trip-System/1.0.0-PingTest",
-        "x-khb-signature": `sha256=${effectiveToken}`,
+        "x-api-key": effectiveToken,
         "Authorization": `Bearer ${effectiveToken}`,
+        "x-khb-signature": `sha256=${effectiveToken}`,
       };
 
       if (organizationId) {
@@ -1080,45 +1075,26 @@ Respond strictly in valid JSON format with this exact structure:
       let pingMessage = "CRM API Handshake Verified Successfully (200 OK).";
       let isSuccess = true;
 
-      if (endpointUrl.startsWith("http") && !endpointUrl.includes("example.com")) {
+      if (effectiveEndpoint.startsWith("http") && !effectiveEndpoint.includes("example.com")) {
         try {
-          // Send a lightweight POST test ping matching the webhook spec
-          const pingPayload = {
-            event: "trip.ping",
-            source: "KHB_TRIP_SYSTEM",
-            timestamp: new Date().toISOString(),
-            booking_reference: "KHB-TRIP-PING",
-            notes: "Automated connection handshake test from KHB Trip System."
-          };
-
-          const resp = await fetch(endpointUrl, {
-            method: "POST",
+          const resp = await fetch(effectiveEndpoint, {
+            method: "GET",
             headers,
-            body: JSON.stringify(pingPayload),
-          }).catch(async () => {
-            // Fallback to GET if POST rejected by network proxy
-            return await fetch(endpointUrl, { method: "GET", headers });
           });
 
-          let respText = '';
+          statusCode = resp.status;
+          let respData: any = {};
           try {
-            respText = await resp.text();
+            respData = await resp.json();
           } catch {
             // ignore
           }
 
-          statusCode = resp.status;
           if (statusCode >= 200 && statusCode < 300) {
-            pingMessage = `Connected to CRM endpoint successfully (HTTP ${statusCode} OK).`;
+            pingMessage = `Connected to CRM Master Data Center successfully (HTTP ${statusCode} OK). Total Master Leads: ${respData.totalClients ?? 'N/A'}`;
             isSuccess = true;
           } else if (statusCode === 401 || statusCode === 403) {
-            pingMessage = `Server reachable at ${endpointUrl} (HTTP ${statusCode} Authentication Required - please verify token).`;
-            isSuccess = false;
-          } else if (statusCode === 404 || statusCode === 405) {
-            pingMessage = `Server reachable at ${endpointUrl} (HTTP ${statusCode} - Endpoint path active).`;
-            isSuccess = true;
-          } else if (statusCode === 500 && respText.includes('FUNCTION_INVOCATION_FAILED')) {
-            pingMessage = `Vercel Server Reached (HTTP 500 FUNCTION_INVOCATION_FAILED): Serverless function at ${endpointUrl} received the request, but encountered an error in the CRM code. Please check CRM Vercel Runtime Logs.`;
+            pingMessage = `CRM reachable at ${effectiveEndpoint} (HTTP ${statusCode} Authentication Required - please verify token).`;
             isSuccess = false;
           } else {
             pingMessage = `Connected to CRM server with HTTP ${statusCode}.`;
@@ -1132,13 +1108,13 @@ Respond strictly in valid JSON format with this exact structure:
 
           if (errMsg.includes('ENOTFOUND') || errCause === 'ENOTFOUND') {
             try {
-              const urlObj = new URL(endpointUrl);
-              pingMessage = `DNS Unresolved (ENOTFOUND): '${urlObj.hostname}' is not yet pointed in DNS. If developing locally, use your local URL (e.g. http://localhost:3001) or Vercel preview domain.`;
+              const urlObj = new URL(effectiveEndpoint);
+              pingMessage = `DNS Unresolved (ENOTFOUND): '${urlObj.hostname}' is not yet pointed in DNS.`;
             } catch {
-              pingMessage = `DNS Unresolved (ENOTFOUND): Domain not found. Please verify hostname or use local URL.`;
+              pingMessage = `DNS Unresolved (ENOTFOUND): Domain not found.`;
             }
           } else if (errMsg.includes('ECONNREFUSED') || errCause === 'ECONNREFUSED') {
-            pingMessage = `Connection Refused (ECONNREFUSED): Target server is offline or not listening on this port.`;
+            pingMessage = `Connection Refused (ECONNREFUSED): Target server is offline or not listening.`;
           } else {
             pingMessage = `Network error connecting to CRM: ${errMsg}`;
           }
@@ -1151,7 +1127,7 @@ Respond strictly in valid JSON format with this exact structure:
         statusCode,
         latencyMs,
         message: pingMessage,
-        endpointTested: endpointUrl,
+        endpointTested: effectiveEndpoint,
       });
     } catch (err: any) {
       const latencyMs = Math.max(Date.now() - startTime, 22);
@@ -1161,6 +1137,37 @@ Respond strictly in valid JSON format with this exact structure:
         latencyMs,
         message: `Connection test error: ${err.message || String(err)}`,
       });
+    }
+  });
+
+  // 7. Proxy Live Search to CRM Master Data Center
+  app.get(["/api/crm/clients", "/crm/clients"], async (req, res) => {
+    try {
+      const search = req.query.search as string || "";
+      const eventType = req.query.eventType as string || "";
+      const crmBase = process.env.CRM_API_BASE_URL || "https://crm-khbevents-com.vercel.app/api/v1/clients";
+      const token = process.env.CRM_MASTER_API_KEY || "khb_live_api_key_2026_master";
+
+      const url = new URL(crmBase);
+      if (search) url.searchParams.append("search", search);
+      if (eventType) url.searchParams.append("eventType", eventType);
+
+      const resp = await fetch(url.toString(), {
+        headers: {
+          "Accept": "application/json",
+          "x-api-key": token,
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!resp.ok) {
+        return res.status(resp.status).json({ success: false, error: `CRM returned HTTP ${resp.status}` });
+      }
+
+      const data = await resp.json();
+      return res.json(data);
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message || "Failed to query CRM Master Data Center" });
     }
   });
 

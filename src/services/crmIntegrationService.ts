@@ -11,11 +11,11 @@ const CRM_SYNC_LOGS_KEY = 'khb_crm_sync_logs';
 const CRM_WEBHOOK_EVENTS_KEY = 'khb_crm_webhook_events';
 
 export const DEFAULT_CRM_CONFIG: CrmConfig = {
-  crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/webhooks/inbound',
-  crmApiToken: 'khb_trip_sec_8932_xab7',
-  crmAuthType: 'bearer',
-  crmHeaderKey: 'Authorization',
-  crmWebhookSecret: 'khb_trip_sec_8932_xab7',
+  crmEndpointUrl: 'https://crm-khbevents-com.vercel.app/api/v1/bookings',
+  crmApiToken: 'khb_live_api_key_2026_master',
+  crmAuthType: 'api_key',
+  crmHeaderKey: 'x-api-key',
+  crmWebhookSecret: 'khb_live_api_key_2026_master',
   crmAutoSyncBookings: true,
   crmAutoSyncCustomers: true,
   crmOrganizationId: 'KHB-DELEGATION-HQ',
@@ -370,3 +370,49 @@ export async function fetchServerWebhookEvents(): Promise<CrmWebhookEvent[]> {
     return getStoredWebhookEvents();
   }
 }
+
+/**
+ * Direct Live Lookup: Search prospects & clients from CRM Master Data Center
+ */
+export async function fetchCrmClientsFromMaster(
+  searchQuery?: string,
+  eventType?: string,
+  config: CrmConfig = DEFAULT_CRM_CONFIG
+): Promise<{ success: boolean; clients: any[]; total: number; error?: string }> {
+  try {
+    const baseUrl = (config.crmEndpointUrl || DEFAULT_CRM_CONFIG.crmEndpointUrl).replace(/\/bookings|\/inbound/g, '/clients');
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('search', searchQuery);
+    if (eventType) params.append('eventType', eventType);
+
+    const fullUrl = `${baseUrl}${params.toString() ? '?' + params.toString() : ''}`;
+
+    const resp = await fetch(fullUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'x-api-key': config.crmApiToken || DEFAULT_CRM_CONFIG.crmApiToken,
+        'Authorization': `Bearer ${config.crmApiToken || DEFAULT_CRM_CONFIG.crmApiToken}`,
+      }
+    });
+
+    if (!resp.ok) {
+      return { success: false, clients: [], total: 0, error: `HTTP ${resp.status}: Failed to fetch CRM clients` };
+    }
+
+    const data = await resp.json();
+    return {
+      success: true,
+      clients: data.clients || [],
+      total: data.total || 0
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      clients: [],
+      total: 0,
+      error: err?.message || 'Network error querying CRM Master Data Center'
+    };
+  }
+}
+
