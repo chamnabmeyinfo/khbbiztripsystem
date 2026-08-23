@@ -37,7 +37,9 @@ export type PermissionKey =
   | 'support_manage'
   | 'system_settings_manage'
   | 'ai_copilot_access'
-  | 'audit_logs_view';
+  | 'audit_logs_view'
+  | 'crm_leads_view'
+  | 'crm_leads_manage';
 
 export type LanguageCode = 'en' | 'ar' | 'he' | 'es' | 'ja' | 'km';
 
@@ -849,3 +851,59 @@ export interface CrmSyncLog {
   durationMs: number;
   errorMessage?: string;
 }
+
+export type LeadOperationalStage =
+  | 'won_ingested'
+  | 'manifest_pending'
+  | 'logistics_confirmed'
+  | 'finance_settled'
+  | 'vouchers_dispatched'
+  | 'trip_completed';
+
+export interface LeadPassenger {
+  id: string;
+  name: string;
+  jobTitle?: string;
+  passportNumber?: string;
+  passportExpiry?: string;
+  nationality?: string;
+  dietaryRequirement?: string;
+  roomType?: 'single' | 'twin_share' | 'deluxe_suite';
+  badgeIssued?: boolean;
+  phone?: string;
+  email?: string;
+  notes?: string;
+}
+
+export interface InboundWonLead {
+  id: string;
+  crmLeadId: string;
+  clientName: string;
+  clientCompany: string;
+  clientEmail: string;
+  clientPhone: string;
+  assignedAgent: string;
+  tripCategory: string; // e.g. "China Business Trip", "Vietnam Business Trip", "Canton Fair Phase 1"
+  dealTitle?: string;
+  dealValueUSD: number;
+  commissionRate?: number;
+  paxCount: number;
+  departureDate: string;
+  bookingCode: string;
+  bookingId?: string;
+  invoiceId?: string;
+  packageId?: string;
+  operationalStage: LeadOperationalStage;
+  manifest: LeadPassenger[];
+  paymentStatus: 'unpaid' | 'deposit_paid' | 'fully_paid';
+  depositPaidUSD: number;
+  crmSyncStatus: 'synced' | 'pending_sync' | 'error';
+  lastSyncedAt?: string;
+  notes?: string;
+  specialRequests?: string;
+  hotelStatus?: HotelStatus;
+  flightStatus?: FlightStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+

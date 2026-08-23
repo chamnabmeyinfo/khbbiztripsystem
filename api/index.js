@@ -1,46 +1,12 @@
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
 // app.ts
-var app_exports = {};
-__export(app_exports, {
-  app: () => app,
-  default: () => app_default
-});
-module.exports = __toCommonJS(app_exports);
-var import_express = __toESM(require("express"), 1);
-var import_genai = require("@google/genai");
-var import_dotenv = __toESM(require("dotenv"), 1);
-import_dotenv.default.config();
-var app = (0, import_express.default)();
+import express from "express";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+dotenv.config();
+var app = express();
 var PORT = Number(process.env.PORT) || 3e3;
-app.use(import_express.default.json({ limit: "10mb" }));
-app.use(import_express.default.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use((req, res, next) => {
   res.setHeader("X-Powered-By", "KHB Biz Trip Backend Engine");
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -54,7 +20,7 @@ app.use((req, res, next) => {
 var getAiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY") return null;
-  return new import_genai.GoogleGenAI({
+  return new GoogleGenAI({
     apiKey,
     httpOptions: {
       headers: {
@@ -1023,7 +989,7 @@ app.get(["/api/crm/clients", "/crm/clients"], async (req, res) => {
   }
 });
 var app_default = app;
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  app
-});
+export {
+  app,
+  app_default as default
+};

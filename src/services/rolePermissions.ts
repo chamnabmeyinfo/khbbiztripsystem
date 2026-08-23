@@ -58,6 +58,20 @@ export const ALL_PERMISSIONS: PermissionDefinition[] = [
 
   // Operations
   {
+    key: 'crm_leads_view',
+    label: 'View Inbound CRM Leads',
+    description: 'Access the list of leads won from CRM, view delegate details and status.',
+    category: 'Operations',
+    riskLevel: 'standard'
+  },
+  {
+    key: 'crm_leads_manage',
+    label: 'Manage Inbound CRM Leads & Manifest',
+    description: 'Advance operational stages, edit passenger manifests, and trigger 2-way CRM syncs.',
+    category: 'Operations',
+    riskLevel: 'high'
+  },
+  {
     key: 'packages_view',
     label: 'View Tour Packages',
     description: 'Browse package catalog, schedules, and itineraries.',
@@ -188,17 +202,19 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     accessibleTabs: [
       'overview',
       'users',
+      'inbound_leads',
+      'bookings',
+      'packages',
+      'costing',
       'profit_loss',
       'cash_flow',
       'invoices',
-      'packages',
-      'bookings',
-      'costing',
       'suppliers',
       'purchase_orders',
       'payments',
       'expenses',
       'recycle_bin',
+      'crm',
       'ai_copilot',
       'settings'
     ]
@@ -220,17 +236,19 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     accessibleTabs: [
       'overview',
       'users',
+      'inbound_leads',
+      'bookings',
+      'packages',
+      'costing',
       'profit_loss',
       'cash_flow',
       'invoices',
-      'packages',
-      'bookings',
-      'costing',
       'suppliers',
       'purchase_orders',
       'payments',
       'expenses',
       'recycle_bin',
+      'crm',
       'ai_copilot',
       'settings'
     ]
@@ -248,6 +266,8 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     badgeColor: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
     level: 5,
     defaultPermissions: [
+      'crm_leads_view',
+      'crm_leads_manage',
       'packages_view',
       'packages_manage',
       'bookings_view',
@@ -259,6 +279,8 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       'ai_copilot_access'
     ],
     permissions: [
+      'crm_leads_view',
+      'crm_leads_manage',
       'packages_view',
       'packages_manage',
       'bookings_view',
@@ -271,11 +293,13 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     ],
     accessibleTabs: [
       'overview',
+      'inbound_leads',
       'packages',
       'bookings',
       'costing',
       'suppliers',
       'invoices',
+      'crm',
       'ai_copilot'
     ]
   },
