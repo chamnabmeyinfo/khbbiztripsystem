@@ -13,6 +13,7 @@ import {
   Invoice,
   SupportChat,
   PushNotification,
+  NotificationCategory,
   BookingStatus,
   FlightStatus,
   HotelStatus,
@@ -38,6 +39,7 @@ import {
   InboundWonLead,
   LeadPassenger,
   LeadOperationalStage,
+  LeadHandoverTask,
 } from '../types';
 import {
   SEED_USERS,
@@ -68,6 +70,7 @@ import {
   pushLeadUpdateToCrm,
   DEFAULT_CRM_CONFIG,
 } from '../services/crmIntegrationService';
+import { generateDefaultHandoverTasks, playNotificationChime, getRecommendedStageFromTasks } from '../services/handoverTaskService';
 import { isStaffMember, userHasPermission, userCanAccessTab, isAllowedGoogleDomain, ROLE_CONFIGS } from '../services/rolePermissions';
 import { CURRENCY_CONFIGS, convertFromUSD } from '../services/currencyService';
 import { isRTL, translations } from '../i18n/translations';
@@ -247,8 +250,23 @@ interface AppContextType {
   deletePackage: (packageId: string) => void;
   
   sendSupportMessage: (chatId: string, text: string, senderRole?: 'traveler' | 'admin') => void;
-  addNotification: (title: string, message: string, type?: PushNotification['type']) => void;
+  addNotification: (
+    title: string,
+    message: string,
+    type?: NotificationCategory,
+    options?: {
+      targetView?: ActiveView;
+      targetTab?: string;
+      targetEntityId?: string;
+      actionUrl?: string;
+      metadata?: Record<string, any>;
+    }
+  ) => void;
   markNotificationsAsRead: () => void;
+  markNotificationAsRead: (id: string) => void;
+  deleteNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  handleNotificationClick: (notification: PushNotification) => void;
   
   getMonthlyFinancialSummary: (monthFilter?: string) => MonthlyFinancialSummary[];
   exportMonthlyReportCSV: (monthFilter?: string) => void;
@@ -282,10 +300,21 @@ interface AppContextType {
   crmEvents: CrmWebhookEvent[];
   crmSyncLogs: CrmSyncLog[];
   inboundLeads: InboundWonLead[];
+  recentWonLeadAlert: { lead: InboundWonLead; timestamp: string } | null;
+  clearWonLeadAlert: () => void;
   addInboundLead: (lead: Omit<InboundWonLead, 'id' | 'createdAt' | 'updatedAt'>) => InboundWonLead;
   updateInboundLead: (lead: InboundWonLead) => void;
   updateLeadOperationalStage: (leadId: string, stage: LeadOperationalStage) => void;
   updateLeadManifest: (leadId: string, manifest: LeadPassenger[]) => void;
+  startLeadHandover: (leadId: string, officerName?: string) => void;
+  updateLeadHandoverTask: (
+    leadId: string,
+    taskId: string,
+    updates: Partial<LeadHandoverTask>,
+    autoAdvanceStage?: boolean
+  ) => void;
+  addLeadHandoverTask: (leadId: string, task: Omit<LeadHandoverTask, 'id'>) => void;
+  deleteLeadHandoverTask: (leadId: string, taskId: string) => void;
   syncLeadToCrm: (
     leadId: string,
     eventType: 'trip.booking_confirmed' | 'trip.passenger_manifest_updated' | 'trip.payment_confirmed'
@@ -453,12 +482,56 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [notifications, setNotifications] = useState<PushNotification[]>([
     {
+      id: 'notif_lead_won_1',
+      title: 'Won Lead: Apex Global Logistics',
+      message: 'Inbound Won Lead KHB-TRIP-2026-8842 (10 Delegates, $24,500 USD) received via Webhook. Click to review post-sale handover tasks.',
+      type: 'lead_won',
+      timestamp: 'Just now',
+      read: false,
+      targetView: 'admin_dashboard',
+      targetTab: 'inbound_leads',
+      targetEntityId: 'lead_apex_01'
+    },
+    {
+      id: 'notif_booking_1',
+      title: 'Reservation Confirmed: TRP-84920',
+      message: 'Tokyo B2B Trade & Technology Summit secured for Chamnab Mey. Flight & Hotel vouchers are active.',
+      type: 'booking',
+      timestamp: '10m ago',
+      read: false,
+      targetView: 'customer_portal',
+      targetTab: 'trips',
+      targetEntityId: 'bk_1723849201'
+    },
+    {
+      id: 'notif_flight_1',
+      title: 'Flight Alert: TD 742 on Schedule',
+      message: 'Phnom Penh (PNH) -> Tokyo Haneda (HND) departing 08:30 AM at Gate A12. Check live itinerary.',
+      type: 'flight',
+      timestamp: '45m ago',
+      read: false,
+      targetView: 'customer_portal',
+      targetTab: 'flights'
+    },
+    {
+      id: 'notif_tax_1',
+      title: 'Monthly VAT & Tax Report Ready',
+      message: 'August 2026 tax filing summary calculated ($1,387.50 USD collected). Click to review & export CSV.',
+      type: 'finance',
+      timestamp: '2h ago',
+      read: true,
+      targetView: 'admin_dashboard',
+      targetTab: 'profit_loss'
+    },
+    {
       id: 'notif_welcome',
       title: 'KHB Trade Mission ERP Active',
       message: 'System initialized for live operations. Cloud database & real-time sync connected.',
-      type: 'flight',
-      timestamp: 'Just now',
-      read: false
+      type: 'system',
+      timestamp: '1d ago',
+      read: true,
+      targetView: 'admin_dashboard',
+      targetTab: 'overview'
     }
   ]);
 
@@ -515,6 +588,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.warn('Failed to save inbound leads to LocalStorage:', e);
     }
   }, [inboundLeads]);
+
+  const [recentWonLeadAlert, setRecentWonLeadAlert] = useState<{ lead: InboundWonLead; timestamp: string } | null>(null);
+  const clearWonLeadAlert = () => setRecentWonLeadAlert(null);
 
   const [activeView, setActiveView] = useState<ActiveView>('marketing');
   const [adminActiveTab, setAdminActiveTab] = useState<string>('overview');
@@ -1478,20 +1554,153 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const addNotification = (title: string, message: string, type: PushNotification['type'] = 'system') => {
+  const addNotification = (
+    title: string,
+    message: string,
+    type: NotificationCategory = 'system',
+    options?: {
+      targetView?: ActiveView;
+      targetTab?: string;
+      targetEntityId?: string;
+      actionUrl?: string;
+      metadata?: Record<string, any>;
+    }
+  ) => {
     const newNotif: PushNotification = {
       id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       title,
       message,
       type,
       timestamp: 'Just now',
-      read: false
+      read: false,
+      targetView: options?.targetView,
+      targetTab: options?.targetTab,
+      targetEntityId: options?.targetEntityId,
+      actionUrl: options?.actionUrl,
+      metadata: options?.metadata,
     };
     setNotifications(prev => [newNotif, ...prev]);
   };
 
   const markNotificationsAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const markNotificationAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  const handleNotificationClick = (notif: PushNotification) => {
+    // 1. Mark this notification as read
+    markNotificationAsRead(notif.id);
+
+    // 2. Handle external web link if specified
+    if (notif.actionUrl) {
+      if (notif.actionUrl.startsWith('http://') || notif.actionUrl.startsWith('https://')) {
+        window.open(notif.actionUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+    }
+
+    // 3. Navigate directly to targetView and targetTab if provided
+    if (notif.targetView) {
+      setActiveView(notif.targetView);
+      if (notif.targetTab && notif.targetView === 'admin_dashboard') {
+        setAdminActiveTab(notif.targetTab);
+      }
+    } else {
+      // Heuristic context-aware routing based on category and text
+      const lowerTitle = (notif.title || '').toLowerCase();
+      const lowerMsg = (notif.message || '').toLowerCase();
+
+      if (
+        notif.type === 'lead_won' ||
+        notif.type === 'crm' ||
+        notif.type === 'task' ||
+        lowerTitle.includes('lead') ||
+        lowerTitle.includes('handover') ||
+        lowerTitle.includes('crm') ||
+        lowerTitle.includes('webhook')
+      ) {
+        setActiveView('admin_dashboard');
+        setAdminActiveTab('inbound_leads');
+      } else if (
+        notif.type === 'finance' ||
+        lowerTitle.includes('tax') ||
+        lowerTitle.includes('vat') ||
+        lowerTitle.includes('invoice') ||
+        lowerTitle.includes('payment')
+      ) {
+        setActiveView('admin_dashboard');
+        if (lowerTitle.includes('invoice')) {
+          setAdminActiveTab('invoices');
+        } else if (lowerTitle.includes('tax') || lowerTitle.includes('profit')) {
+          setAdminActiveTab('profit_loss');
+        } else {
+          setAdminActiveTab('payments');
+        }
+      } else if (notif.type === 'booking') {
+        if (isAdmin || isStaff) {
+          setActiveView('admin_dashboard');
+          setAdminActiveTab('bookings');
+        } else {
+          setActiveView('customer_portal');
+        }
+      } else if (notif.type === 'flight' || notif.type === 'hotel') {
+        if (isAdmin || isStaff) {
+          setActiveView('admin_dashboard');
+          setAdminActiveTab('bookings');
+        } else {
+          setActiveView('customer_portal');
+        }
+      } else if (notif.type === 'supplier' || lowerTitle.includes('supplier') || lowerTitle.includes('purchase order')) {
+        setActiveView('admin_dashboard');
+        setAdminActiveTab(lowerTitle.includes('purchase order') ? 'purchase_orders' : 'suppliers');
+      } else if (notif.type === 'expense' || lowerTitle.includes('expense')) {
+        setActiveView('admin_dashboard');
+        setAdminActiveTab('expenses');
+      } else if (lowerTitle.includes('package')) {
+        setActiveView('admin_dashboard');
+        setAdminActiveTab('packages');
+      } else if (lowerTitle.includes('recycle') || lowerTitle.includes('restore') || lowerTitle.includes('bin')) {
+        setActiveView('admin_dashboard');
+        setAdminActiveTab('recycle_bin');
+      } else if (lowerTitle.includes('setting') || lowerTitle.includes('backup')) {
+        navigateToSettings();
+      } else {
+        if (isAdmin || isStaff) {
+          setActiveView('admin_dashboard');
+        } else {
+          setActiveView('customer_portal');
+        }
+      }
+    }
+
+    // 4. Select entity if targetEntityId is provided
+    if (notif.targetEntityId) {
+      const b = bookings.find(item => item.id === notif.targetEntityId || item.bookingCode === notif.targetEntityId);
+      if (b) {
+        setSelectedBooking(b);
+        if (!isAdmin && !isStaff) {
+          setActiveModal('voucher');
+        }
+      }
+      const inv = invoices.find(item => item.id === notif.targetEntityId || item.invoiceNumber === notif.targetEntityId || item.bookingId === notif.targetEntityId);
+      if (inv) {
+        setSelectedInvoice(inv);
+        if (!isAdmin && !isStaff) {
+          setActiveModal('invoice');
+        }
+      }
+    }
   };
 
   const unreadNotificationCount = useMemo(() => {
@@ -2682,11 +2891,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // CRM Webhook Receiver & Outbound Sync Orchestrator
   // ─────────────────────────────────────────────────────────────────────────
 
+  const processedWebhookIdsRef = React.useRef<Set<string>>(new Set());
+
+  // Initialize tracked webhook IDs on mount
+  useEffect(() => {
+    crmEvents.forEach(e => {
+      if (e.id) processedWebhookIdsRef.current.add(e.id);
+    });
+    inboundLeads.forEach(l => {
+      if (l.crmLeadId) processedWebhookIdsRef.current.add(l.crmLeadId);
+      if (l.id) processedWebhookIdsRef.current.add(l.id);
+    });
+  }, []);
+
   const refreshWebhookEvents = async () => {
     try {
       const serverEvents = await fetchServerWebhookEvents();
       if (serverEvents && serverEvents.length > 0) {
         setCrmEvents(serverEvents);
+        // Process any newly arrived events from the server queue in real time
+        for (const evt of serverEvents) {
+          if (evt.id && !processedWebhookIdsRef.current.has(evt.id)) {
+            processedWebhookIdsRef.current.add(evt.id);
+            processWebhookEvent(evt);
+          }
+        }
       }
       setCrmSyncLogs(getStoredCrmLogs());
     } catch (e) {
@@ -2694,12 +2923,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // Poll for external server webhooks every 3.5 seconds
   useEffect(() => {
     refreshWebhookEvents();
+    const interval = setInterval(refreshWebhookEvents, 3500);
+    return () => clearInterval(interval);
   }, []);
 
   const processWebhookEvent = (event: CrmWebhookEvent) => {
     if (!event) return;
+    if (event.id) {
+      processedWebhookIdsRef.current.add(event.id);
+    }
 
     // ── Deal Won / Lead Won in CRM -> Auto-Provision Delegate Profile, Booking & Invoice ──
     if (event.eventType === 'lead.won' || event.eventType === 'deal.won' || event.eventType === 'crm.deal_closed') {
@@ -2839,11 +3074,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setBookings(prev => [newBooking, ...prev]);
       setInvoices(prev => [newInvoice, ...prev]);
 
-      // 3. Provision / Update Inbound Won Lead Record
+      // 3. Provision / Update Inbound Won Lead Record with Handover Tasks
       const crmLeadId = payload.crm_lead_id || payload.lead_id || payload.id || `lead_${Date.now()}`;
       const tripCategory = eventType || matchedPkg.category || matchedPkg.title;
       
-      const newWonLead: InboundWonLead = {
+      const newWonLeadBase: Omit<InboundWonLead, 'handoverTasks'> = {
         id: `inb_${crmLeadId}`,
         crmLeadId,
         clientName: customerName,
@@ -2862,6 +3097,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         invoiceId: newInvoice.id,
         packageId: matchedPkg.id,
         operationalStage: 'won_ingested',
+        handoverLeadOfficer: assignedAgent || 'Sophea Chamnab (Operations Lead)',
+        handoverStartedAt: new Date().toISOString(),
         manifest: [
           {
             id: `pax_lead_${Date.now()}`,
@@ -2888,6 +3125,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updatedAt: new Date().toISOString()
       };
 
+      const initialHandoverTasks = generateDefaultHandoverTasks(
+        newWonLeadBase as InboundWonLead,
+        assignedAgent || 'Sophea Chamnab (Operations Lead)'
+      );
+
+      const newWonLead: InboundWonLead = {
+        ...newWonLeadBase,
+        handoverTasks: initialHandoverTasks,
+      };
+
       setInboundLeads(prev => {
         const filtered = prev.filter(l => l.crmLeadId !== crmLeadId && l.id !== newWonLead.id);
         const updated = [newWonLead, ...filtered];
@@ -2903,10 +3150,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.warn('Firestore CRM booking auto-provision notice:', err);
       }
 
+      // Trigger Audio Chime & Banner Alert
+      playNotificationChime();
+      setRecentWonLeadAlert({
+        lead: newWonLead,
+        timestamp: new Date().toISOString(),
+      });
+
       addNotification(
         `🤝 CRM Lead Won: ${companyName}`,
-        `New Won Lead ${bookingCode} (${customerName}, ${adults} Pax, $${totalPriceUSD}) organized in Inbound Operations!`,
-        'booking'
+        `New Won Lead ${bookingCode} (${customerName}, ${adults} Pax, $${totalPriceUSD.toLocaleString()}) received via Webhook! 8 Handover tasks initialized.`,
+        'lead_won',
+        {
+          targetView: 'admin_dashboard',
+          targetTab: 'inbound_leads',
+          targetEntityId: newWonLead.id,
+        }
       );
     } else if (event.eventType === 'trip.passenger_manifest_updated') {
       const targetCode = event.affectedEntityId || event.payload?.booking_reference || event.payload?.bookingCode;
@@ -3273,6 +3532,139 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     logUserAudit('Inbound CRM Lead Deleted', `Removed lead ${target.bookingCode} (${target.clientCompany})`, 'warning');
   };
 
+  const startLeadHandover = (leadId: string, officerName = 'Sophea Chamnab (Operations Lead)') => {
+    setInboundLeads(prev => prev.map(l => {
+      if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        const tasks = l.handoverTasks && l.handoverTasks.length > 0
+          ? l.handoverTasks
+          : generateDefaultHandoverTasks(l, officerName);
+
+        const updated: InboundWonLead = {
+          ...l,
+          operationalStage: l.operationalStage === 'won_ingested' ? 'manifest_pending' : l.operationalStage,
+          handoverTasks: tasks,
+          handoverStartedAt: l.handoverStartedAt || new Date().toISOString(),
+          handoverLeadOfficer: officerName,
+          updatedAt: new Date().toISOString(),
+        };
+
+        saveStoredInboundLead(updated);
+        try {
+          setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.warn('Firestore start handover notice:', e);
+        }
+        return updated;
+      }
+      return l;
+    }));
+
+    playNotificationChime();
+    addNotification(
+      '🚀 Handover Workflow Started',
+      `Operations handover activated for lead ${leadId}. 8 standard fulfillment tasks assigned to ${officerName}.`,
+      'system'
+    );
+  };
+
+  const updateLeadHandoverTask = (
+    leadId: string,
+    taskId: string,
+    updates: Partial<LeadHandoverTask>,
+    autoAdvanceStage = true
+  ) => {
+    setInboundLeads(prev => prev.map(l => {
+      if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        const currentTasks = l.handoverTasks && l.handoverTasks.length > 0
+          ? l.handoverTasks
+          : generateDefaultHandoverTasks(l);
+
+        const updatedTasks = currentTasks.map(t => {
+          if (t.id === taskId) {
+            const isNowCompleted = updates.status === 'completed' && t.status !== 'completed';
+            return {
+              ...t,
+              ...updates,
+              completedAt: isNowCompleted ? new Date().toISOString() : (updates.status && updates.status !== 'completed' ? undefined : t.completedAt),
+              completedBy: isNowCompleted ? (currentUser?.name || 'Operations Officer') : t.completedBy,
+            };
+          }
+          return t;
+        });
+
+        let nextStage = l.operationalStage;
+        if (autoAdvanceStage) {
+          nextStage = getRecommendedStageFromTasks(updatedTasks, l.operationalStage);
+        }
+
+        const updated: InboundWonLead = {
+          ...l,
+          handoverTasks: updatedTasks,
+          operationalStage: nextStage,
+          updatedAt: new Date().toISOString(),
+        };
+
+        saveStoredInboundLead(updated);
+        try {
+          setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.warn('Firestore handover task update notice:', e);
+        }
+        return updated;
+      }
+      return l;
+    }));
+  };
+
+  const addLeadHandoverTask = (leadId: string, task: Omit<LeadHandoverTask, 'id'>) => {
+    const newTask: LeadHandoverTask = {
+      ...task,
+      id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    };
+
+    setInboundLeads(prev => prev.map(l => {
+      if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        const currentTasks = l.handoverTasks || [];
+        const updated: InboundWonLead = {
+          ...l,
+          handoverTasks: [...currentTasks, newTask],
+          updatedAt: new Date().toISOString(),
+        };
+        saveStoredInboundLead(updated);
+        try {
+          setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.warn('Firestore add handover task notice:', e);
+        }
+        return updated;
+      }
+      return l;
+    }));
+
+    addNotification('Handover Task Added', `New task "${newTask.title}" assigned to lead.`, 'system');
+  };
+
+  const deleteLeadHandoverTask = (leadId: string, taskId: string) => {
+    setInboundLeads(prev => prev.map(l => {
+      if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        const currentTasks = l.handoverTasks || [];
+        const updated: InboundWonLead = {
+          ...l,
+          handoverTasks: currentTasks.filter(t => t.id !== taskId),
+          updatedAt: new Date().toISOString(),
+        };
+        saveStoredInboundLead(updated);
+        try {
+          setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
+        } catch (e) {
+          console.warn('Firestore delete handover task notice:', e);
+        }
+        return updated;
+      }
+      return l;
+    }));
+  };
+
   // Dynamically compute fully localized representations of packages based on the active language
   const localizedPackages = useMemo(() => {
     return packages.map(pkg => getLocalizedPackage(pkg, language));
@@ -3376,16 +3768,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         sendSupportMessage,
         addNotification,
         markNotificationsAsRead,
+        markNotificationAsRead,
+        deleteNotification,
+        clearAllNotifications,
+        handleNotificationClick,
         getMonthlyFinancialSummary,
         exportMonthlyReportCSV,
         // CRM & Webhook Suite
         crmEvents,
         crmSyncLogs,
         inboundLeads,
+        recentWonLeadAlert,
+        clearWonLeadAlert,
         addInboundLead,
         updateInboundLead,
         updateLeadOperationalStage,
         updateLeadManifest,
+        startLeadHandover,
+        updateLeadHandoverTask,
+        addLeadHandoverTask,
+        deleteLeadHandoverTask,
         syncLeadToCrm,
         deleteInboundLead,
         processWebhookEvent,

@@ -365,15 +365,32 @@ export interface SupportChat {
   updatedAt: string;
 }
 
+export type NotificationCategory =
+  | 'flight'
+  | 'hotel'
+  | 'booking'
+  | 'system'
+  | 'chat'
+  | 'lead_won'
+  | 'crm'
+  | 'finance'
+  | 'supplier'
+  | 'expense'
+  | 'task';
+
 export interface PushNotification {
   id: string;
   userId?: string;
   title: string;
   message: string;
-  type: 'flight' | 'hotel' | 'booking' | 'system' | 'chat';
+  type: NotificationCategory;
   timestamp: string;
   read: boolean;
   actionUrl?: string;
+  targetView?: 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package_sales_page';
+  targetTab?: string;
+  targetEntityId?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface MonthlyFinancialSummary {
@@ -860,6 +877,35 @@ export type LeadOperationalStage =
   | 'vouchers_dispatched'
   | 'trip_completed';
 
+export type HandoverTaskStatus = 'pending' | 'in_progress' | 'completed' | 'blocked';
+export type HandoverTaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type HandoverTaskCategory =
+  | 'lead_intake'
+  | 'manifest_passports'
+  | 'visa_permits'
+  | 'flights_logistics'
+  | 'hotel_rooming'
+  | 'finance_invoice'
+  | 'briefing_materials'
+  | 'crm_feedback';
+
+export interface LeadHandoverTask {
+  id: string;
+  title: string;
+  titleKm?: string;
+  description?: string;
+  category: HandoverTaskCategory;
+  assignedTo?: string; // e.g. "Operations Desk", "Sophea Chamnab", "Visa Desk"
+  assignedRole?: string;
+  status: HandoverTaskStatus;
+  priority: HandoverTaskPriority;
+  dueDate?: string;
+  completedAt?: string;
+  completedBy?: string;
+  notes?: string;
+  isAutomatic?: boolean;
+}
+
 export interface LeadPassenger {
   id: string;
   name: string;
@@ -895,6 +941,10 @@ export interface InboundWonLead {
   packageId?: string;
   operationalStage: LeadOperationalStage;
   manifest: LeadPassenger[];
+  handoverTasks?: LeadHandoverTask[];
+  handoverStartedAt?: string;
+  handoverCompletedAt?: string;
+  handoverLeadOfficer?: string;
   paymentStatus: 'unpaid' | 'deposit_paid' | 'fully_paid';
   depositPaidUSD: number;
   crmSyncStatus: 'synced' | 'pending_sync' | 'error';

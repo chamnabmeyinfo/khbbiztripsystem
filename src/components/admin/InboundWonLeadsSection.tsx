@@ -4,7 +4,12 @@ import {
   InboundWonLead,
   LeadPassenger,
   LeadOperationalStage,
+  LeadHandoverTask,
+  HandoverTaskCategory,
+  HandoverTaskPriority,
+  HandoverTaskStatus,
 } from '../../types';
+import { calculateHandoverProgress, playNotificationChime } from '../../services/handoverTaskService';
 import {
   Users,
   Building2,
@@ -38,7 +43,14 @@ import {
   TrendingUp,
   Award,
   Layers,
-  MessageSquare
+  MessageSquare,
+  CheckSquare,
+  ListTodo,
+  UserCheck,
+  CheckCheck,
+  PlayCircle,
+  BellRing,
+  Check,
 } from 'lucide-react';
 
 const STAGE_CONFIG: Record<
@@ -111,6 +123,12 @@ export const InboundWonLeadsSection: React.FC = () => {
     updateInboundLead,
     updateLeadOperationalStage,
     updateLeadManifest,
+    startLeadHandover,
+    updateLeadHandoverTask,
+    addLeadHandoverTask,
+    deleteLeadHandoverTask,
+    recentWonLeadAlert,
+    clearWonLeadAlert,
     syncLeadToCrm,
     deleteInboundLead,
     bookings,
@@ -131,7 +149,25 @@ export const InboundWonLeadsSection: React.FC = () => {
 
   // Selected Lead Modal State
   const [selectedLead, setSelectedLead] = useState<InboundWonLead | null>(null);
-  const [detailTab, setDetailTab] = useState<'overview' | 'manifest' | 'logistics' | 'finance' | 'crm_sync' | 'badges'>('overview');
+  const [detailTab, setDetailTab] = useState<'overview' | 'handover_tasks' | 'manifest' | 'logistics' | 'finance' | 'crm_sync' | 'badges'>('overview');
+
+  // Handover Tasks State inside Modal
+  const [taskCategoryFilter, setTaskCategoryFilter] = useState<string>('all');
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState<string>('all');
+  const [isAddingCustomTask, setIsAddingCustomTask] = useState(false);
+  const [customTaskTitle, setCustomTaskTitle] = useState('');
+  const [customTaskDesc, setCustomTaskDesc] = useState('');
+  const [customTaskCategory, setCustomTaskCategory] = useState<HandoverTaskCategory>('lead_intake');
+  const [customTaskPriority, setCustomTaskPriority] = useState<HandoverTaskPriority>('medium');
+  const [customTaskAssignee, setCustomTaskAssignee] = useState('Sophea Chamnab (Operations Lead)');
+  const [customTaskDueDate, setCustomTaskDueDate] = useState('');
+  const [autoAdvanceStage, setAutoAdvanceStage] = useState(true);
+
+  // Synchronize selected lead with latest inboundLeads in context
+  const activeLead = useMemo(() => {
+    if (!selectedLead) return null;
+    return inboundLeads.find(l => l.id === selectedLead.id) || selectedLead;
+  }, [selectedLead, inboundLeads]);
 
   // Passenger Editing State inside Modal
   const [isAddingPassenger, setIsAddingPassenger] = useState(false);
@@ -344,6 +380,70 @@ export const InboundWonLeadsSection: React.FC = () => {
     }
   };
 
+  // Save Custom Handover Task
+  const handleSaveCustomHandoverTask = () => {
+    if (!activeLead || !customTaskTitle.trim()) {
+      addNotification('Missing Information', 'Please provide a title for the handover task.', 'warning');
+      return;
+    }
+
+    addLeadHandoverTask(activeLead.id, {
+      title: customTaskTitle.trim(),
+      description: customTaskDesc.trim() || undefined,
+      category: customTaskCategory,
+      priority: customTaskPriority,
+      status: 'pending',
+      assignedTo: customTaskAssignee.trim() || 'Operations Officer',
+      dueDate: customTaskDueDate || new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
+    });
+
+    setCustomTaskTitle('');
+    setCustomTaskDesc('');
+    setIsAddingCustomTask(false);
+  };
+
+  // Export Handover Protocol CSV
+  const handleExportHandoverProtocolCSV = (lead: InboundWonLead) => {
+    const tasks = lead.handoverTasks || [];
+    const headers = [
+      'Booking Code',
+      'Client Company',
+      'Client Contact',
+      'Task Title',
+      'Category',
+      'Priority',
+      'Status',
+      'Assigned Officer',
+      'Due Date',
+      'Completed Date',
+      'Completed By'
+    ];
+
+    const rows = tasks.map(t => [
+      lead.bookingCode,
+      `"${lead.clientCompany}"`,
+      `"${lead.clientName}"`,
+      `"${t.title.replace(/"/g, '""')}"`,
+      t.category,
+      t.priority.toUpperCase(),
+      t.status.toUpperCase(),
+      `"${t.assignedTo || 'Unassigned'}"`,
+      t.dueDate || 'N/A',
+      t.completedAt || 'N/A',
+      `"${t.completedBy || 'N/A'}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `KHB_Handover_Protocol_${lead.bookingCode}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Export Manifest CSV
   const handleExportManifestCSV = (lead?: InboundWonLead) => {
     const targetLeads = lead ? [lead] : inboundLeads;
@@ -411,6 +511,53 @@ export const InboundWonLeadsSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* ─── Real-Time Webhook Alert Banner (Triggered when lead.won event arrives) ─── */}
+      {recentWonLeadAlert && (
+        <div className="p-4 md:p-5 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-sky-500/15 to-indigo-500/15 border-2 border-emerald-500/40 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-3 duration-300">
+          <div className="flex items-start md:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 flex-shrink-0 animate-bounce">
+              <BellRing className="w-6 h-6" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white font-black text-[10px] uppercase tracking-wider shadow-sm">
+                  ⚡ New Won Lead Ingested
+                </span>
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  {new Date(recentWonLeadAlert.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+              <h3 className="text-sm md:text-base font-black text-slate-900 dark:text-white">
+                🎉 {recentWonLeadAlert.lead.clientCompany} ({recentWonLeadAlert.lead.clientName})
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Booking Code: <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{recentWonLeadAlert.lead.bookingCode}</span> • {recentWonLeadAlert.lead.paxCount} Pax • ${recentWonLeadAlert.lead.dealValueUSD?.toLocaleString()} • 8 Handover fulfillment tasks generated!
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end md:self-auto flex-shrink-0">
+            <button
+              onClick={() => {
+                setSelectedLead(recentWonLeadAlert.lead);
+                setDetailTab('handover_tasks');
+                clearWonLeadAlert();
+              }}
+              className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/25 transition cursor-pointer flex items-center gap-1.5"
+            >
+              <CheckSquare className="w-4 h-4" />
+              <span>{isKm ? 'ចាប់ផ្តើមភារកិច្ច Handover' : 'Start Handover Tasks'}</span>
+            </button>
+            <button
+              onClick={clearWonLeadAlert}
+              className="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold transition cursor-pointer"
+              title="Dismiss Alert"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ─── Top Header & Summary KPIs ─── */}
       <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white shadow-2xl relative overflow-hidden border border-indigo-900/50">
         <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -705,9 +852,46 @@ export const InboundWonLeadsSection: React.FC = () => {
                             </div>
                           </div>
 
+                          {/* Handover Tasks Progress Bar */}
+                          {lead.handoverTasks && lead.handoverTasks.length > 0 && (
+                            <div className="space-y-1 pt-0.5">
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
+                                  <CheckSquare className="w-3 h-3 text-indigo-500" />
+                                  <span>Handover:</span>
+                                </span>
+                                <span className={lead.handoverTasks.filter(t => t.status === 'completed').length === lead.handoverTasks.length ? 'text-emerald-500 font-bold' : 'text-indigo-600 dark:text-indigo-400 font-semibold'}>
+                                  {lead.handoverTasks.filter(t => t.status === 'completed').length}/{lead.handoverTasks.length} Tasks
+                                </span>
+                              </div>
+                              <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full transition-all ${
+                                    lead.handoverTasks.filter(t => t.status === 'completed').length === lead.handoverTasks.length
+                                      ? 'bg-emerald-500'
+                                      : 'bg-indigo-500'
+                                  }`}
+                                  style={{
+                                    width: `${(lead.handoverTasks.filter(t => t.status === 'completed').length / lead.handoverTasks.length) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
                           {/* Stage Transition Shortcut */}
                           <div className="flex items-center justify-between pt-1 text-[10px]">
-                            <span className="text-slate-400">Agent: <span className="font-medium text-slate-600 dark:text-slate-300">{lead.assignedAgent.split(' ')[0]}</span></span>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                setSelectedLead(lead);
+                                setDetailTab('handover_tasks');
+                              }}
+                              className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 font-bold"
+                            >
+                              <ListTodo className="w-3 h-3" />
+                              <span>{lead.handoverTasks && lead.handoverTasks.length > 0 ? 'Checklist' : 'Start Handover'}</span>
+                            </button>
                             {stage !== 'trip_completed' && (
                               <button
                                 onClick={e => {
@@ -795,7 +979,21 @@ export const InboundWonLeadsSection: React.FC = () => {
                             {isKm ? 'បានភ្ជាប់' : 'Synced'}
                           </span>
                         </td>
-                        <td className="py-3.5 text-right space-x-1.5">
+                        <td className="py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                          <button
+                            onClick={() => {
+                              setSelectedLead(lead);
+                              setDetailTab('handover_tasks');
+                            }}
+                            className="px-2.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg hover:bg-indigo-100 transition inline-flex items-center gap-1"
+                          >
+                            <CheckSquare className="w-3 h-3" />
+                            <span>
+                              {lead.handoverTasks && lead.handoverTasks.length > 0
+                                ? `${lead.handoverTasks.filter(t => t.status === 'completed').length}/${lead.handoverTasks.length} Tasks`
+                                : 'Handover'}
+                            </span>
+                          </button>
                           <button
                             onClick={() => {
                               setSelectedLead(lead);
@@ -860,6 +1058,26 @@ export const InboundWonLeadsSection: React.FC = () => {
                 {isKm ? 'ព័ត៌មានទូទៅ' : 'Overview & Details'}
               </button>
               <button
+                onClick={() => setDetailTab('handover_tasks')}
+                className={`pb-3 font-bold transition border-b-2 flex items-center gap-1.5 ${
+                  detailTab === 'handover_tasks'
+                    ? 'border-sky-500 text-sky-600 dark:text-sky-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                }`}
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span>{isKm ? 'ភារកិច្ច Handover' : 'Handover Checklist'}</span>
+                {activeLead?.handoverTasks && activeLead.handoverTasks.length > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                    activeLead.handoverTasks.filter(t => t.status === 'completed').length === activeLead.handoverTasks.length
+                      ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300'
+                  }`}>
+                    {activeLead.handoverTasks.filter(t => t.status === 'completed').length}/{activeLead.handoverTasks.length}
+                  </span>
+                )}
+              </button>
+              <button
                 onClick={() => setDetailTab('manifest')}
                 className={`pb-3 font-bold transition border-b-2 flex items-center gap-1.5 ${
                   detailTab === 'manifest'
@@ -870,7 +1088,7 @@ export const InboundWonLeadsSection: React.FC = () => {
                 <Users className="w-3.5 h-3.5" />
                 <span>{isKm ? 'បញ្ជីលិខិតឆ្លងដែន' : 'Passenger Manifest'}</span>
                 <span className="px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-800 text-[10px]">
-                  {selectedLead.manifest?.length || 0}
+                  {activeLead?.manifest?.length || 0}
                 </span>
               </button>
               <button
@@ -1015,6 +1233,436 @@ export const InboundWonLeadsSection: React.FC = () => {
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* ─── TAB: OPERATIONS HANDOVER CHECKLIST ─── */}
+              {detailTab === 'handover_tasks' && activeLead && (
+                <div className="space-y-6">
+                  {/* Handover Executive Summary Card */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 text-white border border-indigo-500/30 shadow-lg space-y-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px] font-bold uppercase tracking-wider border border-indigo-400/30">
+                            Post-Sale Operations Handover
+                          </span>
+                          <span className="text-[11px] font-mono text-slate-400">
+                            Ref: {activeLead.bookingCode}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-black text-white flex items-center gap-2">
+                          <CheckSquare className="w-5 h-5 text-sky-400" />
+                          <span>Delegation Handover & Fulfillment Checklist</span>
+                        </h4>
+                        <p className="text-xs text-slate-300">
+                          Assigned Officer: <span className="font-bold text-white">{activeLead.handoverLeadOfficer || 'Sophea Chamnab (Operations Lead)'}</span> • Started: <span className="font-mono text-sky-300">{activeLead.handoverStartedAt ? new Date(activeLead.handoverStartedAt).toLocaleDateString() : 'Active'}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleExportHandoverProtocolCSV(activeLead)}
+                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5 text-sky-400" />
+                          <span>Export Protocol</span>
+                        </button>
+                        <button
+                          onClick={() => startLeadHandover(activeLead.id)}
+                          className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Reset 8 Standard Tasks</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar & Stats */}
+                    {(() => {
+                      const tasks = activeLead.handoverTasks || [];
+                      const completedCount = tasks.filter(t => t.status === 'completed').length;
+                      const inProgressCount = tasks.filter(t => t.status === 'in_progress').length;
+                      const pendingCount = tasks.filter(t => t.status === 'pending').length;
+                      const progressPct = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+
+                      return (
+                        <div className="space-y-2 pt-2 border-t border-indigo-800/60">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-slate-300">
+                              Handover Progress: <span className="text-white">{completedCount} of {tasks.length} Tasks Finished</span>
+                            </span>
+                            <span className="font-black font-mono text-emerald-400 text-sm">
+                              {progressPct}% COMPLETED
+                            </span>
+                          </div>
+                          <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-indigo-900/50">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                progressPct === 100
+                                  ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                                  : 'bg-gradient-to-r from-sky-500 to-indigo-500'
+                              }`}
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 pt-1 text-center text-[11px]">
+                            <div className="p-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
+                              <span className="text-emerald-400 font-black">{completedCount}</span>
+                              <span className="text-slate-400 ml-1">Completed</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
+                              <span className="text-sky-400 font-black">{inProgressCount}</span>
+                              <span className="text-slate-400 ml-1">In Progress</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-slate-800/70 border border-slate-700/50">
+                              <span className="text-amber-400 font-black">{pendingCount}</span>
+                              <span className="text-slate-400 ml-1">Pending</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Task Action Bar & Filter Controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl">
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      {/* Category Filter */}
+                      <select
+                        value={taskCategoryFilter}
+                        onChange={e => setTaskCategoryFilter(e.target.value)}
+                        className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none"
+                      >
+                        <option value="all">All Categories ({activeLead.handoverTasks?.length || 0})</option>
+                        <option value="lead_intake">1. Lead Intake & Admin</option>
+                        <option value="manifest_passports">2. Passports & Manifest</option>
+                        <option value="visa_permits">3. Visas & Permits</option>
+                        <option value="flights_logistics">4. Flights & Transport</option>
+                        <option value="hotel_rooming">5. Hotel & Accommodation</option>
+                        <option value="finance_invoice">6. Finance & Invoicing</option>
+                        <option value="briefing_materials">7. Briefing & Badges</option>
+                        <option value="crm_feedback">8. CRM Sync & Feedback</option>
+                      </select>
+
+                      {/* Priority Filter */}
+                      <select
+                        value={taskPriorityFilter}
+                        onChange={e => setTaskPriorityFilter(e.target.value)}
+                        className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none"
+                      >
+                        <option value="all">All Priorities</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      {/* Auto advance stage toggle */}
+                      <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={autoAdvanceStage}
+                          onChange={e => setAutoAdvanceStage(e.target.checked)}
+                          className="rounded text-sky-600 focus:ring-sky-500 h-3.5 w-3.5 cursor-pointer"
+                        />
+                        <span className="text-[11px]">Auto-Advance Stage</span>
+                      </label>
+
+                      <button
+                        onClick={() => setIsAddingCustomTask(!isAddingCustomTask)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Task</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Add Custom Task Inline Form */}
+                  {isAddingCustomTask && (
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-sky-500/30 shadow-md space-y-3 animate-in fade-in duration-200">
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <Plus className="w-4 h-4 text-sky-500" />
+                        <span>Create Custom Handover Task</span>
+                      </h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                        <div className="sm:col-span-2">
+                          <label className="text-slate-400 block mb-1 font-semibold">Task Title *</label>
+                          <input
+                            type="text"
+                            value={customTaskTitle}
+                            onChange={e => setCustomTaskTitle(e.target.value)}
+                            placeholder="e.g. Confirm VIP airport limousine transfers"
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-semibold">Category</label>
+                          <select
+                            value={customTaskCategory}
+                            onChange={e => setCustomTaskCategory(e.target.value as HandoverTaskCategory)}
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                          >
+                            <option value="lead_intake">Lead Intake & Admin</option>
+                            <option value="manifest_passports">Passports & Manifest</option>
+                            <option value="visa_permits">Visas & Permits</option>
+                            <option value="flights_logistics">Flights & Logistics</option>
+                            <option value="hotel_rooming">Hotel & Rooming</option>
+                            <option value="finance_invoice">Finance & Invoicing</option>
+                            <option value="briefing_materials">Briefing & Badges</option>
+                            <option value="crm_feedback">CRM Sync & Feedback</option>
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-slate-400 block mb-1 font-semibold">Description / SOP Instructions</label>
+                          <input
+                            type="text"
+                            value={customTaskDesc}
+                            onChange={e => setCustomTaskDesc(e.target.value)}
+                            placeholder="Detailed requirements or specific partner coordination details..."
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-semibold">Priority</label>
+                          <select
+                            value={customTaskPriority}
+                            onChange={e => setCustomTaskPriority(e.target.value as HandoverTaskPriority)}
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                          >
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-semibold">Assigned Officer</label>
+                          <input
+                            type="text"
+                            value={customTaskAssignee}
+                            onChange={e => setCustomTaskAssignee(e.target.value)}
+                            placeholder="e.g. Sophea Chamnab"
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-semibold">Due Date</label>
+                          <input
+                            type="date"
+                            value={customTaskDueDate}
+                            onChange={e => setCustomTaskDueDate(e.target.value)}
+                            className="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <button
+                          onClick={() => setIsAddingCustomTask(false)}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveCustomHandoverTask}
+                          className="px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow cursor-pointer"
+                        >
+                          Save Task
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tasks List */}
+                  <div className="space-y-3">
+                    {(() => {
+                      const allTasks = activeLead.handoverTasks && activeLead.handoverTasks.length > 0
+                        ? activeLead.handoverTasks
+                        : [];
+
+                      if (allTasks.length === 0) {
+                        return (
+                          <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+                            <CheckSquare className="w-10 h-10 text-slate-400 mx-auto" />
+                            <h5 className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                              No Handover Tasks Initialized Yet
+                            </h5>
+                            <p className="text-xs text-slate-400 max-w-md mx-auto">
+                              Start the fulfillment handover workflow to generate 8 standard operational milestones for client ingestion, passport compliance, flights, invoicing, and badges.
+                            </p>
+                            <button
+                              onClick={() => startLeadHandover(activeLead.id)}
+                              className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer inline-flex items-center gap-1.5"
+                            >
+                              <PlayCircle className="w-4 h-4" />
+                              <span>Initialize Handover Checklist</span>
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      const filteredTasks = allTasks.filter(t => {
+                        const matchesCategory = taskCategoryFilter === 'all' || t.category === taskCategoryFilter;
+                        const matchesPriority = taskPriorityFilter === 'all' || t.priority === taskPriorityFilter;
+                        return matchesCategory && matchesPriority;
+                      });
+
+                      if (filteredTasks.length === 0) {
+                        return (
+                          <div className="p-6 text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                            No tasks found matching your filter criteria.
+                          </div>
+                        );
+                      }
+
+                      const priorityStyles: Record<HandoverTaskPriority, string> = {
+                        urgent: 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-300 dark:border-rose-800',
+                        high: 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-800',
+                        medium: 'bg-sky-100 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300 border-sky-300 dark:border-sky-800',
+                        low: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700',
+                      };
+
+                      const categoryNames: Record<HandoverTaskCategory, string> = {
+                        lead_intake: '1. Lead Intake & Admin',
+                        manifest_passports: '2. Passports & Manifest',
+                        visa_permits: '3. Visas & Permits',
+                        flights_logistics: '4. Flights & Logistics',
+                        hotel_rooming: '5. Hotel & Rooming',
+                        finance_invoice: '6. Finance & Payments',
+                        briefing_materials: '7. Briefing & Vouchers',
+                        crm_feedback: '8. CRM Sync & Feedback',
+                      };
+
+                      return filteredTasks.map((task, idx) => {
+                        const isDone = task.status === 'completed';
+                        return (
+                          <div
+                            key={task.id || idx}
+                            className={`p-4 rounded-2xl border transition-all ${
+                              isDone
+                                ? 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/80 opacity-90'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:border-sky-400'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              {/* Checkbox and Main Content */}
+                              <div className="flex items-start gap-3 flex-1">
+                                <button
+                                  onClick={() => {
+                                    updateLeadHandoverTask(
+                                      activeLead.id,
+                                      task.id,
+                                      { status: isDone ? 'pending' : 'completed' },
+                                      autoAdvanceStage
+                                    );
+                                  }}
+                                  className={`w-5 h-5 mt-0.5 rounded-lg flex items-center justify-center transition flex-shrink-0 cursor-pointer ${
+                                    isDone
+                                      ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+                                      : 'border-2 border-slate-300 dark:border-slate-600 hover:border-sky-500 text-transparent'
+                                  }`}
+                                  title={isDone ? 'Mark as Pending' : 'Mark as Completed'}
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+
+                                <div className="space-y-1 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h5
+                                      className={`text-xs font-bold ${
+                                        isDone
+                                          ? 'line-through text-slate-400 dark:text-slate-500'
+                                          : 'text-slate-900 dark:text-white'
+                                      }`}
+                                    >
+                                      {task.title}
+                                    </h5>
+
+                                    {/* Priority Badge */}
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
+                                        priorityStyles[task.priority]
+                                      }`}
+                                    >
+                                      {task.priority}
+                                    </span>
+
+                                    {/* Category Pill */}
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                      {categoryNames[task.category]}
+                                    </span>
+                                  </div>
+
+                                  {task.description && (
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                      {task.description}
+                                    </p>
+                                  )}
+
+                                  {/* Task Meta Details */}
+                                  <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1 flex-wrap">
+                                    <span className="flex items-center gap-1">
+                                      <UserCheck className="w-3 h-3 text-indigo-500" />
+                                      <span>Assignee: <span className="font-semibold text-slate-600 dark:text-slate-300">{task.assignedTo || 'Operations Team'}</span></span>
+                                    </span>
+                                    {task.dueDate && (
+                                      <span className="flex items-center gap-1">
+                                        <Calendar className="w-3 h-3 text-amber-500" />
+                                        <span>Target: <span className="font-mono text-slate-600 dark:text-slate-300">{task.dueDate}</span></span>
+                                      </span>
+                                    )}
+                                    {isDone && task.completedAt && (
+                                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        <span>Done: {new Date(task.completedAt).toLocaleTimeString()} ({task.completedBy || 'Admin'})</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Task Status Dropdown & Delete */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <select
+                                  value={task.status}
+                                  onChange={e => {
+                                    updateLeadHandoverTask(
+                                      activeLead.id,
+                                      task.id,
+                                      { status: e.target.value as HandoverTaskStatus },
+                                      autoAdvanceStage
+                                    );
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="in_progress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                  <option value="blocked">Blocked</option>
+                                </select>
+
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Delete task "${task.title}"?`)) {
+                                      deleteLeadHandoverTask(activeLead.id, task.id);
+                                    }
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-rose-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                  title="Delete Task"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
                 </div>
               )}
 
