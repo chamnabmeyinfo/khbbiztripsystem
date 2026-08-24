@@ -23,17 +23,10 @@ import {
   X,
   Plane,
   CheckCircle,
-  Palette,
-  Sparkles,
-  Settings,
-  Sliders,
-  CreditCard,
   Building2,
-  Database,
-  Lock,
-  ArrowRight,
   Receipt,
-  Webhook,
+  Sparkles,
+  ArrowRight,
   Trash2,
   CheckCheck,
   Filter,
@@ -43,7 +36,6 @@ import {
   Calendar,
   ArrowUpRight
 } from 'lucide-react';
-import { AiThemeColorDetectorModal } from '../admin/AiThemeColorDetectorModal';
 
 export const Header: React.FC = () => {
   const {
@@ -81,8 +73,6 @@ export const Header: React.FC = () => {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'leads' | 'bookings'>('all');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-  const [showThemeModal, setShowThemeModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const rtl = isRTL(language);
@@ -296,305 +286,6 @@ export const Header: React.FC = () => {
                       <span className="text-[10px] text-slate-500 uppercase">{langItem.code}</span>
                     </button>
                   ))}
-                </div>
-              )}
-            </div>
-
-            {/* Settings & Options Hub Trigger */}
-            <div className="relative">
-              <button
-                id="header-settings-options-trigger"
-                onClick={() => {
-                  setShowSettingsDropdown(!showSettingsDropdown);
-                  setShowLangDropdown(false);
-                  setShowCurrDropdown(false);
-                  setShowNotifDropdown(false);
-                  setShowUserDropdown(false);
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition-all duration-200 cursor-pointer group shadow-xs ${
-                  showSettingsDropdown
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-500/25 ring-2 ring-indigo-500/30'
-                    : 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 hover:border-indigo-300 dark:hover:border-indigo-700'
-                }`}
-                title={language === 'km' ? 'ការកំណត់ប្រព័ន្ធ & ជម្រើស' : 'System Settings & Options'}
-                aria-label="Settings and Options"
-                aria-expanded={showSettingsDropdown}
-              >
-                <div className="relative flex items-center justify-center">
-                  <Settings
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      showSettingsDropdown
-                        ? 'rotate-90 text-white'
-                        : 'text-indigo-600 dark:text-indigo-400 group-hover:rotate-45'
-                    }`}
-                  />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
-                </div>
-                <span className="hidden xl:inline text-xs font-bold tracking-tight">
-                  {language === 'km' ? 'ការកំណត់' : 'Settings'}
-                </span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    showSettingsDropdown ? 'rotate-180 opacity-100 text-white' : 'opacity-60 group-hover:opacity-100'
-                  }`}
-                />
-              </button>
-
-              {/* Settings & Options Dropdown Menu */}
-              {showSettingsDropdown && (
-                <div
-                  className={`absolute ${
-                    rtl ? 'left-0' : 'right-0'
-                  } mt-2 w-80 sm:w-88 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200`}
-                >
-                  {/* Top Header Ribbon & Quick Direct Navigation */}
-                  <div className="px-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                        <Sliders className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                        <span>{language === 'km' ? 'ការកំណត់ & ជម្រើសប្រព័ន្ធ' : 'Settings & Options Hub'}</span>
-                      </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        {language === 'km' ? 'ជ្រើសរើសជម្រើសដើម្បីចូលទៅកាន់ទំព័រការកំណត់' : 'Select an option to open in Settings'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Direct Launch Full Settings Action */}
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('features');
-                      }}
-                      className="w-full p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white text-xs font-bold flex items-center justify-between shadow-md shadow-indigo-500/20 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-white/20 text-white">
-                          <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-extrabold text-xs">
-                            {language === 'km' ? 'ចូលទៅផ្ទាំងគ្រប់គ្រងការកំណត់' : 'Go to System Settings'}
-                          </div>
-                          <div className="text-[10px] text-indigo-100 font-normal">
-                            {language === 'km' ? 'មើល និងកែប្រែជម្រើសប្រព័ន្ធទាំងអស់' : 'View and customize all configuration options'}
-                          </div>
-                        </div>
-                      </div>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-
-                  {/* Settings Option Categories */}
-                  <div className="px-2 py-1 max-h-80 overflow-y-auto space-y-1">
-                    {/* Option 1: AI Theme & Color Studio */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('theme');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200 dark:border-purple-800/60 group-hover:scale-105 transition-transform">
-                          <Palette className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>{language === 'km' ? 'ស្ទីលពណ៌ & ពុម្ពអក្សរ AI' : 'AI Theme & Color Studio'}</span>
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">AI</span>
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'កែប្រែពណ៌ប្រធានបទ ពុម្ពអក្សរខ្មែរ & ទំហំ' : 'Color palette presets, Khmer typography & scales'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option 2: Trade Mission & Branding */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('branding');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200 dark:border-amber-800/60 group-hover:scale-105 transition-transform">
-                          <Building2 className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'ព័ត៌មានម៉ាកសញ្ញា & គណៈប្រតិភូ' : 'Trade Mission & Brand Profile'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'ឡូហ្គោក្រុមហ៊ុន ព័ត៌មានអ្នកសម្របសម្រួល & ហត្ថលេខា' : 'Company logo, banner, lead coordinator & credentials'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option 3: Feature Modules & Controls */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('features');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-800/60 group-hover:scale-105 transition-transform">
-                          <Sliders className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'ម៉ូឌុលមុខងារ & គោលការណ៍' : 'Feature Controls & Flags'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'បើក/បិទ AI Copilot, ការកក់, វិក្កយបត្រពន្ធ' : 'Toggle AI Copilot, Customer Booking, Tax Invoicing'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option: CRM & Webhook Real-time API */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('crm');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-200 dark:border-sky-800/60 group-hover:scale-105 transition-transform">
-                          <Webhook className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'សមាហរណកម្ម CRM & Webhooks' : 'CRM & Webhooks Integration'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'ទទួល Real-time Webhook, ផ្ញើការកក់ & Delegate' : 'Inbound Listener, Outbound Token API & Simulator'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option 4: Payment Gateways */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('payments');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center border border-sky-200 dark:border-sky-800/60 group-hover:scale-105 transition-transform">
-                          <CreditCard className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'ច្រកទូទាត់ប្រាក់ (Gateways)' : 'Payment Gateways & QR'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'ABA PayWay, ACLEDA X-Pay, Wing, កាតឥណទាន' : 'ABA PayWay, ACLEDA, Wing, Biometric & Cards'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option 5: Financial Defaults & VAT */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('financials');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-200 dark:border-teal-800/60 group-hover:scale-105 transition-transform">
-                          <Receipt className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'អត្រាពន្ធ VAT & កម្រៃប្រាក់ចំណេញ' : 'VAT Tax, Margins & Defaults'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'អត្រាពន្ធ VAT %, ភាគរយចំណេញ និងចំនួនក្រុម' : 'Default VAT rate %, adult profit margins & min group size'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option 6: Security & Governance */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('security');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200 dark:border-rose-800/60 group-hover:scale-105 transition-transform">
-                          <Lock className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'សុវត្ថិភាព & ការគ្រប់គ្រង RBAC' : 'Security & Access Governance'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'ដែនដី Admin, ការផ្ទៀងផ្ទាត់ជីវមាត្រ & សិទ្ធិ' : 'Admin domain restriction, biometrics & clearance tiers'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-rose-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-
-                    {/* Option 7: Backup & JSON Recovery */}
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        navigateToSettings('backup');
-                      }}
-                      className="w-full p-2 rounded-xl text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-800/60 group-hover:scale-105 transition-transform">
-                          <Database className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            {language === 'km' ? 'បម្រុងទុក & ស្តារទិន្នន័យ (JSON)' : 'System Backup & Data Recovery'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {language === 'km' ? 'នាំចេញ/នាំចូល JSON និងការសម្អាត Recycle Bin' : 'Full loss-free JSON export, import & purge rules'}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                    </button>
-                  </div>
-
-                  {/* Bottom Modal Shortcut */}
-                  <div className="px-3 pt-2.5 mt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        setShowSettingsDropdown(false);
-                        setShowThemeModal(true);
-                      }}
-                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{language === 'km' ? 'បើកផ្ទាំង AI Theme Generator Modal ↗' : 'Launch AI Theme Generator Modal ↗'}</span>
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -1122,12 +813,6 @@ export const Header: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* AI Theme & Color Detector Modal */}
-      <AiThemeColorDetectorModal
-        isOpen={showThemeModal}
-        onClose={() => setShowThemeModal(false)}
-      />
     </header>
   );
 };
