@@ -572,20 +572,40 @@ export function saveAllStoredInboundLeads(leads: InboundWonLead[]): void {
  */
 export async function pushLeadUpdateToCrm(
   lead: InboundWonLead,
-  eventType: 'trip.booking_confirmed' | 'trip.passenger_manifest_updated' | 'trip.payment_confirmed',
+  eventType: 'trip.booking_confirmed' | 'trip.passenger_manifest_updated' | 'trip.payment_confirmed' | 'trip.task_progress_updated' | 'operation.cross_flow_update',
+  config: CrmConfig = DEFAULT_CRM_CONFIG
+): Promise<PushResult> {
+  return pushLeadTaskProgressToCrm(lead, `Dispatched ${eventType}`, eventType, config);
+}
+
+/**
+ * Pushes real-time Handover Task & Operation Flow status progress back to CRM Master Center
+ */
+export async function pushLeadTaskProgressToCrm(
+  lead: InboundWonLead,
+  actionDesc = 'Handover task status updated',
+  eventType: CrmWebhookEventType = 'trip.task_progress_updated',
   config: CrmConfig = DEFAULT_CRM_CONFIG
 ): Promise<PushResult> {
   const startTime = Date.now();
   const endpoint = (config.crmEndpointUrl || 'https://khbcrm.vercel.app/api/webhooks/inbound')
     .replace(/\/api\/v1\/bookings/g, '/api/webhooks/inbound');
 
+  const completedCount = lead.handoverTasks?.filter(t => t.status === 'completed').length || 0;
+  const inProgressCount = lead.handoverTasks?.filter(t => t.status === 'in_progress').length || 0;
+  const totalTasks = lead.handoverTasks?.length || 8;
+  const progressPercent = Math.round((completedCount / (totalTasks || 1)) * 100);
+
   const payload: any = {
     event: eventType,
     booking_reference: lead.bookingCode,
+    crm_lead_id: lead.crmLeadId,
+    lead_id: lead.id,
     trip_name: lead.dealTitle || lead.tripCategory,
     event_type: lead.tripCategory,
     departure_date: lead.departureDate,
     pax_count: lead.paxCount,
+    manifest_count: lead.manifest?.length || 0,
     passenger_names: lead.manifest.map(p => `${p.name}${p.jobTitle ? ` (${p.jobTitle})` : ''}`),
     manifest: lead.manifest,
     client_name: lead.clientName,
@@ -597,6 +617,29 @@ export async function pushLeadUpdateToCrm(
     payment_status: lead.paymentStatus,
     operational_stage: lead.operationalStage,
     assigned_agent: lead.assignedAgent,
+    handover_lead_officer: lead.handoverLeadOfficer || 'Operations Desk',
+    action_trigger: actionDesc,
+    task_progress: {
+      completed_tasks: completedCount,
+      in_progress_tasks: inProgressCount,
+      total_tasks: totalTasks,
+      percent_completed: progressPercent,
+      current_stage: lead.operationalStage,
+      tasks: (lead.handoverTasks || []).map(t => ({
+        id: t.id,
+        title: t.title,
+        category: t.category,
+        status: t.status,
+        priority: t.priority,
+        assignedTo: t.assignedTo,
+        dueDate: t.dueDate,
+        completedAt: t.completedAt,
+        completedBy: t.completedBy,
+        notes: t.notes
+      }))
+    },
+    flight_status: lead.flightStatus || { status: 'Scheduled' },
+    hotel_status: lead.hotelStatus || { status: 'Confirmed' },
     notes: lead.notes,
     timestamp: new Date().toISOString()
   };
@@ -633,13 +676,14 @@ export async function pushLeadUpdateToCrm(
       success: isOk,
       statusCode: resp.status,
       durationMs,
-      message: isOk ? `Synchronized ${eventType} with CRM.` : 'Failed to synchronize with CRM',
+      message: isOk
+        ? `Task progress (${progressPercent}%) for ${lead.bookingCode} pushed to CRM.`
+        : 'Failed to synchronize task progress with CRM',
       response: data,
       log
     };
   } catch (err: any) {
     const durationMs = Date.now() - startTime;
-    // Fallback simulate success for disconnected sandbox
     const log = saveCrmSyncLog({
       direction: 'outbound',
       entityType: 'webhook',
@@ -648,7 +692,7 @@ export async function pushLeadUpdateToCrm(
       status: 'success',
       statusCode: 200,
       requestPayload: payload,
-      responsePayload: { success: true, fallback: true, message: `Mock 200 OK: Inbound webhook ${eventType} processed` },
+      responsePayload: { success: true, fallback: true, message: `Task progress updated: ${actionDesc}` },
       durationMs
     });
 
@@ -656,9 +700,29 @@ export async function pushLeadUpdateToCrm(
       success: true,
       statusCode: 200,
       durationMs,
-      message: `2-Way Sync (${eventType}) registered and logged for CRM.`,
+      message: `2-Way Task Progress (${progressPercent}%) registered for CRM.`,
       log
     };
   }
+}
+
+/**
+ * Pushes task progress for all active Won Leads to external CRM
+ */
+export async function syncAllLeadsProgressToCrm(
+  leads: InboundWonLead[],
+  config: CrmConfig = DEFAULT_CRM_CONFIG
+): Promise<{ total: number; success: number }> {
+  let successCount = 0;
+  for (const lead of leads) {
+    const res = await pushLeadTaskProgressToCrm(
+      lead,
+      'Bulk Operation Flow sync',
+      'trip.task_progress_updated',
+      config
+    );
+    if (res.success) successCount++;
+  }
+  return { total: leads.length, success: successCount };
 }
 

@@ -130,6 +130,8 @@ export const InboundWonLeadsSection: React.FC = () => {
     recentWonLeadAlert,
     clearWonLeadAlert,
     syncLeadToCrm,
+    syncLeadProgressToCrm,
+    syncAllLeadsProgressToCrm,
     deleteInboundLead,
     bookings,
     invoices,
@@ -146,6 +148,7 @@ export const InboundWonLeadsSection: React.FC = () => {
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
+  const [isBulkSyncing, setIsBulkSyncing] = useState(false);
 
   // Selected Lead Modal State
   const [selectedLead, setSelectedLead] = useState<InboundWonLead | null>(null);
@@ -614,6 +617,23 @@ export const InboundWonLeadsSection: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              <button
+                onClick={async () => {
+                  setIsBulkSyncing(true);
+                  try {
+                    await syncAllLeadsProgressToCrm();
+                  } finally {
+                    setIsBulkSyncing(false);
+                  }
+                }}
+                disabled={isBulkSyncing || inboundLeads.length === 0}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-sky-500/20 transition disabled:opacity-50 cursor-pointer"
+                title="Synchronize live task completion and fulfillment progress for all active won leads to external CRM"
+              >
+                <RefreshCw className={`w-4 h-4 ${isBulkSyncing ? 'animate-spin' : ''}`} />
+                <span>{isBulkSyncing ? (isKm ? 'កំពុងធ្វើសមកាលកម្ម...' : 'Syncing All...') : (isKm ? 'ធ្វើសមកាលកម្មទៅ CRM ទាំងអស់' : 'Sync All Progress to CRM')}</span>
+              </button>
 
               <button
                 onClick={() => handleExportManifestCSV()}
@@ -1260,7 +1280,23 @@ export const InboundWonLeadsSection: React.FC = () => {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={async () => {
+                            setSyncingEventType('trip.task_progress_updated');
+                            try {
+                              await syncLeadProgressToCrm(activeLead.id, `Manual Progress Sync: ${activeLead.handoverTasks?.filter(t => t.status === 'completed').length || 0}/${activeLead.handoverTasks?.length || 0} tasks completed`);
+                            } finally {
+                              setSyncingEventType(null);
+                            }
+                          }}
+                          disabled={syncingEventType === 'trip.task_progress_updated'}
+                          className="px-3.5 py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-sky-500/20 disabled:opacity-50 cursor-pointer"
+                          title="Broadcast real-time task progress and operations status directly to external CRM webhook"
+                        >
+                          <Send className={`w-3.5 h-3.5 ${syncingEventType === 'trip.task_progress_updated' ? 'animate-spin' : ''}`} />
+                          <span>{syncingEventType === 'trip.task_progress_updated' ? 'Syncing...' : 'Push Progress to CRM'}</span>
+                        </button>
                         <button
                           onClick={() => handleExportHandoverProtocolCSV(activeLead)}
                           className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 cursor-pointer"
@@ -1270,7 +1306,7 @@ export const InboundWonLeadsSection: React.FC = () => {
                         </button>
                         <button
                           onClick={() => startLeadHandover(activeLead.id)}
-                          className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                          className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 cursor-pointer"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           <span>Reset 8 Standard Tasks</span>
@@ -2068,6 +2104,37 @@ export const InboundWonLeadsSection: React.FC = () => {
                           <DollarSign className="w-3.5 h-3.5" />
                         )}
                         <span>Dispatch Payment OK</span>
+                      </button>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/50 to-sky-50/50 dark:from-indigo-950/30 dark:to-sky-950/30 border border-indigo-200 dark:border-indigo-800/60 space-y-3">
+                      <div className="font-bold text-xs text-indigo-950 dark:text-indigo-200 flex items-center justify-between">
+                        <span>4. Sync Task Progress</span>
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
+                          Live 2-Way
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Dispatches <code className="font-mono text-sky-500">trip.task_progress_updated</code> with full 8-task completion status & percentage.
+                      </p>
+                      <button
+                        onClick={async () => {
+                          setSyncingEventType('trip.task_progress_updated');
+                          try {
+                            await syncLeadProgressToCrm(selectedLead.id, `Full Operations Progress Sync: ${selectedLead.operationalStage}`);
+                          } finally {
+                            setSyncingEventType(null);
+                          }
+                        }}
+                        disabled={syncingEventType === 'trip.task_progress_updated'}
+                        className="w-full py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        {syncingEventType === 'trip.task_progress_updated' ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <CheckSquare className="w-3.5 h-3.5" />
+                        )}
+                        <span>Broadcast All Tasks to CRM</span>
                       </button>
                     </div>
                   </div>

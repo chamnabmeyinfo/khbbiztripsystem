@@ -68,6 +68,8 @@ import {
   saveStoredInboundLead,
   saveAllStoredInboundLeads,
   pushLeadUpdateToCrm,
+  pushLeadTaskProgressToCrm,
+  syncAllLeadsProgressToCrm as syncAllLeadsProgressApi,
   DEFAULT_CRM_CONFIG,
 } from '../services/crmIntegrationService';
 import { generateDefaultHandoverTasks, playNotificationChime, getRecommendedStageFromTasks } from '../services/handoverTaskService';
@@ -319,6 +321,11 @@ interface AppContextType {
     leadId: string,
     eventType: 'trip.booking_confirmed' | 'trip.passenger_manifest_updated' | 'trip.payment_confirmed'
   ) => Promise<{ success: boolean; message: string }>;
+  syncLeadProgressToCrm: (
+    leadId: string,
+    actionDesc?: string
+  ) => Promise<{ success: boolean; message: string }>;
+  syncAllLeadsProgressToCrm: () => Promise<{ total: number; success: number }>;
   deleteInboundLead: (leadId: string) => void;
   processWebhookEvent: (event: CrmWebhookEvent) => void;
   pushBookingToCrm: (bookingId: string) => Promise<boolean>;
@@ -1929,8 +1936,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     flightUpdates?: Partial<FlightStatus>,
     hotelUpdates?: Partial<HotelStatus>
   ) => {
+    let affectedBookingCode = '';
     setBookings(prev => prev.map(b => {
       if (b.id === bookingId) {
+        affectedBookingCode = b.bookingCode;
         const updated: Booking = {
           ...b,
           status,
@@ -1973,6 +1982,65 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       return b;
     }));
+
+    // Cross-Flow Update: Auto-update matching InboundWonLead and push logistics status back to CRM
+    if (affectedBookingCode || bookingId) {
+      setInboundLeads(prev => prev.map(lead => {
+        if (lead.bookingCode === affectedBookingCode || lead.id === bookingId || lead.crmLeadId === bookingId) {
+          const updatedTasks = (lead.handoverTasks || generateDefaultHandoverTasks(lead)).map(t => {
+            if (t.category === 'flight_ticketing' && flightUpdates?.status) {
+              const isFlightConfirmed = ['Scheduled', 'Confirmed', 'Departed', 'Landed'].includes(flightUpdates.status);
+              return {
+                ...t,
+                status: isFlightConfirmed ? ('completed' as const) : t.status,
+                completedAt: isFlightConfirmed ? new Date().toISOString() : t.completedAt,
+                notes: `Flight ${flightUpdates.status || 'updated'}. ${t.notes || ''}`.trim()
+              };
+            }
+            if (t.category === 'hotel_reservations' && hotelUpdates?.status) {
+              const isHotelConfirmed = ['Confirmed', 'Checked In', 'Guaranteed'].includes(hotelUpdates.status);
+              return {
+                ...t,
+                status: isHotelConfirmed ? ('completed' as const) : t.status,
+                completedAt: isHotelConfirmed ? new Date().toISOString() : t.completedAt,
+                notes: `Hotel ${hotelUpdates.status || 'updated'}. ${t.notes || ''}`.trim()
+              };
+            }
+            return t;
+          });
+
+          const recStage = getRecommendedStageFromTasks(updatedTasks, lead.operationalStage);
+          const updatedLead: InboundWonLead = {
+            ...lead,
+            flightStatus: flightUpdates ? { ...(lead.flightStatus || { flightNumber: 'KHB-2026', airline: 'Cambodia Angkor Air', departureAirport: 'PNH', arrivalAirport: 'CAN', departureTime: '08:30 AM', arrivalTime: '12:45 PM', status: 'Scheduled' }), ...flightUpdates } : lead.flightStatus,
+            hotelStatus: hotelUpdates ? { ...(lead.hotelStatus || { hotelName: 'Garden Hotel Guangzhou', roomType: 'Executive Business Suite', checkInDate: '2026-10-15', checkOutDate: '2026-10-22', status: 'Confirmed', confirmationCode: `HTL-${lead.bookingCode}` }), ...hotelUpdates } : lead.hotelStatus,
+            handoverTasks: updatedTasks,
+            operationalStage: recStage,
+            lastTaskAction: `Logistics status updated (Flight/Hotel)`,
+            updatedAt: new Date().toISOString()
+          };
+
+          saveStoredInboundLead(updatedLead);
+          try {
+            setDoc(doc(db, 'inbound_leads', lead.id), sanitizeForFirestore(updatedLead), { merge: true });
+          } catch (e) {
+            console.warn('Cross-flow lead logistics update notice:', e);
+          }
+
+          // Asynchronously dispatch 2-way progress sync to external CRM
+          const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+          pushLeadTaskProgressToCrm(
+            updatedLead,
+            `Logistics updated: Flight ${flightUpdates?.status || 'Active'}, Hotel ${hotelUpdates?.status || 'Active'}`,
+            'logistics.status_synced',
+            config
+          ).then(() => setCrmSyncLogs(getStoredCrmLogs())).catch(e => console.warn('CRM logistics sync:', e));
+
+          return updatedLead;
+        }
+        return lead;
+      }));
+    }
   };
 
   // Package Catalog Management
@@ -2428,10 +2496,79 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newCP = { ...payment, id, createdAt: new Date().toISOString() };
     setCustomerPayments(prev => [newCP, ...prev]);
     try { setDoc(doc(db, 'customer_payments', id), sanitizeForFirestore(newCP)); } catch (e) { console.warn(e); }
+
+    // Cross-Flow Update: Auto-update matching InboundWonLead depositPaidUSD, paymentStatus, and Task 6
+    if (payment.bookingCode || payment.bookingId) {
+      setInboundLeads(prev => prev.map(lead => {
+        if (lead.bookingCode === payment.bookingCode || lead.id === payment.bookingId || lead.crmLeadId === payment.bookingId) {
+          const newPaidTotal = (lead.depositPaidUSD || 0) + (payment.status === 'paid' || payment.status === 'partial' ? payment.amountUSD : 0);
+          const isFullySettled = newPaidTotal >= lead.dealValueUSD;
+          const newPaymentStatus = isFullySettled ? 'fully_paid' as const : (newPaidTotal > 0 ? 'deposit_paid' as const : lead.paymentStatus);
+
+          const updatedTasks = (lead.handoverTasks || generateDefaultHandoverTasks(lead)).map(t => {
+            if (t.category === 'invoice_finance') {
+              return {
+                ...t,
+                status: isFullySettled ? ('completed' as const) : ('in_progress' as const),
+                completedAt: isFullySettled ? new Date().toISOString() : t.completedAt,
+                notes: `Received payment of $${payment.amountUSD} USD via ${payment.paymentMethod}. Total paid: $${newPaidTotal} / $${lead.dealValueUSD}`
+              };
+            }
+            return t;
+          });
+
+          const recStage = getRecommendedStageFromTasks(updatedTasks, lead.operationalStage);
+          const updatedLead: InboundWonLead = {
+            ...lead,
+            depositPaidUSD: newPaidTotal,
+            paymentStatus: newPaymentStatus,
+            handoverTasks: updatedTasks,
+            operationalStage: recStage,
+            lastTaskAction: `Payment of $${payment.amountUSD} recorded (${newPaymentStatus})`,
+            updatedAt: new Date().toISOString()
+          };
+
+          saveStoredInboundLead(updatedLead);
+          try {
+            setDoc(doc(db, 'inbound_leads', lead.id), sanitizeForFirestore(updatedLead), { merge: true });
+          } catch (e) {
+            console.warn('Cross-flow lead payment update notice:', e);
+          }
+
+          // Asynchronously dispatch 2-way progress sync to external CRM
+          const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+          pushLeadTaskProgressToCrm(
+            updatedLead,
+            `Finance settled: Received $${payment.amountUSD} USD (${payment.paymentMethod}) - Status: ${newPaymentStatus}`,
+            'finance.payment_settled',
+            config
+          ).then(() => setCrmSyncLogs(getStoredCrmLogs())).catch(e => console.warn('CRM finance sync:', e));
+
+          return updatedLead;
+        }
+        return lead;
+      }));
+    }
   };
   const updateCustomerPayment = (payment: CustomerPayment) => {
     setCustomerPayments(prev => prev.map(p => p.id === payment.id ? payment : p));
     try { setDoc(doc(db, 'customer_payments', payment.id), sanitizeForFirestore(payment), { merge: true }); } catch (e) { console.warn(e); }
+
+    // Cross-Flow Update: Check and update InboundWonLead
+    if (payment.bookingCode || payment.bookingId) {
+      setInboundLeads(prev => prev.map(lead => {
+        if (lead.bookingCode === payment.bookingCode || lead.id === payment.bookingId || lead.crmLeadId === payment.bookingId) {
+          const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+          pushLeadTaskProgressToCrm(
+            lead,
+            `Payment ${payment.id} status modified to ${payment.status}`,
+            'finance.payment_settled',
+            config
+          ).then(() => setCrmSyncLogs(getStoredCrmLogs())).catch(e => console.warn('CRM finance sync:', e));
+        }
+        return lead;
+      }));
+    }
   };
   const deleteCustomerPayment = (paymentId: string) => {
     const cp = customerPayments.find(p => p.id === paymentId);
@@ -3439,13 +3576,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const updated: InboundWonLead = {
           ...l,
           operationalStage: stage,
+          lastTaskAction: `Operational stage advanced to "${stage}"`,
           updatedAt: new Date().toISOString()
         };
+        saveStoredInboundLead(updated);
         try {
           setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
         } catch (e) {
           console.warn('Firestore stage update notice:', e);
         }
+
+        // Cross-Flow Realtime Sync: Broadcast Stage Progress to CRM Webhook Gateway
+        const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+        pushLeadTaskProgressToCrm(
+          updated,
+          `Operational stage advanced to "${stage.replace(/_/g, ' ').toUpperCase()}"`,
+          'operation.cross_flow_update',
+          config
+        ).then(() => setCrmSyncLogs(getStoredCrmLogs())).catch(e => console.warn('Stage sync CRM push error:', e));
+
         return updated;
       }
       return l;
@@ -3453,7 +3602,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     addNotification(
       `Operational Stage Updated`,
-      `Lead stage advanced to "${stage.replace(/_/g, ' ').toUpperCase()}".`,
+      `Lead stage advanced to "${stage.replace(/_/g, ' ').toUpperCase()}". Synced with CRM.`,
       'system'
     );
   };
@@ -3461,17 +3610,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateLeadManifest = (leadId: string, manifest: LeadPassenger[]) => {
     setInboundLeads(prev => prev.map(l => {
       if (l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId) {
+        let tasks = l.handoverTasks && l.handoverTasks.length > 0 ? l.handoverTasks : generateDefaultHandoverTasks(l);
+        // Auto-complete Task 2 if all required delegates are registered
+        if (manifest.length >= l.paxCount && manifest.length > 0) {
+          tasks = tasks.map(t => t.category === 'manifest_passports' ? {
+            ...t,
+            status: 'completed' as const,
+            completedAt: new Date().toISOString(),
+            completedBy: currentUser?.name || 'Operations Desk',
+            notes: `Verified all ${manifest.length} delegation passenger passports.`
+          } : t);
+        }
+
+        const nextStage = getRecommendedStageFromTasks(tasks, l.operationalStage);
         const updated: InboundWonLead = {
           ...l,
           manifest,
           paxCount: manifest.length || l.paxCount,
+          handoverTasks: tasks,
+          operationalStage: nextStage,
+          lastTaskAction: `Passenger manifest updated (${manifest.length} delegates)`,
           updatedAt: new Date().toISOString()
         };
+
+        saveStoredInboundLead(updated);
         try {
           setDoc(doc(db, 'inbound_leads', l.id), sanitizeForFirestore(updated), { merge: true });
         } catch (e) {
           console.warn('Firestore manifest update notice:', e);
         }
+
+        // Cross-Flow Realtime Sync: Broadcast Manifest Progress to CRM
+        const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+        pushLeadTaskProgressToCrm(
+          updated,
+          `Manifest registered: ${manifest.length} delegates (${manifest.map(m => m.name).join(', ')})`,
+          'trip.passenger_manifest_updated',
+          config
+        ).then(() => setCrmSyncLogs(getStoredCrmLogs())).catch(e => console.warn('Manifest CRM push error:', e));
+
         return updated;
       }
       return l;
@@ -3518,6 +3695,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: res.success, message: res.message };
   };
 
+  const syncLeadProgressToCrm = async (
+    leadId: string,
+    actionDesc = 'Manual Operations Progress Sync'
+  ): Promise<{ success: boolean; message: string }> => {
+    const targetLead = inboundLeads.find(l => l.id === leadId || l.crmLeadId === leadId || l.bookingCode === leadId);
+    if (!targetLead) {
+      return { success: false, message: 'Inbound lead record not found.' };
+    }
+
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+    const res = await pushLeadTaskProgressToCrm(targetLead, actionDesc, 'trip.task_progress_updated', config);
+
+    if (res.success) {
+      const updated: InboundWonLead = {
+        ...targetLead,
+        crmSyncStatus: 'synced',
+        lastSyncedAt: new Date().toISOString(),
+        lastTaskAction: actionDesc,
+      };
+      updateInboundLead(updated);
+      addNotification(
+        '🔄 2-Way CRM Progress Synced',
+        `Pushed latest task status for booking ${targetLead.bookingCode} (${targetLead.clientCompany}) to CRM Master Center.`,
+        'system'
+      );
+    } else {
+      addNotification('CRM Sync Warning', res.message || 'Failed to sync task progress with CRM.', 'system');
+    }
+    setCrmSyncLogs(getStoredCrmLogs());
+    return { success: res.success, message: res.message };
+  };
+
+  const syncAllLeadsProgressToCrm = async (): Promise<{ total: number; success: number }> => {
+    const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+    const res = await syncAllLeadsProgressApi(inboundLeads, config);
+    addNotification(
+      '⚡ Bulk Operations CRM Sync Complete',
+      `Successfully synchronized live task progress for ${res.success}/${res.total} active delegation leads with CRM.`,
+      'system'
+    );
+    setCrmSyncLogs(getStoredCrmLogs());
+    return res;
+  };
+
   const deleteInboundLead = (leadId: string) => {
     const target = inboundLeads.find(l => l.id === leadId || l.bookingCode === leadId);
     if (!target) return;
@@ -3545,6 +3766,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           handoverTasks: tasks,
           handoverStartedAt: l.handoverStartedAt || new Date().toISOString(),
           handoverLeadOfficer: officerName,
+          lastTaskAction: `Handover started by ${officerName}`,
           updatedAt: new Date().toISOString(),
         };
 
@@ -3554,6 +3776,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (e) {
           console.warn('Firestore start handover notice:', e);
         }
+
+        // Push initial handover activation to CRM
+        const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+        pushLeadTaskProgressToCrm(
+          updated,
+          `Operations handover activated. Assigned to ${officerName}`,
+          'trip.task_progress_updated',
+          config
+        ).then(() => setCrmSyncLogs(getStoredCrmLogs())).catch(e => console.warn('Handover CRM push:', e));
+
         return updated;
       }
       return l;
@@ -3562,7 +3794,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     playNotificationChime();
     addNotification(
       '🚀 Handover Workflow Started',
-      `Operations handover activated for lead ${leadId}. 8 standard fulfillment tasks assigned to ${officerName}.`,
+      `Operations handover activated for lead ${leadId}. 8 standard fulfillment tasks assigned to ${officerName}. Synced with CRM.`,
       'system'
     );
   };
@@ -3579,8 +3811,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ? l.handoverTasks
           : generateDefaultHandoverTasks(l);
 
+        let targetTaskTitle = 'Operational Task';
         const updatedTasks = currentTasks.map(t => {
           if (t.id === taskId) {
+            targetTaskTitle = t.title;
             const isNowCompleted = updates.status === 'completed' && t.status !== 'completed';
             return {
               ...t,
@@ -3597,10 +3831,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           nextStage = getRecommendedStageFromTasks(updatedTasks, l.operationalStage);
         }
 
+        const actionDescription = updates.status === 'completed'
+          ? `Completed "${targetTaskTitle}"`
+          : `Updated "${targetTaskTitle}" to ${updates.status || 'in progress'}`;
+
         const updated: InboundWonLead = {
           ...l,
           handoverTasks: updatedTasks,
           operationalStage: nextStage,
+          lastTaskAction: actionDescription,
+          lastSyncedTaskTitle: targetTaskTitle,
           updatedAt: new Date().toISOString(),
         };
 
@@ -3610,6 +3850,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } catch (e) {
           console.warn('Firestore handover task update notice:', e);
         }
+
+        // 2-Way Live Sync: Broadcast Task Progress to external CRM
+        const config = systemSettings.crmConfig || DEFAULT_CRM_CONFIG;
+        pushLeadTaskProgressToCrm(
+          updated,
+          actionDescription,
+          'trip.task_progress_updated',
+          config
+        ).then((res) => {
+          setCrmSyncLogs(getStoredCrmLogs());
+          if (res.success) {
+            setInboundLeads(currentLeads => currentLeads.map(leadItem =>
+              leadItem.id === updated.id ? { ...leadItem, crmSyncStatus: 'synced', lastSyncedAt: new Date().toISOString() } : leadItem
+            ));
+          }
+        }).catch((err) => console.warn('Background 2-Way CRM task progress push error:', err));
+
         return updated;
       }
       return l;
@@ -3789,6 +4046,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addLeadHandoverTask,
         deleteLeadHandoverTask,
         syncLeadToCrm,
+        syncLeadProgressToCrm,
+        syncAllLeadsProgressToCrm,
         deleteInboundLead,
         processWebhookEvent,
         pushBookingToCrm,

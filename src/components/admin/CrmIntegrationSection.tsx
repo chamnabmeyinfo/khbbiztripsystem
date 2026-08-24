@@ -51,6 +51,7 @@ export const CrmIntegrationSection: React.FC = () => {
     pushCustomerToCrm,
     syncAllBookingsToCrm,
     syncAllCustomersToCrm,
+    syncAllLeadsProgressToCrm,
     testCrmConnection,
     simulateWebhookTrigger,
     refreshWebhookEvents,
@@ -93,6 +94,7 @@ export const CrmIntegrationSection: React.FC = () => {
   // Batch sync state
   const [isSyncingAllBookings, setIsSyncingAllBookings] = useState(false);
   const [isSyncingAllCustomers, setIsSyncingAllCustomers] = useState(false);
+  const [isSyncingAllLeads, setIsSyncingAllLeads] = useState(false);
   const [batchSyncResult, setBatchSyncResult] = useState<{ type: string; total: number; success: number } | null>(null);
 
   // Simulator state
@@ -328,6 +330,16 @@ export const CrmIntegrationSection: React.FC = () => {
       setBatchSyncResult({ type: 'customers', total: result.total, success: result.success });
     } finally {
       setIsSyncingAllCustomers(false);
+    }
+  };
+
+  const handleSyncAllLeads = async () => {
+    setIsSyncingAllLeads(true);
+    try {
+      const result = await syncAllLeadsProgressToCrm();
+      setBatchSyncResult({ type: 'won leads operational flows', total: result.total, success: result.success });
+    } finally {
+      setIsSyncingAllLeads(false);
     }
   };
 
@@ -908,6 +920,16 @@ export const CrmIntegrationSection: React.FC = () => {
               )}
 
               <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleSyncAllLeads}
+                  disabled={isSyncingAllLeads || inboundLeads.length === 0}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-sky-500/20 transition disabled:opacity-50 cursor-pointer"
+                  title="Broadcast live fulfillment progress for all active won leads to external CRM"
+                >
+                  {isSyncingAllLeads ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4 text-sky-200" />}
+                  Sync All Won Leads Progress ({inboundLeads.length})
+                </button>
+
                 <button
                   onClick={handleSyncAllBookings}
                   disabled={isSyncingAllBookings}

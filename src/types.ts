@@ -833,6 +833,12 @@ export type CrmWebhookEventType =
   | 'trip.booking_confirmed'
   | 'trip.passenger_manifest_updated'
   | 'trip.payment_confirmed'
+  | 'trip.task_progress_updated'
+  | 'lead.progress_sync'
+  | 'operation.cross_flow_update'
+  | 'manifest.delegate_added'
+  | 'finance.payment_settled'
+  | 'logistics.status_synced'
   | 'lead.created'
   | 'booking.status_updated'
   | 'booking.payment_received'
@@ -953,6 +959,8 @@ export interface InboundWonLead {
   specialRequests?: string;
   hotelStatus?: HotelStatus;
   flightStatus?: FlightStatus;
+  lastTaskAction?: string;
+  lastSyncedTaskTitle?: string;
   createdAt: string;
   updatedAt: string;
 }
