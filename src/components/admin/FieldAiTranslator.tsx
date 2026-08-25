@@ -71,28 +71,28 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
   // Determine detected translation direction for dual mode
   let dualDirection: 'en_to_km' | 'km_to_en' | 'both_filled' | 'both_empty' = 'both_empty';
   if (isDualFieldMode) {
-    if (preferredDirection === 'en_to_km' && (hasEn || !hasKm)) {
+    if (preferredDirection === 'en_to_km') {
       dualDirection = 'en_to_km';
-    } else if (preferredDirection === 'km_to_en' && (hasKm || !hasEn)) {
+    } else if (preferredDirection === 'km_to_en') {
       dualDirection = 'km_to_en';
     } else if (hasEn && !hasKm) {
       dualDirection = 'en_to_km';
     } else if (hasKm && !hasEn) {
       dualDirection = 'km_to_en';
     } else if (hasEn && hasKm) {
-      dualDirection = preferredDirection === 'en_to_km' ? 'en_to_km' : preferredDirection === 'km_to_en' ? 'km_to_en' : 'both_filled';
+      dualDirection = 'both_filled';
     }
   } else if (isDualArrayMode) {
-    if (preferredDirection === 'en_to_km' && (hasEnArray || !hasKmArray)) {
+    if (preferredDirection === 'en_to_km') {
       dualDirection = 'en_to_km';
-    } else if (preferredDirection === 'km_to_en' && (hasKmArray || !hasEnArray)) {
+    } else if (preferredDirection === 'km_to_en') {
       dualDirection = 'km_to_en';
     } else if (hasEnArray && !hasKmArray) {
       dualDirection = 'en_to_km';
     } else if (hasKmArray && !hasEnArray) {
       dualDirection = 'km_to_en';
     } else if (hasEnArray && hasKmArray) {
-      dualDirection = preferredDirection === 'en_to_km' ? 'en_to_km' : preferredDirection === 'km_to_en' ? 'km_to_en' : 'both_filled';
+      dualDirection = 'both_filled';
     }
   }
 
@@ -109,34 +109,56 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
 
     if (isLoading) return;
 
-    const activeDir = forcedDir || (dualDirection !== 'both_filled' && dualDirection !== 'both_empty' ? dualDirection : preferredDirection);
+    const activeDir = forcedDir || (dualDirection !== 'both_filled' && dualDirection !== 'both_empty' ? dualDirection : preferredDirection !== 'auto' ? preferredDirection : (hasKm ? 'km_to_en' : 'en_to_km'));
 
     // CASE 1: Smart Dual-Field Mode
     if (isDualFieldMode) {
-      // Direct: EN to KM
-      if ((activeDir === 'en_to_km' || (hasEn && !hasKm)) && onTranslateToKm) {
-        if (!hasEn) return;
+      // Direct: KM to EN (Khmer -> English)
+      if (activeDir === 'km_to_en' && onTranslateToEn) {
+        const textToTranslate = (kmText && kmText.trim()) || (enText && enText.trim()) || '';
+        if (!textToTranslate) return;
         setIsLoading(true);
         try {
-          const res = await translateTextField(enText!, 'km', 'en', fieldHint);
+          const res = await translateTextField(textToTranslate, 'en', 'km', fieldHint);
           if (res.success && res.translatedText) {
-            onTranslateToKm(res.translatedText);
+            onTranslateToEn(res.translatedText);
             onTranslatedText?.(res.translatedText);
             setIsDone(true);
-            setStatusMessage('Translated to ខ្មែរ!');
+            setStatusMessage('Translated to EN (🇺🇸)!');
             setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
           }
         } catch (err) {
-          console.error('Smart dual translate failed:', err);
+          console.error('Smart dual translate to EN failed:', err);
         } finally {
           setIsLoading(false);
         }
         return;
       }
 
-      // Direct: KM to EN
-      if ((activeDir === 'km_to_en' || (hasKm && !hasEn)) && onTranslateToEn) {
-        if (!hasKm) return;
+      // Direct: EN to KM (English -> Khmer)
+      if (activeDir === 'en_to_km' && onTranslateToKm) {
+        const textToTranslate = (enText && enText.trim()) || (kmText && kmText.trim()) || '';
+        if (!textToTranslate) return;
+        setIsLoading(true);
+        try {
+          const res = await translateTextField(textToTranslate, 'km', 'en', fieldHint);
+          if (res.success && res.translatedText) {
+            onTranslateToKm(res.translatedText);
+            onTranslatedText?.(res.translatedText);
+            setIsDone(true);
+            setStatusMessage('Translated to ខ្មែរ (🇰🇭)!');
+            setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
+          }
+        } catch (err) {
+          console.error('Smart dual translate to KM failed:', err);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Fallback: If both filled and no forced dir, check text script
+      if (hasKm && onTranslateToEn) {
         setIsLoading(true);
         try {
           const res = await translateTextField(kmText!, 'en', 'km', fieldHint);
@@ -144,39 +166,8 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
             onTranslateToEn(res.translatedText);
             onTranslatedText?.(res.translatedText);
             setIsDone(true);
-            setStatusMessage('Translated to EN!');
+            setStatusMessage('KM ➔ EN Synced!');
             setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
-          }
-        } catch (err) {
-          console.error('Smart dual translate failed:', err);
-        } finally {
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      // Condition C: Both are filled -> Default to KM -> EN or EN -> KM
-      if (hasKm && hasEn) {
-        setIsLoading(true);
-        try {
-          if (onTranslateToEn && (!onTranslateToKm || activeDir === 'km_to_en')) {
-            const res = await translateTextField(kmText!, 'en', 'km', fieldHint);
-            if (res.success && res.translatedText) {
-              onTranslateToEn(res.translatedText);
-              onTranslatedText?.(res.translatedText);
-              setIsDone(true);
-              setStatusMessage('KM ➔ EN Synced!');
-              setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
-            }
-          } else if (onTranslateToKm) {
-            const res = await translateTextField(enText!, 'km', 'en', fieldHint);
-            if (res.success && res.translatedText) {
-              onTranslateToKm(res.translatedText);
-              onTranslatedText?.(res.translatedText);
-              setIsDone(true);
-              setStatusMessage('EN ➔ KM Synced!');
-              setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
-            }
           }
         } catch (err) {
           console.error('Re-sync failed:', err);
@@ -189,31 +180,12 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
 
     // CASE 2: Smart Dual-Array Mode (e.g. Highlights, Inclusions)
     if (isDualArrayMode) {
-      if ((activeDir === 'en_to_km' || (hasEnArray && !hasKmArray)) && onTranslateArrayToKm) {
-        if (!hasEnArray) return;
+      if (activeDir === 'km_to_en' && onTranslateArrayToEn) {
+        const itemsToTranslate = (hasKmArray && kmArray) || (hasEnArray && enArray) || [];
+        if (!itemsToTranslate.length) return;
         setIsLoading(true);
         try {
-          const res = await translateArrayField(enArray!, 'km', 'en', fieldHint);
-          if (res.success && res.translatedItems) {
-            onTranslateArrayToKm(res.translatedItems);
-            onTranslatedArray?.(res.translatedItems);
-            setIsDone(true);
-            setStatusMessage('List translated to ខ្មែរ!');
-            setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
-          }
-        } catch (err) {
-          console.error('Dual array translation failed:', err);
-        } finally {
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      if ((activeDir === 'km_to_en' || (hasKmArray && !hasEnArray)) && onTranslateArrayToEn) {
-        if (!hasKmArray) return;
-        setIsLoading(true);
-        try {
-          const res = await translateArrayField(kmArray!, 'en', 'km', fieldHint);
+          const res = await translateArrayField(itemsToTranslate, 'en', 'km', fieldHint);
           if (res.success && res.translatedItems) {
             onTranslateArrayToEn(res.translatedItems);
             onTranslatedArray?.(res.translatedItems);
@@ -229,28 +201,21 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         return;
       }
 
-      if (hasKmArray && hasEnArray) {
+      if (activeDir === 'en_to_km' && onTranslateArrayToKm) {
+        const itemsToTranslate = (hasEnArray && enArray) || (hasKmArray && kmArray) || [];
+        if (!itemsToTranslate.length) return;
         setIsLoading(true);
         try {
-          if (activeDir === 'en_to_km' && onTranslateArrayToKm) {
-            const res = await translateArrayField(enArray!, 'km', 'en', fieldHint);
-            if (res.success && res.translatedItems) {
-              onTranslateArrayToKm(res.translatedItems);
-              setIsDone(true);
-              setStatusMessage('Synced to ខ្មែរ!');
-              setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
-            }
-          } else if (onTranslateArrayToEn) {
-            const res = await translateArrayField(kmArray!, 'en', 'km', fieldHint);
-            if (res.success && res.translatedItems) {
-              onTranslateArrayToEn(res.translatedItems);
-              setIsDone(true);
-              setStatusMessage('Synced to EN!');
-              setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
-            }
+          const res = await translateArrayField(itemsToTranslate, 'km', 'en', fieldHint);
+          if (res.success && res.translatedItems) {
+            onTranslateArrayToKm(res.translatedItems);
+            onTranslatedArray?.(res.translatedItems);
+            setIsDone(true);
+            setStatusMessage('List translated to ខ្មែរ!');
+            setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
           }
         } catch (err) {
-          console.error('Dual array re-sync failed:', err);
+          console.error('Dual array translation failed:', err);
         } finally {
           setIsLoading(false);
         }
@@ -283,7 +248,6 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
       if (!sourceText.trim()) return;
       setIsLoading(true);
       try {
-        // Smart auto-detect direction if target or source was auto
         const detected = detectTextLanguage(sourceText);
         let effTarget = targetLang;
         let effSource = sourceLang;
@@ -310,15 +274,41 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
     }
   };
 
-  // If dual array mode has both filled and both callbacks exist, we can show dual quick-sync buttons
-  if (isDualArrayMode && hasKmArray && hasEnArray && onTranslateArrayToKm && onTranslateArrayToEn && !label) {
+  // If dual field mode has both filled and no custom label, show dual directional quick-sync buttons
+  if (isDualFieldMode && hasKm && hasEn && onTranslateToKm && onTranslateToEn && preferredDirection === 'auto' && !label) {
     return (
       <div className={`inline-flex items-center gap-1 ${className}`}>
         <button
           type="button"
           onClick={(e) => handleTranslate(e, 'km_to_en')}
           disabled={isLoading}
-          title="Translate all Khmer items to English"
+          title="Translate Khmer field into English (🇰🇭 ➔ 🇺🇸)"
+          className="inline-flex items-center gap-1 font-bold rounded-lg px-2 py-0.5 text-[10px] bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
+        >
+          {isLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span>🇰🇭➔🇺🇸 To EN</span>}
+        </button>
+        <button
+          type="button"
+          onClick={(e) => handleTranslate(e, 'en_to_km')}
+          disabled={isLoading}
+          title="Translate English field into Khmer (🇺🇸 ➔ 🇰🇭)"
+          className="inline-flex items-center gap-1 font-bold rounded-lg px-2 py-0.5 text-[10px] bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
+        >
+          {isLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span>🇺🇸➔🇰🇭 To KM</span>}
+        </button>
+      </div>
+    );
+  }
+
+  // If dual array mode has both filled and both callbacks exist, show dual quick-sync buttons
+  if (isDualArrayMode && hasKmArray && hasEnArray && onTranslateArrayToKm && onTranslateArrayToEn && preferredDirection === 'auto' && !label) {
+    return (
+      <div className={`inline-flex items-center gap-1 ${className}`}>
+        <button
+          type="button"
+          onClick={(e) => handleTranslate(e, 'km_to_en')}
+          disabled={isLoading}
+          title="Translate all Khmer items to English (🇰🇭 ➔ 🇺🇸)"
           className="inline-flex items-center gap-1 font-bold rounded-lg px-2 py-0.5 text-[10px] bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
         >
           {isLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span>🇰🇭➔🇺🇸 All to EN</span>}
@@ -327,7 +317,7 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
           type="button"
           onClick={(e) => handleTranslate(e, 'en_to_km')}
           disabled={isLoading}
-          title="Translate all English items to Khmer"
+          title="Translate all English items to Khmer (🇺🇸 ➔ 🇰🇭)"
           className="inline-flex items-center gap-1 font-bold rounded-lg px-2 py-0.5 text-[10px] bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer disabled:opacity-40"
         >
           {isLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span>🇺🇸➔🇰🇭 All to KM</span>}
@@ -342,24 +332,24 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
 
   if (!label) {
     if (isDualFieldMode) {
-      if (dualDirection === 'en_to_km') {
-        dynamicLabel = '⚡ Auto-Translate EN ➔ KM (ខ្មែរ)';
-        dynamicTooltip = 'English detected! Click to auto-translate into Khmer field';
-      } else if (dualDirection === 'km_to_en') {
+      if (preferredDirection === 'km_to_en' || (hasKm && !hasEn)) {
         dynamicLabel = '⚡ Auto-Translate KM ➔ EN (English)';
         dynamicTooltip = 'Khmer detected! Click to auto-translate into English field';
+      } else if (preferredDirection === 'en_to_km' || (hasEn && !hasKm)) {
+        dynamicLabel = '⚡ Auto-Translate EN ➔ KM (ខ្មែរ)';
+        dynamicTooltip = 'English detected! Click to auto-translate into Khmer field';
       } else if (dualDirection === 'both_filled') {
-        dynamicLabel = preferredDirection === 'en_to_km' ? '⚡ Sync EN ➔ KM' : preferredDirection === 'km_to_en' ? '⚡ Sync KM ➔ EN' : '✨ Smart Sync (EN ⇋ KM)';
+        dynamicLabel = preferredDirection === 'en_to_km' ? '⚡ Sync EN ➔ KM' : '⚡ Sync KM ➔ EN';
         dynamicTooltip = 'Click to re-synchronize translation between fields';
       } else {
         dynamicLabel = '✨ Smart AI Translate';
         dynamicTooltip = 'Type in either English or Khmer to auto-translate';
       }
     } else if (isDualArrayMode) {
-      if (dualDirection === 'en_to_km') {
-        dynamicLabel = '⚡ Auto-Translate All EN ➔ KM';
-      } else if (dualDirection === 'km_to_en') {
+      if (preferredDirection === 'km_to_en' || (hasKmArray && !hasEnArray)) {
         dynamicLabel = '⚡ Auto-Translate All KM ➔ EN';
+      } else if (preferredDirection === 'en_to_km' || (hasEnArray && !hasKmArray)) {
+        dynamicLabel = '⚡ Auto-Translate All EN ➔ KM';
       } else {
         dynamicLabel = '✨ Smart Sync All Items';
       }
@@ -401,9 +391,9 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
       } ${
         isDone
           ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-          : dualDirection === 'en_to_km' || dualDirection === 'km_to_en'
-          ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/70 dark:to-purple-950/70 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs hover:shadow-xs active:scale-95'
-          : 'bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs hover:shadow-xs active:scale-95'
+          : dualDirection === 'en_to_km' || preferredDirection === 'en_to_km'
+          ? 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/70 dark:to-indigo-950/70 hover:from-purple-100 hover:to-indigo-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs hover:shadow-xs active:scale-95'
+          : 'bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-950/70 dark:to-sky-950/70 hover:from-indigo-100 hover:to-sky-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs hover:shadow-xs active:scale-95'
       } ${className}`}
     >
       {isLoading ? (
@@ -418,9 +408,9 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         </>
       ) : (
         <>
-          {dualDirection === 'en_to_km' ? (
+          {preferredDirection === 'en_to_km' || (hasEn && !hasKm && preferredDirection === 'auto') ? (
             <span className="text-[11px]">🇺🇸➔🇰🇭</span>
-          ) : dualDirection === 'km_to_en' ? (
+          ) : preferredDirection === 'km_to_en' || (hasKm && !hasEn && preferredDirection === 'auto') ? (
             <span className="text-[11px]">🇰🇭➔🇺🇸</span>
           ) : isDualFieldMode ? (
             <ArrowRightLeft className="w-3 h-3 text-indigo-500" />

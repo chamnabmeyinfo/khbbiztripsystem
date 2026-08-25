@@ -1070,13 +1070,26 @@ export async function parseTourPackageFromText(
 }
 
 /**
- * Smart Language Detector: Checks if text contains Khmer script or English/Latin characters
+ * Smart Language Detector: Checks if text contains Khmer script, Chinese, Vietnamese, or Latin/English characters
  */
-export function detectTextLanguage(text: string): 'km' | 'en' {
+export function detectTextLanguage(text: string): 'km' | 'en' | 'zh' | 'vi' | 'ar' | 'th' | 'ja' | 'ko' | 'he' {
   if (!text || !text.trim()) return 'en';
   // Khmer Unicode ranges (\u1780-\u17FF for main block, \u19E0-\u19FF for Khmer symbols)
-  const hasKhmer = /[\u1780-\u17FF\u19E0-\u19FF]/.test(text);
-  if (hasKhmer) return 'km';
+  if (/[\u1780-\u17FF\u19E0-\u19FF]/.test(text)) return 'km';
+  // Chinese characters
+  if (/[\u4e00-\u9fa5\u3400-\u4dbf]/.test(text)) return 'zh';
+  // Japanese Kana
+  if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'ja';
+  // Korean Hangul
+  if (/[\uAC00-\uD7AF\u1100-\u11FF]/.test(text)) return 'ko';
+  // Thai
+  if (/[\u0E00-\u0E7F]/.test(text)) return 'th';
+  // Arabic
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  // Hebrew
+  if (/[\u0590-\u05FF]/.test(text)) return 'he';
+  // Vietnamese accented characters
+  if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/.test(text)) return 'vi';
   return 'en';
 }
 
@@ -1494,6 +1507,22 @@ export async function translateEntirePackage(
 
   // Iterative translation fallback
   const target = targetLang;
+  const isTargetEn = target === 'en';
+  const isTargetKm = target === 'km';
+
+  // Source text extraction based on source language
+  const srcTitle = isTargetEn ? (pkgData.titleKm || pkgData.title || '') : (pkgData.titleEn || pkgData.title || '');
+  const srcDest = isTargetEn ? (pkgData.destinationKm || pkgData.destination || '') : (pkgData.destinationEn || pkgData.destination || '');
+  const srcCountry = isTargetEn ? (pkgData.countryKm || pkgData.country || '') : (pkgData.countryEn || pkgData.country || '');
+  const srcCategory = isTargetEn ? (pkgData.categoryKm || pkgData.category || '') : (pkgData.categoryEn || pkgData.category || '');
+  const srcDesc = isTargetEn ? (pkgData.descriptionKm || pkgData.description || '') : (pkgData.descriptionEn || pkgData.description || '');
+  const srcHighlights = isTargetEn ? (pkgData.highlightsKm?.length ? pkgData.highlightsKm : pkgData.highlights || []) : (pkgData.highlightsEn?.length ? pkgData.highlightsEn : pkgData.highlights || []);
+  const srcWho = isTargetEn ? (pkgData.whoShouldJoinKm?.length ? pkgData.whoShouldJoinKm : pkgData.whoShouldJoin || []) : (pkgData.whoShouldJoinEn?.length ? pkgData.whoShouldJoinEn : pkgData.whoShouldJoin || []);
+  const srcWhy = isTargetEn ? (pkgData.whyShouldJoinKm?.length ? pkgData.whyShouldJoinKm : pkgData.whyShouldJoin || []) : (pkgData.whyShouldJoinEn?.length ? pkgData.whyShouldJoinEn : pkgData.whyShouldJoin || []);
+  const srcInclusions = isTargetEn ? (pkgData.inclusionsKm?.length ? pkgData.inclusionsKm : pkgData.inclusions || []) : (pkgData.inclusionsEn?.length ? pkgData.inclusionsEn : pkgData.inclusions || []);
+  const srcExclusions = isTargetEn ? (pkgData.exclusionsKm?.length ? pkgData.exclusionsKm : pkgData.exclusions || []) : (pkgData.exclusionsEn?.length ? pkgData.exclusionsEn : pkgData.exclusions || []);
+  const srcTerms = isTargetEn ? (pkgData.termsAndConditionsKm?.length ? pkgData.termsAndConditionsKm : pkgData.termsAndConditions || []) : (pkgData.termsAndConditionsEn?.length ? pkgData.termsAndConditionsEn : pkgData.termsAndConditions || []);
+
   const [
     transTitle,
     transDest,
@@ -1507,24 +1536,27 @@ export async function translateEntirePackage(
     transExclusions,
     transTerms
   ] = await Promise.all([
-    translateTextField(pkgData.title || '', target, sourceLang, 'Tour Package Title'),
-    translateTextField(pkgData.destination || '', target, sourceLang, 'Tour Destination'),
-    translateTextField(pkgData.country || '', target, sourceLang, 'Country Name'),
-    translateTextField(pkgData.category || '', target, sourceLang, 'Category'),
-    translateTextField(pkgData.description || '', target, sourceLang, 'Detailed Package Description'),
-    translateArrayField(pkgData.highlights || [], target, sourceLang, 'Package Highlights'),
-    translateArrayField(pkgData.whoShouldJoin || [], target, sourceLang, 'Target Audience'),
-    translateArrayField(pkgData.whyShouldJoin || [], target, sourceLang, 'Key Value Proposition'),
-    translateArrayField(pkgData.inclusions || [], target, sourceLang, 'Inclusions List'),
-    translateArrayField(pkgData.exclusions || [], target, sourceLang, 'Exclusions List'),
-    translateArrayField(pkgData.termsAndConditions || [], target, sourceLang, 'Terms & Conditions')
+    translateTextField(srcTitle, target, sourceLang, 'Tour Package Title'),
+    translateTextField(srcDest, target, sourceLang, 'Tour Destination'),
+    translateTextField(srcCountry, target, sourceLang, 'Country Name'),
+    translateTextField(srcCategory, target, sourceLang, 'Category'),
+    translateTextField(srcDesc, target, sourceLang, 'Detailed Package Description'),
+    translateArrayField(srcHighlights, target, sourceLang, 'Package Highlights'),
+    translateArrayField(srcWho, target, sourceLang, 'Target Audience'),
+    translateArrayField(srcWhy, target, sourceLang, 'Key Value Proposition'),
+    translateArrayField(srcInclusions, target, sourceLang, 'Inclusions List'),
+    translateArrayField(srcExclusions, target, sourceLang, 'Exclusions List'),
+    translateArrayField(srcTerms, target, sourceLang, 'Terms & Conditions')
   ]);
 
   // Translate Itinerary Days
   const translatedItinerary = await Promise.all(
     (pkgData.itinerary || []).map(async (day) => {
-      const dayTitle = await translateTextField(day.title || '', target, sourceLang, 'Itinerary Day Title');
-      const dayDesc = await translateTextField(day.description || '', target, sourceLang, 'Itinerary Day Description');
+      const srcDayTitle = isTargetEn ? (day.titleKm || day.title || '') : (day.titleEn || day.title || '');
+      const srcDayDesc = isTargetEn ? (day.descriptionKm || day.description || '') : (day.descriptionEn || day.description || '');
+
+      const dayTitle = await translateTextField(srcDayTitle, target, sourceLang, 'Itinerary Day Title');
+      const dayDesc = await translateTextField(srcDayDesc, target, sourceLang, 'Itinerary Day Description');
       const hotel = day.hotelName ? await translateTextField(day.hotelName, target, sourceLang, 'Hotel Name') : { translatedText: '' };
       const assembly = day.assemblyPoint ? await translateTextField(day.assemblyPoint, target, sourceLang, 'Assembly Point') : { translatedText: '' };
 
@@ -1544,8 +1576,12 @@ export async function translateEntirePackage(
 
       return {
         ...day,
-        title: dayTitle.translatedText,
-        description: dayDesc.translatedText,
+        title: day.title || dayTitle.translatedText,
+        titleKm: isTargetKm ? dayTitle.translatedText : (day.titleKm || day.title),
+        titleEn: isTargetEn ? dayTitle.translatedText : (day.titleEn || ''),
+        description: day.description || dayDesc.translatedText,
+        descriptionKm: isTargetKm ? dayDesc.translatedText : (day.descriptionKm || day.description),
+        descriptionEn: isTargetEn ? dayDesc.translatedText : (day.descriptionEn || ''),
         hotelName: hotel.translatedText || day.hotelName,
         assemblyPoint: assembly.translatedText || day.assemblyPoint,
         guideAgenda: agenda
@@ -1556,34 +1592,63 @@ export async function translateEntirePackage(
   // Translate Guide Info
   let translatedGuide = pkgData.tourGuide;
   if (pkgData.tourGuide) {
-    const gTitle = await translateTextField(pkgData.tourGuide.title || '', target, sourceLang, 'Guide Title');
-    const gBio = await translateTextField(pkgData.tourGuide.bio || '', target, sourceLang, 'Guide Bio');
-    const gPoint = await translateTextField(pkgData.tourGuide.briefingMeetingPoint || '', target, sourceLang, 'Meeting Point');
-    const gTime = await translateTextField(pkgData.tourGuide.briefingTime || '', target, sourceLang, 'Briefing Time');
+    const srcGName = isTargetEn ? (pkgData.tourGuide.nameKm || pkgData.tourGuide.name || '') : (pkgData.tourGuide.nameEn || pkgData.tourGuide.name || '');
+    const srcGTitle = isTargetEn ? (pkgData.tourGuide.titleKm || pkgData.tourGuide.title || '') : (pkgData.tourGuide.titleEn || pkgData.tourGuide.title || '');
+    const srcGBio = isTargetEn ? (pkgData.tourGuide.bioKm || pkgData.tourGuide.bio || '') : (pkgData.tourGuide.bioEn || pkgData.tourGuide.bio || '');
+    const srcGPoint = isTargetEn ? (pkgData.tourGuide.briefingMeetingPointKm || pkgData.tourGuide.briefingMeetingPoint || '') : (pkgData.tourGuide.briefingMeetingPointEn || pkgData.tourGuide.briefingMeetingPoint || '');
+    const srcGTime = isTargetEn ? (pkgData.tourGuide.briefingTimeKm || pkgData.tourGuide.briefingTime || '') : (pkgData.tourGuide.briefingTimeEn || pkgData.tourGuide.briefingTime || '');
+
+    const [gName, gTitle, gBio, gPoint, gTime] = await Promise.all([
+      translateTextField(srcGName, target, sourceLang, 'Guide Name'),
+      translateTextField(srcGTitle, target, sourceLang, 'Guide Title'),
+      translateTextField(srcGBio, target, sourceLang, 'Guide Bio'),
+      translateTextField(srcGPoint, target, sourceLang, 'Meeting Point'),
+      translateTextField(srcGTime, target, sourceLang, 'Briefing Time')
+    ]);
 
     translatedGuide = {
       ...pkgData.tourGuide,
+      name: pkgData.tourGuide.name,
+      nameKm: isTargetKm ? gName.translatedText : (pkgData.tourGuide.nameKm || pkgData.tourGuide.name),
+      nameEn: isTargetEn ? gName.translatedText : (pkgData.tourGuide.nameEn || ''),
       title: gTitle.translatedText || pkgData.tourGuide.title,
+      titleKm: isTargetKm ? gTitle.translatedText : (pkgData.tourGuide.titleKm || pkgData.tourGuide.title),
+      titleEn: isTargetEn ? gTitle.translatedText : (pkgData.tourGuide.titleEn || ''),
       bio: gBio.translatedText || pkgData.tourGuide.bio,
+      bioKm: isTargetKm ? gBio.translatedText : (pkgData.tourGuide.bioKm || pkgData.tourGuide.bio),
+      bioEn: isTargetEn ? gBio.translatedText : (pkgData.tourGuide.bioEn || ''),
       briefingMeetingPoint: gPoint.translatedText || pkgData.tourGuide.briefingMeetingPoint,
-      briefingTime: gTime.translatedText || pkgData.tourGuide.briefingTime
+      briefingMeetingPointKm: isTargetKm ? gPoint.translatedText : (pkgData.tourGuide.briefingMeetingPointKm || pkgData.tourGuide.briefingMeetingPoint),
+      briefingMeetingPointEn: isTargetEn ? gPoint.translatedText : (pkgData.tourGuide.briefingMeetingPointEn || ''),
+      briefingTime: gTime.translatedText || pkgData.tourGuide.briefingTime,
+      briefingTimeKm: isTargetKm ? gTime.translatedText : (pkgData.tourGuide.briefingTimeKm || pkgData.tourGuide.briefingTime),
+      briefingTimeEn: isTargetEn ? gTime.translatedText : (pkgData.tourGuide.briefingTimeEn || '')
     };
   }
 
   // Translate Optional Programs
   const translatedOptProgs = await Promise.all(
     (pkgData.optionalPrograms || []).map(async (prog) => {
-      const pTitle = await translateTextField(prog.title, target, sourceLang, 'Optional Tour Title');
-      const pDesc = await translateTextField(prog.description, target, sourceLang, 'Optional Tour Description');
-      const pAud = prog.recommendedAudience ? await translateTextField(prog.recommendedAudience, target, sourceLang, 'Audience') : { translatedText: prog.recommendedAudience || '' };
-      const pHl = await translateArrayField(prog.highlights || [], target, sourceLang, 'Optional Highlights');
-      const pMeals = await translateArrayField(prog.includedMeals || [], target, sourceLang, 'Meals');
-      const pMeeting = prog.meetingPoint ? await translateTextField(prog.meetingPoint, target, sourceLang, 'Meeting Point') : { translatedText: prog.meetingPoint || '' };
+      const srcPTitle = isTargetEn ? (prog.titleKm || prog.title || '') : (prog.titleEn || prog.title || '');
+      const srcPDesc = isTargetEn ? (prog.descriptionKm || prog.description || '') : (prog.descriptionEn || prog.description || '');
+
+      const [pTitle, pDesc, pAud, pHl, pMeals, pMeeting] = await Promise.all([
+        translateTextField(srcPTitle, target, sourceLang, 'Optional Tour Title'),
+        translateTextField(srcPDesc, target, sourceLang, 'Optional Tour Description'),
+        prog.recommendedAudience ? translateTextField(prog.recommendedAudience, target, sourceLang, 'Audience') : Promise.resolve({ translatedText: prog.recommendedAudience || '' }),
+        translateArrayField(prog.highlights || [], target, sourceLang, 'Optional Highlights'),
+        translateArrayField(prog.includedMeals || [], target, sourceLang, 'Meals'),
+        prog.meetingPoint ? translateTextField(prog.meetingPoint, target, sourceLang, 'Meeting Point') : Promise.resolve({ translatedText: prog.meetingPoint || '' })
+      ]);
 
       return {
         ...prog,
-        title: pTitle.translatedText || prog.title,
-        description: pDesc.translatedText || prog.description,
+        title: prog.title || pTitle.translatedText,
+        titleKm: isTargetKm ? pTitle.translatedText : (prog.titleKm || prog.title),
+        titleEn: isTargetEn ? pTitle.translatedText : (prog.titleEn || ''),
+        description: prog.description || pDesc.translatedText,
+        descriptionKm: isTargetKm ? pDesc.translatedText : (prog.descriptionKm || prog.description),
+        descriptionEn: isTargetEn ? pDesc.translatedText : (prog.descriptionEn || ''),
         recommendedAudience: pAud.translatedText || prog.recommendedAudience,
         highlights: pHl.translatedItems,
         includedMeals: pMeals.translatedItems,
@@ -1594,20 +1659,42 @@ export async function translateEntirePackage(
 
   return {
     success: true,
-    summary: `✨ Completed iterative translation of all package components into ${target}`,
+    summary: `✨ Completed translation of all package components into ${target}`,
     translatedPackage: {
       ...pkgData,
-      title: transTitle.translatedText,
-      destination: transDest.translatedText,
-      country: transCountry.translatedText,
-      category: transCategory.translatedText,
-      description: transDesc.translatedText,
-      highlights: transHighlights.translatedItems,
-      whoShouldJoin: transWho.translatedItems,
-      whyShouldJoin: transWhy.translatedItems,
-      inclusions: transInclusions.translatedItems,
-      exclusions: transExclusions.translatedItems,
-      termsAndConditions: transTerms.translatedItems,
+      title: pkgData.title || transTitle.translatedText,
+      titleKm: isTargetKm ? transTitle.translatedText : (pkgData.titleKm || pkgData.title),
+      titleEn: isTargetEn ? transTitle.translatedText : (pkgData.titleEn || ''),
+      destination: pkgData.destination || transDest.translatedText,
+      destinationKm: isTargetKm ? transDest.translatedText : (pkgData.destinationKm || pkgData.destination),
+      destinationEn: isTargetEn ? transDest.translatedText : (pkgData.destinationEn || ''),
+      country: pkgData.country || transCountry.translatedText,
+      countryKm: isTargetKm ? transCountry.translatedText : (pkgData.countryKm || pkgData.country),
+      countryEn: isTargetEn ? transCountry.translatedText : (pkgData.countryEn || ''),
+      category: pkgData.category || transCategory.translatedText,
+      categoryKm: isTargetKm ? transCategory.translatedText : (pkgData.categoryKm || pkgData.category),
+      categoryEn: isTargetEn ? transCategory.translatedText : (pkgData.categoryEn || ''),
+      description: pkgData.description || transDesc.translatedText,
+      descriptionKm: isTargetKm ? transDesc.translatedText : (pkgData.descriptionKm || pkgData.description),
+      descriptionEn: isTargetEn ? transDesc.translatedText : (pkgData.descriptionEn || ''),
+      highlights: isTargetKm ? transHighlights.translatedItems : (pkgData.highlightsKm || pkgData.highlights),
+      highlightsKm: isTargetKm ? transHighlights.translatedItems : (pkgData.highlightsKm || []),
+      highlightsEn: isTargetEn ? transHighlights.translatedItems : (pkgData.highlightsEn || []),
+      whoShouldJoin: isTargetKm ? transWho.translatedItems : (pkgData.whoShouldJoinKm || pkgData.whoShouldJoin),
+      whoShouldJoinKm: isTargetKm ? transWho.translatedItems : (pkgData.whoShouldJoinKm || []),
+      whoShouldJoinEn: isTargetEn ? transWho.translatedItems : (pkgData.whoShouldJoinEn || []),
+      whyShouldJoin: isTargetKm ? transWhy.translatedItems : (pkgData.whyShouldJoinKm || pkgData.whyShouldJoin),
+      whyShouldJoinKm: isTargetKm ? transWhy.translatedItems : (pkgData.whyShouldJoinKm || []),
+      whyShouldJoinEn: isTargetEn ? transWhy.translatedItems : (pkgData.whyShouldJoinEn || []),
+      inclusions: isTargetKm ? transInclusions.translatedItems : (pkgData.inclusionsKm || pkgData.inclusions),
+      inclusionsKm: isTargetKm ? transInclusions.translatedItems : (pkgData.inclusionsKm || []),
+      inclusionsEn: isTargetEn ? transInclusions.translatedItems : (pkgData.inclusionsEn || []),
+      exclusions: isTargetKm ? transExclusions.translatedItems : (pkgData.exclusionsKm || pkgData.exclusions),
+      exclusionsKm: isTargetKm ? transExclusions.translatedItems : (pkgData.exclusionsKm || []),
+      exclusionsEn: isTargetEn ? transExclusions.translatedItems : (pkgData.exclusionsEn || []),
+      termsAndConditions: isTargetKm ? transTerms.translatedItems : (pkgData.termsAndConditionsKm || pkgData.termsAndConditions),
+      termsAndConditionsKm: isTargetKm ? transTerms.translatedItems : (pkgData.termsAndConditionsKm || []),
+      termsAndConditionsEn: isTargetEn ? transTerms.translatedItems : (pkgData.termsAndConditionsEn || []),
       tourGuide: translatedGuide,
       itinerary: translatedItinerary,
       optionalPrograms: translatedOptProgs

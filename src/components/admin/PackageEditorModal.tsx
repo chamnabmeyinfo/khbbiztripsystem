@@ -353,42 +353,42 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (result.success && result.translatedPackage) {
         const trans = result.translatedPackage;
         if (toLang === 'en') {
-          if (trans.title) setTitleEn(trans.title);
-          if (trans.destination) setDestinationEn(trans.destination);
-          if (trans.country) setCountryEn(trans.country);
-          if (trans.category) setCategoryEn(trans.category);
-          if (trans.description) setDescriptionEn(trans.description);
-          if (trans.highlights) setHighlightsEn(trans.highlights);
-          if (trans.whoShouldJoin) setWhoShouldJoinEn(trans.whoShouldJoin);
-          if (trans.whyShouldJoin) setWhyShouldJoinEn(trans.whyShouldJoin);
-          if (trans.inclusions) setInclusionsEn(trans.inclusions);
-          if (trans.exclusions) setExclusionsEn(trans.exclusions);
-          if (trans.termsAndConditions) setTermsAndConditionsEn(trans.termsAndConditions);
-          if (trans.tourGuide?.name) setGuideNameEn(trans.tourGuide.name);
-          if (trans.tourGuide?.title) setGuideTitleEn(trans.tourGuide.title);
-          if (trans.tourGuide?.bio) setGuideBioEn(trans.tourGuide.bio);
-          if (trans.tourGuide?.briefingMeetingPoint) setBriefingMeetingPointEn(trans.tourGuide.briefingMeetingPoint);
-          if (trans.tourGuide?.briefingTime) setBriefingTimeEn(trans.tourGuide.briefingTime);
+          if (trans.titleEn || trans.title) setTitleEn(trans.titleEn || trans.title || '');
+          if (trans.destinationEn || trans.destination) setDestinationEn(trans.destinationEn || trans.destination || '');
+          if (trans.countryEn || trans.country) setCountryEn(trans.countryEn || trans.country || '');
+          if (trans.categoryEn || trans.category) setCategoryEn(trans.categoryEn || trans.category || '');
+          if (trans.descriptionEn || trans.description) setDescriptionEn(trans.descriptionEn || trans.description || '');
+          if (trans.highlightsEn?.length) setHighlightsEn(trans.highlightsEn);
+          if (trans.whoShouldJoinEn?.length) setWhoShouldJoinEn(trans.whoShouldJoinEn);
+          if (trans.whyShouldJoinEn?.length) setWhyShouldJoinEn(trans.whyShouldJoinEn);
+          if (trans.inclusionsEn?.length) setInclusionsEn(trans.inclusionsEn);
+          if (trans.exclusionsEn?.length) setExclusionsEn(trans.exclusionsEn);
+          if (trans.termsAndConditionsEn?.length) setTermsAndConditionsEn(trans.termsAndConditionsEn);
+          if (trans.tourGuide?.nameEn || trans.tourGuide?.name) setGuideNameEn(trans.tourGuide.nameEn || trans.tourGuide.name || '');
+          if (trans.tourGuide?.titleEn || trans.tourGuide?.title) setGuideTitleEn(trans.tourGuide.titleEn || trans.tourGuide.title || '');
+          if (trans.tourGuide?.bioEn || trans.tourGuide?.bio) setGuideBioEn(trans.tourGuide.bioEn || trans.tourGuide.bio || '');
+          if (trans.tourGuide?.briefingMeetingPointEn || trans.tourGuide?.briefingMeetingPoint) setBriefingMeetingPointEn(trans.tourGuide.briefingMeetingPointEn || trans.tourGuide.briefingMeetingPoint || '');
+          if (trans.tourGuide?.briefingTimeEn || trans.tourGuide?.briefingTime) setBriefingTimeEn(trans.tourGuide.briefingTimeEn || trans.tourGuide.briefingTime || '');
           if (trans.itinerary) setItinerary(trans.itinerary);
           if (trans.optionalPrograms) setOptionalPrograms(trans.optionalPrograms);
           setTranslationSuccessMessage('✨ AI បានបកប្រែពត៌មានដំណើរកម្សាន្តទាំងអស់ទៅជាភាសាអង់គ្លេសដោយជោគជ័យ!');
         } else {
-          if (trans.title) { setTitle(trans.title); setTitleKm(trans.title); }
-          if (trans.destination) { setDestination(trans.destination); setDestinationKm(trans.destination); }
-          if (trans.country) { setCountry(trans.country); setCountryKm(trans.country); }
-          if (trans.category) { setCategory(trans.category); setCategoryKm(trans.category); }
-          if (trans.description) { setDescription(trans.description); setDescriptionKm(trans.description); }
-          if (trans.highlights) setHighlightsKm(trans.highlights);
-          if (trans.whoShouldJoin) setWhoShouldJoinKm(trans.whoShouldJoin);
-          if (trans.whyShouldJoin) setWhyShouldJoinKm(trans.whyShouldJoin);
-          if (trans.inclusions) setInclusionsKm(trans.inclusions);
-          if (trans.exclusions) setExclusionsKm(trans.exclusions);
-          if (trans.termsAndConditions) setTermsAndConditionsKm(trans.termsAndConditions);
-          if (trans.tourGuide?.name) { setGuideName(trans.tourGuide.name); setGuideNameKm(trans.tourGuide.name); }
-          if (trans.tourGuide?.title) { setGuideTitle(trans.tourGuide.title); setGuideTitleKm(trans.tourGuide.title); }
-          if (trans.tourGuide?.bio) { setGuideBio(trans.tourGuide.bio); setGuideBioKm(trans.tourGuide.bio); }
-          if (trans.tourGuide?.briefingMeetingPoint) { setBriefingMeetingPoint(trans.tourGuide.briefingMeetingPoint); setBriefingMeetingPointKm(trans.tourGuide.briefingMeetingPoint); }
-          if (trans.tourGuide?.briefingTime) { setBriefingTime(trans.tourGuide.briefingTime); setBriefingTimeKm(trans.tourGuide.briefingTime); }
+          if (trans.titleKm || trans.title) { setTitle(trans.titleKm || trans.title || ''); setTitleKm(trans.titleKm || trans.title || ''); }
+          if (trans.destinationKm || trans.destination) { setDestination(trans.destinationKm || trans.destination || ''); setDestinationKm(trans.destinationKm || trans.destination || ''); }
+          if (trans.countryKm || trans.country) { setCountry(trans.countryKm || trans.country || ''); setCountryKm(trans.countryKm || trans.country || ''); }
+          if (trans.categoryKm || trans.category) { setCategory(trans.categoryKm || trans.category || ''); setCategoryKm(trans.categoryKm || trans.category || ''); }
+          if (trans.descriptionKm || trans.description) { setDescription(trans.descriptionKm || trans.description || ''); setDescriptionKm(trans.descriptionKm || trans.description || ''); }
+          if (trans.highlightsKm?.length) setHighlightsKm(trans.highlightsKm);
+          if (trans.whoShouldJoinKm?.length) setWhoShouldJoinKm(trans.whoShouldJoinKm);
+          if (trans.whyShouldJoinKm?.length) setWhyShouldJoinKm(trans.whyShouldJoinKm);
+          if (trans.inclusionsKm?.length) setInclusionsKm(trans.inclusionsKm);
+          if (trans.exclusionsKm?.length) setExclusionsKm(trans.exclusionsKm);
+          if (trans.termsAndConditionsKm?.length) setTermsAndConditionsKm(trans.termsAndConditionsKm);
+          if (trans.tourGuide?.nameKm || trans.tourGuide?.name) { setGuideName(trans.tourGuide.nameKm || trans.tourGuide.name || ''); setGuideNameKm(trans.tourGuide.nameKm || trans.tourGuide.name || ''); }
+          if (trans.tourGuide?.titleKm || trans.tourGuide?.title) { setGuideTitle(trans.tourGuide.titleKm || trans.tourGuide.title || ''); setGuideTitleKm(trans.tourGuide.titleKm || trans.tourGuide.title || ''); }
+          if (trans.tourGuide?.bioKm || trans.tourGuide?.bio) { setGuideBio(trans.tourGuide.bioKm || trans.tourGuide.bio || ''); setGuideBioKm(trans.tourGuide.bioKm || trans.tourGuide.bio || ''); }
+          if (trans.tourGuide?.briefingMeetingPointKm || trans.tourGuide?.briefingMeetingPoint) { setBriefingMeetingPoint(trans.tourGuide.briefingMeetingPointKm || trans.tourGuide.briefingMeetingPoint || ''); setBriefingMeetingPointKm(trans.tourGuide.briefingMeetingPointKm || trans.tourGuide.briefingMeetingPoint || ''); }
+          if (trans.tourGuide?.briefingTimeKm || trans.tourGuide?.briefingTime) { setBriefingTime(trans.tourGuide.briefingTimeKm || trans.tourGuide.briefingTime || ''); setBriefingTimeKm(trans.tourGuide.briefingTimeKm || trans.tourGuide.briefingTime || ''); }
           if (trans.itinerary) setItinerary(trans.itinerary);
           if (trans.optionalPrograms) setOptionalPrograms(trans.optionalPrograms);
           setTranslationSuccessMessage('✨ AI បានបកប្រែពត៌មានដំណើរកម្សាន្តទាំងអស់ទៅជាភាសាខ្មែរដោយជោគជ័យ!');
@@ -1313,6 +1313,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={titleKm || title}
                           enText={titleEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Tour Package Title"
                           onTranslateToKm={(trans) => {
                             setTitleKm(trans);
@@ -1339,6 +1340,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={titleKm || title}
                           enText={titleEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Tour Package Title"
                           onTranslateToKm={(trans) => {
                             setTitleKm(trans);
@@ -1369,6 +1371,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={titleKm || title}
                           enText={titleEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Tour Package Title"
                           onTranslateToKm={(trans) => {
                             setTitleKm(trans);
@@ -1398,6 +1401,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={titleKm || title}
                           enText={titleEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Tour Package Title"
                           onTranslateToKm={(trans) => {
                             setTitleKm(trans);
@@ -1428,6 +1432,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={destinationKm || destination}
                           enText={destinationEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Destination City or Province"
                           onTranslateToKm={(trans) => {
                             setDestinationKm(trans);
@@ -1454,6 +1459,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={destinationKm || destination}
                           enText={destinationEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Destination City or Province"
                           onTranslateToKm={(trans) => {
                             setDestinationKm(trans);
@@ -1484,6 +1490,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={destinationKm || destination}
                           enText={destinationEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Destination City or Province"
                           onTranslateToKm={(trans) => {
                             setDestinationKm(trans);
@@ -1513,6 +1520,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={destinationKm || destination}
                           enText={destinationEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Destination City or Province"
                           onTranslateToKm={(trans) => {
                             setDestinationKm(trans);
@@ -1543,6 +1551,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={countryKm || country}
                           enText={countryEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Country Name"
                           onTranslateToKm={(trans) => {
                             setCountryKm(trans);
@@ -1569,6 +1578,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={countryKm || country}
                           enText={countryEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Country Name"
                           onTranslateToKm={(trans) => {
                             setCountryKm(trans);
@@ -1599,6 +1609,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={countryKm || country}
                           enText={countryEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Country Name"
                           onTranslateToKm={(trans) => {
                             setCountryKm(trans);
@@ -1628,6 +1639,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={countryKm || country}
                           enText={countryEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Country Name"
                           onTranslateToKm={(trans) => {
                             setCountryKm(trans);
@@ -1996,6 +2008,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
                           enText={descriptionEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Tour Package Full Description and Overview"
                           onTranslateToKm={(trans) => {
                             setDescriptionKm(trans);
@@ -2022,6 +2035,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
                           enText={descriptionEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Tour Package Full Description and Overview"
                           onTranslateToKm={(trans) => {
                             setDescriptionKm(trans);
@@ -2052,6 +2066,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
                           enText={descriptionEn}
+                          preferredDirection="km_to_en"
                           fieldHint="Tour Package Full Description and Overview"
                           onTranslateToKm={(trans) => {
                             setDescriptionKm(trans);
@@ -2081,6 +2096,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
                           enText={descriptionEn}
+                          preferredDirection="en_to_km"
                           fieldHint="Tour Package Full Description and Overview"
                           onTranslateToKm={(trans) => {
                             setDescriptionKm(trans);
@@ -2342,6 +2358,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={guideNameKm || guideName}
                     enText={guideNameEn}
+                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                     fieldHint="Tour Director or Guide Full Name"
                     onTranslateToKm={(trans) => {
                       setGuideName(trans);
@@ -2426,6 +2443,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={guideTitleKm || guideTitle}
                     enText={guideTitleEn}
+                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                     fieldHint="Tour Director or Guide Professional Title"
                     onTranslateToKm={(trans) => {
                       setGuideTitle(trans);
@@ -2589,6 +2607,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={briefingMeetingPointKm || briefingMeetingPoint}
                     enText={briefingMeetingPointEn}
+                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                     fieldHint="Tour Departure Gathering Location or Meeting Point"
                     onTranslateToKm={(trans) => {
                       setBriefingMeetingPoint(trans);
@@ -2687,6 +2706,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={guideBioKm || guideBio}
                     enText={guideBioEn}
+                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                     fieldHint="Tour Director Professional Bio and Qualifications"
                     onTranslateToKm={(trans) => {
                       setGuideBio(trans);
@@ -2891,6 +2911,7 @@ Highlights:
                               <FieldAiTranslator
                                 kmText={day.titleKm || day.title}
                                 enText={day.titleEn}
+                                preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                                 fieldHint={`Tour Itinerary Day ${day.day} Headline Title`}
                                 onTranslateToKm={(trans) => {
                                   handleUpdateDayField(dIdx, 'titleKm', trans);
@@ -3024,6 +3045,7 @@ Highlights:
                               <FieldAiTranslator
                                 kmText={day.descriptionKm || day.description}
                                 enText={day.descriptionEn}
+                                preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                                 fieldHint={`Tour Itinerary Day ${day.day} Full Day Description`}
                                 onTranslateToKm={(trans) => {
                                   handleUpdateDayField(dIdx, 'descriptionKm', trans);
@@ -3128,23 +3150,39 @@ Highlights:
                                       placeholder="08:30 AM"
                                     />
                                   </div>
-                                  <div className="sm:col-span-5">
+                                  <div className="sm:col-span-5 flex items-center gap-1">
                                     <input
                                       type="text"
                                       value={slot.activity || ''}
                                       onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value)}
-                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                                       placeholder="Activity description..."
                                     />
+                                    {slot.activity && (
+                                      <FieldAiTranslator
+                                        sourceText={slot.activity}
+                                        fieldHint="Tour Itinerary Hourly Activity Slot"
+                                        size="xs"
+                                        onTranslatedText={(trans) => handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans)}
+                                      />
+                                    )}
                                   </div>
-                                  <div className="sm:col-span-3">
+                                  <div className="sm:col-span-3 flex items-center gap-1">
                                     <input
                                       type="text"
                                       value={slot.location || ''}
                                       onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value)}
-                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                                       placeholder="Location..."
                                     />
+                                    {slot.location && (
+                                      <FieldAiTranslator
+                                        sourceText={slot.location}
+                                        fieldHint="Tour Itinerary Activity Location"
+                                        size="xs"
+                                        onTranslatedText={(trans) => handleUpdateAgendaItem(dIdx, sIdx, 'location', trans)}
+                                      />
+                                    )}
                                   </div>
                                   <div className="sm:col-span-1 flex justify-end">
                                     <button
@@ -3205,19 +3243,15 @@ Highlights:
                         </label>
                         <div className="flex items-center gap-2">
                           <FieldAiTranslator
-                            sourceText={isEnglishMain ? prog.titleEn : (prog.titleKm || prog.title)}
-                            sourceLang={isEnglishMain ? 'en' : 'km'}
-                            targetLang={isEnglishMain ? 'km' : 'en'}
+                            kmText={prog.titleKm || prog.title}
+                            enText={prog.titleEn}
+                            preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                             fieldHint="Tour Package Optional Add-on Program Name"
-                            label={isEnglishMain ? 'ខ្មែរ' : 'EN'}
-                            onTranslatedText={(translated) => {
-                              if (isEnglishMain) {
-                                handleUpdateOptionalProgram(pIdx, 'titleKm', translated);
-                                handleUpdateOptionalProgram(pIdx, 'title', translated);
-                              } else {
-                                handleUpdateOptionalProgram(pIdx, 'titleEn', translated);
-                              }
+                            onTranslateToKm={(trans) => {
+                              handleUpdateOptionalProgram(pIdx, 'titleKm', trans);
+                              handleUpdateOptionalProgram(pIdx, 'title', trans);
                             }}
+                            onTranslateToEn={(trans) => handleUpdateOptionalProgram(pIdx, 'titleEn', trans)}
                           />
                           <button
                             type="button"
@@ -3382,6 +3416,7 @@ Highlights:
                         <FieldAiTranslator
                           kmText={prog.descriptionKm || prog.description}
                           enText={prog.descriptionEn}
+                          preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
                           fieldHint="Tour Package Optional Add-on Program Description"
                           onTranslateToKm={(trans) => {
                             handleUpdateOptionalProgram(pIdx, 'descriptionKm', trans);

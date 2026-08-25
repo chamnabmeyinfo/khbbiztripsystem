@@ -269,16 +269,17 @@ ${JSON.stringify(packageData, null, 2)}
 
 TRANSLATION RULES:
 1. Translate all textual fields: title, destination, country, category, description, highlights (array), whoShouldJoin (array), whyShouldJoin (array), inclusions (array), exclusions (array), termsAndConditions (array).
-2. For tourGuide: translate name, title, bio, briefingMeetingPoint, briefingTime. (Keep phone, telegram, photoUrl, badgeNumber unchanged).
-3. For itinerary (array of steps): translate each step's title, description, hotelName, assemblyPoint, dayHighlights (array), and for each slot in guideAgenda translate activity, location, notes. (Keep day number, time unchanged).
-4. For optionalPrograms (array): translate title, description, recommendedAudience, highlights (array), includedMeals (array), meetingPoint. (Keep id, additionalCostUSD, durationHours, includesGuide unchanged).
-5. For emergencyContact: translate country name, touristHelpline label if needed (keep emergency numbers 911, 113, 115 unchanged).
+2. Populate both bilingual properties: e.g. when target is 'en', set titleEn, destinationEn, countryEn, categoryEn, descriptionEn, highlightsEn, whoShouldJoinEn, whyShouldJoinEn, inclusionsEn, exclusionsEn, termsAndConditionsEn, while keeping titleKm, destinationKm, countryKm, categoryKm, descriptionKm, highlightsKm, etc. intact.
+3. For tourGuide: translate name, title, bio, briefingMeetingPoint, briefingTime and populate both nameEn/nameKm, titleEn/titleKm, bioEn/bioKm, briefingMeetingPointEn/briefingMeetingPointKm, briefingTimeEn/briefingTimeKm. (Keep phone, telegram, photoUrl, badgeNumber unchanged).
+4. For itinerary (array of steps): translate each step's title, description, hotelName, assemblyPoint, dayHighlights (array), and for each slot in guideAgenda translate activity, location, notes. Set titleEn/titleKm and descriptionEn/descriptionKm on every day. (Keep day number, time unchanged).
+5. For optionalPrograms (array): translate title, description, recommendedAudience, highlights (array), includedMeals (array), meetingPoint. Set titleEn/titleKm and descriptionEn/descriptionKm on every program. (Keep id, additionalCostUSD, durationHours, includesGuide unchanged).
+6. For emergencyContact: translate country name, touristHelpline label if needed (keep emergency numbers 911, 113, 115 unchanged).
 
 Respond strictly with valid JSON format:
 {
   "summary": "1-line summary of package translation",
   "translatedPackage": {
-    ...complete translated package object matching the input structure...
+    ...complete translated package object matching the input structure with bilingual fields...
   }
 }`;
 
