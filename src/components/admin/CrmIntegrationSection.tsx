@@ -33,9 +33,31 @@ import {
   ChevronRight,
   ExternalLink,
   Users,
-  Briefcase
+  Briefcase,
+  BookOpen,
+  Download,
+  Code2,
+  Terminal,
+  FileCode,
+  Table as TableIcon,
+  Workflow,
+  CheckCheck,
+  FileText
 } from 'lucide-react';
 import { CrmConfig, CrmWebhookEventType, CrmWebhookEvent, CrmSyncLog } from '../../types';
+import {
+  CRM_SYSTEM_OVERVIEW,
+  CRM_FIELD_MAPPINGS,
+  CRM_EVENTS_REGISTRY,
+  OPERATIONAL_STAGES_DOC,
+  generateCurlSnippet,
+  generateTypeScriptSnippet,
+  generatePythonSnippet,
+  generatePhpSnippet,
+  generateOpenApiSpec,
+  generateMarkdownIntegrationGuide,
+  CrmEventDoc
+} from '../../services/crmDocumentation';
 
 export const CrmIntegrationSection: React.FC = () => {
   const {
@@ -59,8 +81,9 @@ export const CrmIntegrationSection: React.FC = () => {
     t
   } = useApp();
 
-  type TabType = 'inbound_webhooks' | 'outbound_api' | 'sync_logs' | 'simulator';
+  type TabType = 'inbound_webhooks' | 'outbound_api' | 'simulator' | 'sync_logs' | 'docs';
   const [activeTab, setActiveTab] = useState<TabType>('inbound_webhooks');
+
 
   // Form configuration state
   const [crmConfig, setCrmConfig] = useState<CrmConfig>(() => ({
@@ -110,9 +133,41 @@ export const CrmIntegrationSection: React.FC = () => {
   const [inspectedItem, setInspectedItem] = useState<any | null>(null);
 
   // Default origin webhook URL
-  const webhookUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/api/webhooks/crm-leads`
-    : 'https://trip.khbevents.com/api/webhooks/crm-leads';
+  const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://trip.khbevents.com';
+  const webhookUrl = `${originUrl}/api/webhooks/crm-leads`;
+
+  // Documentation Portal State
+  const [docsSubTab, setDocsSubTab] = useState<'overview' | 'events' | 'code' | 'mappings' | 'workflow' | 'openapi'>('overview');
+  const [selectedDocEventIndex, setSelectedDocEventIndex] = useState(0);
+  const [selectedCodeLang, setSelectedCodeLang] = useState<'curl' | 'ts' | 'python' | 'php'>('curl');
+
+  const handleDownloadOpenApiJson = () => {
+    const spec = generateOpenApiSpec(originUrl);
+    const blob = new Blob([JSON.stringify(spec, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `KHB-BizTrip-CRM-OpenAPI-v2.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addNotification('OpenAPI Spec Exported', 'Downloaded machine-readable OpenAPI 3.0 JSON specification.', 'system');
+  };
+
+  const handleDownloadMarkdownGuide = () => {
+    const md = generateMarkdownIntegrationGuide(originUrl);
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `KHB-CRM-Integration-Specification-v2.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addNotification('Guide Exported', 'Downloaded markdown CRM integration specification.', 'system');
+  };
 
   // Synchronize form if systemSettings changes externally
   useEffect(() => {
@@ -497,6 +552,21 @@ export const CrmIntegrationSection: React.FC = () => {
           Real-Time Sync Audit Logs
           <span className="px-1.5 py-0.5 text-xs rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono">
             {crmSyncLogs.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('docs')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'docs'
+              ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          Integration Guide & OpenAPI Specs
+          <span className="px-1.5 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-500 font-bold">
+            OpenAPI 3.0
           </span>
         </button>
 
@@ -1222,6 +1292,585 @@ export const CrmIntegrationSection: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ─── TAB 5: Integration Guide & OpenAPI Documentation Hub ─── */}
+      {activeTab === 'docs' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Docs Top Hero Banner */}
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 text-white shadow-xl space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                    OpenAPI 3.0 & REST Webhooks
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    v2.4.0 Live Engine
+                  </span>
+                </div>
+                <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                  <BookOpen className="w-6 h-6 text-sky-400" />
+                  CRM Cooperation & Integration Documentation Portal
+                </h3>
+                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+                  Everything an external CRM system (HubSpot, Salesforce, Zoho, or Custom ERP) needs to connect, provision expedition bookings, sync delegate manifests, and receive real-time operational fulfillment milestones.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleDownloadOpenApiJson}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-sky-500/25 transition cursor-pointer"
+                  title="Download machine-readable OpenAPI 3.0 JSON specification"
+                >
+                  <Download className="w-4 h-4" />
+                  Download OpenAPI JSON
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadMarkdownGuide}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                  title="Download full Markdown integration specification"
+                >
+                  <FileText className="w-4 h-4 text-emerald-400" />
+                  Download Markdown Guide
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Live Spec Link Box */}
+            <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-slate-300">
+                <Globe className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="font-mono text-[11px] text-slate-400">Machine-readable Spec URL:</span>
+                <code className="px-2 py-0.5 rounded bg-slate-950 text-emerald-400 font-mono text-[11px] border border-slate-800">
+                  {originUrl}/api/crm/openapi.json
+                </code>
+              </div>
+              <button
+                onClick={() => handleCopy(`${originUrl}/api/crm/openapi.json`, 'openapi_endpoint')}
+                className="text-[11px] text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 cursor-pointer"
+              >
+                {copiedField === 'openapi_endpoint' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedField === 'openapi_endpoint' ? 'Copied' : 'Copy Spec URL for Postman / Swagger'}
+              </button>
+            </div>
+          </div>
+
+          {/* Docs Sub-Navigation Bar */}
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+            <button
+              onClick={() => setDocsSubTab('overview')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'overview'
+                  ? 'bg-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              1. System Role & Architecture
+            </button>
+
+            <button
+              onClick={() => setDocsSubTab('events')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'events'
+                  ? 'bg-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Webhook className="w-3.5 h-3.5" />
+              2. Webhook & Event Catalog ({CRM_EVENTS_REGISTRY.length})
+            </button>
+
+            <button
+              onClick={() => setDocsSubTab('code')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'code'
+                  ? 'bg-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Code2 className="w-3.5 h-3.5" />
+              3. Interactive Code Generator
+            </button>
+
+            <button
+              onClick={() => setDocsSubTab('mappings')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'mappings'
+                  ? 'bg-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              4. Field Mapping Dictionary ({CRM_FIELD_MAPPINGS.length})
+            </button>
+
+            <button
+              onClick={() => setDocsSubTab('workflow')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'workflow'
+                  ? 'bg-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Workflow className="w-3.5 h-3.5" />
+              5. 2-Way Handover Protocol
+            </button>
+
+            <button
+              onClick={() => setDocsSubTab('openapi')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'openapi'
+                  ? 'bg-sky-500 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <FileCode className="w-3.5 h-3.5" />
+              6. Raw OpenAPI 3.0 Schema
+            </button>
+          </div>
+
+          {/* SUB-DOC 1: SYSTEM OVERVIEW & ARCHITECTURE */}
+          {docsSubTab === 'overview' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+                <div>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-sky-500" />
+                    How KHB BizTrip Cooperates with Your CRM Platform
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    KHB BizTrip acts as the specialized operational expedition & logistics ERP backend. When sales teams close deals in your CRM, our integration pipeline takes over the entire traveler fulfillment journey.
+                  </p>
+                </div>
+
+                {/* 3-Step Cooperation Architecture Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                      1
+                    </div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                      Inbound: Deal Won Auto-Provisioning
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Your CRM dispatches a <code className="font-mono text-sky-500 font-bold">lead.won</code> webhook to <code className="font-mono text-xs">/api/webhooks/crm-leads</code>. We immediately generate the trip reservation, passenger manifest, and handover task checklist.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                    <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-xs">
+                      2
+                    </div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                      Operations: 8-Stage Expedition Fulfillment
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Our operations coordinators confirm flights, 5-star hotel blocks, visas, bilingual guides, and passenger preferences in the Won Leads Operations Hub.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                      3
+                    </div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                      Outbound: 2-Way Progress Synchronization
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      As milestones complete (e.g. Visa Issued, Flight Booked), we push live status & checklist progress back into your CRM deal record so sales and executives stay informed.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Authentication & Security Protocol */}
+                <div className="p-5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 space-y-3">
+                  <h5 className="text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    Authentication & Security Standards
+                  </h5>
+                  <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                    All webhook endpoints accept incoming requests secured with token verification. Include your webhook secret via one of the following methods:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-amber-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                      <span className="text-slate-400">Header Option A (Recommended):</span>
+                      <div className="mt-1 text-sky-600 dark:text-sky-400 font-bold">x-crm-token: &lt;your_secret&gt;</div>
+                    </div>
+                    <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-amber-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                      <span className="text-slate-400">Header Option B (Standard Bearer):</span>
+                      <div className="mt-1 text-sky-600 dark:text-sky-400 font-bold">Authorization: Bearer &lt;your_secret&gt;</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-DOC 2: WEBHOOK & EVENT CATALOG */}
+          {docsSubTab === 'events' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Event Selector List */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Select Event Schema to Inspect
+                  </label>
+                  <div className="space-y-1.5">
+                    {CRM_EVENTS_REGISTRY.map((evt, idx) => (
+                      <button
+                        key={evt.eventType}
+                        type="button"
+                        onClick={() => setSelectedDocEventIndex(idx)}
+                        className={`w-full text-left p-3 rounded-xl border text-xs transition cursor-pointer ${
+                          selectedDocEventIndex === idx
+                            ? 'bg-sky-50 dark:bg-sky-950/40 border-sky-400 dark:border-sky-700 font-bold text-sky-900 dark:text-sky-200 shadow-sm'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-mono text-xs truncate">{evt.eventType}</span>
+                          <span
+                            className={`text-[9px] uppercase font-bold px-1.5 py-0.2 rounded ${
+                              evt.direction === 'inbound'
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                                : 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300'
+                            }`}
+                          >
+                            {evt.direction}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                          {evt.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Event Details & Schemas */}
+                {CRM_EVENTS_REGISTRY[selectedDocEventIndex] && (
+                  <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+                          {CRM_EVENTS_REGISTRY[selectedDocEventIndex].httpMethod} {CRM_EVENTS_REGISTRY[selectedDocEventIndex].endpoint}
+                        </span>
+                        <span className="text-xs text-slate-400">•</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          Trigger: <strong>{CRM_EVENTS_REGISTRY[selectedDocEventIndex].trigger}</strong>
+                        </span>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white font-mono mt-1">
+                        {CRM_EVENTS_REGISTRY[selectedDocEventIndex].eventType}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        {CRM_EVENTS_REGISTRY[selectedDocEventIndex].description}
+                      </p>
+                    </div>
+
+                    {/* Request Payload Sample */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">HTTP Request JSON Payload:</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(JSON.stringify(CRM_EVENTS_REGISTRY[selectedDocEventIndex].payloadSample, null, 2), 'doc_req_payload')}
+                          className="text-sky-500 hover:text-sky-600 font-bold flex items-center gap-1 text-[11px]"
+                        >
+                          {copiedField === 'doc_req_payload' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                          {copiedField === 'doc_req_payload' ? 'Copied' : 'Copy JSON'}
+                        </button>
+                      </div>
+                      <pre className="p-4 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-[260px]">
+                        {JSON.stringify(CRM_EVENTS_REGISTRY[selectedDocEventIndex].payloadSample, null, 2)}
+                      </pre>
+                    </div>
+
+                    {/* Response Sample */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">Expected HTTP Response (200 OK):</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(JSON.stringify(CRM_EVENTS_REGISTRY[selectedDocEventIndex].responseSample, null, 2), 'doc_res_payload')}
+                          className="text-sky-500 hover:text-sky-600 font-bold flex items-center gap-1 text-[11px]"
+                        >
+                          {copiedField === 'doc_res_payload' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                          {copiedField === 'doc_res_payload' ? 'Copied' : 'Copy Response'}
+                        </button>
+                      </div>
+                      <pre className="p-3.5 rounded-xl bg-slate-950 text-sky-400 font-mono text-xs overflow-x-auto max-h-[160px]">
+                        {JSON.stringify(CRM_EVENTS_REGISTRY[selectedDocEventIndex].responseSample, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* SUB-DOC 3: INTERACTIVE CODE GENERATOR */}
+          {docsSubTab === 'code' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Code2 className="w-4 h-4 text-sky-500" />
+                      Live Multi-Language Webhook Code Snippets
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Ready-to-use client code with pre-filled headers and payload structure.
+                    </p>
+                  </div>
+
+                  {/* Language Selector */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCodeLang('curl')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        selectedCodeLang === 'curl' ? 'bg-sky-500 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      cURL (CLI)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCodeLang('ts')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        selectedCodeLang === 'ts' ? 'bg-sky-500 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      Node.js / TS
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCodeLang('python')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        selectedCodeLang === 'python' ? 'bg-sky-500 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      Python
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCodeLang('php')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        selectedCodeLang === 'php' ? 'bg-sky-500 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      PHP
+                    </button>
+                  </div>
+                </div>
+
+                {/* Target Event Selection */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Event to Generate:
+                  </div>
+                  <select
+                    value={selectedDocEventIndex}
+                    onChange={e => setSelectedDocEventIndex(Number(e.target.value))}
+                    className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                  >
+                    {CRM_EVENTS_REGISTRY.map((evt, idx) => (
+                      <option key={evt.eventType} value={idx}>
+                        {evt.eventType} ({evt.description.slice(0, 40)}...)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Code Block Preview */}
+                {(() => {
+                  const currentDoc = CRM_EVENTS_REGISTRY[selectedDocEventIndex] || CRM_EVENTS_REGISTRY[0];
+                  let snippet = '';
+                  if (selectedCodeLang === 'curl') {
+                    snippet = generateCurlSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
+                  } else if (selectedCodeLang === 'ts') {
+                    snippet = generateTypeScriptSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
+                  } else if (selectedCodeLang === 'python') {
+                    snippet = generatePythonSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
+                  } else if (selectedCodeLang === 'php') {
+                    snippet = generatePhpSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
+                  }
+
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                          Target: {originUrl}{currentDoc.endpoint}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(snippet, 'code_snippet')}
+                          className="flex items-center gap-1 px-3 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-bold text-xs shadow-sm transition"
+                        >
+                          {copiedField === 'code_snippet' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          {copiedField === 'code_snippet' ? 'Code Copied!' : 'Copy Code Snippet'}
+                        </button>
+                      </div>
+                      <pre className="p-4 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-[380px] leading-relaxed">
+                        {snippet}
+                      </pre>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* SUB-DOC 4: FIELD MAPPING DICTIONARY */}
+          {docsSubTab === 'mappings' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <TableIcon className="w-4 h-4 text-sky-500" />
+                      CRM Data Dictionary & Field Mapping Specifications
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Clear field-by-field translation mapping external CRM lead/deal attributes to KHB BizTrip data entities.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">CRM Field Key</th>
+                        <th className="px-3 py-3 border-b border-slate-200 dark:border-slate-800">Type</th>
+                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">KHB BizTrip Field</th>
+                        <th className="px-3 py-3 border-b border-slate-200 dark:border-slate-800">Required?</th>
+                        <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-800">Description & Example</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {CRM_FIELD_MAPPINGS.map(field => (
+                        <tr key={field.crmField} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                          <td className="px-4 py-3 font-mono font-bold text-sky-600 dark:text-sky-400">
+                            {field.crmField}
+                          </td>
+                          <td className="px-3 py-3 font-mono text-[11px] text-slate-500">
+                            {field.crmType}
+                          </td>
+                          <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                            {field.bizTripField}
+                          </td>
+                          <td className="px-3 py-3">
+                            {field.required ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                                Required
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                Optional
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                            <p>{field.description}</p>
+                            <div className="mt-1 font-mono text-[10px] text-slate-400">
+                              Example: {typeof field.exampleValue === 'object' ? JSON.stringify(field.exampleValue) : String(field.exampleValue)}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-DOC 5: 2-WAY HANDOVER PROTOCOL & STAGES */}
+          {docsSubTab === 'workflow' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+                <div>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Workflow className="w-4 h-4 text-sky-500" />
+                    8-Stage Expedition Fulfillment & Handover Lifecycle
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Upon deal won ingestion, KHB BizTrip coordinates these 8 operational stages and transmits milestone updates back into your CRM deal record.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {OPERATIONAL_STAGES_DOC.map(stage => (
+                    <div
+                      key={stage.stage}
+                      className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">{stage.title}</span>
+                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                          {stage.progress}%
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {stage.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-DOC 6: RAW OPENAPI 3.0 SCHEMA VIEWER */}
+          {docsSubTab === 'openapi' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 font-mono">
+                      <FileCode className="w-4 h-4 text-sky-500" />
+                      OpenAPI 3.0.3 Specification Document
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Compliant with OpenAPI Specification 3.0.3. Compatible with Swagger UI, Postman, Zapier, and n8n.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(JSON.stringify(generateOpenApiSpec(originUrl), null, 2), 'raw_openapi')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 text-xs font-bold transition"
+                    >
+                      {copiedField === 'raw_openapi' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedField === 'raw_openapi' ? 'Copied' : 'Copy JSON'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDownloadOpenApiJson}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-sm transition"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Download .json
+                    </button>
+                  </div>
+                </div>
+
+                <pre className="p-4 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-[460px] leading-relaxed">
+                  {JSON.stringify(generateOpenApiSpec(originUrl), null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

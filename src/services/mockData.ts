@@ -37,16 +37,16 @@ export const SEED_USERS: User[] = [
     name: 'Tim Vutha',
     email: 'vutha.tim@khbmedia.asia',
     phone: '060 815 515',
-    role: 'admin',
+    role: 'super_admin',
     status: 'active',
-    department: 'Trip Operations',
-    jobTitle: 'Trade Mission & Tour Package Administrator',
+    department: 'Executive Leadership',
+    jobTitle: 'Chief Executive Officer (CEO)',
     preferredLanguage: 'km',
     preferredCurrency: 'USD',
     hasBiometrics: true,
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
     createdAt: '2026-02-15T00:00:00.000Z',
-    lastLoginAt: '2026-08-17T06:40:00.000Z'
+    lastLoginAt: '2026-08-25T07:00:00.000Z'
   },
   {
     id: 'usr_sokha_ly',

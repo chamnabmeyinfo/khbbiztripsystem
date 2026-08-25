@@ -1050,6 +1050,138 @@ app.get(["/api/crm/clients", "/crm/clients"], async (req, res) => {
     return res.status(500).json({ success: false, error: err.message || "Failed to query CRM Master Data Center" });
   }
 });
+app.get(["/api/crm/openapi.json", "/crm/openapi.json"], (req, res) => {
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost:3000";
+  const originUrl = `${protocol}://${host}`;
+  const spec = {
+    openapi: "3.0.3",
+    info: {
+      title: "KHB BizTrip Expedition & ERP Integration API",
+      version: "2.4.0",
+      description: "REST and Webhook API specification for external CRMs (HubSpot, Salesforce, Zoho, Custom ERP) to cooperate with KHB BizTrip Expedition Operations System.",
+      contact: {
+        name: "KHB Technology & Operations Team",
+        email: "tech@khbevents.com",
+        url: "https://khbevents.com"
+      }
+    },
+    servers: [
+      { url: originUrl, description: "Active Host Gateway" },
+      { url: "https://khbcrm.vercel.app", description: "Vercel Deployment Endpoint" },
+      { url: "http://localhost:3000", description: "Local Development Server" }
+    ],
+    components: {
+      securitySchemes: {
+        ApiKeyHeader: {
+          type: "apiKey",
+          in: "header",
+          name: "x-crm-token",
+          description: "Secret authentication token or API key for webhook verification."
+        },
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT or API Key",
+          description: "Standard Bearer authorization header."
+        }
+      }
+    },
+    paths: {
+      "/api/webhooks/crm-leads": {
+        post: {
+          summary: "Inbound Deal Won Webhook",
+          description: "Receives won deals from CRM, provisions the trip booking, builds the passenger manifest, and creates the operational checklist.",
+          security: [{ ApiKeyHeader: [] }, { BearerAuth: [] }],
+          responses: {
+            "200": { description: "Inbound lead provisioned successfully" },
+            "401": { description: "Unauthorized / Invalid Webhook Token" },
+            "400": { description: "Malformed JSON Payload or Missing Required Fields" }
+          }
+        }
+      },
+      "/api/webhooks/crm": {
+        post: {
+          summary: "General Inbound Lifecycle Webhook",
+          description: "Handles lifecycle updates: booking status updates, flight delays, VIP upgrades, and urgent broadcasts.",
+          security: [{ ApiKeyHeader: [] }],
+          responses: {
+            "200": { description: "Lifecycle event accepted and processed" }
+          }
+        }
+      },
+      "/api/crm/push-inbound-sync": {
+        post: {
+          summary: "Outbound 2-Way Operational Progress Dispatcher",
+          description: "Pushes real-time fulfillment stage and handover checklist progress back into the external CRM deal record.",
+          responses: {
+            "200": { description: "Fulfillment milestone synchronized with CRM" }
+          }
+        }
+      },
+      "/api/crm/push-booking": {
+        post: {
+          summary: "Outbound Booking Dispatch",
+          description: "Pushes newly confirmed booking reservations into the CRM pipeline.",
+          responses: {
+            "200": { description: "Booking synchronized with CRM" }
+          }
+        }
+      },
+      "/api/crm/push-customer": {
+        post: {
+          summary: "Outbound Trade Delegate Profile Dispatch",
+          description: "Synchronizes delegate profile details with CRM contacts.",
+          responses: {
+            "200": { description: "Delegate profile synchronized" }
+          }
+        }
+      },
+      "/api/crm/test-connection": {
+        post: {
+          summary: "Test CRM Handshake & Latency",
+          description: "Verifies network connectivity and authentication tokens with external CRM endpoint.",
+          responses: {
+            "200": { description: "Ping successful" }
+          }
+        }
+      }
+    }
+  };
+  res.setHeader("Content-Type", "application/json");
+  return res.json(spec);
+});
+app.get(["/api/crm/docs", "/crm/docs"], (_req, res) => {
+  return res.json({
+    system: "KHB BizTrip Expedition & Trade Mission Operations System",
+    version: "2.4.0",
+    description: "Enterprise B2B delegation logistics, tour package management, supplier procurement, costing engine, and delegate passenger manifest management platform.",
+    endpoints: {
+      inboundWebhookLeads: "/api/webhooks/crm-leads",
+      inboundWebhookLifecycle: "/api/webhooks/crm",
+      inboundEventsStream: "/api/webhooks/crm/events",
+      outboundPushBooking: "/api/crm/push-booking",
+      outboundPushCustomer: "/api/crm/push-customer",
+      outboundProgressSync: "/api/crm/push-inbound-sync",
+      connectionTest: "/api/crm/test-connection",
+      openApiJson: "/api/crm/openapi.json"
+    },
+    supportedEvents: [
+      "lead.won",
+      "deal.won",
+      "booking.status_updated",
+      "flight.status_changed",
+      "customer.vip_upgraded",
+      "notification.broadcast",
+      "trip.fulfillment_progress_sync"
+    ],
+    authMethods: [
+      "x-crm-token Header",
+      "Authorization: Bearer <token>",
+      "x-api-key Header"
+    ]
+  });
+});
 var app_default = app;
 
 // api/handler.ts

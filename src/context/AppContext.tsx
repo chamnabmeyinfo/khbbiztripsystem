@@ -149,9 +149,14 @@ interface AppContextType {
     customPermissions?: PermissionKey[],
     customAccessibleTabs?: string[]
   ) => Promise<void>;
+  toggleUserPermissionDirectly: (userId: string, permissionKey: PermissionKey) => Promise<void>;
+  toggleUserTabDirectly: (userId: string, tabId: string) => Promise<void>;
   resetUserPermissionsToDefault: (userId: string) => Promise<void>;
   switchActiveUser: (userId: string) => void;
+  generateTemporaryPassword: (userId: string) => Promise<string>;
+  resetUserSecurityCredentials: (userId: string) => Promise<void>;
   logUserAudit: (action: string, details: string, severity?: 'info' | 'warning' | 'security') => void;
+
   
   // ERP State
   suppliers: Supplier[];
@@ -389,8 +394,8 @@ const INITIAL_AUDIT_LOGS: UserAuditLog[] = [
     userId: 'usr_vutha_tim',
     userName: 'Tim Vutha',
     userEmail: 'vutha.tim@khbmedia.asia',
-    userRole: 'admin',
-    action: 'Flight Schedule Verified',
+    userRole: 'super_admin',
+    action: 'Executive Flight & Manifest Audit',
     details: 'Verified charter flight seats and luxury bus allocation for Bangkok Trade Expo 2026.',
     timestamp: '2026-08-17T05:45:00.000Z',
     ipAddress: '192.168.1.24 (Phnom Penh HQ)',
@@ -698,21 +703,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (fbUser: FirebaseUser | null) => {
       if (fbUser) {
-        const isAdminUser =
+        const isSuperAdminEmail =
           fbUser.email === 'chamnabmey.info@gmail.com' ||
           fbUser.email === 'vutha.tim@khbmedia.asia' ||
+          fbUser.email === 'vutha.tim@khbevents.com';
+        const isAdminUser =
+          isSuperAdminEmail ||
           fbUser.email?.endsWith('@khbevents.com') ||
           fbUser.email?.endsWith('@khbmedia.asia') ||
           fbUser.email?.includes('admin');
+        const isVutha = fbUser.email === 'vutha.tim@khbmedia.asia' || fbUser.email === 'vutha.tim@khbevents.com';
+
         const updatedUser: User = {
           id: fbUser.uid,
-          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Traveler',
+          name: isVutha ? (fbUser.displayName || 'Tim Vutha') : (fbUser.displayName || fbUser.email?.split('@')[0] || 'Traveler'),
           email: fbUser.email || 'traveler@example.com',
-          phone: fbUser.phoneNumber || '+1 (555) 019-2831',
-          role: isAdminUser ? 'admin' : 'traveler',
+          phone: fbUser.phoneNumber || (isVutha ? '060 815 515' : '+1 (555) 019-2831'),
+          role: isSuperAdminEmail ? 'super_admin' : (isAdminUser ? 'admin' : 'traveler'),
+          department: isSuperAdminEmail ? 'Executive Leadership' : undefined,
+          jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : undefined,
           preferredLanguage: language,
           preferredCurrency: currency,
-          hasBiometrics: false
+          hasBiometrics: isSuperAdminEmail
         };
         setCurrentUser(updatedUser);
       }
@@ -1009,7 +1021,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const isSuperAdmin =
     currentUser?.role === 'super_admin' ||
     currentUser?.email === 'chamnabmey.info@gmail.com' ||
-    currentUser?.email === 'vutha.tim@khbmedia.asia';
+    currentUser?.email === 'vutha.tim@khbmedia.asia' ||
+    currentUser?.email === 'vutha.tim@khbevents.com';
 
   const hasPermission = (permission: PermissionKey): boolean => {
     return userHasPermission(currentUser, permission);
@@ -1041,44 +1054,91 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addUser = async (userData: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
+    const normalizedEmail = userData.email.toLowerCase().trim();
+    if (!normalizedEmail) {
+      addNotification('Registration Failed', 'Email address is required.', 'system');
+      throw new Error('Valid email address is required.');
+    }
+
+    const emailExists = users.some(u => u.email.toLowerCase().trim() === normalizedEmail);
+    if (emailExists) {
+      addNotification('User Already Exists', `An account with email "${userData.email}" already exists in the system.`, 'system');
+      throw new Error(`Email "${userData.email}" is already registered.`);
+    }
+
     const newId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const createdUser: User = {
       ...userData,
       id: newId,
-      createdAt: new Date().toISOString(),
-      status: userData.status || 'active'
+      email: normalizedEmail,
+      name: userData.name.trim(),
+      phone: userData.phone ? userData.phone.trim() : '',
+      jobTitle: userData.jobTitle ? userData.jobTitle.trim() : '',
+      department: userData.department || 'Trip Operations',
+      preferredLanguage: userData.preferredLanguage || 'km',
+      preferredCurrency: userData.preferredCurrency || 'USD',
+      status: userData.status || 'active',
+      hasBiometrics: userData.hasBiometrics || false,
+      createdAt: new Date().toISOString()
     };
+
     setUsers(prev => [createdUser, ...prev]);
     logUserAudit(
       'Created User Account',
       `Added ${createdUser.name} (${createdUser.email}) with role [${createdUser.role}] in department [${createdUser.department || 'General'}]`,
       'info'
     );
+
     try {
       await setDoc(doc(db, 'users', newId), sanitizeForFirestore(createdUser));
     } catch (e) {
       console.warn('Failed to persist new user to Firestore:', e);
     }
-    addNotification('User Created', `Successfully added ${createdUser.name} to the directory.`, 'system');
+    addNotification('User Created', `Successfully added ${createdUser.name} (${createdUser.email}) to the directory.`, 'system');
     return createdUser;
   };
 
   const updateUser = async (updatedUserData: User): Promise<void> => {
-    setUsers(prev => prev.map(u => u.id === updatedUserData.id ? updatedUserData : u));
-    if (currentUser?.id === updatedUserData.id) {
-      setCurrentUser(updatedUserData);
+    const normalizedEmail = updatedUserData.email.toLowerCase().trim();
+    if (!normalizedEmail) {
+      addNotification('Update Failed', 'Email address cannot be empty.', 'system');
+      throw new Error('Email address is required.');
     }
+
+    const emailConflict = users.some(
+      u => u.id !== updatedUserData.id && u.email.toLowerCase().trim() === normalizedEmail
+    );
+    if (emailConflict) {
+      addNotification('Email Conflict', `The email "${updatedUserData.email}" is already in use by another user.`, 'system');
+      throw new Error(`Email "${updatedUserData.email}" is already in use.`);
+    }
+
+    const sanitizedUser: User = {
+      ...updatedUserData,
+      email: normalizedEmail,
+      name: updatedUserData.name.trim(),
+      phone: updatedUserData.phone ? updatedUserData.phone.trim() : '',
+      jobTitle: updatedUserData.jobTitle ? updatedUserData.jobTitle.trim() : '',
+      status: updatedUserData.status || 'active'
+    };
+
+    setUsers(prev => prev.map(u => u.id === sanitizedUser.id ? sanitizedUser : u));
+    if (currentUser?.id === sanitizedUser.id) {
+      setCurrentUser(sanitizedUser);
+    }
+
     logUserAudit(
       'Updated User Profile',
-      `Modified attributes/roles for ${updatedUserData.name} (${updatedUserData.email}) - Role: [${updatedUserData.role}], Status: [${updatedUserData.status}]`,
+      `Modified attributes/roles for ${sanitizedUser.name} (${sanitizedUser.email}) - Role: [${sanitizedUser.role}], Status: [${sanitizedUser.status}]`,
       'info'
     );
+
     try {
-      await setDoc(doc(db, 'users', updatedUserData.id), sanitizeForFirestore(updatedUserData), { merge: true });
+      await setDoc(doc(db, 'users', sanitizedUser.id), sanitizeForFirestore(sanitizedUser), { merge: true });
     } catch (e) {
       console.warn('Failed to update user in Firestore:', e);
     }
-    addNotification('User Updated', `Changes to ${updatedUserData.name} have been saved.`, 'system');
+    addNotification('User Updated', `Changes to ${sanitizedUser.name} have been saved.`, 'system');
   };
 
   const assignUserRoleAndPermissions = async (
@@ -1104,7 +1164,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     logUserAudit(
       'RBAC Permissions Override Assigned',
-      `Super Admin reconfigured clearance for ${targetUser.name} (${targetUser.email}) -> Role: [${role}], Custom Permissions: ${customPermissions ? customPermissions.length : 'Default'}, Custom Tabs: ${customAccessibleTabs ? customAccessibleTabs.length : 'Default'}`,
+      `Clearance updated for ${targetUser.name} (${targetUser.email}) -> Role: [${role}], Custom Permissions: ${customPermissions ? customPermissions.length : 'Default'}, Custom Tabs: ${customAccessibleTabs ? customAccessibleTabs.length : 'Default'}`,
       'security'
     );
 
@@ -1116,9 +1176,79 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     addNotification(
       'Role & Permissions Updated',
-      `Assigned role "${ROLE_CONFIGS[role]?.displayName || role}" and custom permission overrides to ${targetUser.name}.`,
+      `Assigned role "${ROLE_CONFIGS[role]?.displayName || role}" and custom clearances to ${targetUser.name}.`,
       'system'
     );
+  };
+
+  const toggleUserPermissionDirectly = async (userId: string, permissionKey: PermissionKey): Promise<void> => {
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const effective = getUserEffectivePermissions(targetUser);
+    const hasIt = effective.includes(permissionKey);
+    const newPerms = hasIt
+      ? effective.filter(k => k !== permissionKey)
+      : Array.from(new Set([...effective, permissionKey]));
+
+    const updated: User = {
+      ...targetUser,
+      customPermissions: newPerms
+    };
+
+    setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+    if (currentUser?.id === userId) {
+      setCurrentUser(updated);
+    }
+
+    logUserAudit(
+      hasIt ? 'Revoked Permission' : 'Granted Permission',
+      `${hasIt ? 'Revoked' : 'Granted'} [${permissionKey}] for ${targetUser.name} (${targetUser.email})`,
+      'security'
+    );
+
+    try {
+      await setDoc(doc(db, 'users', userId), sanitizeForFirestore(updated), { merge: true });
+    } catch (e) {
+      console.warn('Failed to persist direct permission toggle to Firestore:', e);
+    }
+
+    addNotification('Permission Updated', `${hasIt ? 'Revoked' : 'Granted'} "${permissionKey}" for ${targetUser.name}.`, 'system');
+  };
+
+  const toggleUserTabDirectly = async (userId: string, tabId: string): Promise<void> => {
+    const targetUser = users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const effective = getUserEffectiveTabs(targetUser);
+    const hasIt = effective.includes(tabId);
+    const newTabs = hasIt
+      ? effective.filter(t => t !== tabId)
+      : Array.from(new Set([...effective, tabId]));
+
+    const updated: User = {
+      ...targetUser,
+      customAccessibleTabs: newTabs
+    };
+
+    setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+    if (currentUser?.id === userId) {
+      setCurrentUser(updated);
+    }
+
+    logUserAudit(
+      hasIt ? 'Revoked Module Access' : 'Granted Module Access',
+      `${hasIt ? 'Revoked' : 'Granted'} dashboard tab [${tabId}] for ${targetUser.name} (${targetUser.email})`,
+      'security'
+    );
+
+    try {
+      await setDoc(doc(db, 'users', userId), sanitizeForFirestore(updated), { merge: true });
+    } catch (e) {
+      console.warn('Failed to persist direct tab toggle to Firestore:', e);
+    }
+
+    addNotification('Module Access Updated', `${hasIt ? 'Revoked' : 'Granted'} module "${tabId}" for ${targetUser.name}.`, 'system');
   };
 
   const resetUserPermissionsToDefault = async (userId: string): Promise<void> => {
@@ -1157,16 +1287,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteUser = async (userId: string): Promise<void> => {
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
-    if (targetUser.role === 'super_admin' && users.filter(u => u.role === 'super_admin').length <= 1) {
-      addNotification('Action Denied', 'Cannot delete the primary Super Admin account.', 'system');
+
+    if (currentUser?.id === userId) {
+      addNotification('Action Denied', 'You cannot delete the user account currently signed into this session. Please switch accounts first.', 'system');
       return;
     }
+
+    if (targetUser.role === 'super_admin' && users.filter(u => u.role === 'super_admin').length <= 1) {
+      addNotification('Action Denied', 'Cannot delete the sole primary Super Admin account of the organization.', 'system');
+      return;
+    }
+
     setUsers(prev => prev.filter(u => u.id !== userId));
     logUserAudit(
       'Deleted User Account',
       `Permanently removed user ${targetUser.name} (${targetUser.email}) with role [${targetUser.role}]`,
       'warning'
     );
+
     try {
       await deleteDoc(doc(db, 'users', userId));
     } catch (e) {
@@ -1178,13 +1316,63 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const toggleUserStatus = async (userId: string, status: UserStatus): Promise<void> => {
     const target = users.find(u => u.id === userId);
     if (!target) return;
-    const updated = { ...target, status };
+
+    if (currentUser?.id === userId && status === 'suspended') {
+      addNotification('Action Denied', 'You cannot suspend your own currently active account session.', 'system');
+      return;
+    }
+
+    const updated: User = { ...target, status };
     await updateUser(updated);
     logUserAudit(
       'Status Changed',
       `User ${target.name} status updated from [${target.status || 'active'}] to [${status}]`,
       status === 'suspended' ? 'warning' : 'info'
     );
+  };
+
+  const generateTemporaryPassword = async (userId: string): Promise<string> => {
+    const target = users.find(u => u.id === userId);
+    if (!target) throw new Error('User not found');
+
+    const tempPassword = `KHB-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    logUserAudit(
+      'Generated Temporary Access Key',
+      `Generated temporary credentials for ${target.name} (${target.email})`,
+      'security'
+    );
+    addNotification('Temporary Key Issued', `Temporary key generated for ${target.name}.`, 'system');
+    return tempPassword;
+  };
+
+  const resetUserSecurityCredentials = async (userId: string): Promise<void> => {
+    const target = users.find(u => u.id === userId);
+    if (!target) return;
+
+    const updated: User = {
+      ...target,
+      hasBiometrics: false,
+      biometricCredentialId: undefined
+    };
+
+    setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+    if (currentUser?.id === userId) {
+      setCurrentUser(updated);
+    }
+
+    logUserAudit(
+      'Reset Security Credentials',
+      `Reset biometrics & passkey credentials for ${target.name} (${target.email})`,
+      'security'
+    );
+
+    try {
+      await setDoc(doc(db, 'users', userId), sanitizeForFirestore(updated), { merge: true });
+    } catch (e) {
+      console.warn('Failed to reset security credentials in Firestore:', e);
+    }
+
+    addNotification('Credentials Reset', `Reset passkey/biometric credentials for ${target.name}.`, 'system');
   };
 
   const switchActiveUser = (userId: string) => {
@@ -1204,6 +1392,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addNotification('Role / Profile Switched', `Active user is now ${target.name} (${ROLE_CONFIGS[target.role]?.displayName || target.role})`, 'system');
     }
   };
+
 
   const t = (key: keyof typeof translations['en']): string => {
     const dict = translations[language] || translations['en'];
@@ -1267,38 +1456,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return { success: false, error: errorMsg };
       }
 
-      const isSuperAdminEmail = userEmail === 'chamnabmey.info@gmail.com';
-      const isLeadDirectorEmail = userEmail === 'vutha.tim@khbmedia.asia' || userEmail === 'vutha.tim@khbevents.com';
+      const isSuperAdminEmail =
+        userEmail === 'chamnabmey.info@gmail.com' ||
+        userEmail === 'vutha.tim@khbmedia.asia' ||
+        userEmail === 'vutha.tim@khbevents.com';
+      const isVutha = userEmail === 'vutha.tim@khbmedia.asia' || userEmail === 'vutha.tim@khbevents.com';
       
       const existingUser = users.find(u => u.email.toLowerCase() === userEmail);
       const assignedRole: UserRole = isSuperAdminEmail
         ? 'super_admin'
-        : (existingUser?.role && existingUser.role !== 'traveler' ? existingUser.role : (isLeadDirectorEmail ? 'admin' : 'operations_manager'));
+        : (existingUser?.role && existingUser.role !== 'traveler' ? existingUser.role : 'operations_manager');
 
       const newUser: User = {
-        id: user.uid,
-        name: user.displayName || existingUser?.name || userEmail.split('@')[0] || 'KHB Staff Member',
+        id: isVutha ? 'usr_vutha_tim' : user.uid,
+        name: isVutha ? (user.displayName || 'Tim Vutha') : (user.displayName || existingUser?.name || userEmail.split('@')[0] || 'KHB Staff Member'),
         email: user.email || userEmail,
-        phone: user.phoneNumber || existingUser?.phone || '+855 12 345 678',
+        phone: user.phoneNumber || existingUser?.phone || (isVutha ? '060 815 515' : '+855 12 345 678'),
         role: assignedRole,
-        department: existingUser?.department || (isSuperAdminEmail || isLeadDirectorEmail ? 'Executive Leadership' : 'Trip Operations'),
+        department: isSuperAdminEmail ? 'Executive Leadership' : (existingUser?.department || 'Trip Operations'),
+        jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (existingUser?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : 'Staff Member')),
         preferredLanguage: language,
         preferredCurrency: currency,
         hasBiometrics: true,
-        avatarUrl: user.photoURL || undefined
+        avatarUrl: user.photoURL || existingUser?.avatarUrl || undefined
       };
 
       setCurrentUser(newUser);
 
       // Upsert to Firestore users collection
       try {
-        await setDoc(doc(db, 'users', user.uid), sanitizeForFirestore({
-          id: user.uid,
+        await setDoc(doc(db, 'users', newUser.id), sanitizeForFirestore({
+          id: newUser.id,
           name: newUser.name,
           email: newUser.email,
           phone: newUser.phone,
           role: newUser.role,
           department: newUser.department,
+          jobTitle: newUser.jobTitle,
           preferredLanguage: language,
           preferredCurrency: currency,
           avatarUrl: newUser.avatarUrl,
@@ -1320,12 +1514,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ) {
         const fallbackEmail = 'vutha.tim@khbmedia.asia';
         const fallbackUser: User = {
-          id: 'usr_tim_vutha',
+          id: 'usr_vutha_tim',
           name: 'Tim Vutha',
           email: fallbackEmail,
-          phone: '+855 12 888 999',
-          role: 'admin',
+          phone: '060 815 515',
+          role: 'super_admin',
           department: 'Executive Leadership',
+          jobTitle: 'Chief Executive Officer (CEO)',
           preferredLanguage: language,
           preferredCurrency: currency,
           hasBiometrics: true,
@@ -1449,11 +1644,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const loginWithEmail = async (email: string, role?: UserRole, name?: string, phone?: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    const isCorporateStaff =
-      cleanEmail.endsWith('@khbevents.com') ||
-      cleanEmail.endsWith('@khbmedia.asia') ||
+    const isSuperAdminEmail =
+      cleanEmail === 'chamnabmey.info@gmail.com' ||
       cleanEmail === 'vutha.tim@khbmedia.asia' ||
-      cleanEmail === 'chamnabmey.info@gmail.com';
+      cleanEmail === 'vutha.tim@khbevents.com';
+    const isCorporateStaff =
+      isSuperAdminEmail ||
+      cleanEmail.endsWith('@khbevents.com') ||
+      cleanEmail.endsWith('@khbmedia.asia');
 
     const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
     if (existing) {
@@ -1468,20 +1666,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    const generatedName = name || cleanEmail.split('@')[0].replace(/[._]/g, ' ');
-    const formattedName = generatedName.charAt(0).toUpperCase() + generatedName.slice(1);
-    const finalRole: UserRole = isCorporateStaff ? 'admin' : (role || 'traveler');
-    const userId = `usr_${Date.now()}`;
+    const isVutha = cleanEmail === 'vutha.tim@khbmedia.asia' || cleanEmail === 'vutha.tim@khbevents.com';
+    const generatedName = isVutha ? 'Tim Vutha' : (name || cleanEmail.split('@')[0].replace(/[._]/g, ' '));
+    const formattedName = isVutha ? 'Tim Vutha' : (generatedName.charAt(0).toUpperCase() + generatedName.slice(1));
+    const finalRole: UserRole = isSuperAdminEmail ? 'super_admin' : (isCorporateStaff ? 'admin' : (role || 'traveler'));
+    const userId = isVutha ? 'usr_vutha_tim' : `usr_${Date.now()}`;
     const user: User = {
       id: userId,
-      name: formattedName || (finalRole === 'admin' ? 'KHB Staff Member' : 'Traveler'),
+      name: formattedName || (finalRole === 'super_admin' ? 'Tim Vutha' : (finalRole === 'admin' ? 'KHB Staff Member' : 'Traveler')),
       email: cleanEmail,
-      phone: phone || '+855 12 345 678',
+      phone: isVutha ? '060 815 515' : (phone || '+855 12 345 678'),
       role: finalRole,
-      department: isCorporateStaff ? 'Trip Operations' : 'Trade Delegates',
+      department: isSuperAdminEmail ? 'Executive Leadership' : (isCorporateStaff ? 'Trip Operations' : 'Trade Delegates'),
+      jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : undefined),
       preferredLanguage: language,
       preferredCurrency: currency,
-      hasBiometrics: false,
+      hasBiometrics: isSuperAdminEmail,
     };
     setUsers(prev => [user, ...prev]);
     setCurrentUser(user);
@@ -3948,8 +4148,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteUser,
         toggleUserStatus,
         assignUserRoleAndPermissions,
+        toggleUserPermissionDirectly,
+        toggleUserTabDirectly,
         resetUserPermissionsToDefault,
         switchActiveUser,
+        generateTemporaryPassword,
+        resetUserSecurityCredentials,
         logUserAudit,
         language,
         currency,

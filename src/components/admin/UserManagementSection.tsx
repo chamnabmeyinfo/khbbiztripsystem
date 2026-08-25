@@ -67,8 +67,12 @@ export const UserManagementSection: React.FC = () => {
     deleteUser,
     toggleUserStatus,
     assignUserRoleAndPermissions,
+    toggleUserPermissionDirectly,
+    toggleUserTabDirectly,
     resetUserPermissionsToDefault,
     switchActiveUser,
+    generateTemporaryPassword,
+    resetUserSecurityCredentials,
     auditLogs,
     logUserAudit
   } = useApp();
@@ -84,6 +88,10 @@ export const UserManagementSection: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [permissionModalUser, setPermissionModalUser] = useState<User | null>(null);
+  const [tempPasswordIssued, setTempPasswordIssued] = useState<{ user: User; pass: string } | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
 
   // Live Matrix Customizer state
   const [matrixSelectedUserId, setMatrixSelectedUserId] = useState<string>(users[0]?.id || '');
@@ -165,7 +173,7 @@ export const UserManagementSection: React.FC = () => {
     setSelectedTabs([...defaultTabs]);
   };
 
-  // Toggle individual permission
+  // Toggle individual permission in modal
   const handleTogglePermission = (key: PermissionKey) => {
     setSelectedPermissions(prev =>
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
@@ -182,7 +190,7 @@ export const UserManagementSection: React.FC = () => {
     }
   };
 
-  // Toggle accessible ERP tab
+  // Toggle accessible ERP tab in modal
   const handleToggleTab = (tabId: string) => {
     setSelectedTabs(prev =>
       prev.includes(tabId) ? prev.filter(t => t !== tabId) : [...prev, tabId]
@@ -202,6 +210,7 @@ export const UserManagementSection: React.FC = () => {
   };
 
   const handleOpenAddModal = () => {
+    setFormError(null);
     setFormData({
       name: '',
       email: '',
@@ -218,6 +227,7 @@ export const UserManagementSection: React.FC = () => {
   };
 
   const handleOpenEditModal = (user: User) => {
+    setFormError(null);
     setEditingUser(user);
     setFormData({
       name: user.name,
@@ -235,40 +245,83 @@ export const UserManagementSection: React.FC = () => {
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.email.trim()) return;
+    setFormError(null);
+    const cleanName = formData.name.trim();
+    const cleanEmail = formData.email.trim().toLowerCase();
 
-    if (editingUser) {
-      await updateUser({
-        ...editingUser,
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        role: formData.role,
-        department: formData.department,
-        jobTitle: formData.jobTitle.trim(),
-        status: formData.status,
-        hasBiometrics: formData.hasBiometrics,
-        customPermissions: formData.customPermissions,
-        customAccessibleTabs: formData.customAccessibleTabs
-      });
-      setEditingUser(null);
+    if (!cleanName) {
+      setFormError('Please enter the user full name.');
+      return;
+    }
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setFormError('Please enter a valid work email address.');
+      return;
+    }
+
+    // Email duplication check
+    if (!editingUser) {
+      const emailTaken = users.some(u => u.email.toLowerCase().trim() === cleanEmail);
+      if (emailTaken) {
+        setFormError(`An account with email "${cleanEmail}" is already registered.`);
+        return;
+      }
     } else {
-      await addUser({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        role: formData.role,
-        department: formData.department,
-        jobTitle: formData.jobTitle.trim(),
-        status: formData.status,
-        hasBiometrics: formData.hasBiometrics,
-        preferredLanguage: 'km',
-        preferredCurrency: 'USD',
-        customPermissions: formData.customPermissions,
-        customAccessibleTabs: formData.customAccessibleTabs,
-        avatarUrl: `https://images.unsplash.com/photo-${1530000000000 + Math.floor(Math.random() * 999999)}?w=200&auto=format&fit=crop&q=80`
-      });
-      setIsAddModalOpen(false);
+      const emailTaken = users.some(u => u.id !== editingUser.id && u.email.toLowerCase().trim() === cleanEmail);
+      if (emailTaken) {
+        setFormError(`The email "${cleanEmail}" is already in use by another user.`);
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (editingUser) {
+        await updateUser({
+          ...editingUser,
+          name: cleanName,
+          email: cleanEmail,
+          phone: formData.phone.trim(),
+          role: formData.role,
+          department: formData.department,
+          jobTitle: formData.jobTitle.trim(),
+          status: formData.status,
+          hasBiometrics: formData.hasBiometrics,
+          customPermissions: formData.customPermissions,
+          customAccessibleTabs: formData.customAccessibleTabs
+        });
+        setEditingUser(null);
+      } else {
+        await addUser({
+          name: cleanName,
+          email: cleanEmail,
+          phone: formData.phone.trim(),
+          role: formData.role,
+          department: formData.department,
+          jobTitle: formData.jobTitle.trim(),
+          status: formData.status,
+          hasBiometrics: formData.hasBiometrics,
+          preferredLanguage: 'km',
+          preferredCurrency: 'USD',
+          customPermissions: formData.customPermissions,
+          customAccessibleTabs: formData.customAccessibleTabs,
+          avatarUrl: `https://images.unsplash.com/photo-${1530000000000 + Math.floor(Math.random() * 999999)}?w=200&auto=format&fit=crop&q=80`
+        });
+        setIsAddModalOpen(false);
+      }
+    } catch (err: any) {
+      setFormError(err?.message || 'Failed to save user.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleIssueTempPassword = async (user: User) => {
+    try {
+      const tempPass = await generateTemporaryPassword(user.id);
+      setTempPasswordIssued({ user, pass: tempPass });
+    } catch (e: any) {
+      alert(e?.message || 'Could not generate temporary key.');
     }
   };
 
@@ -717,6 +770,26 @@ export const UserManagementSection: React.FC = () => {
 
                               {canManageUsers && (
                                 <>
+                                  {/* Issue Temporary Key */}
+                                  <button
+                                    onClick={() => handleIssueTempPassword(user)}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
+                                    title="Generate temporary access key"
+                                  >
+                                    <KeyRound className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Reset Biometrics */}
+                                  {user.hasBiometrics && (
+                                    <button
+                                      onClick={() => resetUserSecurityCredentials(user.id)}
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                                      title="Reset passkey and biometric credentials"
+                                    >
+                                      <Fingerprint className="w-3.5 h-3.5 text-amber-500" />
+                                    </button>
+                                  )}
+
                                   <button
                                     onClick={() => handleOpenEditModal(user)}
                                     className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
@@ -725,24 +798,51 @@ export const UserManagementSection: React.FC = () => {
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
 
+                                  {/* Status toggle with self-check */}
                                   <button
-                                    onClick={() => toggleUserStatus(user.id, userStatus === 'active' ? 'suspended' : 'active')}
+                                    onClick={() => {
+                                      if (isSelf && userStatus === 'active') {
+                                        alert('You cannot suspend your own currently active account session.');
+                                        return;
+                                      }
+                                      toggleUserStatus(user.id, userStatus === 'active' ? 'suspended' : 'active');
+                                    }}
+                                    disabled={isSelf && userStatus === 'active'}
                                     className={`p-1.5 rounded-lg transition-colors ${
-                                      userStatus === 'active'
+                                      isSelf && userStatus === 'active'
+                                        ? 'opacity-40 cursor-not-allowed text-slate-300'
+                                        : userStatus === 'active'
                                         ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                                         : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
                                     }`}
-                                    title={userStatus === 'active' ? 'Suspend access' : 'Reactivate access'}
+                                    title={
+                                      isSelf && userStatus === 'active'
+                                        ? 'Cannot suspend active session user'
+                                        : userStatus === 'active'
+                                        ? 'Suspend access'
+                                        : 'Reactivate access'
+                                    }
                                   >
                                     {userStatus === 'active' ? <Lock className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                                   </button>
 
-                                  {/* Delete user */}
+                                  {/* Delete user with self-check */}
                                   {user.role !== 'super_admin' && (
                                     <button
-                                      onClick={() => setUserToDelete(user)}
-                                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                                      title="Delete user account"
+                                      onClick={() => {
+                                        if (isSelf) {
+                                          alert('You cannot delete the user account currently signed into this session.');
+                                          return;
+                                        }
+                                        setUserToDelete(user);
+                                      }}
+                                      disabled={isSelf}
+                                      className={`p-1.5 rounded-lg transition-colors ${
+                                        isSelf
+                                          ? 'opacity-40 cursor-not-allowed text-slate-300'
+                                          : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                                      }`}
+                                      title={isSelf ? 'Cannot delete active session user' : 'Delete user account'}
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -929,42 +1029,110 @@ export const UserManagementSection: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => handleIssueTempPassword(matrixUser)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800 transition-colors"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    Issue Temp Key
+                  </button>
                   <button
                     onClick={() => handleOpenPermissionModal(matrixUser)}
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-sm transition-colors"
                   >
-                    <KeyRound className="w-4 h-4" />
-                    Configure Permissions & Modules
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Deep Configuration Modal
                   </button>
                   <button
                     onClick={() => resetUserPermissionsToDefault(matrixUser.id)}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 transition-colors"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
-                    Reset to Defaults
+                    Reset Defaults
                   </button>
                 </div>
               </div>
 
-              {/* Active Permissions Breakdown */}
+              {/* Accessible ERP Dashboard Modules Bar */}
+              <div className="space-y-3 p-4 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                      Accessible ERP Dashboard Modules ({getUserEffectiveTabs(matrixUser).length} of {ERP_TABS_LIST.length} Enabled)
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Click any module pill to instantly toggle access permission for this user.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {ERP_TABS_LIST.map(tab => {
+                    const hasAccess = getUserEffectiveTabs(matrixUser).includes(tab.id);
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => canManageUsers && toggleUserTabDirectly(matrixUser.id, tab.id)}
+                        disabled={!canManageUsers}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          hasAccess
+                            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20'
+                            : 'bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-indigo-400'
+                        } ${!canManageUsers ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        title={hasAccess ? `Click to revoke access to ${tab.label}` : `Click to grant access to ${tab.label}`}
+                      >
+                        {hasAccess ? <Check className="w-3 h-3 text-white" /> : <XCircle className="w-3 h-3 text-slate-400" />}
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Active Permissions Breakdown with 1-Click Toggle */}
               <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  Currently Granted Permissions ({getUserEffectivePermissions(matrixUser).length} of {ALL_PERMISSIONS.length})
-                </h4>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                      Direct 1-Click Permissions Matrix ({getUserEffectivePermissions(matrixUser).length} of {ALL_PERMISSIONS.length} Granted)
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Click any permission card to instantly grant or revoke clearance. Updates are synced live to Cloud Firestore.
+                    </p>
+                  </div>
+
+                  {/* Filter chips inside Customizer */}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={matrixCategoryFilter}
+                      onChange={e => setMatrixCategoryFilter(e.target.value)}
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                    >
+                      <option value="all">All Categories</option>
+                      {categories.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {ALL_PERMISSIONS.map(perm => {
+                  {ALL_PERMISSIONS.filter(p => matrixCategoryFilter === 'all' || p.category === matrixCategoryFilter).map(perm => {
                     const isGranted = getUserEffectivePermissions(matrixUser).includes(perm.key);
                     return (
                       <div
                         key={perm.key}
-                        className={`p-3 rounded-xl border transition-all ${
+                        onClick={() => canManageUsers && toggleUserPermissionDirectly(matrixUser.id, perm.key)}
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
                           isGranted
-                            ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60'
-                            : 'bg-slate-50/40 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800 opacity-60'
-                        }`}
+                            ? 'bg-emerald-50/70 dark:bg-emerald-950/25 border-emerald-300 dark:border-emerald-700 shadow-sm hover:border-emerald-400'
+                            : 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 opacity-60 hover:opacity-100 hover:border-slate-300'
+                        } ${!canManageUsers ? 'cursor-not-allowed' : ''}`}
+                        title={isGranted ? 'Click to revoke clearance' : 'Click to grant clearance'}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2">
@@ -974,7 +1142,9 @@ export const UserManagementSection: React.FC = () => {
                               <XCircle className="w-4 h-4 text-slate-400 shrink-0" />
                             )}
                             <div>
-                              <p className="text-xs font-bold text-slate-900 dark:text-white">{perm.label}</p>
+                              <p className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                {perm.label}
+                              </p>
                               <span className="text-[10px] text-slate-400 font-mono">{perm.key}</span>
                             </div>
                           </div>
@@ -993,6 +1163,14 @@ export const UserManagementSection: React.FC = () => {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
                           {perm.description}
                         </p>
+                        <div className="mt-2.5 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between text-[10px] font-bold">
+                          <span className={isGranted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                            {isGranted ? '✓ Clearance Granted' : '✗ Clearance Denied'}
+                          </span>
+                          <span className="text-sky-500 group-hover:underline">
+                            Click to toggle
+                          </span>
+                        </div>
                       </div>
                     );
                   })}
@@ -1368,6 +1546,14 @@ export const UserManagementSection: React.FC = () => {
             </div>
 
             <form onSubmit={handleSaveUser} className="p-6 space-y-4 text-xs">
+              {/* Form Error Banner */}
+              {formError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span className="text-xs font-semibold">{formError}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
                 <input
@@ -1490,8 +1676,10 @@ export const UserManagementSection: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-sm transition-colors"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 shadow-sm transition-colors disabled:opacity-50 flex items-center gap-1.5"
                 >
+                  {isSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   {editingUser ? 'Save User Changes' : 'Create User Account'}
                 </button>
               </div>
@@ -1527,6 +1715,55 @@ export const UserManagementSection: React.FC = () => {
                 className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-sm transition-colors"
               >
                 Yes, Delete User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TEMPORARY ACCESS KEY ISSUED */}
+      {tempPasswordIssued && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Temporary Access Key Issued</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  For user: <strong>{tempPasswordIssued.user.name}</strong> ({tempPasswordIssued.user.email})
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Share this secure temporary credential with the team member. They can use it for initial sign-in and password setup.
+            </p>
+
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <code className="text-base font-mono font-bold text-emerald-400 tracking-wider">
+                {tempPasswordIssued.pass}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(tempPasswordIssued.pass);
+                  setCopiedKey(true);
+                  setTimeout(() => setCopiedKey(false), 2000);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 font-bold flex items-center gap-1 transition cursor-pointer"
+              >
+                {copiedKey ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedKey ? 'Copied!' : 'Copy Key'}
+              </button>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setTempPasswordIssued(null)}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-sky-500 hover:bg-sky-600 shadow-md transition"
+              >
+                Done & Close
               </button>
             </div>
           </div>
