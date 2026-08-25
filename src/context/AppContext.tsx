@@ -731,8 +731,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         hash.includes('settings') ||
         pathname.includes('/settings')
       ) {
-        let targetSub = subTabParam || 'features';
-        if (hash.includes('languages') || pathname.includes('languages') || subTabParam === 'languages') {
+        let targetSub = subTabParam || 'updates';
+        if (hash.includes('updates') || pathname.includes('updates') || subTabParam === 'updates') {
+          targetSub = 'updates';
+        } else if (hash.includes('categories') || pathname.includes('categories') || subTabParam === 'categories') {
+          targetSub = 'categories';
+        } else if (hash.includes('languages') || pathname.includes('languages') || subTabParam === 'languages') {
           targetSub = 'languages';
         } else if (hash.includes('crm') || pathname.includes('crm') || subTabParam === 'crm') {
           targetSub = 'crm';
@@ -742,8 +746,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           targetSub = 'branding';
         } else if (hash.includes('theme') || pathname.includes('theme') || subTabParam === 'theme') {
           targetSub = 'theme';
+        } else if (hash.includes('financials') || pathname.includes('financials') || subTabParam === 'financials') {
+          targetSub = 'financials';
         } else if (hash.includes('security') || pathname.includes('security') || subTabParam === 'security') {
           targetSub = 'security';
+        } else if (hash.includes('backup') || pathname.includes('backup') || subTabParam === 'backup') {
+          targetSub = 'backup';
+        } else if (hash.includes('features') || pathname.includes('features') || subTabParam === 'features') {
+          targetSub = 'features';
         }
         setSettingsSubTab(targetSub);
         setAdminActiveTab('settings');
