@@ -25,6 +25,27 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Global error handler — shows crash reason instead of blank screen
+      window.onerror = function(msg, src, line, col, err) {
+        var root = document.getElementById('root');
+        if (root && !root.hasChildNodes()) {
+          root.innerHTML = '<div style="padding:40px;font-family:system-ui;max-width:700px;margin:0 auto;">' +
+            '<h2 style="color:#dc2626;">⚠️ Application Load Error</h2>' +
+            '<p style="color:#64748b;">The app encountered an error during initialization:</p>' +
+            '<pre style="background:#f1f5f9;padding:16px;border-radius:8px;overflow:auto;font-size:13px;color:#0f172a;">' +
+            (msg || 'Unknown error') + '\n\nSource: ' + (src || '?') + ':' + (line || '?') + ':' + (col || '?') +
+            (err && err.stack ? '\n\nStack:\n' + err.stack : '') + '</pre>' +
+            '<button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">Reload Page</button>' +
+            '</div>';
+        }
+      };
+      window.onunhandledrejection = function(e) {
+        var reason = e.reason;
+        var msg = reason instanceof Error ? reason.message + '\n' + reason.stack : String(reason);
+        window.onerror('Unhandled Promise: ' + msg, '', 0, 0, reason instanceof Error ? reason : null);
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

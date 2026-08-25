@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import { AppProvider, useApp } from './context/AppContext';
@@ -27,6 +22,50 @@ import { SupportChatWidget } from './components/portal/SupportChatWidget';
 import { AiFloatingCopilot } from './components/common/AiFloatingCopilot';
 
 import { StandaloneAgendaView } from './components/portal/StandaloneAgendaView';
+
+// Global Error Boundary to catch rendering crashes and show a diagnostic screen
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.setState({ errorInfo });
+    console.error('React ErrorBoundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'system-ui', maxWidth: 700, margin: '0 auto' }}>
+          <h2 style={{ color: '#dc2626' }}>⚠️ Application Render Error</h2>
+          <p style={{ color: '#64748b' }}>The app crashed during rendering. Details below:</p>
+          <pre style={{ background: '#f1f5f9', padding: 16, borderRadius: 8, overflow: 'auto', fontSize: 13, color: '#0f172a' }}>
+            {this.state.error?.message || 'Unknown error'}
+            {'\n\n'}
+            {this.state.error?.stack || ''}
+            {this.state.errorInfo?.componentStack ? '\n\nComponent Stack:\n' + this.state.errorInfo.componentStack : ''}
+          </pre>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 16, padding: '10px 24px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const MainLayout: React.FC = () => {
   const { activeView, language } = useApp();
@@ -91,10 +130,12 @@ export default function App() {
   })();
 
   return (
-    <HelmetProvider>
-      <AppProvider>
-        {isAgendaStandalone ? <StandaloneAgendaView /> : <MainLayout />}
-      </AppProvider>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <AppProvider>
+          {isAgendaStandalone ? <StandaloneAgendaView /> : <MainLayout />}
+        </AppProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
