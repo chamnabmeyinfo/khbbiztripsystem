@@ -73,7 +73,15 @@ import {
   DEFAULT_CRM_CONFIG,
 } from '../services/crmIntegrationService';
 import { generateDefaultHandoverTasks, playNotificationChime, getRecommendedStageFromTasks } from '../services/handoverTaskService';
-import { isStaffMember, userHasPermission, userCanAccessTab, isAllowedGoogleDomain, ROLE_CONFIGS } from '../services/rolePermissions';
+import {
+  isStaffMember,
+  userHasPermission,
+  userCanAccessTab,
+  isAllowedGoogleDomain,
+  ROLE_CONFIGS,
+  getUserEffectivePermissions,
+  getUserEffectiveTabs
+} from '../services/rolePermissions';
 import { CURRENCY_CONFIGS, convertFromUSD } from '../services/currencyService';
 import { isRTL, translations } from '../i18n/translations';
 import { getLocalizedPackage } from '../utils/packageLocalization';
@@ -604,6 +612,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [recentWonLeadAlert, setRecentWonLeadAlert] = useState<{ lead: InboundWonLead; timestamp: string } | null>(null);
   const clearWonLeadAlert = () => setRecentWonLeadAlert(null);
 
+  // IMPORTANT: users & auditLogs state MUST be declared before any hook or function that references them
+  const [users, setUsers] = useState<User[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.USERS);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return SEED_USERS;
+  });
+
+  const [auditLogs, setAuditLogs] = useState<UserAuditLog[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return INITIAL_AUDIT_LOGS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
+  }, [auditLogs]);
+
   const [activeView, setActiveView] = useState<ActiveView>('marketing');
   const [adminActiveTab, setAdminActiveTab] = useState<string>('overview');
   const [settingsSubTab, setSettingsSubTab] = useState<string>('features');
@@ -882,30 +915,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.SUPPLIER_PAYMENTS, JSON.stringify(supplierPayments)); }, [supplierPayments]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses)); }, [expenses]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(deletedItems)); }, [deletedItems]);
-
-  const [users, setUsers] = useState<User[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.USERS);
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return SEED_USERS;
-  });
-
-  const [auditLogs, setAuditLogs] = useState<UserAuditLog[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_AUDIT_LOGS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
-  }, [auditLogs]);
 
   // Firestore Real-Time Users Sync
   useEffect(() => {

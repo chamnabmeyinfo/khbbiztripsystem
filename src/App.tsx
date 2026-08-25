@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import { AppProvider, useApp } from './context/AppContext';
 import { isRTL, getFontFamilyClass } from './i18n/translations';
@@ -23,22 +23,37 @@ import { AiFloatingCopilot } from './components/common/AiFloatingCopilot';
 
 import { StandaloneAgendaView } from './components/portal/StandaloneAgendaView';
 
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
 // Global Error Boundary to catch rendering crashes and show a diagnostic screen
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState;
+  public props: ErrorBoundaryProps;
+
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.props = props;
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+    };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    this.setState({ errorInfo });
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    (this as any).setState({ errorInfo });
     console.error('React ErrorBoundary caught:', error, errorInfo);
   }
 
