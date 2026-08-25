@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { CURRENCY_CONFIGS } from '../../services/currencyService';
-import { isRTL } from '../../i18n/translations';
+import { isRTL, SUPPORTED_LANGUAGES } from '../../i18n/translations';
 import { LanguageCode, CurrencyCode, UserRole } from '../../types';
 import { ROLE_CONFIGS, isStaffMember } from '../../services/rolePermissions';
 import {
@@ -77,14 +77,13 @@ export const Header: React.FC = () => {
 
   const rtl = isRTL(language);
 
-  const languagesList: { code: LanguageCode; label: string; native: string; flag: string }[] = [
-    { code: 'en', label: 'English', native: 'English', flag: '🇺🇸' },
-    { code: 'km', label: 'Khmer', native: 'ភាសាខ្មែរ', flag: '🇰🇭' },
-    { code: 'ar', label: 'Arabic', native: 'العربية (RTL)', flag: '🇦🇪' },
-    { code: 'he', label: 'Hebrew', native: 'עברית (RTL)', flag: '🇮🇱' },
-    { code: 'es', label: 'Spanish', native: 'Español', flag: '🇪🇸' },
-    { code: 'ja', label: 'Japanese', native: '日本語 (CJK)', flag: '🇯🇵' },
-  ];
+  const enabledCodes = systemSettings?.enabledLanguages || ['en', 'km', 'ar', 'he', 'es', 'ja', 'zh', 'vi', 'th', 'fr', 'ko', 'de'];
+  const languagesList = SUPPORTED_LANGUAGES.filter(l => enabledCodes.includes(l.code)).map(l => ({
+    code: l.code,
+    label: l.label,
+    native: l.nativeName,
+    flag: l.flag
+  }));
 
   return (
     <header className="sticky top-0 z-50 bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors duration-200">

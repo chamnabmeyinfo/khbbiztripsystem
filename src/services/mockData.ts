@@ -1502,6 +1502,13 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   cardBorderWidth: 'thin',
   textShadowPreset: 'none',
 
+  // Language & Internationalization Controls
+  defaultLanguage: 'en',
+  enabledLanguages: ['en', 'km', 'ar', 'he', 'es', 'ja', 'zh', 'vi', 'th', 'fr', 'ko', 'de'],
+  autoDetectBrowserLanguage: true,
+  enableAiAutoTranslation: true,
+  showLanguageSwitcher: true,
+
   // CRM & Webhook Integration
   crmConfig: {
     crmEndpointUrl: 'https://khbcrm.vercel.app/api/v1/bookings',

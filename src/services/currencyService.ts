@@ -72,10 +72,16 @@ export function formatMoney(amountInUSD: number, targetCurrency: CurrencyCode, l
   const localeMap: Record<LanguageCode, string> = {
     en: 'en-US',
     km: 'km-KH',
+    zh: 'zh-CN',
+    vi: 'vi-VN',
+    th: 'th-TH',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
     ar: 'ar-AE',
     he: 'he-IL',
     es: 'es-ES',
-    ja: 'ja-JP',
+    fr: 'fr-FR',
+    de: 'de-DE',
   };
 
   try {
@@ -95,10 +101,16 @@ export function formatRawMoney(amountInCurrency: number, targetCurrency: Currenc
   const localeMap: Record<LanguageCode, string> = {
     en: 'en-US',
     km: 'km-KH',
+    zh: 'zh-CN',
+    vi: 'vi-VN',
+    th: 'th-TH',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
     ar: 'ar-AE',
     he: 'he-IL',
     es: 'es-ES',
-    ja: 'ja-JP',
+    fr: 'fr-FR',
+    de: 'de-DE',
   };
 
   try {

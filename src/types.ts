@@ -42,7 +42,7 @@ export type PermissionKey =
   | 'crm_leads_view'
   | 'crm_leads_manage';
 
-export type LanguageCode = 'en' | 'ar' | 'he' | 'es' | 'ja' | 'km';
+export type LanguageCode = 'en' | 'km' | 'ar' | 'he' | 'es' | 'ja' | 'zh' | 'vi' | 'th' | 'fr' | 'ko' | 'de';
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AED' | 'ILS';
 
@@ -803,6 +803,13 @@ export interface SystemSettings {
   restrictAdminDomain: boolean;
   allowedAdminDomain: string;
   enableBiometricAuth: boolean;
+
+  // Language & Internationalization Controls
+  defaultLanguage?: LanguageCode;
+  enabledLanguages?: LanguageCode[];
+  autoDetectBrowserLanguage?: boolean;
+  enableAiAutoTranslation?: boolean;
+  showLanguageSwitcher?: boolean;
 
   // CRM & Webhook Integration
   crmConfig?: CrmConfig;

@@ -702,7 +702,7 @@ const ja: PdfLabels = {
   whyShouldJoin: 'なぜこのミッションに参加すべきか：',
 };
 
-const TRANSLATIONS: Record<LanguageCode, PdfLabels> = { en, km, ar, he, es, ja };
+const TRANSLATIONS: Partial<Record<LanguageCode, PdfLabels>> = { en, km, ar, he, es, ja };
 
 export function getPdfLabels(lang: LanguageCode): PdfLabels {
   return TRANSLATIONS[lang] || en;

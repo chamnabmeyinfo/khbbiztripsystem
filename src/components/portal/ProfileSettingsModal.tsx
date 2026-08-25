@@ -32,8 +32,12 @@ export const ProfileSettingsModal: React.FC = () => {
     offlineMode,
     setOfflineMode,
     authenticateBiometric,
+    systemSettings,
     t
   } = useApp();
+
+  const enabledCodes = systemSettings?.enabledLanguages || ['en', 'km', 'ar', 'he', 'es', 'ja', 'zh', 'vi', 'th', 'fr', 'ko', 'de'];
+  const activeSupportedLanguages = SUPPORTED_LANGUAGES.filter(l => enabledCodes.includes(l.code));
 
   const [biometricEnabled, setBiometricEnabled] = useState(currentUser?.biometricEnabled ?? true);
   const [notificationStatus, setNotificationStatus] = useState(true);
@@ -101,7 +105,7 @@ export const ProfileSettingsModal: React.FC = () => {
               <span>{t('language')} (with auto RTL layout)</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {SUPPORTED_LANGUAGES.map(lang => (
+              {activeSupportedLanguages.map(lang => (
                 <button
                   key={lang.code}
                   type="button"

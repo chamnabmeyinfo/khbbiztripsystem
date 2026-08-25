@@ -691,6 +691,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       }
 
+      // Deep linking for Settings Sub-Tabs (e.g. ?tab=settings&subTab=languages or #settings/languages)
+      const tabParam = urlParams.get('tab');
+      const subTabParam = urlParams.get('subTab') || urlParams.get('sub');
+      const pathname = window.location.pathname.toLowerCase();
+
+      if (
+        tabParam === 'settings' ||
+        hash.includes('settings') ||
+        pathname.includes('/settings')
+      ) {
+        let targetSub = subTabParam || 'features';
+        if (hash.includes('languages') || pathname.includes('languages') || subTabParam === 'languages') {
+          targetSub = 'languages';
+        } else if (hash.includes('crm') || pathname.includes('crm') || subTabParam === 'crm') {
+          targetSub = 'crm';
+        } else if (hash.includes('payments') || pathname.includes('payments') || subTabParam === 'payments') {
+          targetSub = 'payments';
+        } else if (hash.includes('branding') || pathname.includes('branding') || subTabParam === 'branding') {
+          targetSub = 'branding';
+        } else if (hash.includes('theme') || pathname.includes('theme') || subTabParam === 'theme') {
+          targetSub = 'theme';
+        } else if (hash.includes('security') || pathname.includes('security') || subTabParam === 'security') {
+          targetSub = 'security';
+        }
+        setSettingsSubTab(targetSub);
+        setAdminActiveTab('settings');
+        setActiveView('admin_dashboard');
+      }
+
       // QR Code verification scanner linking
       const verifyType = urlParams.get('verify');
       const verifyRef = urlParams.get('ref') || urlParams.get('bookingCode');
