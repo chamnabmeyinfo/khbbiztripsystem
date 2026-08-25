@@ -41,7 +41,9 @@ import {
   X,
   Compass,
   Webhook,
-  Send
+  Send,
+  RefreshCw,
+  KeyRound
 } from 'lucide-react';
 import { BookingStatus, TourPackage } from '../../types';
 import { SuppliersSection } from './SuppliersSection';
@@ -242,6 +244,71 @@ export const AdminDashboard: React.FC = () => {
     ...group,
     items: group.items.filter(item => canAccessTab(item.id))
   })).filter(group => group.items.length > 0);
+
+  // If newly registered staff has no assigned role yet (general_staff) or zero accessible tabs
+  if (currentUser.role === 'general_staff' || NAV_GROUPS.length === 0) {
+    return (
+      <div className="py-16 max-w-2xl mx-auto px-4">
+        <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 text-center animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+            <Clock className="w-8 h-8 animate-pulse" />
+          </div>
+          
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              <Shield className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Pending Role Assignment • General Staff</span>
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Welcome to KHB BizTrip, {currentUser.name}!
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
+              Your corporate email <strong className="text-slate-900 dark:text-white font-mono">{currentUser.email}</strong> has been verified under KHB Corporate Staff.
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+              To enforce enterprise access control, first-time staff accounts start with no operational role. An Administrator will review your account in User Management and assign your department role (Operations, Procurement, Finances, or Support) and module clearances.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-left space-y-2 text-xs">
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+              <span>Account Holder:</span>
+              <strong className="text-slate-900 dark:text-white">{currentUser.name}</strong>
+            </div>
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+              <span>Corporate Email:</span>
+              <strong className="text-slate-900 dark:text-white font-mono">{currentUser.email}</strong>
+            </div>
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+              <span>Department Clearance:</span>
+              <span className="font-semibold text-amber-600 dark:text-amber-400">General Staff (Pending Allocation)</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+              <span>Active Permissions:</span>
+              <span className="font-mono text-slate-500 dark:text-slate-400">0 of 15 Modules (Awaiting Admin Activation)</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Check Clearance Status</span>
+            </button>
+            <button
+              onClick={() => logout()}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out / Switch</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const totalRevenueUSD = bookings
     .filter(b => b.status !== 'cancelled')

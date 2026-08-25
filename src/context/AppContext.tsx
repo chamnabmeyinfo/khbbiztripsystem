@@ -707,30 +707,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           fbUser.email === 'chamnabmey.info@gmail.com' ||
           fbUser.email === 'vutha.tim@khbmedia.asia' ||
           fbUser.email === 'vutha.tim@khbevents.com';
-        const isAdminUser =
+        const isCorporateStaff =
           isSuperAdminEmail ||
           fbUser.email?.endsWith('@khbevents.com') ||
-          fbUser.email?.endsWith('@khbmedia.asia') ||
-          fbUser.email?.includes('admin');
+          fbUser.email?.endsWith('@khbmedia.asia');
         const isVutha = fbUser.email === 'vutha.tim@khbmedia.asia' || fbUser.email === 'vutha.tim@khbevents.com';
 
+        const existing = users.find(u => u.email.toLowerCase() === fbUser.email?.toLowerCase());
+
         const updatedUser: User = {
-          id: fbUser.uid,
-          name: isVutha ? (fbUser.displayName || 'Tim Vutha') : (fbUser.displayName || fbUser.email?.split('@')[0] || 'Traveler'),
+          id: isVutha ? 'usr_vutha_tim' : (existing?.id || fbUser.uid),
+          name: isVutha ? (fbUser.displayName || 'Tim Vutha') : (fbUser.displayName || existing?.name || fbUser.email?.split('@')[0] || 'Traveler'),
           email: fbUser.email || 'traveler@example.com',
-          phone: fbUser.phoneNumber || (isVutha ? '060 815 515' : '+1 (555) 019-2831'),
-          role: isSuperAdminEmail ? 'super_admin' : (isAdminUser ? 'admin' : 'traveler'),
-          department: isSuperAdminEmail ? 'Executive Leadership' : undefined,
-          jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : undefined,
+          phone: fbUser.phoneNumber || existing?.phone || (isVutha ? '060 815 515' : '+855 12 345 678'),
+          role: isSuperAdminEmail ? 'super_admin' : (existing?.role || (isCorporateStaff ? 'general_staff' : 'traveler')),
+          department: isSuperAdminEmail ? 'Executive Leadership' : (existing?.department || (isCorporateStaff ? 'General Staff' : 'Trade Delegates')),
+          jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (existing?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isCorporateStaff ? 'Staff Member (Pending Clearance)' : undefined))),
+          status: isSuperAdminEmail ? 'active' : (existing?.status || (isCorporateStaff ? 'invited' : 'active')),
+          customPermissions: existing?.customPermissions,
+          customAccessibleTabs: existing?.customAccessibleTabs,
           preferredLanguage: language,
           preferredCurrency: currency,
-          hasBiometrics: isSuperAdminEmail
+          hasBiometrics: isSuperAdminEmail || existing?.hasBiometrics || false
         };
         setCurrentUser(updatedUser);
       }
     });
     return () => unsubscribe();
-  }, [language, currency]);
+  }, [language, currency, users]);
 
   // Firestore Real-Time Packages Sync (with Deleted IDs Guard)
   useEffect(() => {
@@ -1150,9 +1154,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const targetUser = users.find(u => u.id === userId);
     if (!targetUser) return;
 
+    const isPendingStaff = targetUser.role === 'general_staff' || targetUser.status === 'invited';
+    const newDepartment = isPendingStaff && ROLE_CONFIGS[role]?.department 
+      ? ROLE_CONFIGS[role].department 
+      : targetUser.department;
+    const newJobTitle = isPendingStaff && (!targetUser.jobTitle || targetUser.jobTitle.includes('Pending'))
+      ? (ROLE_CONFIGS[role]?.displayName || targetUser.jobTitle)
+      : targetUser.jobTitle;
+
     const updated: User = {
       ...targetUser,
       role,
+      department: newDepartment,
+      jobTitle: newJobTitle,
+      status: 'active',
       customPermissions: customPermissions ? [...customPermissions] : undefined,
       customAccessibleTabs: customAccessibleTabs ? [...customAccessibleTabs] : undefined
     };
@@ -1163,8 +1178,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     logUserAudit(
-      'RBAC Permissions Override Assigned',
-      `Clearance updated for ${targetUser.name} (${targetUser.email}) -> Role: [${role}], Custom Permissions: ${customPermissions ? customPermissions.length : 'Default'}, Custom Tabs: ${customAccessibleTabs ? customAccessibleTabs.length : 'Default'}`,
+      'RBAC Role & Permissions Assigned',
+      `Clearance updated for ${targetUser.name} (${targetUser.email}) -> Role: [${role}], Department: [${newDepartment}], Custom Permissions: ${customPermissions ? customPermissions.length : 'Default'}, Custom Tabs: ${customAccessibleTabs ? customAccessibleTabs.length : 'Default'}`,
       'security'
     );
 
@@ -1175,8 +1190,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     addNotification(
-      'Role & Permissions Updated',
-      `Assigned role "${ROLE_CONFIGS[role]?.displayName || role}" and custom clearances to ${targetUser.name}.`,
+      'Role & Permissions Assigned',
+      `Successfully assigned role "${ROLE_CONFIGS[role]?.displayName || role}" and activated account for ${targetUser.name}.`,
       'system'
     );
   };
@@ -1463,22 +1478,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const isVutha = userEmail === 'vutha.tim@khbmedia.asia' || userEmail === 'vutha.tim@khbevents.com';
       
       const existingUser = users.find(u => u.email.toLowerCase() === userEmail);
+      const isFirstTimeStaff = !existingUser && !isSuperAdminEmail;
+
       const assignedRole: UserRole = isSuperAdminEmail
         ? 'super_admin'
-        : (existingUser?.role && existingUser.role !== 'traveler' ? existingUser.role : 'operations_manager');
+        : (existingUser?.role && existingUser.role !== 'traveler' ? existingUser.role : 'general_staff');
 
       const newUser: User = {
-        id: isVutha ? 'usr_vutha_tim' : user.uid,
+        id: isVutha ? 'usr_vutha_tim' : (existingUser?.id || user.uid),
         name: isVutha ? (user.displayName || 'Tim Vutha') : (user.displayName || existingUser?.name || userEmail.split('@')[0] || 'KHB Staff Member'),
         email: user.email || userEmail,
         phone: user.phoneNumber || existingUser?.phone || (isVutha ? '060 815 515' : '+855 12 345 678'),
         role: assignedRole,
-        department: isSuperAdminEmail ? 'Executive Leadership' : (existingUser?.department || 'Trip Operations'),
-        jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (existingUser?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : 'Staff Member')),
+        department: isSuperAdminEmail ? 'Executive Leadership' : (existingUser?.department || (isFirstTimeStaff ? 'General Staff' : 'Trip Operations')),
+        jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (existingUser?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isFirstTimeStaff ? 'Staff Member (Pending Clearance)' : 'Staff Member'))),
+        status: isSuperAdminEmail ? 'active' : (existingUser?.status || (isFirstTimeStaff ? 'invited' : 'active')),
+        customPermissions: existingUser?.customPermissions || [],
+        customAccessibleTabs: existingUser?.customAccessibleTabs || [],
         preferredLanguage: language,
         preferredCurrency: currency,
-        hasBiometrics: true,
-        avatarUrl: user.photoURL || existingUser?.avatarUrl || undefined
+        hasBiometrics: isSuperAdminEmail || existingUser?.hasBiometrics || true,
+        avatarUrl: user.photoURL || existingUser?.avatarUrl || undefined,
+        createdAt: existingUser?.createdAt || new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
       };
 
       setCurrentUser(newUser);
@@ -1493,17 +1515,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           role: newUser.role,
           department: newUser.department,
           jobTitle: newUser.jobTitle,
+          status: newUser.status,
+          customPermissions: newUser.customPermissions,
+          customAccessibleTabs: newUser.customAccessibleTabs,
           preferredLanguage: language,
           preferredCurrency: currency,
           avatarUrl: newUser.avatarUrl,
-          createdAt: new Date().toISOString()
+          createdAt: newUser.createdAt,
+          lastLoginAt: newUser.lastLoginAt
         }), { merge: true });
       } catch (e) {
         console.warn('User profile sync notice:', e);
       }
 
       setActiveView('admin_dashboard');
-      addNotification('Corporate Staff Login Verified', `Welcome back, ${newUser.name} (${newUser.email})!`, 'system');
+      if (isFirstTimeStaff) {
+        addNotification(
+          'Account Registered (Pending Clearance)',
+          `Welcome ${newUser.name}! Your account is registered under KHB Corporate Staff and is pending role allocation by an Administrator.`,
+          'system'
+        );
+      } else {
+        addNotification('Corporate Staff Login Verified', `Welcome back, ${newUser.name} (${newUser.email})!`, 'system');
+      }
       return { success: true };
     } catch (err: any) {
       // If popup is blocked by sandbox environment, fallback gracefully for verified staff
@@ -1667,21 +1701,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const isVutha = cleanEmail === 'vutha.tim@khbmedia.asia' || cleanEmail === 'vutha.tim@khbevents.com';
+    const isFirstTimeStaff = isCorporateStaff && !isSuperAdminEmail;
     const generatedName = isVutha ? 'Tim Vutha' : (name || cleanEmail.split('@')[0].replace(/[._]/g, ' '));
     const formattedName = isVutha ? 'Tim Vutha' : (generatedName.charAt(0).toUpperCase() + generatedName.slice(1));
-    const finalRole: UserRole = isSuperAdminEmail ? 'super_admin' : (isCorporateStaff ? 'admin' : (role || 'traveler'));
+    const finalRole: UserRole = isSuperAdminEmail ? 'super_admin' : (isCorporateStaff ? 'general_staff' : (role || 'traveler'));
     const userId = isVutha ? 'usr_vutha_tim' : `usr_${Date.now()}`;
     const user: User = {
       id: userId,
-      name: formattedName || (finalRole === 'super_admin' ? 'Tim Vutha' : (finalRole === 'admin' ? 'KHB Staff Member' : 'Traveler')),
+      name: formattedName || (finalRole === 'super_admin' ? 'Tim Vutha' : (isCorporateStaff ? 'KHB Staff Member' : 'Traveler')),
       email: cleanEmail,
       phone: isVutha ? '060 815 515' : (phone || '+855 12 345 678'),
       role: finalRole,
-      department: isSuperAdminEmail ? 'Executive Leadership' : (isCorporateStaff ? 'Trip Operations' : 'Trade Delegates'),
-      jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : undefined),
+      department: isSuperAdminEmail ? 'Executive Leadership' : (isCorporateStaff ? 'General Staff' : 'Trade Delegates'),
+      jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isCorporateStaff ? 'Staff Member (Pending Clearance)' : undefined)),
+      status: isSuperAdminEmail ? 'active' : (isFirstTimeStaff ? 'invited' : 'active'),
+      customPermissions: [],
+      customAccessibleTabs: [],
       preferredLanguage: language,
       preferredCurrency: currency,
       hasBiometrics: isSuperAdminEmail,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
     };
     setUsers(prev => [user, ...prev]);
     setCurrentUser(user);
@@ -1694,18 +1734,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         phone: user.phone,
         role: user.role,
         department: user.department,
+        jobTitle: user.jobTitle,
+        status: user.status,
+        customPermissions: user.customPermissions,
+        customAccessibleTabs: user.customAccessibleTabs,
         preferredLanguage: language,
         preferredCurrency: currency,
-        createdAt: new Date().toISOString()
+        createdAt: user.createdAt,
+        lastLoginAt: user.lastLoginAt
       }));
-    } catch {}
+    } catch (e) {
+      console.warn('Firestore sync notice:', e);
+    }
 
-    if (finalRole === 'admin') {
+    if (isCorporateStaff) {
       setActiveView('admin_dashboard');
-      addNotification('Corporate Staff Login', `Logged in with verified company email: ${cleanEmail}`, 'system');
+      if (isFirstTimeStaff) {
+        addNotification('Account Created (Pending Clearance)', `Welcome ${user.name}! Your account is registered under KHB Corporate Staff and is pending role allocation by an Administrator.`, 'system');
+      } else {
+        addNotification('Corporate Staff Login', `Logged in as ${user.name} (${user.email})`, 'system');
+      }
     } else {
       setActiveView('customer_portal');
-      addNotification('Welcome', `Logged in as ${user.name}`, 'booking');
+      addNotification('Welcome', `Account created for ${user.name}`, 'booking');
     }
   };
 

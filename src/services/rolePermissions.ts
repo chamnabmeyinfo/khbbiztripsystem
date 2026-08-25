@@ -412,6 +412,22 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       'invoices'
     ]
   },
+  general_staff: {
+    id: 'general_staff',
+    title: 'General Staff (Pending Assignment)',
+    shortTitle: 'Staff (Pending)',
+    displayName: 'General Staff (Pending Assignment)',
+    description: 'Newly registered corporate staff account pending department role and permission allocation by an Administrator.',
+    department: 'General Staff',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/40',
+    badgeText: 'text-amber-700 dark:text-amber-300',
+    badgeBorder: 'border-amber-200 dark:border-amber-800',
+    badgeColor: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    level: 2,
+    defaultPermissions: [],
+    permissions: [],
+    accessibleTabs: []
+  },
   traveler: {
     id: 'traveler',
     title: 'B2B Trade Delegate / Traveler',
@@ -482,7 +498,8 @@ export function isStaffMember(user: User | null): boolean {
     'operations_manager',
     'procurement_officer',
     'finance_officer',
-    'support_agent'
+    'support_agent',
+    'general_staff'
   ].includes(user.role);
 }
 

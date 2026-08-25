@@ -5,6 +5,7 @@ export type UserRole =
   | 'procurement_officer'
   | 'finance_officer'
   | 'support_agent'
+  | 'general_staff'
   | 'traveler';
 
 export type UserStatus = 'active' | 'suspended' | 'invited' | 'inactive';

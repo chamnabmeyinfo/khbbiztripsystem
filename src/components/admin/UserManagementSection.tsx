@@ -151,17 +151,26 @@ export const UserManagementSection: React.FC = () => {
   const totalDelegates = users.filter(u => u.role === 'traveler').length;
   const activeCount = users.filter(u => (u.status || 'active') === 'active').length;
   const suspendedCount = users.filter(u => u.status === 'suspended').length;
+  const pendingStaffCount = users.filter(u => u.role === 'general_staff' || (isStaffMember(u) && u.status === 'invited')).length;
 
   const canManageUsers = hasPermission('users_manage') || isSuperAdmin;
 
   // Open Permission Modal for a specific user
   const handleOpenPermissionModal = (user: User) => {
     setPermissionModalUser(user);
-    setTargetRole(user.role);
-    const effectivePerms = getUserEffectivePermissions(user);
-    const effectiveTabs = getUserEffectiveTabs(user);
-    setSelectedPermissions(effectivePerms);
-    setSelectedTabs(effectiveTabs);
+    const initialRole: UserRole = user.role === 'general_staff' ? 'operations_manager' : user.role;
+    setTargetRole(initialRole);
+    if (user.role === 'general_staff') {
+      const defaults = ROLE_CONFIGS[initialRole]?.defaultPermissions || [];
+      const defaultTabs = ROLE_CONFIGS[initialRole]?.accessibleTabs || [];
+      setSelectedPermissions([...defaults]);
+      setSelectedTabs([...defaultTabs]);
+    } else {
+      const effectivePerms = getUserEffectivePermissions(user);
+      const effectiveTabs = getUserEffectiveTabs(user);
+      setSelectedPermissions(effectivePerms);
+      setSelectedTabs(effectiveTabs);
+    }
   };
 
   // Quick Action: Apply role default permissions
@@ -527,6 +536,32 @@ export const UserManagementSection: React.FC = () => {
       {/* SUB-TAB 1: USER DIRECTORY */}
       {activeSubTab === 'directory' && (
         <div className="space-y-4">
+          {/* Pending Staff Role Assignment Alert Banner */}
+          {pendingStaffCount > 0 && (
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-sm animate-in fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 shadow-inner">
+                  <Clock className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-amber-950 dark:text-amber-200 text-sm">
+                    {pendingStaffCount} New Staff Account(s) Awaiting Role Assignment
+                  </h4>
+                  <p className="text-amber-800 dark:text-amber-300/90 text-xs mt-0.5">
+                    Newly signed-in staff are initialized with zero permissions. Click "Assign Role" to choose a preset or customize access.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setRoleFilter(roleFilter === 'general_staff' ? 'all' : 'general_staff')}
+                className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-md shadow-amber-600/20 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>{roleFilter === 'general_staff' ? 'Show All Users' : `Filter Pending Staff (${pendingStaffCount})`}</span>
+              </button>
+            </div>
+          )}
+
           {/* Search & Filters Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="relative w-full sm:w-80">
@@ -671,14 +706,26 @@ export const UserManagementSection: React.FC = () => {
                           {/* Role Badge & Permissions Summary */}
                           <td className="px-4 py-4">
                             <div className="space-y-1">
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${roleConfig.badgeColor}`}
-                              >
-                                <Shield className="w-3 h-3" />
-                                {roleConfig.displayName}
-                              </span>
+                              {user.role === 'general_staff' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700 animate-pulse">
+                                  <Clock className="w-3 h-3 text-amber-600" />
+                                  <span>Pending Role Allocation</span>
+                                </span>
+                              ) : (
+                                <span
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${roleConfig.badgeColor}`}
+                                >
+                                  <Shield className="w-3 h-3" />
+                                  {roleConfig.displayName}
+                                </span>
+                              )}
+
                               <div className="flex items-center gap-1.5">
-                                {hasCustomPerms ? (
+                                {user.role === 'general_staff' ? (
+                                  <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                                    0 Active Clearances (Unassigned)
+                                  </span>
+                                ) : hasCustomPerms ? (
                                   <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                                     <KeyRound className="w-2.5 h-2.5 text-purple-600 dark:text-purple-400" />
                                     {effectivePermsCount} Custom Permissions
@@ -697,11 +744,11 @@ export const UserManagementSection: React.FC = () => {
                             <div>
                               <div className="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1">
                                 <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                                {user.department || 'General Operations'}
+                                {user.department || 'General Staff'}
                               </div>
                               <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
                                 <Briefcase className="w-3 h-3 text-slate-400" />
-                                {user.jobTitle || 'Team Member'}
+                                {user.jobTitle || (user.role === 'general_staff' ? 'Pending Role' : 'Staff Member')}
                               </div>
                             </div>
                           </td>
@@ -720,7 +767,7 @@ export const UserManagementSection: React.FC = () => {
                               {userStatus === 'active' && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                               {userStatus === 'suspended' && <XCircle className="w-3 h-3 text-rose-500" />}
                               {userStatus === 'invited' && <Clock className="w-3 h-3 text-amber-500" />}
-                              {userStatus.charAt(0).toUpperCase() + userStatus.slice(1)}
+                              {user.role === 'general_staff' ? 'Pending Role' : (userStatus.charAt(0).toUpperCase() + userStatus.slice(1))}
                             </span>
                           </td>
 
@@ -749,11 +796,15 @@ export const UserManagementSection: React.FC = () => {
                               {canManageUsers && (
                                 <button
                                   onClick={() => handleOpenPermissionModal(user)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 dark:hover:bg-amber-900 border border-amber-300/60 dark:border-amber-700/60 transition-colors shadow-sm"
-                                  title="Assign custom role and fine-grained permissions"
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                                    user.role === 'general_staff'
+                                      ? 'text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 animate-pulse cursor-pointer'
+                                      : 'text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/60 hover:bg-amber-200 dark:hover:bg-amber-900 border border-amber-300/60 dark:border-amber-700/60 cursor-pointer'
+                                  }`}
+                                  title={user.role === 'general_staff' ? 'Assign role preset & module access' : 'Assign custom role and fine-grained permissions'}
                                 >
-                                  <KeyRound className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                                  <span>Clearance</span>
+                                  <KeyRound className="w-3 h-3" />
+                                  <span>{user.role === 'general_staff' ? 'Assign Role' : 'Clearance'}</span>
                                 </button>
                               )}
 
