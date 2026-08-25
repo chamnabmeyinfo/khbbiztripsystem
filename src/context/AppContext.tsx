@@ -40,6 +40,7 @@ import {
   LeadPassenger,
   LeadOperationalStage,
   LeadHandoverTask,
+  PackageCategory,
 } from '../types';
 import {
   SEED_USERS,
@@ -54,7 +55,8 @@ import {
   SEED_SUPPLIER_PAYMENTS,
   SEED_EXPENSES,
   SEED_DELETED_ITEMS,
-  DEFAULT_SYSTEM_SETTINGS
+  DEFAULT_SYSTEM_SETTINGS,
+  DEFAULT_PACKAGE_CATEGORIES
 } from '../services/mockData';
 import {
   pushBookingToExternalCrm,
@@ -264,6 +266,15 @@ interface AppContextType {
   updatePackage: (pkg: TourPackage) => void;
   deletePackage: (packageId: string) => void;
   
+  // Tour Package Categories CRUD
+  packageCategories: PackageCategory[];
+  addPackageCategory: (cat: Omit<PackageCategory, 'createdAt' | 'updatedAt'> | PackageCategory) => PackageCategory;
+  updatePackageCategory: (cat: PackageCategory) => void;
+  deletePackageCategory: (categoryId: string) => { success: boolean; affectedPackages: number };
+  togglePackageCategoryStatus: (categoryId: string) => void;
+  reorderPackageCategories: (orderedIds: string[]) => void;
+  resetPackageCategories: () => void;
+  
   sendSupportMessage: (chatId: string, text: string, senderRole?: 'traveler' | 'admin') => void;
   addNotification: (
     title: string,
@@ -382,6 +393,7 @@ const STORAGE_KEYS = {
   DELETED_IDS: 'tripdesk_deleted_ids_prod',
   SETTINGS: 'tripdesk_settings_prod',
   INBOUND_LEADS: 'tripdesk_inbound_leads_prod',
+  PACKAGE_CATEGORIES: 'tripdesk_package_categories_prod',
 };
 
 const INITIAL_AUDIT_LOGS: UserAuditLog[] = [
@@ -586,6 +598,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
     applyThemeToDOM(systemSettings, darkMode);
   }, [systemSettings, darkMode]);
+
+  // Package Categories State
+  const [packageCategories, setPackageCategories] = useState<PackageCategory[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PACKAGE_CATEGORIES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_PACKAGE_CATEGORIES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
+    } catch (e) {}
+  }, [packageCategories]);
 
   // CRM & Webhook Inbound & Outbound Sync State
   const [crmEvents, setCrmEvents] = useState<CrmWebhookEvent[]>(() => getStoredWebhookEvents());
@@ -1055,6 +1085,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore system settings sync fallback to local store');
+    }
+  }, []);
+
+  // Firestore Real-Time Package Categories Sync
+  useEffect(() => {
+    try {
+      const q = query(collection(db, 'package_categories'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const remoteCategories = snapshot.docs.map(d => ({
+            id: d.id,
+            ...d.data()
+          })) as PackageCategory[];
+          remoteCategories.sort((a, b) => (a.order || 999) - (b.order || 999));
+          setPackageCategories(remoteCategories);
+          try {
+            localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(remoteCategories));
+          } catch (e) {}
+        }
+      }, (err) => {
+        console.warn('Package categories snapshot notice:', err.message);
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Firestore package categories sync fallback to local store');
     }
   }, []);
 
@@ -2399,6 +2454,164 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.warn('Package Firestore delete notice:', e);
     }
     addNotification('Tour Package Moved to Recycle Bin', `"${pkg?.title || packageId}" was removed. You can recover it anytime from Data Recovery.`, 'system');
+  };
+
+  // Package Categories CRUD
+  const addPackageCategory = (catData: Omit<PackageCategory, 'createdAt' | 'updatedAt'> | PackageCategory): PackageCategory => {
+    const slugId = catData.id?.trim() || catData.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    const catObj = catData as Partial<PackageCategory>;
+    const newCategory: PackageCategory = {
+      ...catData,
+      id: slugId || `cat_${Date.now()}`,
+      name: catData.name.trim(),
+      nameKm: catData.nameKm?.trim() || undefined,
+      nameEn: catData.nameEn?.trim() || catData.name.trim(),
+      nameZh: catData.nameZh?.trim() || undefined,
+      description: catData.description?.trim() || undefined,
+      icon: catData.icon?.trim() || '🏷️',
+      color: catData.color || 'indigo',
+      isActive: catData.isActive ?? true,
+      order: catData.order ?? (packageCategories.length + 1),
+      createdAt: catObj.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setPackageCategories(prev => {
+      const existing = prev.findIndex(c => c.id === newCategory.id);
+      let updated: PackageCategory[];
+      if (existing >= 0) {
+        updated = prev.map((c, i) => i === existing ? newCategory : c);
+      } else {
+        updated = [...prev, newCategory];
+      }
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      const cleanPayload = Object.fromEntries(
+        Object.entries(newCategory).filter(([_, v]) => v !== undefined)
+      );
+      setDoc(doc(db, 'package_categories', newCategory.id), cleanPayload, { merge: true }).catch(err => {
+        console.warn('Firestore save category notice:', err);
+      });
+    } catch (e) {}
+
+    logUserAudit('Package Category Created', `Created package category "${newCategory.name}" (${newCategory.id})`, 'info');
+    addNotification('Category Added', `Package category "${newCategory.name}" was created successfully.`, 'system');
+    return newCategory;
+  };
+
+  const updatePackageCategory = (category: PackageCategory) => {
+    const updatedCategory: PackageCategory = {
+      ...category,
+      updatedAt: new Date().toISOString()
+    };
+
+    setPackageCategories(prev => {
+      const updated = prev.map(c => c.id === updatedCategory.id ? updatedCategory : c);
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      const cleanPayload = Object.fromEntries(
+        Object.entries(updatedCategory).filter(([_, v]) => v !== undefined)
+      );
+      setDoc(doc(db, 'package_categories', updatedCategory.id), cleanPayload, { merge: true }).catch(err => {
+        console.warn('Firestore update category notice:', err);
+      });
+    } catch (e) {}
+
+    logUserAudit('Package Category Updated', `Updated package category "${updatedCategory.name}" (${updatedCategory.id})`, 'info');
+    addNotification('Category Updated', `Category "${updatedCategory.name}" was updated.`, 'system');
+  };
+
+  const deletePackageCategory = (categoryId: string): { success: boolean; affectedPackages: number } => {
+    const affectedCount = packages.filter(p => p.category === categoryId).length;
+    const cat = packageCategories.find(c => c.id === categoryId);
+
+    setPackageCategories(prev => {
+      const updated = prev.filter(c => c.id !== categoryId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      deleteDoc(doc(db, 'package_categories', categoryId)).catch(err => {
+        console.warn('Firestore delete category notice:', err);
+      });
+    } catch (e) {}
+
+    logUserAudit('Package Category Deleted', `Deleted package category (${categoryId}). ${affectedCount} packages affected.`, 'warning');
+    addNotification('Category Deleted', `Category "${cat?.name || categoryId}" was removed.`, 'system');
+    return { success: true, affectedPackages: affectedCount };
+  };
+
+  const togglePackageCategoryStatus = (categoryId: string) => {
+    setPackageCategories(prev => {
+      const updated = prev.map(c => {
+        if (c.id === categoryId) {
+          const next = { ...c, isActive: !c.isActive, updatedAt: new Date().toISOString() };
+          try {
+            const cleanPayload = Object.fromEntries(
+              Object.entries(next).filter(([_, v]) => v !== undefined)
+            );
+            setDoc(doc(db, 'package_categories', categoryId), cleanPayload, { merge: true }).catch(err => {});
+          } catch (e) {}
+          return next;
+        }
+        return c;
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const reorderPackageCategories = (orderedIds: string[]) => {
+    setPackageCategories(prev => {
+      const idMap = new Map<string, PackageCategory>(prev.map(c => [c.id, c]));
+      const ordered: PackageCategory[] = [];
+      orderedIds.forEach((id, idx) => {
+        const cat = idMap.get(id);
+        if (cat) {
+          const updatedCat: PackageCategory = { ...cat, order: idx + 1, updatedAt: new Date().toISOString() };
+          ordered.push(updatedCat);
+          try {
+            setDoc(doc(db, 'package_categories', cat.id), { order: idx + 1, updatedAt: updatedCat.updatedAt }, { merge: true }).catch(err => {});
+          } catch (e) {}
+        }
+      });
+      prev.forEach(c => {
+        if (!orderedIds.includes(c.id)) {
+          ordered.push(c);
+        }
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(ordered));
+      } catch (e) {}
+      return ordered;
+    });
+  };
+
+  const resetPackageCategories = () => {
+    setPackageCategories(DEFAULT_PACKAGE_CATEGORIES);
+    try {
+      localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(DEFAULT_PACKAGE_CATEGORIES));
+      DEFAULT_PACKAGE_CATEGORIES.forEach(cat => {
+        setDoc(doc(db, 'package_categories', cat.id), cat, { merge: true }).catch(err => {});
+      });
+    } catch (e) {}
+    logUserAudit('Package Categories Reset', 'Reset package categories to factory default presets.', 'info');
+    addNotification('Categories Reset', 'Package categories restored to factory presets.', 'system');
   };
 
   // Support Chat
@@ -4315,6 +4528,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addPackage,
         updatePackage,
         deletePackage,
+        packageCategories,
+        addPackageCategory,
+        updatePackageCategory,
+        deletePackageCategory,
+        togglePackageCategoryStatus,
+        reorderPackageCategories,
+        resetPackageCategories,
         sendSupportMessage,
         addNotification,
         markNotificationsAsRead,

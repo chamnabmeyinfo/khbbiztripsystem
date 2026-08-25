@@ -236,6 +236,23 @@ export interface TourPackage {
   cantonFairPhase?: 'Phase 1' | 'Phase 2' | 'Phase 3' | 'All Phases' | 'Multi-Phase';
 }
 
+export interface PackageCategory {
+  id: string; // unique slug/identifier (e.g., 'canton_fair', 'trade_mission', 'franchise')
+  name: string; // primary display name
+  nameKm?: string; // Khmer display name
+  nameEn?: string; // English display name
+  nameZh?: string; // Chinese display name
+  description?: string;
+  icon?: string; // emoji or visual symbol (e.g., '🇨🇳', '🏢', '☕', '🏭', '👑')
+  color?: string; // visual accent color (e.g., 'rose', 'indigo', 'amber', 'emerald', 'sky', 'purple', 'teal', 'cyan')
+  badgeBg?: string; // custom background css class / color
+  badgeTextColor?: string; // custom text color
+  isActive: boolean; // whether active for package assignment and filter visibility
+  order?: number; // sorting index
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface FlightStatus {

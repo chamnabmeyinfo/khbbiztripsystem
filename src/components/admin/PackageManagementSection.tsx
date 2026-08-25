@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TourPackage } from '../../types';
 import { PackageEditorModal } from './PackageEditorModal';
+import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
 import { formatMoney } from '../../services/currencyService';
 import {
   Plane,
@@ -31,6 +32,7 @@ export const PackageManagementSection: React.FC = () => {
   const {
     packages,
     rawPackages,
+    packageCategories,
     addPackage,
     updatePackage,
     deletePackage,
@@ -45,6 +47,7 @@ export const PackageManagementSection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [editingPkg, setEditingPkg] = useState<TourPackage | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [openWithAi, setOpenWithAi] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -59,6 +62,7 @@ export const PackageManagementSection: React.FC = () => {
     const matchesCategory =
       selectedCategory === 'all' ||
       pkg.category === selectedCategory ||
+      (selectedCategory === 'canton_fair' && (pkg.isCantonFair || pkg.category === 'canton_fair')) ||
       (selectedCategory === 'b2b' && (pkg.tags?.includes('trade_mission' as any) || pkg.tags?.includes('trending' as any)));
 
     return matchesSearch && matchesCategory;
@@ -192,6 +196,17 @@ export const PackageManagementSection: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsCategoryManagerOpen(true)}
+              className="px-3.5 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              title="Add, edit, or remove Tour Package Categories"
+            >
+              <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>Manage Categories</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-indigo-200/70 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-[10px] font-mono">
+                {packageCategories.length}
+              </span>
+            </button>
+            <button
               onClick={handleOpenAiCreate}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 border border-indigo-400/30"
             >
@@ -220,25 +235,51 @@ export const PackageManagementSection: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
-            {[
-              { id: 'all', label: 'All Packages' },
-              { id: 'trade_mission', label: 'B2B Trade Missions' },
-              { id: 'franchise', label: 'Franchise & Retail' },
-              { id: 'coffee_tea_bakery', label: 'Coffee & Bakery' }
-            ].map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                  selectedCategory === cat.id
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+                selectedCategory === 'all'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              All Packages ({packages.length})
+            </button>
+            {packageCategories
+              .filter(c => c.isActive)
+              .map(cat => {
+                const count = packages.filter(p => p.category === cat.id || (cat.id === 'canton_fair' && p.isCantonFair)).length;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+                      selectedCategory === cat.id
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat.icon && <span>{cat.icon}</span>}
+                    <span>{language === 'km' && cat.nameKm ? cat.nameKm : cat.name}</span>
+                    {count > 0 && (
+                      <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
+                        selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            <button
+              onClick={() => setIsCategoryManagerOpen(true)}
+              className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+              title="Add or Edit Categories"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Category</span>
+            </button>
           </div>
         </div>
       </div>
@@ -274,10 +315,21 @@ export const PackageManagementSection: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
 
                   {/* Top Badges */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                  <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 max-w-[70%]">
                     <span className="px-3 py-1 rounded-full bg-indigo-600/90 backdrop-blur-md text-white font-bold text-[10px] uppercase tracking-wider">
                       {pkg.destination}
                     </span>
+                    {pkg.category && (
+                      (() => {
+                        const matchedCat = packageCategories.find(c => c.id === pkg.category);
+                        return (
+                          <span className={`px-2.5 py-1 rounded-full backdrop-blur-md text-[10px] font-bold border ${matchedCat ? getCategoryBadgeClasses(matchedCat.color) : 'bg-slate-900/80 text-white border-transparent'}`}>
+                            {matchedCat?.icon ? `${matchedCat.icon} ` : '🏷️ '}
+                            {matchedCat ? (language === 'km' && matchedCat.nameKm ? matchedCat.nameKm : matchedCat.name) : pkg.category}
+                          </span>
+                        );
+                      })()
+                    )}
                     <span className="px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-slate-200 text-[10px] font-bold font-mono">
                       {pkg.durationDays}D / {pkg.durationNights}N
                     </span>
@@ -465,6 +517,12 @@ export const PackageManagementSection: React.FC = () => {
           onSave={handleSavePackage}
         />
       )}
+
+      {/* Package Categories Management Modal */}
+      <PackageCategoryModal
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+      />
     </div>
   );
 };

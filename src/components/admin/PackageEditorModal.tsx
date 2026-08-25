@@ -51,8 +51,10 @@ import {
   Target,
   HelpCircle,
   Languages,
-  RefreshCw
+  RefreshCw,
+  Tag
 } from 'lucide-react';
+import { PackageCategoryModal } from './PackageCategoryModal';
 
 /**
  * Utility to compress and convert client image files into lightweight Base64 DataURLs.
@@ -106,10 +108,11 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   initialOpenWithAi = false
 }) => {
   const isEditing = !!pkg;
-  const { language } = useApp();
+  const { language, packageCategories } = useApp();
   const isEnglishMain = language === 'en';
 
   const [activeTab, setActiveTab] = useState<TabType>('basic');
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState<boolean>(false);
 
   // AI Auto-Fill / Text Importer State
   const [isAiImporterOpen, setIsAiImporterOpen] = useState<boolean>(initialOpenWithAi || !pkg);
@@ -1645,14 +1648,33 @@ Highlights:
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Category *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Category *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryManagerOpen(true)}
+                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Tag className="w-3 h-3" />
+                      <span>+ Manage Categories</span>
+                    </button>
+                  </div>
                   <select
                     value={category}
                     onChange={(e) => {
                       const val = e.target.value;
+                      if (val === '__manage_new__') {
+                        setIsCategoryManagerOpen(true);
+                        return;
+                      }
                       setCategory(val);
+                      const selectedCat = packageCategories.find(c => c.id === val);
+                      if (selectedCat) {
+                        if (selectedCat.nameKm) setCategoryKm(selectedCat.nameKm);
+                        if (selectedCat.nameEn) setCategoryEn(selectedCat.nameEn);
+                      }
                       if (val === 'canton_fair') {
                         setIsCantonFair(true);
                         if (!cantonFairPhase) setCantonFairPhase('Phase 1');
@@ -1660,12 +1682,20 @@ Highlights:
                     }}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white cursor-pointer"
                   >
-                    <option value="canton_fair">🇨🇳 ពិព័រណ៍ក្វាងចូវ Canton Fair (Guangzhou, China)</option>
-                    <option value="trade_mission">B2B Trade Mission (ពិព័រណ៍ពាណិជ្ជកម្ម)</option>
-                    <option value="franchise">Retailtech & Franchise</option>
-                    <option value="coffee_tea_bakery">Coffee, Tea & Bakery Expo</option>
-                    <option value="business_inspection">Industrial & Factory Inspection</option>
-                    <option value="luxury_executive">Executive VIP Delegation</option>
+                    {packageCategories.map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon ? `${cat.icon} ` : ''}{cat.name} {cat.nameKm ? `(${cat.nameKm})` : ''}
+                      </option>
+                    ))}
+                    {/* Fallback for legacy custom category */}
+                    {category && !packageCategories.some(c => c.id === category) && (
+                      <option value={category}>
+                        🏷️ {category} (Custom Legacy)
+                      </option>
+                    )}
+                    <option value="__manage_new__" className="text-indigo-600 font-bold">
+                      ➕ Create / Manage Categories...
+                    </option>
                   </select>
                 </div>
 
@@ -3609,6 +3639,24 @@ Highlights:
           </div>
         </form>
       </div>
+
+      {/* Package Categories Management Sub-Modal */}
+      <PackageCategoryModal
+        isOpen={isCategoryManagerOpen}
+        onClose={() => setIsCategoryManagerOpen(false)}
+        onSelectCategory={(catId) => {
+          setCategory(catId);
+          const sel = packageCategories.find(c => c.id === catId);
+          if (sel) {
+            if (sel.nameKm) setCategoryKm(sel.nameKm);
+            if (sel.nameEn) setCategoryEn(sel.nameEn);
+          }
+          if (catId === 'canton_fair') {
+            setIsCantonFair(true);
+            if (!cantonFairPhase) setCantonFairPhase('Phase 1');
+          }
+        }}
+      />
     </div>
   );
 };

@@ -64,8 +64,11 @@ import {
   ArrowRightLeft,
   Copy,
   CheckCheck,
-  Loader2
+  Loader2,
+  PackageCheck,
+  Tag
 } from 'lucide-react';
+import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
 import { SystemSettings, LanguageCode } from '../../types';
 import { AiThemeColorDetectorModal } from './AiThemeColorDetectorModal';
 import { CrmIntegrationSection } from './CrmIntegrationSection';
@@ -137,15 +140,21 @@ export const SettingsSection: React.FC = () => {
     settingsSubTab,
     setSettingsSubTab,
     addNotification,
+    packageCategories,
+    packages,
+    deletePackageCategory,
+    togglePackageCategoryStatus,
+    resetPackageCategories,
     language,
     setLanguage,
     t
   } = useApp();
 
-  type SubTabType = 'features' | 'languages' | 'crm' | 'payments' | 'branding' | 'theme' | 'financials' | 'security' | 'backup';
+  type SubTabType = 'features' | 'categories' | 'languages' | 'crm' | 'payments' | 'branding' | 'theme' | 'financials' | 'security' | 'backup';
   const [activeSubTab, setActiveSubTabState] = useState<SubTabType>(
     (settingsSubTab as SubTabType) || 'features'
   );
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   const setActiveSubTab = (tab: SubTabType) => {
     setActiveSubTabState(tab);
@@ -153,7 +162,7 @@ export const SettingsSection: React.FC = () => {
   };
 
   useEffect(() => {
-    if (settingsSubTab && ['features', 'languages', 'crm', 'payments', 'branding', 'theme', 'financials', 'security', 'backup'].includes(settingsSubTab)) {
+    if (settingsSubTab && ['features', 'categories', 'languages', 'crm', 'payments', 'branding', 'theme', 'financials', 'security', 'backup'].includes(settingsSubTab)) {
       setActiveSubTabState(settingsSubTab as SubTabType);
     }
   }, [settingsSubTab]);
@@ -361,6 +370,7 @@ export const SettingsSection: React.FC = () => {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: 'features', label: '⚡ Feature Toggles', icon: Sliders },
+          { id: 'categories', label: '🏷️ Tour Categories', icon: Tag },
           { id: 'languages', label: '🌐 Language & i18n', icon: Globe },
           { id: 'crm', label: '🔗 CRM & Webhook API', icon: Webhook },
           { id: 'payments', label: '💳 Payment Gateways', icon: CreditCard },
@@ -388,6 +398,100 @@ export const SettingsSection: React.FC = () => {
           );
         })}
       </div>
+
+      {/* ── TAB: TOUR PACKAGE CATEGORIES ───────────────────────────────── */}
+      {activeSubTab === 'categories' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Top Banner Card */}
+          <div className="bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-indigo-800/60 shadow-xl relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>Master Category Management</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{packageCategories.length} Categories Registered</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                  Tour Package Categories & Classification Engine
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Configure and customize trade expo classifications, B2B delegation categories, and storefront filter badges. Manage English, Khmer, and Chinese bilingual titles, visual icons/emojis, and color themes.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  className="px-5 py-3 rounded-2xl bg-white text-indigo-950 font-bold text-xs shadow-lg hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Tag className="w-4 h-4 text-indigo-600" />
+                  <span>Open Full Category Manager</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Categories Grid Preview in Settings */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Active Package Categories ({packageCategories.length})
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Click "Open Full Category Manager" to create, edit, delete, or re-order categories.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>+ Add / Edit Categories</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              {packageCategories.map((cat) => {
+                const assignedCount = packages.filter(p => p.category === cat.id).length;
+                return (
+                  <div
+                    key={cat.id}
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex flex-col justify-between space-y-3"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold border ${getCategoryBadgeClasses(cat.color)}`}>
+                          <span>{cat.icon || '🏷️'}</span>
+                          <span>{cat.name}</span>
+                        </span>
+                        <span className={`w-2 h-2 rounded-full ${cat.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      </div>
+                      {cat.nameKm && (
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 font-khmer">
+                          {cat.nameKm}
+                        </div>
+                      )}
+                      {cat.description && (
+                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-1">
+                          {cat.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                      <span>{cat.id}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{assignedCount} Packages</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── TAB: LANGUAGE & INTERNATIONALIZATION (i18n) ────────────────── */}
       {activeSubTab === 'languages' && (
@@ -3155,6 +3259,12 @@ export const SettingsSection: React.FC = () => {
       <AiThemeColorDetectorModal
         isOpen={showAiThemeModal}
         onClose={() => setShowAiThemeModal(false)}
+      />
+
+      {/* Package Categories Management Modal */}
+      <PackageCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
       />
     </div>
   );

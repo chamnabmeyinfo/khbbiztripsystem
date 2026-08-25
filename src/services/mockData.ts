@@ -12,7 +12,8 @@ import {
   SupplierPayment,
   Expense,
   DeletedItemRecord,
-  SystemSettings
+  SystemSettings,
+  PackageCategory
 } from '../types';
 
 export const SEED_USERS: User[] = [
@@ -1520,7 +1521,114 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
     crmAutoSyncCustomers: true,
     crmOrganizationId: 'KHB-DELEGATION-HQ',
     lastSyncAt: '2026-08-23T14:30:00.000Z',
-    syncStatus: 'connected',
   },
 };
+
+export const DEFAULT_PACKAGE_CATEGORIES: PackageCategory[] = [
+  {
+    id: 'canton_fair',
+    name: 'Canton Fair (ពិព័រណ៍ក្វាងចូវ)',
+    nameKm: '🇨🇳 ពិព័រណ៍ក្វាងចូវ Canton Fair (Guangzhou, China)',
+    nameEn: 'Canton Fair Multi-Phase Trade Mission',
+    nameZh: '广交会进出口商品交易会',
+    description: 'World largest multi-industry import & export trade exhibition in Guangzhou, China.',
+    icon: '🇨🇳',
+    color: 'rose',
+    isActive: true,
+    order: 1,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'trade_mission',
+    name: 'B2B Trade Mission',
+    nameKm: 'B2B Trade Mission (ពិព័រណ៍ពាណិជ្ជកម្ម)',
+    nameEn: 'B2B Trade Mission & Business Expo',
+    nameZh: 'B2B 跨国商务考察与贸易对接',
+    description: 'High-level bilateral trade exhibitions, business matching, and VIP networking.',
+    icon: '🏢',
+    color: 'indigo',
+    isActive: true,
+    order: 2,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'franchise',
+    name: 'Retailtech & Franchise',
+    nameKm: 'Retailtech & Franchise (សិទ្ធិអាជីវកម្ម)',
+    nameEn: 'Retailtech & Franchise Master Sourcing',
+    nameZh: '新零售科技与连锁加盟展',
+    description: 'Global retail systems, brand franchising master licenses, and smart store technology.',
+    icon: '🛍️',
+    color: 'amber',
+    isActive: true,
+    order: 3,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'coffee_tea_bakery',
+    name: 'Coffee, Tea & Bakery Expo',
+    nameKm: 'Coffee, Tea & Bakery Expo (កាហ្វេ និងនំ)',
+    nameEn: 'Coffee, Tea & Bakery Expo',
+    nameZh: '国际咖啡、茶饮与烘焙博览会',
+    description: 'Specialty coffee roasting, bubble tea supply chain, bakery equipment, and packaging.',
+    icon: '☕',
+    color: 'emerald',
+    isActive: true,
+    order: 4,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'business_inspection',
+    name: 'Industrial & Factory Inspection',
+    nameKm: 'Industrial & Factory Inspection (ទស្សនកិច្ចរោងចក្រ)',
+    nameEn: 'Industrial & Factory Inspection',
+    nameZh: '工业制造与源头智能工厂考察',
+    description: 'On-site factory audits, industrial automation, supply chain sourcing, and machinery.',
+    icon: '🏭',
+    color: 'sky',
+    isActive: true,
+    order: 5,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'luxury_executive',
+    name: 'Executive VIP Delegation',
+    nameKm: 'Executive VIP Delegation (គណៈប្រតិភូជាន់ខ្ពស់)',
+    nameEn: 'Executive VIP Delegation',
+    nameZh: '政商领袖高端商务代表团',
+    description: 'C-suite exclusive delegation with government ministry summits and private investment roundtables.',
+    icon: '👑',
+    color: 'purple',
+    isActive: true,
+    order: 6,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tech_innovation',
+    name: 'Tech & AI Innovation Summit',
+    nameKm: 'Tech & AI Innovation Summit (បច្ចេកវិទ្យា & AI)',
+    nameEn: 'Tech & AI Innovation Summit',
+    nameZh: '科技与人工智能创新峰会',
+    description: 'Artificial intelligence, robotics, fintech, and digital transformation conferences.',
+    icon: '⚡',
+    color: 'cyan',
+    isActive: true,
+    order: 7,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'green_energy',
+    name: 'Renewable & Solar Energy Expo',
+    nameKm: 'Renewable Energy & Solar (ថាមពលកកើតឡើងវិញ)',
+    nameEn: 'Renewable & Solar Energy Expo',
+    nameZh: '新能源、光伏与绿色储能展',
+    description: 'Photovoltaic solar panels, EV charging ecosystems, energy storage, and sustainability.',
+    icon: '🌿',
+    color: 'teal',
+    isActive: true,
+    order: 8,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  }
+];
+
 
