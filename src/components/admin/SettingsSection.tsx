@@ -166,8 +166,10 @@ export const SettingsSection: React.FC = () => {
     setLanguage,
     defaultView,
     defaultAdminTab,
+    defaultPackageViewMode,
     setDefaultView,
     setDefaultAdminTab,
+    setDefaultPackageViewMode,
     resetDefaultView,
     t
   } = useApp();
@@ -1348,7 +1350,7 @@ export const SettingsSection: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               {/* Primary View Selector */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -1356,9 +1358,9 @@ export const SettingsSection: React.FC = () => {
                 </label>
                 <div className="space-y-1.5">
                   {[
-                    { id: 'marketing', label: 'Explore Packages (Public Catalog)', icon: '🌐' },
+                    { id: 'marketing', label: 'Explore Packages (Public)', icon: '🌐' },
                     { id: 'customer_portal', label: 'My Trips (Customer Portal)', icon: '💼' },
-                    { id: 'admin_dashboard', label: 'Admin Dashboard (Back-Office ERP)', icon: '🛡️' }
+                    { id: 'admin_dashboard', label: 'Admin Dashboard (ERP)', icon: '🛡️' }
                   ].map((v) => {
                     const isSelected = (defaultView || 'marketing') === v.id;
                     return (
@@ -1374,9 +1376,9 @@ export const SettingsSection: React.FC = () => {
                       >
                         <div className="flex items-center gap-2">
                           <span>{v.icon}</span>
-                          <span>{v.label}</span>
+                          <span className="truncate">{v.label}</span>
                         </div>
-                        {isSelected && <Star className="w-3.5 h-3.5 fill-white text-white" />}
+                        {isSelected && <Star className="w-3.5 h-3.5 fill-white text-white shrink-0" />}
                       </button>
                     );
                   })}
@@ -1386,7 +1388,7 @@ export const SettingsSection: React.FC = () => {
               {/* Admin Default Tab Selector */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Admin Landing Module (when Admin Dashboard is active)
+                  Admin Landing Module
                 </label>
                 <select
                   value={defaultAdminTab || 'overview'}
@@ -1410,7 +1412,45 @@ export const SettingsSection: React.FC = () => {
                   <option value="settings">⚙️ System ERP Settings</option>
                 </select>
                 <p className="text-[11px] text-slate-500 pt-1">
-                  Active default tab: <strong className="text-amber-600 dark:text-amber-400 capitalize font-mono">{(defaultAdminTab || 'overview').replace('_', ' ')}</strong>
+                  Active default tab: <strong className="text-amber-600 dark:text-amber-400 capitalize font-mono">{(defaultAdminTab || 'overview').replace(/_/g, ' ')}</strong>
+                </p>
+              </div>
+
+              {/* Tour Package Default Layout Selector */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                  <span>Tour Package Default View</span>
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold uppercase">
+                    {defaultPackageViewMode || 'grid'}
+                  </span>
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { id: 'grid', label: 'Grid Cards', icon: '🎴' },
+                    { id: 'detailed-list', label: 'Detailed List', icon: '📃' },
+                    { id: 'table', label: 'Compact Table', icon: '📊' },
+                    { id: 'kanban', label: 'Kanban Board', icon: '📋' }
+                  ].map((m) => {
+                    const isSelected = (defaultPackageViewMode || 'grid') === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setDefaultPackageViewMode(m.id as any)}
+                        className={`p-2 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
+                        }`}
+                      >
+                        <span className="truncate">{m.icon} {m.label}</span>
+                        {isSelected && <Star className="w-3 h-3 fill-white text-white shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-slate-500 pt-0.5">
+                  Right-click any package view mode button to switch anytime.
                 </p>
               </div>
             </div>

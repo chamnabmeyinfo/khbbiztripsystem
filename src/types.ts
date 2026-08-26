@@ -215,6 +215,7 @@ export interface EmergencyContact {
 }
 
 export type TourPackageStatus = 'active' | 'draft' | 'archived' | 'deleted';
+export type PackageViewMode = 'grid' | 'detailed-list' | 'table' | 'kanban';
 
 export interface TourPackage {
   id: string;

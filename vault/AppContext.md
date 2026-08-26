@@ -35,6 +35,7 @@ The `AppContext` is the single source of truth for the entire application, handl
 | `offlineMode` | `boolean` | Simulated or physical PWA offline mode flag |
 | `defaultView` | `ActiveView` | User-configured default startup view (`'marketing'`, `'customer_portal'`, `'admin_dashboard'`) stored in `localStorage` |
 | `defaultAdminTab` | `string` | User-configured default landing tab in Admin ERP (`'overview'`, `'packages'`, `'bookings'`, etc.) stored in `localStorage` |
+| `defaultPackageViewMode` | `PackageViewMode` | User-configured default view mode for Tour Packages (`'grid'`, `'detailed-list'`, `'table'`, `'kanban'`) stored in `localStorage` |
 | `toastMessage` | `string \| null` | Global toast notification text for user actions |
 
 ---
@@ -49,6 +50,7 @@ setSelectedBooking(b: Booking | null);
 setActiveModal(name: string | null);
 setDefaultView(view: ActiveView): void; // Persists default landing view to localStorage & shows toast
 setDefaultAdminTab(tab: string): void; // Persists default admin tab to localStorage & shows toast
+setDefaultPackageViewMode(mode: PackageViewMode): void; // Persists default package view layout to localStorage & shows toast
 resetDefaultView(): void; // Clears saved defaults back to initial system standard
 showToast(message: string): void;
 clearToast(): void;

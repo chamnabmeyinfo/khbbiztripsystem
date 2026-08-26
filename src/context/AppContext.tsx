@@ -42,6 +42,7 @@ import {
   LeadOperationalStage,
   LeadHandoverTask,
   PackageCategory,
+  PackageViewMode,
   SystemUpdateHistoryRecord,
   SystemUpdateCategory,
   SystemUpdateChangeDiff,
@@ -394,8 +395,10 @@ interface AppContextType {
   // Default View & Tab Customization
   defaultView: ActiveView;
   defaultAdminTab: string;
+  defaultPackageViewMode: PackageViewMode;
   setDefaultView: (view: ActiveView, targetAdminTab?: string) => void;
   setDefaultAdminTab: (tab: string) => void;
+  setDefaultPackageViewMode: (mode: PackageViewMode) => void;
   resetDefaultView: () => void;
 
   // Global Toast Notifications
@@ -435,6 +438,7 @@ const STORAGE_KEYS = {
   SYSTEM_UPDATES: 'tripdesk_system_updates_prod',
   DEFAULT_VIEW: 'tripdesk_default_view_prod',
   DEFAULT_ADMIN_TAB: 'tripdesk_default_admin_tab_prod',
+  DEFAULT_PACKAGE_VIEW_MODE: 'tripdesk_default_package_view_mode_prod',
 };
 
 const INITIAL_AUDIT_LOGS: UserAuditLog[] = [
@@ -745,6 +749,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return 'overview';
   });
 
+  const [defaultPackageViewMode, setDefaultPackageViewModeState] = useState<PackageViewMode>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_PACKAGE_VIEW_MODE) as PackageViewMode;
+      if (saved && ['grid', 'detailed-list', 'table', 'kanban'].includes(saved)) {
+        return saved;
+      }
+    } catch {}
+    return 'grid';
+  });
+
   // Global Toast Notifications
   const [toastMessage, setToastMessage] = useState<{
     text: string;
@@ -812,17 +826,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   };
 
+  const setDefaultPackageViewMode = (mode: PackageViewMode) => {
+    setDefaultPackageViewModeState(mode);
+    try {
+      localStorage.setItem(STORAGE_KEYS.DEFAULT_PACKAGE_VIEW_MODE, mode);
+    } catch {}
+
+    const modeLabels: Record<PackageViewMode, string> = {
+      grid: 'Grid Cards (ក្រឡា)',
+      'detailed-list': 'Detailed List (បញ្ជីលម្អិត)',
+      table: 'Compact Table (តារាងទិន្នន័យ)',
+      kanban: 'Kanban Board (ក្តារដំណើរការ)'
+    };
+
+    showToast(
+      '⭐ Default Package View Saved',
+      `"${modeLabels[mode] || mode}" is now your default view for Tour Packages.`,
+      'success',
+      'star'
+    );
+  };
+
   const resetDefaultView = () => {
     setDefaultViewState('marketing');
     setDefaultAdminTabState('overview');
+    setDefaultPackageViewModeState('grid');
     try {
       localStorage.removeItem(STORAGE_KEYS.DEFAULT_VIEW);
       localStorage.removeItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB);
+      localStorage.removeItem(STORAGE_KEYS.DEFAULT_PACKAGE_VIEW_MODE);
     } catch {}
 
     showToast(
       '🔄 Default View Reset',
-      'The default startup view has been reset to "Explore Packages".',
+      'Startup and package views have been reset to default.',
       'info',
       'check'
     );
@@ -5076,8 +5113,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         refreshWebhookEvents,
         defaultView,
         defaultAdminTab,
+        defaultPackageViewMode,
         setDefaultView,
         setDefaultAdminTab,
+        setDefaultPackageViewMode,
         resetDefaultView,
         toastMessage,
         showToast,

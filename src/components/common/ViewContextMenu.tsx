@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Star, RotateCcw, Check, Sparkles, Layout, ExternalLink, X } from 'lucide-react';
-import { ActiveView } from '../../types';
+import { Star, RotateCcw, Check, Sparkles, Layout, ExternalLink, X, LayoutGrid } from 'lucide-react';
+import { ActiveView, PackageViewMode } from '../../types';
 
 export interface ViewContextMenuState {
   isOpen: boolean;
@@ -8,10 +8,12 @@ export interface ViewContextMenuState {
   y: number;
   targetView: ActiveView;
   targetTab?: string;
+  targetPackageViewMode?: PackageViewMode;
   title: string;
   subtitle?: string;
   isCurrentDefaultView: boolean;
   isCurrentDefaultTab?: boolean;
+  isCurrentDefaultPackageViewMode?: boolean;
 }
 
 interface ViewContextMenuProps {
@@ -19,8 +21,10 @@ interface ViewContextMenuProps {
   onClose: () => void;
   onSetDefaultView: (view: ActiveView, tab?: string) => void;
   onSetDefaultTab?: (tab: string) => void;
+  onSetDefaultPackageViewMode?: (mode: PackageViewMode) => void;
   onResetDefault: () => void;
   onOpenView?: (view: ActiveView, tab?: string) => void;
+  onSelectPackageViewMode?: (mode: PackageViewMode) => void;
 }
 
 export const ViewContextMenu: React.FC<ViewContextMenuProps> = ({
@@ -28,8 +32,10 @@ export const ViewContextMenu: React.FC<ViewContextMenuProps> = ({
   onClose,
   onSetDefaultView,
   onSetDefaultTab,
+  onSetDefaultPackageViewMode,
   onResetDefault,
-  onOpenView
+  onOpenView,
+  onSelectPackageViewMode
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -105,37 +111,91 @@ export const ViewContextMenu: React.FC<ViewContextMenuProps> = ({
 
       {/* Action List */}
       <div className="py-1 space-y-0.5 text-xs">
-        {/* Set as Default Startup View */}
-        <button
-          onClick={() => {
-            onSetDefaultView(menu.targetView, menu.targetTab);
-            onClose();
-          }}
-          className={`w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left font-bold transition-colors cursor-pointer ${
-            menu.isCurrentDefaultView
-              ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300'
-              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <Star
-            className={`w-4 h-4 shrink-0 ${
-              menu.isCurrentDefaultView
-                ? 'fill-amber-400 text-amber-500'
-                : 'text-amber-500'
+        {/* Set as Default Tour Package View Mode (if targetPackageViewMode is provided) */}
+        {menu.targetPackageViewMode && onSetDefaultPackageViewMode && (
+          <button
+            onClick={() => {
+              onSetDefaultPackageViewMode(menu.targetPackageViewMode!);
+              onClose();
+            }}
+            className={`w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left font-bold transition-colors cursor-pointer ${
+              menu.isCurrentDefaultPackageViewMode
+                ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300'
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`}
-          />
-          <div className="min-w-0 flex-1">
-            <div className="truncate">
-              {menu.isCurrentDefaultView ? 'Default Startup View' : 'Set as Default View'}
+          >
+            <Star
+              className={`w-4 h-4 shrink-0 ${
+                menu.isCurrentDefaultPackageViewMode
+                  ? 'fill-amber-400 text-amber-500'
+                  : 'text-amber-500'
+              }`}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="truncate">
+                {menu.isCurrentDefaultPackageViewMode
+                  ? 'Default Package View'
+                  : 'Set as Default Package View'}
+              </div>
+              <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 truncate">
+                Default layout for Tour Packages
+              </div>
             </div>
-            <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 truncate">
-              {menu.isCurrentDefaultView ? 'Currently active default' : 'Opens on app launch'}
+            {menu.isCurrentDefaultPackageViewMode && (
+              <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            )}
+          </button>
+        )}
+
+        {/* Select Package View Mode Now */}
+        {menu.targetPackageViewMode && onSelectPackageViewMode && (
+          <button
+            onClick={() => {
+              onSelectPackageViewMode(menu.targetPackageViewMode!);
+              onClose();
+            }}
+            className="w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <LayoutGrid className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <span className="truncate font-semibold">Switch to This Layout</span>
             </div>
-          </div>
-          {menu.isCurrentDefaultView && (
-            <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          )}
-        </button>
+          </button>
+        )}
+
+        {/* Set as Default Startup View */}
+        {menu.targetView && (
+          <button
+            onClick={() => {
+              onSetDefaultView(menu.targetView, menu.targetTab);
+              onClose();
+            }}
+            className={`w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left font-bold transition-colors cursor-pointer ${
+              menu.isCurrentDefaultView
+                ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300'
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Star
+              className={`w-4 h-4 shrink-0 ${
+                menu.isCurrentDefaultView
+                  ? 'fill-amber-400 text-amber-500'
+                  : 'text-amber-500'
+              }`}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="truncate">
+                {menu.isCurrentDefaultView ? 'Default Startup View' : 'Set as Default View'}
+              </div>
+              <div className="text-[10px] font-normal text-slate-500 dark:text-slate-400 truncate">
+                {menu.isCurrentDefaultView ? 'Currently active default' : 'Opens on app launch'}
+              </div>
+            </div>
+            {menu.isCurrentDefaultView && (
+              <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            )}
+          </button>
+        )}
 
         {/* Set as Default Tab (if targetTab is provided) */}
         {menu.targetTab && onSetDefaultTab && (

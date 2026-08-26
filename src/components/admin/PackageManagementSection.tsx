@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { TourPackage, TourPackageStatus } from '../../types';
+import { TourPackage, TourPackageStatus, PackageViewMode } from '../../types';
 import { PackageEditorModal } from './PackageEditorModal';
 import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
 import { formatMoney } from '../../services/currencyService';
@@ -39,11 +39,12 @@ import {
   Kanban,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   Building,
-  Activity
+  Activity,
+  SlidersHorizontal
 } from 'lucide-react';
-
-export type PackageViewMode = 'grid' | 'detailed-list' | 'table' | 'kanban';
+import { ViewContextMenu, ViewContextMenuState } from '../common/ViewContextMenu';
 
 export const PackageManagementSection: React.FC = () => {
   const {
@@ -63,18 +64,24 @@ export const PackageManagementSection: React.FC = () => {
     setActiveModal,
     openPackageSalesPage,
     currency,
-    language
+    language,
+    defaultPackageViewMode,
+    setDefaultPackageViewMode,
+    setDefaultView,
+    resetDefaultView
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft' | 'archived' | 'deleted'>('all');
-  const [viewMode, setViewMode] = useState<PackageViewMode>('grid');
+  const [viewMode, setViewMode] = useState<PackageViewMode>(() => defaultPackageViewMode || 'grid');
   const [editingPkg, setEditingPkg] = useState<TourPackage | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [openWithAi, setOpenWithAi] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDefaultDropdownOpen, setIsDefaultDropdownOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<ViewContextMenuState | null>(null);
 
   // Deleted packages from Recycle Bin
   const recycleBinPackages = useMemo(() => {
@@ -432,63 +439,121 @@ export const PackageManagementSection: React.FC = () => {
             </button>
           </div>
 
-          {/* View Mode Switcher (Grid / List / Table / Kanban) */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl shrink-0 self-end md:self-auto border border-slate-200/60 dark:border-slate-700/60">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Card Grid View"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Grid</span>
-            </button>
+          {/* View Mode Switcher (Grid / List / Table / Kanban) + Default View Chooser */}
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-2xl shrink-0 self-end md:self-auto border border-slate-200/70 dark:border-slate-700/70 shadow-2xs">
+            {([
+              { mode: 'grid' as PackageViewMode, label: 'Grid', icon: LayoutGrid, desc: 'Card Grid' },
+              { mode: 'detailed-list' as PackageViewMode, label: 'List', icon: List, desc: 'Detailed List' },
+              { mode: 'table' as PackageViewMode, label: 'Table', icon: Table, desc: 'Compact Table' },
+              { mode: 'kanban' as PackageViewMode, label: 'Kanban', icon: Kanban, desc: 'Kanban Board' }
+            ]).map(({ mode, label, icon: Icon, desc }) => {
+              const isSelected = viewMode === mode;
+              const isDefault = defaultPackageViewMode === mode;
 
-            <button
-              type="button"
-              onClick={() => setViewMode('detailed-list')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'detailed-list'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Detailed List View"
-            >
-              <List className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">List</span>
-            </button>
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setViewMode(mode)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setContextMenu({
+                      isOpen: true,
+                      x: e.clientX,
+                      y: e.clientY,
+                      targetView: 'admin_dashboard',
+                      targetTab: 'packages',
+                      targetPackageViewMode: mode,
+                      title: `Tour Package: ${label} View`,
+                      subtitle: `${desc} • Right-click to set as default`,
+                      isCurrentDefaultView: false,
+                      isCurrentDefaultPackageViewMode: isDefault
+                    });
+                  }}
+                  className={`relative px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none group ${
+                    isSelected
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title={`${desc}${isDefault ? ' (Default View)' : ' (Right-click to set as default)'}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{label}</span>
+                  {isDefault && (
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0 animate-in fade-in" title="Active Default View" />
+                  )}
+                </button>
+              );
+            })}
 
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'table'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Compact Data Table View"
-            >
-              <Table className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Table</span>
-            </button>
+            {/* Quick Default View Chooser Menu */}
+            <div className="relative border-l border-slate-200 dark:border-slate-700/80 pl-1.5 ml-0.5 flex items-center">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsDefaultDropdownOpen(!isDefaultDropdownOpen)}
+                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    defaultPackageViewMode === viewMode
+                      ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/60'
+                      : 'bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 hover:border-amber-400 hover:text-amber-600'
+                  }`}
+                  title="Choose default view mode for Tour Packages"
+                >
+                  <Star className={`w-3 h-3 ${defaultPackageViewMode === viewMode ? 'fill-amber-400 text-amber-500' : 'text-slate-400'}`} />
+                  <span className="hidden md:inline">
+                    {defaultPackageViewMode === viewMode ? 'Default' : 'Set Default'}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-slate-400" />
+                </button>
 
-            <button
-              type="button"
-              onClick={() => setViewMode('kanban')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'kanban'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Kanban Board View (Pipeline)"
-            >
-              <Kanban className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Kanban</span>
-            </button>
+                {isDefaultDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsDefaultDropdownOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1.5 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 animate-in fade-in zoom-in-95">
+                      <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        Set Default Package View
+                      </div>
+                      <div className="py-1 space-y-0.5">
+                        {[
+                          { mode: 'grid' as PackageViewMode, label: 'Grid Cards (ក្រឡា)', icon: LayoutGrid },
+                          { mode: 'detailed-list' as PackageViewMode, label: 'Detailed List (បញ្ជីលម្អិត)', icon: List },
+                          { mode: 'table' as PackageViewMode, label: 'Compact Table (តារាង)', icon: Table },
+                          { mode: 'kanban' as PackageViewMode, label: 'Kanban Board (ក្តារ)', icon: Kanban }
+                        ].map((item) => {
+                          const isItemDefault = defaultPackageViewMode === item.mode;
+                          return (
+                            <button
+                              key={item.mode}
+                              type="button"
+                              onClick={() => {
+                                setDefaultPackageViewMode(item.mode);
+                                setViewMode(item.mode);
+                                setIsDefaultDropdownOpen(false);
+                              }}
+                              className={`w-full px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                                isItemDefault
+                                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <item.icon className="w-3.5 h-3.5 text-slate-500" />
+                                <span>{item.label}</span>
+                              </div>
+                              {isItemDefault && <Check className="w-3.5 h-3.5 text-amber-500" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1485,6 +1550,16 @@ export const PackageManagementSection: React.FC = () => {
       <PackageCategoryModal
         isOpen={isCategoryManagerOpen}
         onClose={() => setIsCategoryManagerOpen(false)}
+      />
+
+      {/* Right-Click Context Menu for View Modes */}
+      <ViewContextMenu
+        menu={contextMenu}
+        onClose={() => setContextMenu(null)}
+        onSetDefaultView={(view, tab) => setDefaultView(view, tab)}
+        onSetDefaultPackageViewMode={(mode) => setDefaultPackageViewMode(mode)}
+        onSelectPackageViewMode={(mode) => setViewMode(mode)}
+        onResetDefault={() => resetDefaultView()}
       />
     </div>
   );
