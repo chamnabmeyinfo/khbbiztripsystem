@@ -41,6 +41,9 @@ import {
   LeadOperationalStage,
   LeadHandoverTask,
   PackageCategory,
+  SystemUpdateHistoryRecord,
+  SystemUpdateCategory,
+  SystemUpdateChangeDiff,
 } from '../types';
 import {
   SEED_USERS,
@@ -58,6 +61,13 @@ import {
   DEFAULT_SYSTEM_SETTINGS,
   DEFAULT_PACKAGE_CATEGORIES
 } from '../services/mockData';
+import {
+  INITIAL_SYSTEM_UPDATES,
+  computeSettingsDiff,
+  deriveCategoryFromChanges,
+  generateUpdateTitle,
+  generateUpdateSummary
+} from '../services/systemUpdateHistoryService';
 import {
   pushBookingToExternalCrm,
   pushCustomerToExternalCrm,
@@ -322,6 +332,12 @@ interface AppContextType {
   setSettingsSubTab: (subTab: string) => void;
   navigateToSettings: (subTab?: string) => void;
 
+  // System Update & Modification History
+  systemUpdates: SystemUpdateHistoryRecord[];
+  recordSystemUpdate: (record: Omit<SystemUpdateHistoryRecord, 'id' | 'timestamp' | 'updatedBy'> & { id?: string; timestamp?: string; updatedBy?: string }) => SystemUpdateHistoryRecord;
+  deleteSystemUpdate: (id: string) => void;
+  clearSystemUpdateHistory: () => void;
+
   // CRM & Webhook Integration Suite
   crmEvents: CrmWebhookEvent[];
   crmSyncLogs: CrmSyncLog[];
@@ -394,6 +410,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'tripdesk_settings_prod',
   INBOUND_LEADS: 'tripdesk_inbound_leads_prod',
   PACKAGE_CATEGORIES: 'tripdesk_package_categories_prod',
+  SYSTEM_UPDATES: 'tripdesk_system_updates_prod',
 };
 
 const INITIAL_AUDIT_LOGS: UserAuditLog[] = [
@@ -616,6 +633,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
     } catch (e) {}
   }, [packageCategories]);
+
+  // System Update & Modification History State
+  const [systemUpdates, setSystemUpdates] = useState<SystemUpdateHistoryRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SYSTEM_UPDATES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_SYSTEM_UPDATES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(systemUpdates));
+    } catch (e) {}
+  }, [systemUpdates]);
 
   // CRM & Webhook Inbound & Outbound Sync State
   const [crmEvents, setCrmEvents] = useState<CrmWebhookEvent[]>(() => getStoredWebhookEvents());
@@ -1120,6 +1155,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore package categories sync fallback to local store');
+    }
+  }, []);
+
+  // Firestore Real-Time System Updates & Modification History Sync
+  useEffect(() => {
+    try {
+      const q = query(collection(db, 'system_updates'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        if (!snapshot.empty) {
+          const cloudUpdates: SystemUpdateHistoryRecord[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as SystemUpdateHistoryRecord;
+            if (data && data.id) {
+              cloudUpdates.push({ ...data, id: docSnap.id });
+            }
+          });
+          if (cloudUpdates.length > 0) {
+            setSystemUpdates(prev => {
+              const map = new Map<string, SystemUpdateHistoryRecord>();
+              INITIAL_SYSTEM_UPDATES.forEach(u => map.set(u.id, u));
+              prev.forEach(u => map.set(u.id, u));
+              cloudUpdates.forEach(u => map.set(u.id, u));
+              const merged = Array.from(map.values()).sort(
+                (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+              );
+              try {
+                localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        }
+      }, (err) => {
+        console.warn('System updates snapshot notice:', err.message);
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Firestore system updates sync fallback to local store');
     }
   }, []);
 
@@ -3450,8 +3523,68 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     document.body.removeChild(link);
   };
 
+  const recordSystemUpdate = (
+    record: Omit<SystemUpdateHistoryRecord, 'id' | 'timestamp' | 'updatedBy'> & {
+      id?: string;
+      timestamp?: string;
+      updatedBy?: string;
+    }
+  ): SystemUpdateHistoryRecord => {
+    const authorName = record.updatedBy || currentUser?.name || currentUser?.email || 'System Admin';
+    const authorRole = record.updatedByRole || (currentUser?.role ? ROLE_CONFIGS[currentUser.role]?.name : 'Administrator');
+    const id = record.id || `upd_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const timestamp = record.timestamp || new Date().toISOString();
+
+    const newRecord: SystemUpdateHistoryRecord = {
+      id,
+      version: record.version || 'v5.2.0-Live',
+      title: record.title,
+      category: record.category,
+      description: record.description,
+      changes: record.changes || [],
+      highlights: record.highlights || [],
+      updatedBy: authorName,
+      updatedByRole: authorRole,
+      timestamp,
+      source: record.source || 'admin_action',
+      status: record.status || 'applied',
+      metadata: record.metadata || {}
+    };
+
+    setSystemUpdates(prev => [newRecord, ...prev.filter(r => r.id !== id)]);
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify([newRecord, ...systemUpdates.filter(r => r.id !== id)]));
+      const cleanPayload = sanitizeForFirestore(newRecord);
+      setDoc(doc(db, 'system_updates', id), cleanPayload, { merge: true }).catch(err => {
+        console.warn('Firestore recordSystemUpdate notice:', err);
+      });
+    } catch (e) {}
+
+    logUserAudit('System Update Logged', `[${newRecord.category}] ${newRecord.title}`, 'info');
+    return newRecord;
+  };
+
+  const deleteSystemUpdate = (id: string) => {
+    setSystemUpdates(prev => prev.filter(u => u.id !== id));
+    try {
+      const remaining = systemUpdates.filter(u => u.id !== id);
+      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(remaining));
+      deleteDoc(doc(db, 'system_updates', id)).catch(err => console.warn(err));
+    } catch (e) {}
+  };
+
+  const clearSystemUpdateHistory = () => {
+    setSystemUpdates(INITIAL_SYSTEM_UPDATES);
+    try {
+      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(INITIAL_SYSTEM_UPDATES));
+    } catch (e) {}
+    addNotification('History Reset', 'System update history reset to initial release milestones.', 'system');
+  };
+
   const updateSystemSettings = (updates: Partial<SystemSettings>) => {
     setSystemSettings(prev => {
+      const diffs = computeSettingsDiff(prev, updates);
       const updated = {
         ...prev,
         ...updates,
@@ -3460,12 +3593,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...(updates.paymentGateways || {})
         }
       };
+
       try {
         localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
         setDoc(doc(db, 'system_settings', 'global_config'), sanitizeForFirestore(updated), { merge: true });
       } catch (e) {
         console.warn('System settings cloud sync queued:', e);
       }
+
+      if (diffs.length > 0) {
+        const cat = deriveCategoryFromChanges(diffs);
+        const title = generateUpdateTitle(diffs, cat);
+        const desc = generateUpdateSummary(diffs);
+        recordSystemUpdate({
+          title,
+          category: cat,
+          description: desc,
+          changes: diffs,
+          source: 'admin_action',
+          status: 'applied',
+          version: 'v5.2.0-Live'
+        });
+      }
+
       addNotification('Settings Updated', 'System configuration & feature flags saved successfully.', 'system');
       return updated;
     });
@@ -3479,16 +3629,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Reset sync notice:', e);
     }
+    recordSystemUpdate({
+      title: 'Reset System Configuration to Defaults',
+      category: 'system_settings',
+      description: 'Restored all system branding, feature flags, and localization parameters to default factory preset.',
+      source: 'admin_action',
+      status: 'applied',
+      version: 'v5.2.0-Live'
+    });
     addNotification('Settings Reset', 'Configuration restored to factory defaults.', 'system');
   };
 
   const exportSystemBackupJSON = () => {
     const backupData = {
-      version: '5.0',
+      version: '5.2',
       exportedAt: new Date().toISOString(),
       exportedBy: currentUser?.email || 'admin@khbevents.com',
       systemSettings,
+      systemUpdates,
       packages,
+      packageCategories,
       suppliers,
       costTemplates,
       purchaseOrders,
@@ -3516,7 +3676,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       const data = JSON.parse(jsonString);
       if (data.systemSettings) setSystemSettings(data.systemSettings);
+      if (Array.isArray(data.systemUpdates)) setSystemUpdates(data.systemUpdates);
       if (Array.isArray(data.packages)) setPackages(data.packages);
+      if (Array.isArray(data.packageCategories)) setPackageCategories(data.packageCategories);
       if (Array.isArray(data.suppliers)) setSuppliers(data.suppliers);
       if (Array.isArray(data.costTemplates)) setCostTemplates(data.costTemplates);
       if (Array.isArray(data.purchaseOrders)) setPurchaseOrders(data.purchaseOrders);
@@ -4502,6 +4664,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         settingsSubTab,
         setSettingsSubTab,
         navigateToSettings,
+        systemUpdates,
+        recordSystemUpdate,
+        deleteSystemUpdate,
+        clearSystemUpdateHistory,
         addSupplier, updateSupplier, deleteSupplier,
         saveCostTemplate, updateCostTemplate, deleteCostTemplate, getCostTemplateForPackage,
         createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, updatePOStatus,

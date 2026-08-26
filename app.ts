@@ -1344,7 +1344,114 @@ Respond strictly in valid JSON format with this exact structure:
     return res.json(spec);
   });
 
-  // 9. Interactive CRM Developer Documentation Endpoint
+  // 9. Interactive CRM Developer Documentation & Capability Manifest Endpoints
+  app.get(["/api/crm/capabilities", "/crm/capabilities", "/api/crm/manifest", "/crm/manifest"], (req, res) => {
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
+    const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost:3000";
+    const originUrl = `${protocol}://${host}`;
+
+    const manifest = {
+      system: {
+        name: "KHB BizTrip Expedition & Trade Mission Operations System",
+        version: "2.4.0",
+        role: "Enterprise B2B delegation logistics, tour package management, supplier procurement, costing engine, and delegate passenger manifest platform.",
+        purpose: "Enables external CRM platforms to automatically provision trade expedition bookings when deals are closed won, sync delegate manifests, receive live operational stage updates, and broadcast flight/schedule notifications.",
+        baseUrl: originUrl,
+        contact: "tech@khbevents.com"
+      },
+      capabilities: [
+        {
+          id: "expedition_packages",
+          title: "Tour & Trade Mission Package Catalog",
+          badge: "Core Catalog",
+          description: "Manages multi-tier trade mission packages, inclusive services, day-by-day itineraries, flight schedules, and dual-currency pricing.",
+          crmInteroperability: "CRM can read available tour package IDs, prices, departure dates, and seat availability to automatically match won deals with specific expedition packages."
+        },
+        {
+          id: "won_leads_pipeline",
+          title: "Inbound Won Leads & Delegation Handover",
+          badge: "Automated Handover",
+          description: "When sales reps win a deal in CRM, the system automatically registers the expedition lead, provisions the booking record, and initializes the 8-Stage Handover Checklist.",
+          crmInteroperability: "CRM dispatches `lead.won` webhook with deal size, passenger count, and customer contact. System auto-generates operations tasks and assigns coordinators."
+        },
+        {
+          id: "passenger_manifest",
+          title: "Traveler & Delegate Passenger Manifest",
+          badge: "Manifest Operations",
+          description: "Full delegate manifest tracker capturing passport numbers, expiry dates, rooming allocations (Single Suite vs Shared Twin), dietary restrictions, and VIP protocols.",
+          crmInteroperability: "CRM can pass initial passenger lists in the `lead.won` payload or update delegate VIP tier via `customer.vip_upgraded`. System syncs finalized manifest back to CRM."
+        },
+        {
+          id: "flight_hotel_telemetry",
+          title: "Flight Status & Accommodation Radar",
+          badge: "Real-Time Telemetry",
+          description: "Tracks international flight PNRs, airline gate assignments, delay alerts, and 5-star hotel group room blocks for trade delegates.",
+          crmInteroperability: "CRM airline feeds or flight tracking systems push `flight.status_changed` webhooks to instantly notify trade delegates via their mobile portal."
+        },
+        {
+          id: "financial_settlements",
+          title: "Invoicing, Multi-Currency & Payments",
+          badge: "Finance & Tax",
+          description: "Automated invoice generation, dual-currency USD/KHR conversion, partial deposit tracking, receipt vouchers, and tax/VAT compliance reporting.",
+          crmInteroperability: "System notifies CRM when invoices are generated, deposits are verified, or final payments settle (`finance.payment_settled`)."
+        },
+        {
+          id: "suppliers_procurement",
+          title: "Suppliers & Purchase Orders (PO)",
+          badge: "Procurement",
+          description: "Manages external suppliers (airlines, luxury coach operators, 5-star hotels, bilingual translation guides, trade hall ticket distributors) and purchase order settlements.",
+          crmInteroperability: "Operations team costs and books suppliers per delegation group, maintaining accurate profit/loss and gross margins visible to management."
+        }
+      ],
+      cooperationWorkflows: [
+        {
+          event: "lead.won",
+          direction: "inbound (CRM -> BizTrip)",
+          endpoint: "/api/webhooks/crm-leads",
+          description: "Automatically provisions expedition booking and sets up 8-task handover checklist."
+        },
+        {
+          event: "booking.status_updated",
+          direction: "inbound (CRM -> BizTrip)",
+          endpoint: "/api/webhooks/crm",
+          description: "Updates booking confirmation or cancellation status."
+        },
+        {
+          event: "flight.status_changed",
+          direction: "inbound (CRM -> BizTrip)",
+          endpoint: "/api/webhooks/crm",
+          description: "Pushes airline gate changes and delay notifications to traveler portal."
+        },
+        {
+          event: "trip.fulfillment_progress_sync",
+          direction: "outbound (BizTrip -> CRM)",
+          endpoint: "Configured CRM Webhook URL",
+          description: "Pushes live milestone checklist completion (0-100%) back into CRM deal record."
+        }
+      ],
+      authMethods: [
+        "x-crm-token: <secret> Header",
+        "Authorization: Bearer <token>",
+        "x-api-key: <key> Header"
+      ],
+      endpoints: {
+        inboundWebhookLeads: `${originUrl}/api/webhooks/crm-leads`,
+        inboundWebhookLifecycle: `${originUrl}/api/webhooks/crm`,
+        inboundEventsStream: `${originUrl}/api/webhooks/crm/events`,
+        outboundPushBooking: `${originUrl}/api/crm/push-booking`,
+        outboundPushCustomer: `${originUrl}/api/crm/push-customer`,
+        outboundProgressSync: `${originUrl}/api/crm/push-inbound-sync`,
+        connectionTest: `${originUrl}/api/crm/test-connection`,
+        openApiJson: `${originUrl}/api/crm/openapi.json`,
+        capabilitiesManifest: `${originUrl}/api/crm/capabilities`
+      }
+    };
+
+    res.setHeader("Content-Type", "application/json");
+    return res.json(manifest);
+  });
+
+  // 10. Interactive CRM Developer Documentation Endpoint
   app.get(["/api/crm/docs", "/crm/docs"], (_req, res) => {
     return res.json({
       system: "KHB BizTrip Expedition & Trade Mission Operations System",
@@ -1358,7 +1465,8 @@ Respond strictly in valid JSON format with this exact structure:
         outboundPushCustomer: "/api/crm/push-customer",
         outboundProgressSync: "/api/crm/push-inbound-sync",
         connectionTest: "/api/crm/test-connection",
-        openApiJson: "/api/crm/openapi.json"
+        openApiJson: "/api/crm/openapi.json",
+        capabilitiesJson: "/api/crm/capabilities"
       },
       supportedEvents: [
         "lead.won",

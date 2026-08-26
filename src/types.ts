@@ -79,6 +79,45 @@ export interface UserAuditLog {
   severity: 'info' | 'warning' | 'security';
 }
 
+export type SystemUpdateCategory =
+  | 'system_settings'
+  | 'feature_toggle'
+  | 'branding_theme'
+  | 'currency_pricing'
+  | 'payment_gateway'
+  | 'crm_integration'
+  | 'package_catalog'
+  | 'category_manage'
+  | 'security_access'
+  | 'i18n_translation'
+  | 'release_version'
+  | 'database_sync'
+  | 'manual_maintenance';
+
+export interface SystemUpdateChangeDiff {
+  field: string;
+  fieldLabel?: string;
+  oldValue?: any;
+  newValue?: any;
+  type?: 'modified' | 'added' | 'removed';
+}
+
+export interface SystemUpdateHistoryRecord {
+  id: string;
+  version?: string;
+  title: string;
+  category: SystemUpdateCategory;
+  description: string;
+  changes?: SystemUpdateChangeDiff[];
+  highlights?: string[];
+  updatedBy: string;
+  updatedByRole?: string;
+  timestamp: string;
+  source: 'admin_action' | 'system_release' | 'auto_sync' | 'manual_log';
+  status: 'applied' | 'pending' | 'reverted';
+  metadata?: Record<string, any>;
+}
+
 export interface GuideScheduleSlot {
   time: string; // e.g. "08:30 AM"
   activity: string;

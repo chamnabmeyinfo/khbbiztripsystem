@@ -50,12 +50,18 @@ import {
   CRM_FIELD_MAPPINGS,
   CRM_EVENTS_REGISTRY,
   OPERATIONAL_STAGES_DOC,
+  CRM_CAPABILITY_PILLARS,
+  CRM_COOPERATION_SCENARIOS,
   generateCurlSnippet,
   generateTypeScriptSnippet,
   generatePythonSnippet,
   generatePhpSnippet,
+  generateGoSnippet,
+  generateZapierWebhookGuide,
   generateOpenApiSpec,
   generateMarkdownIntegrationGuide,
+  generateCrmAiPrompt,
+  generateCapabilityManifestJson,
   CrmEventDoc
 } from '../../services/crmDocumentation';
 
@@ -137,9 +143,9 @@ export const CrmIntegrationSection: React.FC = () => {
   const webhookUrl = `${originUrl}/api/webhooks/crm-leads`;
 
   // Documentation Portal State
-  const [docsSubTab, setDocsSubTab] = useState<'overview' | 'events' | 'code' | 'mappings' | 'workflow' | 'openapi'>('overview');
+  const [docsSubTab, setDocsSubTab] = useState<'overview' | 'ai_prompt' | 'events' | 'code' | 'mappings' | 'workflow' | 'openapi'>('overview');
   const [selectedDocEventIndex, setSelectedDocEventIndex] = useState(0);
-  const [selectedCodeLang, setSelectedCodeLang] = useState<'curl' | 'ts' | 'python' | 'php'>('curl');
+  const [selectedCodeLang, setSelectedCodeLang] = useState<'curl' | 'ts' | 'python' | 'php' | 'go' | 'zapier'>('curl');
 
   const handleDownloadOpenApiJson = () => {
     const spec = generateOpenApiSpec(originUrl);
@@ -153,6 +159,20 @@ export const CrmIntegrationSection: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     addNotification('OpenAPI Spec Exported', 'Downloaded machine-readable OpenAPI 3.0 JSON specification.', 'system');
+  };
+
+  const handleDownloadCapabilityManifest = () => {
+    const manifest = generateCapabilityManifestJson(originUrl);
+    const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `KHB-BizTrip-Capabilities.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addNotification('Manifest Exported', 'Downloaded machine-readable CRM capability manifest JSON.', 'system');
   };
 
   const handleDownloadMarkdownGuide = () => {
@@ -1319,45 +1339,84 @@ export const CrmIntegrationSection: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDocsSubTab('ai_prompt')}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                  title="Copy ready-to-use prompt for CRM AI assistants and engineers"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  AI & Developer Prompt
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadCapabilityManifest}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+                  title="Download machine-readable system capability manifest JSON"
+                >
+                  <Download className="w-4 h-4" />
+                  Capability Manifest JSON
+                </button>
+
                 <button
                   type="button"
                   onClick={handleDownloadOpenApiJson}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-sky-500/25 transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-sky-500/25 transition cursor-pointer"
                   title="Download machine-readable OpenAPI 3.0 JSON specification"
                 >
                   <Download className="w-4 h-4" />
-                  Download OpenAPI JSON
+                  OpenAPI JSON
                 </button>
 
                 <button
                   type="button"
                   onClick={handleDownloadMarkdownGuide}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
                   title="Download full Markdown integration specification"
                 >
                   <FileText className="w-4 h-4 text-emerald-400" />
-                  Download Markdown Guide
+                  Markdown Guide
                 </button>
               </div>
             </div>
 
             {/* Quick Live Spec Link Box */}
             <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Globe className="w-4 h-4 text-sky-400 shrink-0" />
-                <span className="font-mono text-[11px] text-slate-400">Machine-readable Spec URL:</span>
-                <code className="px-2 py-0.5 rounded bg-slate-950 text-emerald-400 font-mono text-[11px] border border-slate-800">
-                  {originUrl}/api/crm/openapi.json
-                </code>
+              <div className="flex flex-wrap items-center gap-3 text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <Globe className="w-4 h-4 text-sky-400 shrink-0" />
+                  <span className="font-mono text-[11px] text-slate-400">OpenAPI Endpoint:</span>
+                  <code className="px-2 py-0.5 rounded bg-slate-950 text-emerald-400 font-mono text-[11px] border border-slate-800">
+                    {originUrl}/api/crm/openapi.json
+                  </code>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Server className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-mono text-[11px] text-slate-400">Capability Manifest:</span>
+                  <code className="px-2 py-0.5 rounded bg-slate-950 text-emerald-400 font-mono text-[11px] border border-slate-800">
+                    {originUrl}/api/crm/capabilities
+                  </code>
+                </div>
               </div>
-              <button
-                onClick={() => handleCopy(`${originUrl}/api/crm/openapi.json`, 'openapi_endpoint')}
-                className="text-[11px] text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 cursor-pointer"
-              >
-                {copiedField === 'openapi_endpoint' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedField === 'openapi_endpoint' ? 'Copied' : 'Copy Spec URL for Postman / Swagger'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleCopy(`${originUrl}/api/crm/capabilities`, 'manifest_endpoint')}
+                  className="text-[11px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedField === 'manifest_endpoint' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedField === 'manifest_endpoint' ? 'Copied' : 'Copy Manifest URL'}
+                </button>
+                <span className="text-slate-600">•</span>
+                <button
+                  onClick={() => handleCopy(`${originUrl}/api/crm/openapi.json`, 'openapi_endpoint')}
+                  className="text-[11px] text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedField === 'openapi_endpoint' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedField === 'openapi_endpoint' ? 'Copied' : 'Copy OpenAPI URL'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1372,7 +1431,19 @@ export const CrmIntegrationSection: React.FC = () => {
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
-              1. System Role & Architecture
+              1. System Capabilities & Role
+            </button>
+
+            <button
+              onClick={() => setDocsSubTab('ai_prompt')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                docsSubTab === 'ai_prompt'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              2. CRM AI & Developer Prompt
             </button>
 
             <button
@@ -1384,7 +1455,7 @@ export const CrmIntegrationSection: React.FC = () => {
               }`}
             >
               <Webhook className="w-3.5 h-3.5" />
-              2. Webhook & Event Catalog ({CRM_EVENTS_REGISTRY.length})
+              3. Webhook & Event Catalog ({CRM_EVENTS_REGISTRY.length})
             </button>
 
             <button
@@ -1396,7 +1467,7 @@ export const CrmIntegrationSection: React.FC = () => {
               }`}
             >
               <Code2 className="w-3.5 h-3.5" />
-              3. Interactive Code Generator
+              4. Code Generator (6 Languages)
             </button>
 
             <button
@@ -1408,7 +1479,7 @@ export const CrmIntegrationSection: React.FC = () => {
               }`}
             >
               <TableIcon className="w-3.5 h-3.5" />
-              4. Field Mapping Dictionary ({CRM_FIELD_MAPPINGS.length})
+              5. Field Mapping Dictionary ({CRM_FIELD_MAPPINGS.length})
             </button>
 
             <button
@@ -1420,7 +1491,7 @@ export const CrmIntegrationSection: React.FC = () => {
               }`}
             >
               <Workflow className="w-3.5 h-3.5" />
-              5. 2-Way Handover Protocol
+              6. 2-Way Handover Protocol
             </button>
 
             <button
@@ -1432,60 +1503,107 @@ export const CrmIntegrationSection: React.FC = () => {
               }`}
             >
               <FileCode className="w-3.5 h-3.5" />
-              6. Raw OpenAPI 3.0 Schema
+              7. Raw OpenAPI 3.0 Schema
             </button>
           </div>
 
-          {/* SUB-DOC 1: SYSTEM OVERVIEW & ARCHITECTURE */}
+          {/* SUB-DOC 1: SYSTEM OVERVIEW & CAPABILITY PILLARS */}
           {docsSubTab === 'overview' && (
             <div className="space-y-6">
               <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
                 <div>
                   <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <Globe className="w-4 h-4 text-sky-500" />
-                    How KHB BizTrip Cooperates with Your CRM Platform
+                    KHB BizTrip System Capabilities & CRM Interoperability
                   </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    KHB BizTrip acts as the specialized operational expedition & logistics ERP backend. When sales teams close deals in your CRM, our integration pipeline takes over the entire traveler fulfillment journey.
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    KHB BizTrip is the specialized trade mission operations ERP backend. Review the core capability pillars below to see exactly what this system has and how your CRM can cooperate with each capability.
                   </p>
                 </div>
 
-                {/* 3-Step Cooperation Architecture Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
-                      1
+                {/* Capability Pillars Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {CRM_CAPABILITY_PILLARS.map(pillar => (
+                    <div
+                      key={pillar.id}
+                      className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-3 flex flex-col justify-between"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+                            {pillar.badge}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400">ID: {pillar.id}</span>
+                        </div>
+                        <h5 className="text-sm font-bold text-slate-900 dark:text-white">
+                          {pillar.title}
+                        </h5>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                          {pillar.description}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700/60">
+                        <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <Zap className="w-3 h-3" />
+                          CRM Cooperation:
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                          {pillar.crmInteroperability}
+                        </p>
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {pillar.keyEntities.map(k => (
+                            <span key={k} className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              {k}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
-                      Inbound: Deal Won Auto-Provisioning
+                  ))}
+                </div>
+
+                {/* 4 Practical Cooperation Scenarios */}
+                <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                  <div>
+                    <h5 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Workflow className="w-4 h-4 text-indigo-500" />
+                      4 Primary Cooperation Interaction Scenarios
                     </h5>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Your CRM dispatches a <code className="font-mono text-sky-500 font-bold">lead.won</code> webhook to <code className="font-mono text-xs">/api/webhooks/crm-leads</code>. We immediately generate the trip reservation, passenger manifest, and handover task checklist.
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Clear interaction flows showing how external CRMs and KHB BizTrip exchange data end-to-end.
                     </p>
                   </div>
 
-                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
-                    <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-xs">
-                      2
-                    </div>
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
-                      Operations: 8-Stage Expedition Fulfillment
-                    </h5>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Our operations coordinators confirm flights, 5-star hotel blocks, visas, bilingual guides, and passenger preferences in the Won Leads Operations Hub.
-                    </p>
-                  </div>
-
-                  <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
-                      3
-                    </div>
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
-                      Outbound: 2-Way Progress Synchronization
-                    </h5>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      As milestones complete (e.g. Visa Issued, Flight Booked), we push live status & checklist progress back into your CRM deal record so sales and executives stay informed.
-                    </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {CRM_COOPERATION_SCENARIOS.map(scenario => (
+                      <div
+                        key={scenario.scenarioId}
+                        className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white font-mono">
+                            {scenario.title}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                            {scenario.direction}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {scenario.summary}
+                        </p>
+                        <div className="space-y-1.5 pt-2">
+                          {scenario.steps.map((step, sIdx) => (
+                            <div key={sIdx} className="flex items-start gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                              <span className="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold flex items-center justify-center shrink-0 text-[10px] mt-0.5">
+                                {sIdx + 1}
+                              </span>
+                              <span className="leading-relaxed">{step}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1508,6 +1626,44 @@ export const CrmIntegrationSection: React.FC = () => {
                       <div className="mt-1 text-sky-600 dark:text-sky-400 font-bold">Authorization: Bearer &lt;your_secret&gt;</div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-DOC: AI PROMPT FOR CRM DEVELOPER */}
+          {docsSubTab === 'ai_prompt' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      Self-Service AI & Developer Onboarding Prompt
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Give this exact prompt to your CRM developer or paste it into ChatGPT / Claude / Gemini to build the integration automatically with zero manual explanation required.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(generateCrmAiPrompt(originUrl), 'ai_prompt_text')}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md shadow-amber-500/20 transition cursor-pointer"
+                  >
+                    {copiedField === 'ai_prompt_text' ? <Check className="w-4 h-4 text-slate-950" /> : <Copy className="w-4 h-4" />}
+                    {copiedField === 'ai_prompt_text' ? 'Copied Prompt!' : 'Copy Complete AI Prompt'}
+                  </button>
+                </div>
+
+                <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-2">
+                    <span className="font-mono text-emerald-400 font-bold">KHB-BizTrip-CRM-Integration-Prompt.txt</span>
+                    <span>Ready for AI Agents, Zapier, Make & Developers</span>
+                  </div>
+                  <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed max-h-[460px] overflow-y-auto">
+                    {generateCrmAiPrompt(originUrl)}
+                  </pre>
                 </div>
               </div>
             </div>
@@ -1632,7 +1788,7 @@ export const CrmIntegrationSection: React.FC = () => {
                   </div>
 
                   {/* Language Selector */}
-                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                  <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                     <button
                       type="button"
                       onClick={() => setSelectedCodeLang('curl')}
@@ -1662,12 +1818,30 @@ export const CrmIntegrationSection: React.FC = () => {
                     </button>
                     <button
                       type="button"
+                      onClick={() => setSelectedCodeLang('go')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        selectedCodeLang === 'go' ? 'bg-sky-500 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      Go (Golang)
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setSelectedCodeLang('php')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                         selectedCodeLang === 'php' ? 'bg-sky-500 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       PHP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCodeLang('zapier')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        selectedCodeLang === 'zapier' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      Zapier / n8n / Make
                     </button>
                   </div>
                 </div>
@@ -1700,8 +1874,12 @@ export const CrmIntegrationSection: React.FC = () => {
                     snippet = generateTypeScriptSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
                   } else if (selectedCodeLang === 'python') {
                     snippet = generatePythonSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
+                  } else if (selectedCodeLang === 'go') {
+                    snippet = generateGoSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
                   } else if (selectedCodeLang === 'php') {
                     snippet = generatePhpSnippet(originUrl, currentDoc, crmConfig.crmWebhookSecret);
+                  } else if (selectedCodeLang === 'zapier') {
+                    snippet = generateZapierWebhookGuide(originUrl, currentDoc, crmConfig.crmWebhookSecret);
                   }
 
                   return (
