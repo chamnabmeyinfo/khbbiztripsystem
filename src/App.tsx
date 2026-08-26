@@ -20,6 +20,7 @@ import { ProfileSettingsModal } from './components/portal/ProfileSettingsModal';
 import { AgendaPdfModal } from './components/portal/AgendaPdfModal';
 import { SupportChatWidget } from './components/portal/SupportChatWidget';
 import { AiFloatingCopilot } from './components/common/AiFloatingCopilot';
+import { GlobalToast } from './components/common/GlobalToast';
 
 import { StandaloneAgendaView } from './components/portal/StandaloneAgendaView';
 
@@ -122,6 +123,9 @@ const MainLayout: React.FC = () => {
 
       {/* 24/7 Concierge Support Chat Widget */}
       <SupportChatWidget />
+
+      {/* Global Toast Notifications for actions like setting default view */}
+      <GlobalToast />
 
       {/* Global Footer */}
       <Footer />

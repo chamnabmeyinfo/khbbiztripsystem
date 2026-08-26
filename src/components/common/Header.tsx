@@ -34,8 +34,10 @@ import {
   MessageSquare,
   AlertCircle,
   Calendar,
-  ArrowUpRight
+  ArrowUpRight,
+  Star
 } from 'lucide-react';
+import { ViewContextMenu, ViewContextMenuState } from './ViewContextMenu';
 
 export const Header: React.FC = () => {
   const {
@@ -50,6 +52,9 @@ export const Header: React.FC = () => {
     unreadNotificationCount,
     activeView,
     systemSettings,
+    defaultView,
+    setDefaultView,
+    resetDefaultView,
     setActiveView,
     setAdminActiveTab,
     setLanguage,
@@ -74,6 +79,25 @@ export const Header: React.FC = () => {
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'leads' | 'bookings'>('all');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [viewContextMenu, setViewContextMenu] = useState<ViewContextMenuState | null>(null);
+
+  const handleOpenViewContextMenu = (
+    e: React.MouseEvent,
+    targetView: typeof activeView,
+    title: string,
+    subtitle?: string
+  ) => {
+    e.preventDefault();
+    setViewContextMenu({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY,
+      targetView,
+      title,
+      subtitle,
+      isCurrentDefaultView: defaultView === targetView
+    });
+  };
 
   const langRef = useRef<HTMLDivElement>(null);
   const currRef = useRef<HTMLDivElement>(null);
@@ -211,13 +235,29 @@ export const Header: React.FC = () => {
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
             <button
               onClick={() => setActiveView('marketing')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+              onContextMenu={(e) =>
+                handleOpenViewContextMenu(
+                  e,
+                  'marketing',
+                  t('explorePackages') || 'Explore Packages',
+                  'Public Tour Catalog Landing'
+                )
+              }
+              title={
+                defaultView === 'marketing'
+                  ? '⭐ Current Default View (Right-click for options)'
+                  : 'Right-click to set as default startup view'
+              }
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeView === 'marketing'
                   ? 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              {t('explorePackages')}
+              <span>{t('explorePackages')}</span>
+              {defaultView === 'marketing' && (
+                <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />
+              )}
             </button>
 
             <button
@@ -228,27 +268,59 @@ export const Header: React.FC = () => {
                   setActiveView('customer_portal');
                 }
               }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+              onContextMenu={(e) =>
+                handleOpenViewContextMenu(
+                  e,
+                  'customer_portal',
+                  t('myTrips') || 'My Trips Portal',
+                  'Customer Booking & Itinerary Dashboard'
+                )
+              }
+              title={
+                defaultView === 'customer_portal'
+                  ? '⭐ Current Default View (Right-click for options)'
+                  : 'Right-click to set as default startup view'
+              }
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeView === 'customer_portal'
                   ? 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <Briefcase className="w-4 h-4" />
-              {t('myTrips')}
+              <span>{t('myTrips')}</span>
+              {defaultView === 'customer_portal' && (
+                <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />
+              )}
             </button>
 
             {isAdmin && (
               <button
                 onClick={() => setActiveView('admin_dashboard')}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+                onContextMenu={(e) =>
+                  handleOpenViewContextMenu(
+                    e,
+                    'admin_dashboard',
+                    t('adminDashboard') || 'Admin Dashboard',
+                    'Back-Office Enterprise Management ERP'
+                  )
+                }
+                title={
+                  defaultView === 'admin_dashboard'
+                    ? '⭐ Current Default View (Right-click for options)'
+                    : 'Right-click to set as default startup view'
+                }
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeView === 'admin_dashboard'
                     ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Shield className="w-4 h-4" />
-                {t('adminDashboard')}
+                <span>{t('adminDashboard')}</span>
+                {defaultView === 'admin_dashboard' && (
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0" />
+                )}
               </button>
             )}
           </nav>
@@ -895,9 +967,16 @@ export const Header: React.FC = () => {
                 setActiveView('marketing');
                 setMobileMenuOpen(false);
               }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              onContextMenu={(e) => {
+                setMobileMenuOpen(false);
+                handleOpenViewContextMenu(e, 'marketing', t('explorePackages') || 'Explore Packages');
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
             >
-              {t('explorePackages')}
+              <span>{t('explorePackages')}</span>
+              {defaultView === 'marketing' && (
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+              )}
             </button>
             <button
               onClick={() => {
@@ -905,13 +984,38 @@ export const Header: React.FC = () => {
                 else setActiveView('customer_portal');
                 setMobileMenuOpen(false);
               }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              onContextMenu={(e) => {
+                setMobileMenuOpen(false);
+                handleOpenViewContextMenu(e, 'customer_portal', t('myTrips') || 'My Trips');
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
             >
-              {t('myTrips')}
+              <span>{t('myTrips')}</span>
+              {defaultView === 'customer_portal' && (
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+              )}
             </button>
           </div>
         </div>
       )}
+
+      {/* Floating View Context Menu on Right Click */}
+      <ViewContextMenu
+        menu={viewContextMenu}
+        onClose={() => setViewContextMenu(null)}
+        onSetDefaultView={(view) => {
+          setDefaultView(view);
+          setViewContextMenu(null);
+        }}
+        onResetDefault={() => {
+          resetDefaultView();
+          setViewContextMenu(null);
+        }}
+        onOpenView={(view) => {
+          setActiveView(view);
+          setViewContextMenu(null);
+        }}
+      />
     </header>
   );
 };

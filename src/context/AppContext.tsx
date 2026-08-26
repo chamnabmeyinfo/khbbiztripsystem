@@ -391,6 +391,18 @@ interface AppContextType {
   ) => Promise<boolean>;
   refreshWebhookEvents: () => Promise<void>;
 
+  // Default View & Tab Customization
+  defaultView: ActiveView;
+  defaultAdminTab: string;
+  setDefaultView: (view: ActiveView, targetAdminTab?: string) => void;
+  setDefaultAdminTab: (tab: string) => void;
+  resetDefaultView: () => void;
+
+  // Global Toast Notifications
+  toastMessage: { text: string; subtext?: string; type?: 'success' | 'info'; icon?: string } | null;
+  showToast: (text: string, subtext?: string, type?: 'success' | 'info', icon?: string) => void;
+  clearToast: () => void;
+
   // Helper
   t: (key: keyof typeof translations['en']) => string;
 }
@@ -421,6 +433,8 @@ const STORAGE_KEYS = {
   INBOUND_LEADS: 'tripdesk_inbound_leads_prod',
   PACKAGE_CATEGORIES: 'tripdesk_package_categories_prod',
   SYSTEM_UPDATES: 'tripdesk_system_updates_prod',
+  DEFAULT_VIEW: 'tripdesk_default_view_prod',
+  DEFAULT_ADMIN_TAB: 'tripdesk_default_admin_tab_prod',
 };
 
 const INITIAL_AUDIT_LOGS: UserAuditLog[] = [
@@ -712,8 +726,126 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
   }, [auditLogs]);
 
-  const [activeView, setActiveView] = useState<ActiveView>('marketing');
-  const [adminActiveTab, setAdminActiveTab] = useState<string>('overview');
+  // Default Startup View & Admin Tab User Preferences
+  const [defaultView, setDefaultViewState] = useState<ActiveView>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_VIEW) as ActiveView;
+      if (saved && ['marketing', 'customer_portal', 'admin_dashboard', 'package_sales_page'].includes(saved)) {
+        return saved;
+      }
+    } catch {}
+    return 'marketing';
+  });
+
+  const [defaultAdminTab, setDefaultAdminTabState] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB);
+      if (saved) return saved;
+    } catch {}
+    return 'overview';
+  });
+
+  // Global Toast Notifications
+  const [toastMessage, setToastMessage] = useState<{
+    text: string;
+    subtext?: string;
+    type?: 'success' | 'info';
+    icon?: string;
+  } | null>(null);
+
+  const showToast = (
+    text: string,
+    subtext?: string,
+    type: 'success' | 'info' = 'success',
+    icon: string = 'star'
+  ) => {
+    setToastMessage({ text, subtext, type, icon });
+  };
+
+  const clearToast = () => setToastMessage(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => {
+        setToastMessage(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const setDefaultView = (view: ActiveView, targetAdminTab?: string) => {
+    setDefaultViewState(view);
+    try {
+      localStorage.setItem(STORAGE_KEYS.DEFAULT_VIEW, view);
+      if (targetAdminTab) {
+        setDefaultAdminTabState(targetAdminTab);
+        localStorage.setItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB, targetAdminTab);
+      }
+    } catch {}
+
+    const viewNameMap: Record<ActiveView, string> = {
+      marketing: 'Explore Packages (Public)',
+      customer_portal: 'My Trips (Customer Portal)',
+      admin_dashboard: `Admin Back-Office ERP ${targetAdminTab ? `(${targetAdminTab.replace(/_/g, ' ').toUpperCase()})` : ''}`,
+      package_sales_page: 'Tour Package Sales Page'
+    };
+
+    showToast(
+      '⭐ Set as Default Startup View',
+      `"${viewNameMap[view] || view}" will now open automatically when you launch or refresh the application.`,
+      'success',
+      'star'
+    );
+  };
+
+  const setDefaultAdminTab = (tab: string) => {
+    setDefaultAdminTabState(tab);
+    try {
+      localStorage.setItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB, tab);
+    } catch {}
+
+    showToast(
+      '⭐ Default Admin Tab Saved',
+      `The Back-Office ERP will now open to "${tab.replace(/_/g, ' ').toUpperCase()}" by default.`,
+      'success',
+      'star'
+    );
+  };
+
+  const resetDefaultView = () => {
+    setDefaultViewState('marketing');
+    setDefaultAdminTabState('overview');
+    try {
+      localStorage.removeItem(STORAGE_KEYS.DEFAULT_VIEW);
+      localStorage.removeItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB);
+    } catch {}
+
+    showToast(
+      '🔄 Default View Reset',
+      'The default startup view has been reset to "Explore Packages".',
+      'info',
+      'check'
+    );
+  };
+
+  const [activeView, setActiveView] = useState<ActiveView>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_VIEW) as ActiveView;
+      if (saved && ['marketing', 'customer_portal', 'admin_dashboard', 'package_sales_page'].includes(saved)) {
+        return saved;
+      }
+    } catch {}
+    return 'marketing';
+  });
+
+  const [adminActiveTab, setAdminActiveTab] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB);
+      if (saved) return saved;
+    } catch {}
+    return 'overview';
+  });
+
   const [settingsSubTab, setSettingsSubTab] = useState<string>('features');
   const [selectedPackage, setSelectedPackage] = useState<TourPackage | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -4942,6 +5074,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         testCrmConnection,
         simulateWebhookTrigger,
         refreshWebhookEvents,
+        defaultView,
+        defaultAdminTab,
+        setDefaultView,
+        setDefaultAdminTab,
+        resetDefaultView,
+        toastMessage,
+        showToast,
+        clearToast,
         t,
       }}
     >

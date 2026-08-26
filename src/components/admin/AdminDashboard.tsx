@@ -44,8 +44,10 @@ import {
   Send,
   RefreshCw,
   KeyRound,
-  Rocket
+  Rocket,
+  Star
 } from 'lucide-react';
+import { ViewContextMenu, ViewContextMenuState } from '../common/ViewContextMenu';
 import { BookingStatus, TourPackage } from '../../types';
 import { SuppliersSection } from './SuppliersSection';
 import { CostingSection } from './CostingSection';
@@ -97,6 +99,11 @@ export const AdminDashboard: React.FC = () => {
     adminActiveTab,
     setAdminActiveTab,
     setSettingsSubTab,
+    defaultView,
+    defaultAdminTab,
+    setDefaultView,
+    setDefaultAdminTab,
+    resetDefaultView,
     t
   } = useApp();
 
@@ -125,6 +132,22 @@ export const AdminDashboard: React.FC = () => {
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [bookingSearch, setBookingSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [contextMenu, setContextMenu] = useState<ViewContextMenuState | null>(null);
+
+  const handleTabContextMenu = (e: React.MouseEvent, tabId: AdminTab, tabLabel: string) => {
+    e.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY,
+      targetView: 'admin_dashboard',
+      targetTab: tabId,
+      title: tabLabel,
+      subtitle: 'Back-Office Admin Module',
+      isCurrentDefaultView: defaultView === 'admin_dashboard' && defaultAdminTab === tabId,
+      isCurrentDefaultTab: defaultAdminTab === tabId
+    });
+  };
 
   // Package create modal state
   const [showNewPackageModal, setShowNewPackageModal] = useState(false);
@@ -480,6 +503,7 @@ export const AdminDashboard: React.FC = () => {
               {group.items.map(item => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
+                const isDefaultTab = defaultAdminTab === item.id;
                 return (
                   <button
                     key={item.id}
@@ -487,6 +511,12 @@ export const AdminDashboard: React.FC = () => {
                       setActiveTab(item.id);
                       setShowMobileSidebar(false);
                     }}
+                    onContextMenu={(e) => handleTabContextMenu(e, item.id, item.label)}
+                    title={
+                      isDefaultTab
+                        ? '⭐ Current Default Admin Tab (Right-click for options)'
+                        : 'Right-click to set as default startup tab/view'
+                    }
                     className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left font-bold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
@@ -500,17 +530,22 @@ export const AdminDashboard: React.FC = () => {
                       <span className="truncate text-xs">{item.label}</span>
                     </div>
 
-                    {item.count !== undefined && (
-                      <span
-                        className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
-                          isActive
-                            ? 'bg-white/20 text-white'
-                            : item.badgeColor || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                        }`}
-                      >
-                        {item.count}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isDefaultTab && (
+                        <Star className={`w-3 h-3 ${isActive ? 'fill-amber-300 text-amber-300' : 'fill-amber-400 text-amber-500'}`} />
+                      )}
+                      {item.count !== undefined && (
+                        <span
+                          className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                            isActive
+                              ? 'bg-white/20 text-white'
+                              : item.badgeColor || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          {item.count}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -575,9 +610,34 @@ export const AdminDashboard: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5" />
                 <span className="text-indigo-600 dark:text-indigo-400 font-bold">{currentTabLabel}</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {currentTabLabel}
-              </h1>
+              <div className="flex items-center gap-2.5 mt-0.5">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {currentTabLabel}
+                </h1>
+                <button
+                  onClick={() => setDefaultAdminTab(activeTab)}
+                  onContextMenu={(e) => handleTabContextMenu(e, activeTab, currentTabLabel)}
+                  title={
+                    defaultAdminTab === activeTab
+                      ? '⭐ Current Default Admin Tab (Right-click for options)'
+                      : 'Right-click or click to set as default admin tab'
+                  }
+                  className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    defaultAdminTab === activeTab
+                      ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800'
+                  }`}
+                >
+                  <Star
+                    className={`w-3.5 h-3.5 ${
+                      defaultAdminTab === activeTab ? 'fill-amber-400 text-amber-500' : 'text-slate-400'
+                    }`}
+                  />
+                  <span className="text-[11px]">
+                    {defaultAdminTab === activeTab ? 'Default Tab' : 'Set as Default'}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1110,6 +1170,28 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Right-click Context Menu for Admin Tabs and Default Views */}
+      <ViewContextMenu
+        menu={contextMenu}
+        onClose={() => setContextMenu(null)}
+        onSetDefaultView={(view) => {
+          setDefaultView(view);
+          setContextMenu(null);
+        }}
+        onSetDefaultAdminTab={(tab) => {
+          setDefaultAdminTab(tab);
+          setContextMenu(null);
+        }}
+        onResetDefault={() => {
+          resetDefaultView();
+          setContextMenu(null);
+        }}
+        onOpenTab={(tab) => {
+          setActiveTab(tab);
+          setContextMenu(null);
+        }}
+      />
     </div>
   );
 };

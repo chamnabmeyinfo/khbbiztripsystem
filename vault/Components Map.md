@@ -11,6 +11,8 @@
 | `AuthModal` | `AuthModal.tsx` | Multi-method login/signup dialog (Google, Biometrics, Corporate Email, Demo Fast-Switch) |
 | `CurrencyConverterModal` | `CurrencyConverterModal.tsx` | Real-time interactive multi-currency FX calculator |
 | `AiFloatingCopilot` | `AiFloatingCopilot.tsx` | Ambient AI assistant for instant booking and itinerary advice |
+| `ViewContextMenu` | `ViewContextMenu.tsx` | Context menu triggered by right-clicking navigation tabs or views to set/reset default landing screens |
+| `GlobalToast` | `GlobalToast.tsx` | Non-blocking toast notification banner for user action feedback across views |
 
 ---
 

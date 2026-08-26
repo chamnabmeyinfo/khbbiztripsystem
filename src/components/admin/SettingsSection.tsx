@@ -78,7 +78,9 @@ import {
   Zap,
   ChevronRight,
   ChevronDown,
-  History
+  History,
+  Star,
+  MousePointerClick
 } from 'lucide-react';
 import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
 import { SystemSettings, LanguageCode } from '../../types';
@@ -162,6 +164,11 @@ export const SettingsSection: React.FC = () => {
     resetPackageCategories,
     language,
     setLanguage,
+    defaultView,
+    defaultAdminTab,
+    setDefaultView,
+    setDefaultAdminTab,
+    resetDefaultView,
     t
   } = useApp();
 
@@ -1300,7 +1307,116 @@ export const SettingsSection: React.FC = () => {
 
       {/* ── TAB 1: FEATURE TOGGLES ────────────────────────────────────── */}
       {activeSubTab === 'features' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-6">
+          {/* Default Startup View & Landing Tab Customizer Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                  <Star className="w-5 h-5 fill-amber-400 text-amber-500" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Default Startup View & Landing Module</span>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                      Right-Click Enabled
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Customize which screen and admin tab automatically opens when you launch KHB Biz Trip ERP.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => resetDefaultView()}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Reset to Default</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Helper Banner */}
+            <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 flex items-start gap-3">
+              <MousePointerClick className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
+                <strong className="font-bold">Pro Tip:</strong> You can right-click any top navigation link (e.g. <em>Explore Packages</em>, <em>My Trips</em>, <em>Admin Dashboard</em>) or any admin sidebar tab at any time to instantly set it as your default startup view!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              {/* Primary View Selector */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Primary Application View
+                </label>
+                <div className="space-y-1.5">
+                  {[
+                    { id: 'marketing', label: 'Explore Packages (Public Catalog)', icon: '🌐' },
+                    { id: 'customer_portal', label: 'My Trips (Customer Portal)', icon: '💼' },
+                    { id: 'admin_dashboard', label: 'Admin Dashboard (Back-Office ERP)', icon: '🛡️' }
+                  ].map((v) => {
+                    const isSelected = (defaultView || 'marketing') === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setDefaultView(v.id as any)}
+                        className={`w-full p-2.5 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{v.icon}</span>
+                          <span>{v.label}</span>
+                        </div>
+                        {isSelected && <Star className="w-3.5 h-3.5 fill-white text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Admin Default Tab Selector */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Admin Landing Module (when Admin Dashboard is active)
+                </label>
+                <select
+                  value={defaultAdminTab || 'overview'}
+                  onChange={(e) => setDefaultAdminTab(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="overview">📊 Overview & KPI Metrics</option>
+                  <option value="inbound_leads">📥 Inbound CRM Won Leads</option>
+                  <option value="packages">✈️ Tour Packages Management</option>
+                  <option value="bookings">💼 Delegate Bookings</option>
+                  <option value="costing">🧮 Quotation & Margin Costing</option>
+                  <option value="purchase_orders">📄 Procurement & POs</option>
+                  <option value="suppliers">🏢 Verified Suppliers</option>
+                  <option value="payments">💳 Payments & KHQR</option>
+                  <option value="expenses">🧾 Operational Expenses</option>
+                  <option value="profit_loss">📈 Profit & Loss Statement</option>
+                  <option value="cash_flow">🌊 Cash Flow Liquidity</option>
+                  <option value="users">👥 User & Staff Permissions</option>
+                  <option value="ai_copilot">✨ AI Operations Copilot</option>
+                  <option value="crm">⚡ CRM & Webhooks</option>
+                  <option value="settings">⚙️ System ERP Settings</option>
+                </select>
+                <p className="text-[11px] text-slate-500 pt-1">
+                  Active default tab: <strong className="text-amber-600 dark:text-amber-400 capitalize font-mono">{(defaultAdminTab || 'overview').replace('_', ' ')}</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             {
               key: 'enableAiCopilot',
@@ -1394,6 +1510,7 @@ export const SettingsSection: React.FC = () => {
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
