@@ -6,7 +6,7 @@
 
 | Component | File | Purpose |
 |---|---|---|
-| `Header` | `Header.tsx` | Sticky top navigation bar, language/currency selectors, notifications bell, role badges, auth button |
+| `Header` | `Header.tsx` | Sticky top navigation bar, language/currency selectors with click-outside dismiss & mutual toggle, notifications bell, user profile identity widget on right side with live status dot & department badge, auth button |
 | `Footer` | `Footer.tsx` | Enterprise site footer with corporate links and accreditation |
 | `AuthModal` | `AuthModal.tsx` | Multi-method login/signup dialog (Google, Biometrics, Corporate Email, Demo Fast-Switch) |
 | `CurrencyConverterModal` | `CurrencyConverterModal.tsx` | Real-time interactive multi-currency FX calculator |
@@ -50,8 +50,8 @@
 |---|---|---|
 | `AdminDashboard` | `AdminDashboard.tsx` | Enterprise back-office workspace with sticky sidebar navigation, RBAC clearance filtering, and KPI summaries |
 | `UserManagementSection` | `UserManagementSection.tsx` | Staff & traveler RBAC administration, role assignment, permissions, department filters |
-| `PackageManagementSection` | `PackageManagementSection.tsx` | Tour package catalogue CRUD, itinerary designer, pricing, and tag management |
-| `PackageEditorModal` | `PackageEditorModal.tsx` | Detailed modal editor for creating/updating multi-day tour packages and mission agendas |
+| `PackageManagementSection` | `PackageManagementSection.tsx` | Tour package catalogue CRUD with 4 View Modes (Card Grid, Detailed List, Compact Table, Kanban Board), status lifecycle (Active, Draft, Archived, Recycle Bin), and Clone-as-Draft |
+| `PackageEditorModal` | `PackageEditorModal.tsx` | Detailed modal editor for creating/updating multi-day tour packages, mission agendas, and draft saving |
 | `CostingSection` | `CostingSection.tsx` | Unit economics, supplier cost estimation, margin targets, and per-pax pricing calculations |
 | `SuppliersSection` | `SuppliersSection.tsx` | Vendor database (airlines, hotels, coach operators, caterers, translators) and rate cards |
 | `PurchaseOrdersSection` | `PurchaseOrdersSection.tsx` | Procurement PO generation, vendor order tracking, and approval workflows |

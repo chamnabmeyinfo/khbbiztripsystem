@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { CURRENCY_CONFIGS } from '../../services/currencyService';
 import { isRTL, SUPPORTED_LANGUAGES } from '../../i18n/translations';
@@ -74,6 +74,80 @@ export const Header: React.FC = () => {
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'leads' | 'bookings'>('all');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const langRef = useRef<HTMLDivElement>(null);
+  const currRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking anywhere outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent | PointerEvent) => {
+      const target = event.target as Node;
+      if (langRef.current && !langRef.current.contains(target)) {
+        setShowLangDropdown(false);
+      }
+      if (currRef.current && !currRef.current.contains(target)) {
+        setShowCurrDropdown(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(target)) {
+        setShowNotifDropdown(false);
+      }
+      if (userRef.current && !userRef.current.contains(target)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowLangDropdown(false);
+        setShowCurrDropdown(false);
+        setShowNotifDropdown(false);
+        setShowUserDropdown(false);
+      }
+    };
+
+    // Using capture: true ensures outside clicks are caught even if child elements prevent bubbling
+    document.addEventListener('pointerdown', handleClickOutside, true);
+    document.addEventListener('touchstart', handleClickOutside, true);
+    document.addEventListener('mousedown', handleClickOutside, true);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside, true);
+      document.removeEventListener('touchstart', handleClickOutside, true);
+      document.removeEventListener('mousedown', handleClickOutside, true);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const toggleCurrDropdown = () => {
+    setShowCurrDropdown(prev => !prev);
+    setShowLangDropdown(false);
+    setShowNotifDropdown(false);
+    setShowUserDropdown(false);
+  };
+
+  const toggleLangDropdown = () => {
+    setShowLangDropdown(prev => !prev);
+    setShowCurrDropdown(false);
+    setShowNotifDropdown(false);
+    setShowUserDropdown(false);
+  };
+
+  const toggleNotifDropdown = () => {
+    setShowNotifDropdown(prev => !prev);
+    setShowCurrDropdown(false);
+    setShowLangDropdown(false);
+    setShowUserDropdown(false);
+  };
+
+  const toggleUserDropdown = () => {
+    setShowUserDropdown(prev => !prev);
+    setShowCurrDropdown(false);
+    setShowLangDropdown(false);
+    setShowNotifDropdown(false);
+  };
 
   const rtl = isRTL(language);
 
@@ -195,19 +269,24 @@ export const Header: React.FC = () => {
             </button>
 
             {/* Currency Selector & Converter Button */}
-            <div className="relative">
+            <div ref={currRef} className="relative">
               <button
-                onClick={() => setShowCurrDropdown(!showCurrDropdown)}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                onClick={toggleCurrDropdown}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  showCurrDropdown
+                    ? 'bg-sky-50 dark:bg-slate-800 text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700 ring-2 ring-sky-500/20'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700'
+                }`}
+                aria-expanded={showCurrDropdown}
               >
                 <span>{CURRENCY_CONFIGS[currency].flag}</span>
                 <span>{currency}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${showCurrDropdown ? 'rotate-180 text-sky-500' : ''}`} />
               </button>
 
               {showCurrDropdown && (
                 <div
-                  className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95`}
+                  className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150`}
                 >
                   <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
                     {t('selectCurrency') || 'Select Currency'}
@@ -219,7 +298,7 @@ export const Header: React.FC = () => {
                         setCurrency(curr.code);
                         setShowCurrDropdown(false);
                       }}
-                      className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-sky-50 dark:hover:bg-slate-700 cursor-pointer ${
+                      className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-sky-50 dark:hover:bg-slate-700 cursor-pointer transition-colors ${
                         currency === curr.code
                           ? 'text-sky-600 dark:text-sky-400 font-bold bg-sky-50/50 dark:bg-slate-700/50'
                           : 'text-slate-700 dark:text-slate-200'
@@ -248,22 +327,27 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Language Selector */}
-            <div className="relative">
+            <div ref={langRef} className="relative">
               <button
-                onClick={() => setShowLangDropdown(!showLangDropdown)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                onClick={toggleLangDropdown}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  showLangDropdown
+                    ? 'bg-sky-50 dark:bg-slate-800 text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700 ring-2 ring-sky-500/20'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700'
+                }`}
+                aria-expanded={showLangDropdown}
               >
                 <Globe className="w-3.5 h-3.5 text-sky-500" />
                 <span className="uppercase">{language}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${showLangDropdown ? 'rotate-180 text-sky-500' : ''}`} />
               </button>
 
               {showLangDropdown && (
                 <div
-                  className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50`}
+                  className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-52 max-h-80 overflow-y-auto bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150`}
                 >
                   <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700">
-                    Language / اللغة
+                    Language / ភាសា
                   </div>
                   {languagesList.map(langItem => (
                     <button
@@ -272,7 +356,7 @@ export const Header: React.FC = () => {
                         setLanguage(langItem.code);
                         setShowLangDropdown(false);
                       }}
-                      className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-sky-50 dark:hover:bg-slate-700 cursor-pointer ${
+                      className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-sky-50 dark:hover:bg-slate-700 cursor-pointer transition-colors ${
                         language === langItem.code
                           ? 'text-sky-600 dark:text-sky-400 font-bold bg-sky-50/50 dark:bg-slate-700/50'
                           : 'text-slate-700 dark:text-slate-200'
@@ -299,14 +383,17 @@ export const Header: React.FC = () => {
             </button>
 
             {/* Push Notifications Bell */}
-            <div className="relative">
+            <div ref={notifRef} className="relative">
               <button
-                onClick={() => {
-                  setShowNotifDropdown(!showNotifDropdown);
-                }}
-                className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative cursor-pointer"
+                onClick={toggleNotifDropdown}
+                className={`p-2 rounded-lg transition-all relative cursor-pointer ${
+                  showNotifDropdown
+                    ? 'bg-slate-100 dark:bg-slate-800 text-sky-600 dark:text-sky-400 ring-2 ring-sky-500/20'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
                 aria-label="Notifications"
                 title="Notifications & Alerts"
+                aria-expanded={showNotifDropdown}
               >
                 <Bell className="w-4 h-4" />
                 {unreadNotificationCount > 0 && (
@@ -619,32 +706,45 @@ export const Header: React.FC = () => {
 
             {/* User Profile / Auth Button */}
             {currentUser ? (
-              <div className="relative">
+              <div ref={userRef} className="relative">
                 <button
-                  onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  onClick={toggleUserDropdown}
+                  className={`flex items-center gap-2 pl-2 pr-2 py-1 rounded-xl transition-all cursor-pointer shadow-2xs border ${
+                    showUserDropdown
+                      ? 'bg-slate-100 dark:bg-slate-800 border-sky-300 dark:border-sky-700 ring-2 ring-sky-500/20'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50'
+                  }`}
+                  aria-expanded={showUserDropdown}
                 >
-                  {currentUser.avatarUrl ? (
-                    <img
-                      src={currentUser.avatarUrl}
-                      alt={currentUser.name}
-                      referrerPolicy="no-referrer"
-                      className="w-7 h-7 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-xs">
-                      {currentUser.name.charAt(0)}
-                    </div>
-                  )}
-                  <span className="hidden md:inline text-xs font-semibold text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
-                    {currentUser.name.split(' ')[0]}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <div className="relative shrink-0">
+                    {currentUser.avatarUrl ? (
+                      <img
+                        src={currentUser.avatarUrl}
+                        alt={currentUser.name}
+                        referrerPolicy="no-referrer"
+                        className="w-7 h-7 rounded-lg object-cover ring-1 ring-emerald-500/30"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                        {currentUser.name.charAt(0)}
+                      </div>
+                    )}
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900" />
+                  </div>
+                  <div className="hidden md:flex flex-col text-left leading-tight">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
+                      {currentUser.name.split('(')[0].trim()}
+                    </span>
+                    <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-300">
+                      {ROLE_CONFIGS[currentUser.role]?.shortTitle || ROLE_CONFIGS[currentUser.role]?.title || 'Staff'}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showUserDropdown ? 'rotate-180 text-sky-500' : ''}`} />
                 </button>
 
                 {showUserDropdown && (
                   <div
-                    className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50`}
+                    className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-150`}
                   >
                     <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
                       <div className="text-xs font-bold text-slate-900 dark:text-white truncate">

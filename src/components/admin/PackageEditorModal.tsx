@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   TourPackage,
@@ -138,20 +138,20 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [categoryEn, setCategoryEn] = useState(pkg?.categoryEn || '');
   const [isCantonFair, setIsCantonFair] = useState<boolean>(pkg?.isCantonFair ?? (pkg?.category === 'canton_fair' || !!pkg?.cantonFairPhase));
   const [cantonFairPhase, setCantonFairPhase] = useState<'Phase 1' | 'Phase 2' | 'Phase 3' | 'All Phases' | 'Multi-Phase' | undefined>(pkg?.cantonFairPhase);
-  const [priceUSD, setPriceUSD] = useState<number>(pkg?.priceUSD || 350);
-  const [discountPriceUSD, setDiscountPriceUSD] = useState<number | undefined>(pkg?.discountPriceUSD || 299);
+  const [priceUSD, setPriceUSD] = useState<number>(pkg ? (pkg.priceUSD ?? 0) : 350);
+  const [discountPriceUSD, setDiscountPriceUSD] = useState<number | undefined>(pkg ? pkg.discountPriceUSD : undefined);
   const [durationDays, setDurationDays] = useState<number>(pkg?.durationDays || 4);
-  const [durationNights, setDurationNights] = useState<number>(pkg?.durationNights || 3);
+  const [durationNights, setDurationNights] = useState<number>(pkg?.durationNights ?? Math.max(0, (pkg?.durationDays || 4) - 1));
   const [hotelStars, setHotelStars] = useState<number>(pkg?.hotelStars || 4);
   const [flightIncluded, setFlightIncluded] = useState<boolean>(pkg?.flightIncluded ?? true);
-  const [availableDates, setAvailableDates] = useState<string[]>(pkg?.availableDates || ['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01']);
+  const [availableDates, setAvailableDates] = useState<string[]>(pkg?.availableDates || (pkg ? [] : ['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01']));
   const [newDateInput, setNewDateInput] = useState('');
-  const [availableDatesText, setAvailableDatesText] = useState(pkg?.availableDates?.join(', ') || '2026-10-29, 2026-10-30, 2026-10-31, 2026-11-01');
+  const [availableDatesText, setAvailableDatesText] = useState(pkg?.availableDates?.join(', ') || (pkg ? '' : '2026-10-29, 2026-10-30, 2026-10-31, 2026-11-01'));
   const [tags, setTags] = useState<string[]>(pkg?.tags || ['trending', 'popular', 'cultural']);
   const [newTagInput, setNewTagInput] = useState('');
-  const [rating, setRating] = useState<number>(pkg?.rating || 5.0);
-  const [reviewCount, setReviewCount] = useState<number>(pkg?.reviewCount || 32);
-  const [bookedThisMonth, setBookedThisMonth] = useState<number>(pkg?.bookedThisMonth || 18);
+  const [rating, setRating] = useState<number>(pkg?.rating ?? 5.0);
+  const [reviewCount, setReviewCount] = useState<number>(pkg?.reviewCount ?? 1);
+  const [bookedThisMonth, setBookedThisMonth] = useState<number>(pkg?.bookedThisMonth ?? 0);
   const [lat, setLat] = useState<number>(pkg?.coordinates?.lat || 10.8231);
   const [lng, setLng] = useState<number>(pkg?.coordinates?.lng || 106.6297);
   const [mapX, setMapX] = useState<number>(pkg?.coordinates?.mapX || 74);
@@ -170,7 +170,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   // Highlights Bilingual State
   const [highlightsKm, setHighlightsKm] = useState<string[]>(
-    pkg?.highlightsKm || pkg?.highlights || [
+    pkg ? (pkg.highlightsKm || pkg.highlights || []) : [
       '🤝 ស្វែងរកផលិតផលបោះដុំពាក់ព័ន្ធនឹង តែ កាហ្វេ ការដុតនំ និងការលក់រាយ (Wholesale Sourcing)',
       '⚙️ សម្ភារៈ និងឧបករណ៍ឆុងកាហ្វេ ធ្វើនំ និងបច្ចេកវិទ្យាពាក់ព័ន្ធនឹងលក់រាយ (Equipment & RetailTech)',
       '🏢 ប្រេនល្បីៗនៅវៀតណាម និងអន្តរជាតិសម្រាប់ទិញសិទ្ធិ Franchise មកកម្ពុជា (Franchise Opportunities)'
@@ -180,7 +180,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   // Who Should Join Bilingual State
   const [whoShouldJoinKm, setWhoShouldJoinKm] = useState<string[]>(
-    pkg?.whoShouldJoinKm || pkg?.whoShouldJoin || [
+    pkg ? (pkg.whoShouldJoinKm || pkg.whoShouldJoin || []) : [
       'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ',
       'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា',
       'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ'
@@ -190,7 +190,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   // Why You Should Join Bilingual State
   const [whyShouldJoinKm, setWhyShouldJoinKm] = useState<string[]>(
-    pkg?.whyShouldJoinKm || pkg?.whyShouldJoin || [
+    pkg ? (pkg.whyShouldJoinKm || pkg.whyShouldJoin || []) : [
       'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល',
       'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន',
       'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត'
@@ -200,7 +200,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   // Inclusions Bilingual State
   const [inclusionsKm, setInclusionsKm] = useState<string[]>(
-    pkg?.inclusionsKm || pkg?.inclusions || [
+    pkg ? (pkg.inclusionsKm || pkg.inclusions || []) : [
       'រថយន្តក្រុង VIP ពីភ្នំពេញ ទៅកាន់ប្រទេសវៀតណាម (Phnom Penh to Vietnam VIP Coach)',
       'សណ្ឋាគារស្នាក់នៅស្តង់ដារ ៤ ផ្កាយ (៣ យប់ / ៤ ថ្ងៃ)',
       'អាហារពេលព្រឹកប៊ូហ្វេប្រចាំថ្ងៃនៅសណ្ឋាគារ (Daily Hotel Buffet Breakfast)',
@@ -217,7 +217,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   // Exclusions Bilingual State
   const [exclusionsKm, setExclusionsKm] = useState<string[]>(
-    pkg?.exclusionsKm || pkg?.exclusions || [
+    pkg ? (pkg.exclusionsKm || pkg.exclusions || []) : [
       'អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចផ្ទាល់ខ្លួន (លើកលែងតែកម្មវិធីដែលបានបញ្ជាក់)',
       'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាបោកអ៊ុត, ទូរស័ព្ទ)',
       'ថ្លៃកម្មវិធីជម្រើសបន្ថែម (Optional Tour Programs / VIP 1-on-1 Dinner)',
@@ -228,7 +228,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   // Terms & Conditions Bilingual State
   const [termsAndConditionsKm, setTermsAndConditionsKm] = useState<string[]>(
-    pkg?.termsAndConditionsKm || pkg?.termsAndConditions || [
+    pkg ? (pkg.termsAndConditionsKm || pkg.termsAndConditions || []) : [
       'លិខិតឆ្លងដែន (Passport) ត្រូវតែមានសុពលភាពយ៉ាងតិច ៦ ខែ គិតចាប់ពីថ្ងៃចេញដំណើរ។',
       'ការកក់កន្លែង និងធានាសិទ្ធិចូលរួម ត្រូវតម្កល់ប្រាក់កក់យ៉ាងតិច 50% នៃតម្លៃសរុបពេលចុះឈ្មោះ។',
       'ការបង់ប្រាក់បង្គ្រប់ 100% ត្រូវធ្វើឡើងយ៉ាងតិច ៧ ថ្ងៃ មុនកាលបរិច្ឆេទចេញដំណើរ។',
@@ -260,6 +260,90 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [briefingTime, setBriefingTime] = useState(pkg?.tourGuide?.briefingTime || '06:00 AM (ថ្ងៃទី 29/10/2026)');
   const [briefingTimeKm, setBriefingTimeKm] = useState(pkg?.tourGuide?.briefingTimeKm || pkg?.tourGuide?.briefingTime || '06:00 AM (ថ្ងៃទី 29/10/2026)');
   const [briefingTimeEn, setBriefingTimeEn] = useState(pkg?.tourGuide?.briefingTimeEn || '');
+
+  // Synchronize state when pkg changes
+  useEffect(() => {
+    if (pkg) {
+      setStatus(pkg.status || 'active');
+      setTitle(pkg.title || '');
+      setTitleKm(pkg.titleKm || pkg.title || '');
+      setTitleEn(pkg.titleEn || '');
+      setDestination(pkg.destination || '');
+      setDestinationKm(pkg.destinationKm || pkg.destination || '');
+      setDestinationEn(pkg.destinationEn || '');
+      setCountry(pkg.country || 'Vietnam');
+      setCountryKm(pkg.countryKm || pkg.country || '');
+      setCountryEn(pkg.countryEn || '');
+      setCategory(pkg.category || 'trade_mission');
+      setCategoryKm(pkg.categoryKm || '');
+      setCategoryEn(pkg.categoryEn || '');
+      setIsCantonFair(pkg.isCantonFair ?? (pkg.category === 'canton_fair' || !!pkg.cantonFairPhase));
+      setCantonFairPhase(pkg.cantonFairPhase);
+      setPriceUSD(pkg.priceUSD ?? 0);
+      setDiscountPriceUSD(pkg.discountPriceUSD);
+      setDurationDays(pkg.durationDays || 1);
+      setDurationNights(pkg.durationNights ?? Math.max(0, (pkg.durationDays || 1) - 1));
+      setHotelStars(pkg.hotelStars || 4);
+      setFlightIncluded(pkg.flightIncluded ?? true);
+      setAvailableDates(pkg.availableDates || []);
+      setAvailableDatesText(pkg.availableDates?.join(', ') || '');
+      setTags(pkg.tags || []);
+      setRating(pkg.rating ?? 5.0);
+      setReviewCount(pkg.reviewCount ?? 0);
+      setBookedThisMonth(pkg.bookedThisMonth ?? 0);
+      setLat(pkg.coordinates?.lat || 10.8231);
+      setLng(pkg.coordinates?.lng || 106.6297);
+      setMapX(pkg.coordinates?.mapX || 74);
+      setMapY(pkg.coordinates?.mapY || 62);
+      setDescription(pkg.description || '');
+      setDescriptionKm(pkg.descriptionKm || pkg.description || '');
+      setDescriptionEn(pkg.descriptionEn || '');
+      setImages(pkg.images || []);
+      setHighlightsKm(pkg.highlightsKm || pkg.highlights || []);
+      setHighlightsEn(pkg.highlightsEn || []);
+      setWhoShouldJoinKm(pkg.whoShouldJoinKm || pkg.whoShouldJoin || []);
+      setWhoShouldJoinEn(pkg.whoShouldJoinEn || []);
+      setWhyShouldJoinKm(pkg.whyShouldJoinKm || pkg.whyShouldJoin || []);
+      setWhyShouldJoinEn(pkg.whyShouldJoinEn || []);
+      setInclusionsKm(pkg.inclusionsKm || pkg.inclusions || []);
+      setInclusionsEn(pkg.inclusionsEn || []);
+      setExclusionsKm(pkg.exclusionsKm || pkg.exclusions || []);
+      setExclusionsEn(pkg.exclusionsEn || []);
+      setTermsAndConditionsKm(pkg.termsAndConditionsKm || pkg.termsAndConditions || []);
+      setTermsAndConditionsEn(pkg.termsAndConditionsEn || []);
+      setItinerary(pkg.itinerary || []);
+      setOptionalPrograms(pkg.optionalPrograms || []);
+      if (pkg.tourGuide) {
+        setGuideName(pkg.tourGuide.name || '');
+        setGuideNameKm(pkg.tourGuide.nameKm || pkg.tourGuide.name || '');
+        setGuideNameEn(pkg.tourGuide.nameEn || '');
+        setGuideTitle(pkg.tourGuide.title || '');
+        setGuideTitleKm(pkg.tourGuide.titleKm || pkg.tourGuide.title || '');
+        setGuideTitleEn(pkg.tourGuide.titleEn || '');
+        setGuidePhone(pkg.tourGuide.phone || '');
+        setGuideTelegram(pkg.tourGuide.telegram || '');
+        setGuideLanguages(pkg.tourGuide.languages || []);
+        setGuideBadge(pkg.tourGuide.badgeNumber || '');
+        setGuidePhoto(pkg.tourGuide.photoUrl || '');
+        setGuideBio(pkg.tourGuide.bio || '');
+        setGuideBioKm(pkg.tourGuide.bioKm || pkg.tourGuide.bio || '');
+        setGuideBioEn(pkg.tourGuide.bioEn || '');
+        setBriefingMeetingPoint(pkg.tourGuide.briefingMeetingPoint || '');
+        setBriefingMeetingPointKm(pkg.tourGuide.briefingMeetingPointKm || pkg.tourGuide.briefingMeetingPoint || '');
+        setBriefingMeetingPointEn(pkg.tourGuide.briefingMeetingPointEn || '');
+        setBriefingTime(pkg.tourGuide.briefingTime || '');
+        setBriefingTimeKm(pkg.tourGuide.briefingTimeKm || pkg.tourGuide.briefingTime || '');
+        setBriefingTimeEn(pkg.tourGuide.briefingTimeEn || '');
+      }
+      if (pkg.emergencyContact) {
+        setEmergencyCountry(pkg.emergencyContact.country || pkg.country || '');
+        setEmergencyPolice(pkg.emergencyContact.police || '');
+        setEmergencyAmbulance(pkg.emergencyContact.ambulance || '');
+        setEmergencyHelpline(pkg.emergencyContact.touristHelpline || '');
+        setEmergencyEmbassy(pkg.emergencyContact.embassySupport || '');
+      }
+    }
+  }, [pkg]);
 
   // Package-wide Auto-Translate Loading State
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
@@ -968,6 +1052,7 @@ Highlights:
         hotelName: (isEnglishMain ? (step.hotelNameEn || step.hotelName || step.hotelNameKm) : (step.hotelNameKm || step.hotelName || step.hotelNameEn))?.trim() || undefined,
         hotelNameKm: (step.hotelNameKm || step.hotelName || step.hotelNameEn)?.trim() || undefined,
         hotelNameEn: step.hotelNameEn?.trim() || undefined,
+        assemblyTime: step.assemblyTime?.trim() || undefined,
         assemblyPoint: (isEnglishMain ? (step.assemblyPointEn || step.assemblyPoint || step.assemblyPointKm) : (step.assemblyPointKm || step.assemblyPoint || step.assemblyPointEn))?.trim() || undefined,
         assemblyPointKm: (step.assemblyPointKm || step.assemblyPoint || step.assemblyPointEn)?.trim() || undefined,
         assemblyPointEn: step.assemblyPointEn?.trim() || undefined,
@@ -979,6 +1064,8 @@ Highlights:
         dayHighlightsEn: (step.dayHighlightsEn && step.dayHighlightsEn.length > 0) ? step.dayHighlightsEn : undefined,
         guideAgenda: (step.guideAgenda || []).map(slot => ({
           ...slot,
+          time: slot.time?.trim() || '08:30 AM',
+          type: slot.type || 'briefing',
           activity: (isEnglishMain ? (slot.activityEn || slot.activity || slot.activityKm || '') : (slot.activityKm || slot.activity || slot.activityEn || '')).trim(),
           activityKm: (slot.activityKm || slot.activity || slot.activityEn || '').trim(),
           activityEn: slot.activityEn?.trim() || undefined,
@@ -992,6 +1079,10 @@ Highlights:
       })),
       optionalPrograms: (optionalPrograms || []).map(prog => ({
         ...prog,
+        id: prog.id || `opt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        additionalCostUSD: Number(prog.additionalCostUSD) || 0,
+        durationHours: Number(prog.durationHours) || 1,
+        includesGuide: prog.includesGuide ?? true,
         title: (isEnglishMain ? (prog.titleEn || prog.title || prog.titleKm || '') : (prog.titleKm || prog.title || prog.titleEn || '')).trim(),
         titleKm: (prog.titleKm || prog.title || prog.titleEn || '').trim(),
         titleEn: prog.titleEn?.trim() || undefined,

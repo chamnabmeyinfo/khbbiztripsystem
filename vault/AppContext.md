@@ -68,7 +68,15 @@ canAccessTab(tabId: string): boolean;
 // Packages & Missions
 addPackage(pkg);
 updatePackage(pkg);
+updatePackageStatus(packageId: string, status: TourPackageStatus);
+clonePackageAsDraft(pkg: TourPackage): TourPackage;
 deletePackage(id);
+restorePackage(packageId: string);
+
+// Package Categories
+addPackageCategory(cat);
+updatePackageCategory(cat);
+deletePackageCategory(id);
 
 // Bookings & Travellers
 createBooking(params);

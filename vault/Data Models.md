@@ -28,6 +28,8 @@ export type Department =
 export type LanguageCode = 'en' | 'ar' | 'he' | 'es' | 'ja' | 'km';
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AED' | 'ILS';
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+export type TourPackageStatus = 'active' | 'draft' | 'archived' | 'deleted';
+export type PackageViewMode = 'grid' | 'detailed-list' | 'table' | 'kanban';
 ```
 
 ---
@@ -60,13 +62,22 @@ export interface User {
 ```typescript
 export interface TourPackage {
   id: string;
+  status?: TourPackageStatus; // 'active' | 'draft' | 'archived' | 'deleted' (defaults to 'active')
   title: string;
   titleKm?: string;
+  titleEn?: string;
   description: string;
   descriptionKm?: string;
+  descriptionEn?: string;
   destination: string;
   destinationKm?: string;
+  destinationEn?: string;
   country: string;
+  countryKm?: string;
+  countryEn?: string;
+  category?: string;
+  categoryKm?: string;
+  categoryEn?: string;
   coordinates: { lat: number; lng: number; mapX: number; mapY: number };
   images: string[];
   priceUSD: number;
@@ -75,10 +86,25 @@ export interface TourPackage {
   durationNights: number;
   itinerary: ItineraryStep[];
   highlights: string[];
+  highlightsKm?: string[];
+  highlightsEn?: string[];
+  whoShouldJoin?: string[];
+  whoShouldJoinKm?: string[];
+  whoShouldJoinEn?: string[];
+  whyShouldJoin?: string[];
+  whyShouldJoinKm?: string[];
+  whyShouldJoinEn?: string[];
   inclusions: string[];
+  inclusionsKm?: string[];
+  inclusionsEn?: string[];
   exclusions: string[];
+  exclusionsKm?: string[];
+  exclusionsEn?: string[];
+  termsAndConditions?: string[];
+  termsAndConditionsKm?: string[];
+  termsAndConditionsEn?: string[];
   availableDates: string[];
-  tags: string[];
+  tags: ('trending' | 'popular' | 'luxury' | 'adventure' | 'cultural' | 'eco')[];
   rating: number;
   reviewCount: number;
   bookedThisMonth: number;
@@ -88,8 +114,8 @@ export interface TourPackage {
   // B2B & Mission Extensions
   tourGuide?: TourGuide;
   optionalPrograms?: OptionalTourProgram[];
-  cantonFairPhases?: { phaseNumber: number; dates: string; industries: string[] }[];
-  termsAndConditions?: string[];
+  isCantonFair?: boolean;
+  cantonFairPhase?: 'Phase 1' | 'Phase 2' | 'Phase 3' | 'All Phases' | 'Multi-Phase';
 }
 ```
 

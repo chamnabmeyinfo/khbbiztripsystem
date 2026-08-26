@@ -2505,6 +2505,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Package Firestore save notice:', e);
     }
+    setSelectedPackage(prev => (prev && prev.id === newPkg.id ? newPkg : prev));
     // Record in System Update History
     recordSystemUpdate({
       title: `Tour Package Created: ${newPkg.title}`,
@@ -2564,10 +2565,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return next;
     });
     try {
-      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg), { merge: true });
+      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg));
     } catch (e) {
       console.warn('Package Firestore update notice:', e);
     }
+    setSelectedPackage(prev => (prev && prev.id === updatedPkg.id ? updatedPkg : prev));
     // Record in System Update History
     const changes: SystemUpdateChangeDiff[] = [];
     if (previous) {
