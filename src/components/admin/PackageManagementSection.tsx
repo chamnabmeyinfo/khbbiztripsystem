@@ -32,8 +32,18 @@ import {
   ArrowRight,
   Archive,
   AlertTriangle,
-  FolderSync
+  FolderSync,
+  LayoutGrid,
+  List,
+  Table,
+  Kanban,
+  ExternalLink,
+  ChevronRight,
+  Building,
+  Activity
 } from 'lucide-react';
+
+export type PackageViewMode = 'grid' | 'detailed-list' | 'table' | 'kanban';
 
 export const PackageManagementSection: React.FC = () => {
   const {
@@ -59,6 +69,7 @@ export const PackageManagementSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft' | 'archived' | 'deleted'>('all');
+  const [viewMode, setViewMode] = useState<PackageViewMode>('grid');
   const [editingPkg, setEditingPkg] = useState<TourPackage | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -335,7 +346,7 @@ export const PackageManagementSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Filter Segmented Control Tabs */}
+        {/* Status Filter & View Mode Controls Bar */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl overflow-x-auto">
             <button
@@ -420,6 +431,65 @@ export const PackageManagementSection: React.FC = () => {
               </span>
             </button>
           </div>
+
+          {/* View Mode Switcher (Grid / List / Table / Kanban) */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl shrink-0 self-end md:self-auto border border-slate-200/60 dark:border-slate-700/60">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="Card Grid View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('detailed-list')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'detailed-list'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="Detailed List View"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="Compact Data Table View"
+            >
+              <Table className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('kanban')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'kanban'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-black'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="Kanban Board View (Pipeline)"
+            >
+              <Kanban className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Kanban</span>
+            </button>
+          </div>
         </div>
 
         {/* Search & Category Filter Bar */}
@@ -476,7 +546,7 @@ export const PackageManagementSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Tour Package Cards Grid */}
+      {/* Multi-View Package Display Area */}
       {filteredPackages.length === 0 ? (
         <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
           <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-inner">
@@ -491,7 +561,600 @@ export const PackageManagementSection: React.FC = () => {
               : 'Try clearing the search query, switching the status tab, or click "Create Package" to add a new tour.'}
           </p>
         </div>
+      ) : viewMode === 'table' ? (
+        /* 1. TABLE VIEW */
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px] font-black">
+                  <th className="py-3.5 px-4">Tour Package</th>
+                  <th className="py-3.5 px-3">Destination</th>
+                  <th className="py-3.5 px-3">Category</th>
+                  <th className="py-3.5 px-3">Duration</th>
+                  <th className="py-3.5 px-3">Pricing (USD)</th>
+                  <th className="py-3.5 px-3">Status</th>
+                  <th className="py-3.5 px-3">Guide / Coordinator</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                {filteredPackages.map(pkg => {
+                  const currentStatus: TourPackageStatus = pkg.status || 'active';
+                  const isTrashItem = statusFilter === 'deleted' || currentStatus === 'deleted';
+                  const matchedCat = packageCategories.find(c => c.id === pkg.category);
+
+                  return (
+                    <tr key={pkg.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      {/* Package Name & Thumbnail */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3 min-w-[220px]">
+                          <div className="w-12 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
+                            <img
+                              src={pkg.images[0] || 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&auto=format&fit=crop&q=80'}
+                              alt={pkg.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 dark:text-white line-clamp-1 text-xs">
+                              {pkg.title}
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              ID: {pkg.id}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Destination */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300">
+                          <MapPin className="w-3.5 h-3.5 text-indigo-500" />
+                          <span>{pkg.destination}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400">{pkg.country}</div>
+                      </td>
+
+                      {/* Category */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {matchedCat ? (
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${getCategoryBadgeClasses(matchedCat.color)}`}>
+                            {matchedCat.icon ? `${matchedCat.icon} ` : ''}{language === 'km' && matchedCat.nameKm ? matchedCat.nameKm : matchedCat.name}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">—</span>
+                        )}
+                      </td>
+
+                      {/* Duration */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]">
+                          {pkg.durationDays}D / {pkg.durationNights}N
+                        </span>
+                      </td>
+
+                      {/* Pricing */}
+                      <td className="py-3 px-3 whitespace-nowrap font-mono">
+                        {pkg.discountPriceUSD ? (
+                          <div>
+                            <span className="font-black text-emerald-600 dark:text-emerald-400 text-xs">
+                              ${pkg.discountPriceUSD}
+                            </span>
+                            <span className="ml-1.5 text-[10px] text-slate-400 line-through">
+                              ${pkg.priceUSD}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="font-black text-slate-900 dark:text-white text-xs">
+                            ${pkg.priceUSD}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <select
+                          value={currentStatus}
+                          disabled={isTrashItem}
+                          onChange={(e) => handleStatusChange(pkg.id, e.target.value as TourPackageStatus)}
+                          className={`text-[11px] font-bold px-2 py-1 rounded-lg border appearance-none cursor-pointer focus:outline-none ${
+                            currentStatus === 'active'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                              : currentStatus === 'draft'
+                              ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                              : currentStatus === 'archived'
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                              : 'bg-rose-50 text-rose-700 border-rose-300'
+                          }`}
+                        >
+                          <option value="active">🟢 Active</option>
+                          <option value="draft">🟡 Draft</option>
+                          <option value="archived">⚪ Archived</option>
+                          {isTrashItem && <option value="deleted">🔴 Trash</option>}
+                        </select>
+                      </td>
+
+                      {/* Guide */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {pkg.tourGuide ? (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-[10px] font-bold overflow-hidden">
+                              {pkg.tourGuide.photoUrl ? (
+                                <img src={pkg.tourGuide.photoUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                pkg.tourGuide.name.charAt(0)
+                              )}
+                            </div>
+                            <span className="text-slate-800 dark:text-slate-200 text-xs font-bold">
+                              {pkg.tourGuide.name}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">Unassigned</span>
+                        )}
+                      </td>
+
+                      {/* Table Actions */}
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        {isTrashItem ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleRestoreDeleted(pkg)}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                              title="Restore"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>Restore</span>
+                            </button>
+                            <button
+                              onClick={() => handlePermanentDelete(pkg)}
+                              className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                              title="Delete permanently"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openPackageSalesPage(pkg)}
+                              className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+                              title="Sales Page"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handlePreview(pkg)}
+                              className="p-1.5 rounded-lg text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 cursor-pointer"
+                              title="Preview"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleCloneAsDraft(pkg)}
+                              className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
+                              title="Clone as Draft"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(pkg)}
+                              className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+                              title="Edit Package"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => deletePackage(pkg.id)}
+                              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                              title="Move to Trash"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : viewMode === 'detailed-list' ? (
+        /* 2. DETAILED LIST VIEW */
+        <div className="space-y-4">
+          {filteredPackages.map(pkg => {
+            const currentStatus: TourPackageStatus = pkg.status || 'active';
+            const isTrashItem = statusFilter === 'deleted' || currentStatus === 'deleted';
+            const matchedCat = packageCategories.find(c => c.id === pkg.category);
+
+            return (
+              <div
+                key={pkg.id}
+                className={`bg-white dark:bg-slate-900 rounded-3xl border p-5 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 ${
+                  currentStatus === 'draft'
+                    ? 'border-amber-200 dark:border-amber-900/60'
+                    : currentStatus === 'archived'
+                    ? 'border-slate-300 dark:border-slate-700 opacity-90'
+                    : isTrashItem
+                    ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20'
+                    : 'border-slate-200 dark:border-slate-800'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+                  {/* Thumbnail Image with Status Badge */}
+                  <div className="relative w-full sm:w-36 h-28 sm:h-24 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
+                    <img
+                      src={pkg.images[0] || 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&auto=format&fit=crop&q=80'}
+                      alt={pkg.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-1.5 left-1.5">
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider backdrop-blur-md shadow-xs ${
+                        currentStatus === 'active'
+                          ? 'bg-emerald-600/90 text-white'
+                          : currentStatus === 'draft'
+                          ? 'bg-amber-500/90 text-white'
+                          : currentStatus === 'archived'
+                          ? 'bg-slate-800/90 text-slate-200'
+                          : 'bg-rose-600/90 text-white'
+                      }`}>
+                        {currentStatus === 'active' ? '🟢 Active' : currentStatus === 'draft' ? '🟡 Draft' : currentStatus === 'archived' ? '⚪ Archived' : '🔴 Trash'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Main Information */}
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{pkg.destination}, {pkg.country}</span>
+                      </span>
+                      {matchedCat && (
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${getCategoryBadgeClasses(matchedCat.color)}`}>
+                          {matchedCat.icon ? `${matchedCat.icon} ` : ''}{matchedCat.name}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {pkg.durationDays}D / {pkg.durationNights}N
+                      </span>
+                    </div>
+
+                    <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
+                      {pkg.title}
+                    </h4>
+
+                    <p className="text-xs text-slate-500 line-clamp-1">
+                      {pkg.description || 'Comprehensive business trip & trade delegation package.'}
+                    </p>
+
+                    {/* Features snippet */}
+                    <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                      <span className="flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
+                        <Star className="w-3.5 h-3.5 fill-amber-400" />
+                        <span>{pkg.hotelStars || 4}★ Hotel</span>
+                      </span>
+                      <span>•</span>
+                      <span>{pkg.itinerary?.length || 0} Itinerary Days</span>
+                      <span>•</span>
+                      <span>{pkg.optionalPrograms?.length || 0} Add-On Programs</span>
+                      {pkg.tourGuide && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <User className="w-3 h-3 text-indigo-500" />
+                            <span>Guide: {pkg.tourGuide.name}</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price & Actions Side */}
+                <div className="flex flex-row md:flex-col items-center md:items-end justify-between gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800 shrink-0">
+                  <div className="text-left md:text-right">
+                    {pkg.discountPriceUSD ? (
+                      <div>
+                        <div className="text-[10px] line-through text-slate-400 font-mono">${pkg.priceUSD} USD</div>
+                        <div className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                          ${pkg.discountPriceUSD} USD
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono">
+                        ${pkg.priceUSD} USD
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  {isTrashItem ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleRestoreDeleted(pkg)}
+                        className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Restore</span>
+                      </button>
+                      <button
+                        onClick={() => handlePermanentDelete(pkg)}
+                        className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => openPackageSalesPage(pkg)}
+                        className="px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Sales Page"
+                      >
+                        <span>🚀 Sales</span>
+                      </button>
+                      <button
+                        onClick={() => handlePreview(pkg)}
+                        className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
+                        title="Quick View"
+                      >
+                        <Eye className="w-4 h-4 text-sky-500" />
+                      </button>
+                      <button
+                        onClick={() => handleCloneAsDraft(pkg)}
+                        className="p-1.5 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors cursor-pointer"
+                        title="Clone as Draft"
+                      >
+                        <Copy className="w-4 h-4 text-amber-600" />
+                      </button>
+                      <button
+                        onClick={() => handleOpenEdit(pkg)}
+                        className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => deletePackage(pkg.id)}
+                        className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                        title="Move to Trash"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : viewMode === 'kanban' ? (
+        /* 3. KANBAN PIPELINE BOARD VIEW */
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Active Column */}
+          <div className="bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl p-4 border border-emerald-200 dark:border-emerald-900/50 space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h4 className="font-black text-xs uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                  🟢 Live Active Catalog
+                </h4>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-mono font-bold">
+                {packages.filter(p => !p.status || p.status === 'active').length}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {packages.filter(p => !p.status || p.status === 'active').map(pkg => (
+                <div
+                  key={pkg.id}
+                  className="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-700 shadow-xs hover:shadow-md transition-all space-y-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={pkg.images[0] || 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&auto=format&fit=crop&q=80'}
+                      alt=""
+                      className="w-12 h-12 rounded-xl object-cover shrink-0 border"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                        {pkg.destination} • {pkg.durationDays}D
+                      </div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                        {pkg.title}
+                      </div>
+                      <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        ${pkg.discountPriceUSD || pkg.priceUSD} USD
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleStatusChange(pkg.id, 'draft')}
+                        className="px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 cursor-pointer"
+                        title="Move to Draft"
+                      >
+                        → Draft
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(pkg.id, 'archived')}
+                        className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer"
+                        title="Archive"
+                      >
+                        → Archive
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEdit(pkg)}
+                        className="p-1 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer"
+                        title="Edit"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleCloneAsDraft(pkg)}
+                        className="p-1 rounded-lg text-amber-600 hover:bg-amber-50 cursor-pointer"
+                        title="Clone as Draft"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Draft Column */}
+          <div className="bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl p-4 border border-amber-200 dark:border-amber-900/50 space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <h4 className="font-black text-xs uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                  🟡 Drafts & Proposals
+                </h4>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-mono font-bold">
+                {packages.filter(p => p.status === 'draft').length}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {packages.filter(p => p.status === 'draft').map(pkg => (
+                <div
+                  key={pkg.id}
+                  className="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-amber-200/80 dark:border-amber-900/50 shadow-xs hover:shadow-md transition-all space-y-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={pkg.images[0] || 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&auto=format&fit=crop&q=80'}
+                      alt=""
+                      className="w-12 h-12 rounded-xl object-cover shrink-0 border border-amber-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                        {pkg.destination} • {pkg.durationDays}D Plan
+                      </div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                        {pkg.title}
+                      </div>
+                      <div className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 mt-0.5">
+                        ${pkg.priceUSD} USD
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                    <button
+                      onClick={() => handleStatusChange(pkg.id, 'active')}
+                      className="px-3 py-1 rounded-lg text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-2xs"
+                      title="Publish Live"
+                    >
+                      🚀 Publish Live
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEdit(pkg)}
+                        className="p-1 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer"
+                        title="Edit Draft"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => deletePackage(pkg.id)}
+                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Archived & Inactive Column */}
+          <div className="bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl p-4 border border-slate-300 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                <h4 className="font-black text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  ⚪ Archived & Historical
+                </h4>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold">
+                {packages.filter(p => p.status === 'archived').length}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {packages.filter(p => p.status === 'archived').map(pkg => (
+                <div
+                  key={pkg.id}
+                  className="bg-white dark:bg-slate-800/90 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-700 opacity-90 hover:opacity-100 shadow-xs transition-all space-y-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={pkg.images[0] || 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&auto=format&fit=crop&q=80'}
+                      alt=""
+                      className="w-12 h-12 rounded-xl object-cover shrink-0 grayscale"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-slate-500">
+                        {pkg.destination} • {pkg.durationDays}D
+                      </div>
+                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">
+                        {pkg.title}
+                      </div>
+                      <div className="text-xs font-mono text-slate-500 mt-0.5">
+                        ${pkg.priceUSD} USD
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                    <button
+                      onClick={() => handleStatusChange(pkg.id, 'active')}
+                      className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 cursor-pointer"
+                    >
+                      ↩ Reactivate
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleCloneAsDraft(pkg)}
+                        className="p-1 rounded-lg text-amber-600 hover:bg-amber-50 cursor-pointer"
+                        title="Clone as Draft"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => deletePackage(pkg.id)}
+                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer"
+                        title="Trash"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
+        /* 4. DEFAULT CARD GRID VIEW */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredPackages.map(pkg => {
             const currentStatus: TourPackageStatus = pkg.status || 'active';
