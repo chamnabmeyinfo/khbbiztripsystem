@@ -169,38 +169,58 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [newImageUrl, setNewImageUrl] = useState('');
 
   // Highlights Bilingual State
-  const [highlightsKm, setHighlightsKm] = useState<string[]>(
-    pkg ? (pkg.highlightsKm || pkg.highlights || []) : [
+  const [highlightsKm, setHighlightsKm] = useState<string[]>(() => {
+    if (pkg) {
+      if (pkg.highlightsKm !== undefined) return pkg.highlightsKm;
+      if (pkg.highlights !== undefined) return pkg.highlights;
+      return [];
+    }
+    return [
       '🤝 ស្វែងរកផលិតផលបោះដុំពាក់ព័ន្ធនឹង តែ កាហ្វេ ការដុតនំ និងការលក់រាយ (Wholesale Sourcing)',
       '⚙️ សម្ភារៈ និងឧបករណ៍ឆុងកាហ្វេ ធ្វើនំ និងបច្ចេកវិទ្យាពាក់ព័ន្ធនឹងលក់រាយ (Equipment & RetailTech)',
       '🏢 ប្រេនល្បីៗនៅវៀតណាម និងអន្តរជាតិសម្រាប់ទិញសិទ្ធិ Franchise មកកម្ពុជា (Franchise Opportunities)'
-    ]
-  );
-  const [highlightsEn, setHighlightsEn] = useState<string[]>(pkg?.highlightsEn || []);
+    ];
+  });
+  const [highlightsEn, setHighlightsEn] = useState<string[]>(() => pkg?.highlightsEn || []);
 
   // Who Should Join Bilingual State
-  const [whoShouldJoinKm, setWhoShouldJoinKm] = useState<string[]>(
-    pkg ? (pkg.whoShouldJoinKm || pkg.whoShouldJoin || []) : [
+  const [whoShouldJoinKm, setWhoShouldJoinKm] = useState<string[]>(() => {
+    if (pkg) {
+      if (pkg.whoShouldJoinKm !== undefined) return pkg.whoShouldJoinKm;
+      if (pkg.whoShouldJoin !== undefined) return pkg.whoShouldJoin;
+      return [];
+    }
+    return [
       'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ',
       'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា',
       'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ'
-    ]
-  );
-  const [whoShouldJoinEn, setWhoShouldJoinEn] = useState<string[]>(pkg?.whoShouldJoinEn || []);
+    ];
+  });
+  const [whoShouldJoinEn, setWhoShouldJoinEn] = useState<string[]>(() => pkg?.whoShouldJoinEn || []);
 
   // Why You Should Join Bilingual State
-  const [whyShouldJoinKm, setWhyShouldJoinKm] = useState<string[]>(
-    pkg ? (pkg.whyShouldJoinKm || pkg.whyShouldJoin || []) : [
+  const [whyShouldJoinKm, setWhyShouldJoinKm] = useState<string[]>(() => {
+    if (pkg) {
+      if (pkg.whyShouldJoinKm !== undefined) return pkg.whyShouldJoinKm;
+      if (pkg.whyShouldJoin !== undefined) return pkg.whyShouldJoin;
+      return [];
+    }
+    return [
       'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល',
       'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន',
       'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត'
-    ]
-  );
-  const [whyShouldJoinEn, setWhyShouldJoinEn] = useState<string[]>(pkg?.whyShouldJoinEn || []);
+    ];
+  });
+  const [whyShouldJoinEn, setWhyShouldJoinEn] = useState<string[]>(() => pkg?.whyShouldJoinEn || []);
 
   // Inclusions Bilingual State
-  const [inclusionsKm, setInclusionsKm] = useState<string[]>(
-    pkg ? (pkg.inclusionsKm || pkg.inclusions || []) : [
+  const [inclusionsKm, setInclusionsKm] = useState<string[]>(() => {
+    if (pkg) {
+      if (pkg.inclusionsKm !== undefined) return pkg.inclusionsKm;
+      if (pkg.inclusions !== undefined) return pkg.inclusions;
+      return [];
+    }
+    return [
       'រថយន្តក្រុង VIP ពីភ្នំពេញ ទៅកាន់ប្រទេសវៀតណាម (Phnom Penh to Vietnam VIP Coach)',
       'សណ្ឋាគារស្នាក់នៅស្តង់ដារ ៤ ផ្កាយ (៣ យប់ / ៤ ថ្ងៃ)',
       'អាហារពេលព្រឹកប៊ូហ្វេប្រចាំថ្ងៃនៅសណ្ឋាគារ (Daily Hotel Buffet Breakfast)',
@@ -211,33 +231,43 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       'ការចុះឈ្មោះ និងកាតផ្លូវការចូលទស្សនាពិព័រណ៍ទាំង ៣ ដោយឥតគិតថ្លៃ (Official VIP Expo Passes)',
       'សេវាសម្រួលបែបបទឆ្លងដែន VIP (Fast-Track Border & Immigration VIP Clearance)',
       'សំបុត្រយន្តហោះក្នុងស្រុកពី ហូជីមិញ ទៅកាន់ កោះត្រល់ (Domestic Flight: HCMC to Phu Quoc)'
-    ]
-  );
-  const [inclusionsEn, setInclusionsEn] = useState<string[]>(pkg?.inclusionsEn || []);
+    ];
+  });
+  const [inclusionsEn, setInclusionsEn] = useState<string[]>(() => pkg?.inclusionsEn || []);
 
   // Exclusions Bilingual State
-  const [exclusionsKm, setExclusionsKm] = useState<string[]>(
-    pkg ? (pkg.exclusionsKm || pkg.exclusions || []) : [
+  const [exclusionsKm, setExclusionsKm] = useState<string[]>(() => {
+    if (pkg) {
+      if (pkg.exclusionsKm !== undefined) return pkg.exclusionsKm;
+      if (pkg.exclusions !== undefined) return pkg.exclusions;
+      return [];
+    }
+    return [
       'អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចផ្ទាល់ខ្លួន (លើកលែងតែកម្មវិធីដែលបានបញ្ជាក់)',
       'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាបោកអ៊ុត, ទូរស័ព្ទ)',
       'ថ្លៃកម្មវិធីជម្រើសបន្ថែម (Optional Tour Programs / VIP 1-on-1 Dinner)',
       'ធានារ៉ាប់រងការធ្វើដំណើរក្រៅប្រទេសផ្ទាល់ខ្លួន'
-    ]
-  );
-  const [exclusionsEn, setExclusionsEn] = useState<string[]>(pkg?.exclusionsEn || []);
+    ];
+  });
+  const [exclusionsEn, setExclusionsEn] = useState<string[]>(() => pkg?.exclusionsEn || []);
 
   // Terms & Conditions Bilingual State
-  const [termsAndConditionsKm, setTermsAndConditionsKm] = useState<string[]>(
-    pkg ? (pkg.termsAndConditionsKm || pkg.termsAndConditions || []) : [
+  const [termsAndConditionsKm, setTermsAndConditionsKm] = useState<string[]>(() => {
+    if (pkg) {
+      if (pkg.termsAndConditionsKm !== undefined) return pkg.termsAndConditionsKm;
+      if (pkg.termsAndConditions !== undefined) return pkg.termsAndConditions;
+      return [];
+    }
+    return [
       'លិខិតឆ្លងដែន (Passport) ត្រូវតែមានសុពលភាពយ៉ាងតិច ៦ ខែ គិតចាប់ពីថ្ងៃចេញដំណើរ។',
       'ការកក់កន្លែង និងធានាសិទ្ធិចូលរួម ត្រូវតម្កល់ប្រាក់កក់យ៉ាងតិច 50% នៃតម្លៃសរុបពេលចុះឈ្មោះ។',
       'ការបង់ប្រាក់បង្គ្រប់ 100% ត្រូវធ្វើឡើងយ៉ាងតិច ៧ ថ្ងៃ មុនកាលបរិច្ឆេទចេញដំណើរ។',
       'ករណីលុបចោលការធ្វើដំណើរមុន ១៥ ថ្ងៃ នឹងទទួលបានការបង្វិលប្រាក់វិញ 70%។ ករណីលុបចោលក្រោម ៧ ថ្ងៃ មិនអាចបង្វិលប្រាក់បានទេ។',
       'អ្នកចូលរួមត្រូវគោរពតាមពេលវេលា និងការណែនាំរបស់មគ្គុទ្ទេសក៍ និងអ្នកសម្របសម្រួលបេសកកម្ម។',
       'ក្រុមហ៊ុនសូមរក្សាសិទ្ធិកែប្រែកាលវិភាគ ឬសណ្ឋាគារក្នុងកម្រិតស្មើគ្នា ករណីមានប្រធានសក្តិ ឬហេតុការណ៍ចៃដន្យ។'
-    ]
-  );
-  const [termsAndConditionsEn, setTermsAndConditionsEn] = useState<string[]>(pkg?.termsAndConditionsEn || []);
+    ];
+  });
+  const [termsAndConditionsEn, setTermsAndConditionsEn] = useState<string[]>(() => pkg?.termsAndConditionsEn || []);
 
   // Tour Guide Profile Bilingual State
   const [guideName, setGuideName] = useState(pkg?.tourGuide?.name || 'Mr. Tim Vutha & Senior Escort Team');
@@ -299,18 +329,18 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       setDescriptionKm(pkg.descriptionKm || pkg.description || '');
       setDescriptionEn(pkg.descriptionEn || '');
       setImages(pkg.images || []);
-      setHighlightsKm(pkg.highlightsKm || pkg.highlights || []);
-      setHighlightsEn(pkg.highlightsEn || []);
-      setWhoShouldJoinKm(pkg.whoShouldJoinKm || pkg.whoShouldJoin || []);
-      setWhoShouldJoinEn(pkg.whoShouldJoinEn || []);
-      setWhyShouldJoinKm(pkg.whyShouldJoinKm || pkg.whyShouldJoin || []);
-      setWhyShouldJoinEn(pkg.whyShouldJoinEn || []);
-      setInclusionsKm(pkg.inclusionsKm || pkg.inclusions || []);
-      setInclusionsEn(pkg.inclusionsEn || []);
-      setExclusionsKm(pkg.exclusionsKm || pkg.exclusions || []);
-      setExclusionsEn(pkg.exclusionsEn || []);
-      setTermsAndConditionsKm(pkg.termsAndConditionsKm || pkg.termsAndConditions || []);
-      setTermsAndConditionsEn(pkg.termsAndConditionsEn || []);
+      setHighlightsKm(pkg.highlightsKm !== undefined ? pkg.highlightsKm : (pkg.highlights || []));
+      setHighlightsEn(pkg.highlightsEn !== undefined ? pkg.highlightsEn : []);
+      setWhoShouldJoinKm(pkg.whoShouldJoinKm !== undefined ? pkg.whoShouldJoinKm : (pkg.whoShouldJoin || []));
+      setWhoShouldJoinEn(pkg.whoShouldJoinEn !== undefined ? pkg.whoShouldJoinEn : []);
+      setWhyShouldJoinKm(pkg.whyShouldJoinKm !== undefined ? pkg.whyShouldJoinKm : (pkg.whyShouldJoin || []));
+      setWhyShouldJoinEn(pkg.whyShouldJoinEn !== undefined ? pkg.whyShouldJoinEn : []);
+      setInclusionsKm(pkg.inclusionsKm !== undefined ? pkg.inclusionsKm : (pkg.inclusions || []));
+      setInclusionsEn(pkg.inclusionsEn !== undefined ? pkg.inclusionsEn : []);
+      setExclusionsKm(pkg.exclusionsKm !== undefined ? pkg.exclusionsKm : (pkg.exclusions || []));
+      setExclusionsEn(pkg.exclusionsEn !== undefined ? pkg.exclusionsEn : []);
+      setTermsAndConditionsKm(pkg.termsAndConditionsKm !== undefined ? pkg.termsAndConditionsKm : (pkg.termsAndConditions || []));
+      setTermsAndConditionsEn(pkg.termsAndConditionsEn !== undefined ? pkg.termsAndConditionsEn : []);
       setItinerary(pkg.itinerary || []);
       setOptionalPrograms(pkg.optionalPrograms || []);
       if (pkg.tourGuide) {
@@ -981,24 +1011,36 @@ Highlights:
       descriptionKm: (descriptionKm || description || descriptionEn).trim(),
       descriptionEn: descriptionEn.trim() || undefined,
       images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80'],
-      highlights: (isEnglishMain && highlightsEn.length > 0) ? highlightsEn : (highlightsKm.length > 0 ? highlightsKm : highlightsEn),
-      highlightsKm: highlightsKm.length > 0 ? highlightsKm : undefined,
-      highlightsEn: highlightsEn.length > 0 ? highlightsEn : undefined,
-      whoShouldJoin: (isEnglishMain && whoShouldJoinEn.length > 0) ? whoShouldJoinEn : (whoShouldJoinKm.length > 0 ? whoShouldJoinKm : whoShouldJoinEn),
-      whoShouldJoinKm: whoShouldJoinKm.length > 0 ? whoShouldJoinKm : undefined,
-      whoShouldJoinEn: whoShouldJoinEn.length > 0 ? whoShouldJoinEn : undefined,
-      whyShouldJoin: (isEnglishMain && whyShouldJoinEn.length > 0) ? whyShouldJoinEn : (whyShouldJoinKm.length > 0 ? whyShouldJoinKm : whyShouldJoinEn),
-      whyShouldJoinKm: whyShouldJoinKm.length > 0 ? whyShouldJoinKm : undefined,
-      whyShouldJoinEn: whyShouldJoinEn.length > 0 ? whyShouldJoinEn : undefined,
-      inclusions: (isEnglishMain && inclusionsEn.length > 0) ? inclusionsEn : (inclusionsKm.length > 0 ? inclusionsKm : inclusionsEn),
-      inclusionsKm: inclusionsKm.length > 0 ? inclusionsKm : undefined,
-      inclusionsEn: inclusionsEn.length > 0 ? inclusionsEn : undefined,
-      exclusions: (isEnglishMain && exclusionsEn.length > 0) ? exclusionsEn : (exclusionsKm.length > 0 ? exclusionsKm : exclusionsEn),
-      exclusionsKm: exclusionsKm.length > 0 ? exclusionsKm : undefined,
-      exclusionsEn: exclusionsEn.length > 0 ? exclusionsEn : undefined,
-      termsAndConditions: (isEnglishMain && termsAndConditionsEn.length > 0) ? termsAndConditionsEn : (termsAndConditionsKm.length > 0 ? termsAndConditionsKm : termsAndConditionsEn),
-      termsAndConditionsKm: termsAndConditionsKm.length > 0 ? termsAndConditionsKm : undefined,
-      termsAndConditionsEn: termsAndConditionsEn.length > 0 ? termsAndConditionsEn : undefined,
+      highlights: isEnglishMain
+        ? (highlightsEn.length > 0 ? highlightsEn : (highlightsKm.length > 0 ? highlightsKm : []))
+        : (highlightsKm.length > 0 ? highlightsKm : (highlightsEn.length > 0 ? highlightsEn : [])),
+      highlightsKm: highlightsKm || [],
+      highlightsEn: highlightsEn || [],
+      whoShouldJoin: isEnglishMain
+        ? (whoShouldJoinEn.length > 0 ? whoShouldJoinEn : (whoShouldJoinKm.length > 0 ? whoShouldJoinKm : []))
+        : (whoShouldJoinKm.length > 0 ? whoShouldJoinKm : (whoShouldJoinEn.length > 0 ? whoShouldJoinEn : [])),
+      whoShouldJoinKm: whoShouldJoinKm || [],
+      whoShouldJoinEn: whoShouldJoinEn || [],
+      whyShouldJoin: isEnglishMain
+        ? (whyShouldJoinEn.length > 0 ? whyShouldJoinEn : (whyShouldJoinKm.length > 0 ? whyShouldJoinKm : []))
+        : (whyShouldJoinKm.length > 0 ? whyShouldJoinKm : (whyShouldJoinEn.length > 0 ? whyShouldJoinEn : [])),
+      whyShouldJoinKm: whyShouldJoinKm || [],
+      whyShouldJoinEn: whyShouldJoinEn || [],
+      inclusions: isEnglishMain
+        ? (inclusionsEn.length > 0 ? inclusionsEn : (inclusionsKm.length > 0 ? inclusionsKm : []))
+        : (inclusionsKm.length > 0 ? inclusionsKm : (inclusionsEn.length > 0 ? inclusionsEn : [])),
+      inclusionsKm: inclusionsKm || [],
+      inclusionsEn: inclusionsEn || [],
+      exclusions: isEnglishMain
+        ? (exclusionsEn.length > 0 ? exclusionsEn : (exclusionsKm.length > 0 ? exclusionsKm : []))
+        : (exclusionsKm.length > 0 ? exclusionsKm : (exclusionsEn.length > 0 ? exclusionsEn : [])),
+      exclusionsKm: exclusionsKm || [],
+      exclusionsEn: exclusionsEn || [],
+      termsAndConditions: isEnglishMain
+        ? (termsAndConditionsEn.length > 0 ? termsAndConditionsEn : (termsAndConditionsKm.length > 0 ? termsAndConditionsKm : []))
+        : (termsAndConditionsKm.length > 0 ? termsAndConditionsKm : (termsAndConditionsEn.length > 0 ? termsAndConditionsEn : [])),
+      termsAndConditionsKm: termsAndConditionsKm || [],
+      termsAndConditionsEn: termsAndConditionsEn || [],
       availableDates: finalAvailableDates,
       tags: tags as any,
       rating: Number(rating) || 5.0,

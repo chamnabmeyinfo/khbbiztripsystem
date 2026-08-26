@@ -74,21 +74,53 @@ export const PackageSalesLandingPage: React.FC = () => {
     );
   }
 
-  const whoShouldJoinList = (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0)
-    ? (language === 'km' && pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0 ? pkg.whoShouldJoinKm : pkg.whoShouldJoin)
-    : [
-        language === 'km' ? 'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ' : 'Coffee shop, bakery, and F&B restaurant owners seeking direct factory-wholesale pricing and suppliers',
-        language === 'km' ? 'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា' : 'Entrepreneurs & investors looking to license proven international F&B franchise brands for Cambodia',
-        language === 'km' ? 'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ' : 'Importers & commercial distributors of raw bakery ingredients, packaging, and commercial food equipment'
-      ];
+  const highlightsList = (language === 'km' && pkg.highlightsKm && pkg.highlightsKm.length > 0)
+    ? pkg.highlightsKm
+    : (language !== 'km' && pkg.highlightsEn && pkg.highlightsEn.length > 0
+        ? pkg.highlightsEn
+        : (pkg.highlights || []));
 
-  const whyShouldJoinList = (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0)
-    ? (language === 'km' && pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0 ? pkg.whyShouldJoinKm : pkg.whyShouldJoin)
-    : [
-        language === 'km' ? 'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល' : 'Acquire direct factory-gate wholesale pricing without broker markups and middleman fees',
-        language === 'km' ? 'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន' : 'Meet and negotiate in person with 1,000+ top verified international manufacturers and brand owners',
-        language === 'km' ? 'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត' : 'Enjoy seamless VIP Fast-Track border clearance, 4-star luxury accommodation, and dedicated translators'
-      ];
+  const whoShouldJoinList = (language === 'km' && pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0)
+    ? pkg.whoShouldJoinKm
+    : (language !== 'km' && pkg.whoShouldJoinEn && pkg.whoShouldJoinEn.length > 0
+        ? pkg.whoShouldJoinEn
+        : (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0
+            ? pkg.whoShouldJoin
+            : [
+                language === 'km' ? 'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ' : 'Coffee shop, bakery, and F&B restaurant owners seeking direct factory-wholesale pricing and suppliers',
+                language === 'km' ? 'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា' : 'Entrepreneurs & investors looking to license proven international F&B franchise brands for Cambodia',
+                language === 'km' ? 'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ' : 'Importers & commercial distributors of raw bakery ingredients, packaging, and commercial food equipment'
+              ]));
+
+  const whyShouldJoinList = (language === 'km' && pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0)
+    ? pkg.whyShouldJoinKm
+    : (language !== 'km' && pkg.whyShouldJoinEn && pkg.whyShouldJoinEn.length > 0
+        ? pkg.whyShouldJoinEn
+        : (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0
+            ? pkg.whyShouldJoin
+            : [
+                language === 'km' ? 'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល' : 'Acquire direct factory-gate wholesale pricing without broker markups and middleman fees',
+                language === 'km' ? 'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន' : 'Meet and negotiate in person with 1,000+ top verified international manufacturers and brand owners',
+                language === 'km' ? 'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត' : 'Enjoy seamless VIP Fast-Track border clearance, 4-star luxury accommodation, and dedicated translators'
+              ]));
+
+  const inclusionsList = (language === 'km' && pkg.inclusionsKm && pkg.inclusionsKm.length > 0)
+    ? pkg.inclusionsKm
+    : (language !== 'km' && pkg.inclusionsEn && pkg.inclusionsEn.length > 0
+        ? pkg.inclusionsEn
+        : (pkg.inclusions || []));
+
+  const exclusionsList = (language === 'km' && pkg.exclusionsKm && pkg.exclusionsKm.length > 0)
+    ? pkg.exclusionsKm
+    : (language !== 'km' && pkg.exclusionsEn && pkg.exclusionsEn.length > 0
+        ? pkg.exclusionsEn
+        : (pkg.exclusions || []));
+
+  const termsList = (language === 'km' && pkg.termsAndConditionsKm && pkg.termsAndConditionsKm.length > 0)
+    ? pkg.termsAndConditionsKm
+    : (language !== 'km' && pkg.termsAndConditionsEn && pkg.termsAndConditionsEn.length > 0
+        ? pkg.termsAndConditionsEn
+        : (pkg.termsAndConditions || []));
 
   // Price calculations
   const basePrice = pkg.discountPriceUSD || pkg.priceUSD;
@@ -558,7 +590,7 @@ export const PackageSalesLandingPage: React.FC = () => {
       </section>
 
       {/* ── Key Sourcing & Trade Mission Highlights ─────────────────────────── */}
-      {pkg.highlights && pkg.highlights.length > 0 && (
+      {highlightsList.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
             <div className="flex items-center gap-3">
@@ -576,7 +608,7 @@ export const PackageSalesLandingPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {pkg.highlights.map((hl, i) => (
+              {highlightsList.map((hl, i) => (
                 <div
                   key={i}
                   className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 flex items-start gap-3 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
@@ -994,7 +1026,7 @@ export const PackageSalesLandingPage: React.FC = () => {
               <h3>{language === 'km' ? 'អត្ថប្រយោជន៍រួមបញ្ចូល (What’s Included)' : 'What’s Included in Mission'}</h3>
             </div>
             <div className="space-y-2.5">
-              {(pkg.inclusions || []).map((inc, i) => (
+              {inclusionsList.map((inc, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
                   <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span className="leading-relaxed">{inc}</span>
@@ -1010,7 +1042,7 @@ export const PackageSalesLandingPage: React.FC = () => {
               <h3>{language === 'km' ? 'មិនរាប់បញ្ចូល (Exclusions)' : 'Not Included in Package'}</h3>
             </div>
             <div className="space-y-2.5">
-              {(pkg.exclusions || []).map((exc, i) => (
+              {exclusionsList.map((exc, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0 mt-1.5" />
                   <span className="leading-relaxed">{exc}</span>
@@ -1022,7 +1054,7 @@ export const PackageSalesLandingPage: React.FC = () => {
       </section>
 
       {/* ── Terms, Policies & Conditions ───────────────────────────────────── */}
-      {pkg.termsAndConditions && pkg.termsAndConditions.length > 0 && (
+      {termsList.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
             <div className="flex items-center gap-3">
@@ -1040,7 +1072,7 @@ export const PackageSalesLandingPage: React.FC = () => {
             </div>
 
             <div className="space-y-2.5">
-              {pkg.termsAndConditions.map((term, tIdx) => (
+              {termsList.map((term, tIdx) => (
                 <div
                   key={tIdx}
                   className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-start gap-3"
