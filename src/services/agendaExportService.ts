@@ -187,7 +187,7 @@ function buildImageGallery(pkg: TourPackage, labels: PdfLabels, settings?: Syste
       <span style="font-size:9.5px;color:${C.slate400};font-weight:normal;">1 Featured + ${subImgs.length} Mission Photos (${allImages.length} Photos Total)</span>
     </div>
 
-    <div data-bg-img="${escapeHtml(mainImg)}" class="gallery-hero-box" style="width:100%;height:160px;border-radius:9px;border:1px solid ${C.slate200};position:relative;overflow:hidden;background:${C.slate100} url('${escapeHtml(mainImg)}') no-repeat center center / cover;margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+    <div data-bg-img="${escapeHtml(mainImg)}" class="gallery-hero-box" style="width:100%;height:135px;border-radius:9px;border:1px solid ${C.slate200};position:relative;overflow:hidden;background:${C.slate100} url('${escapeHtml(mainImg)}') no-repeat center center / cover;margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
       <img src="${escapeHtml(mainImg)}" alt="Featured ${escapeHtml(pkg.destination)}" crossOrigin="anonymous" referrerPolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;" />
       <div class="gallery-hero-badge-left" style="position:absolute;bottom:8px;left:10px;max-width:calc(100% - 20px);background:rgba(15,23,42,0.88);color:#fff;padding:4px 10px;border-radius:6px;font-size:9px;font-weight:bold;display:inline-flex;align-items:center;gap:4px;line-height:1.2;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         <span>📍</span>
@@ -576,7 +576,7 @@ function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels, settings?
     const descPart = step.description ? `<div style="padding:8px 12px;font-size:10.5px;color:${C.slate600};font-style:italic;line-height:1.55;background:${C.white};border-bottom:1px solid ${C.slate100};word-break:break-word;">${escapeHtml(labels.overview)} ${escapeHtml(step.description)}</div>` : '';
 
     return `
-    <div style="border:1px solid ${C.slate200};border-radius:8px;overflow:hidden;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;">
+    <div class="itinerary-day-box" data-pdf-block="1" style="border:1px solid ${C.slate200};border-radius:8px;overflow:hidden;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid;">
       <div class="itinerary-day-header" style="background:${C.slate100};padding:10px 14px;border-bottom:1px solid ${C.slate200};display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;width:100%;box-sizing:border-box;">
         <div class="day-title-group" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
           <span class="day-number-badge" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.navy};color:${C.white};padding:0 8px;border-radius:4px;font-size:9.5px;font-weight:bold;flex-shrink:0;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(labels.day)} ${step.day}</span></span>
@@ -603,11 +603,10 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   const docRef = `KHB-AGN-${pkg.id.slice(0, 8).toUpperCase()}`;
 
   const itinerarySteps = pkg.itinerary || [];
-  const multiDay = itinerarySteps.length > 2;
 
   // PAGE 1: Cover & Mission Executive Profile
   const page1Content = `
-    <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+    <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
       ${buildHeader(pkg, labels, { selectedDate: opts.selectedDate, travelerName: opts.travelerName, docRef, systemSettings: opts.systemSettings })}
       ${buildImageGallery(pkg, labels, opts.systemSettings)}
       ${buildTitleBlock(pkg, labels, opts.systemSettings)}
@@ -617,37 +616,39 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     </div>
   `;
 
-  // PAGE 2 (and 3 if multi-day): Itinerary Days
+  // ITINERARY DAYS: Chunk into clean pages (max 2 days per page to prevent page overflow and slicing)
   const itineraryPages: string[] = [];
-  if (!multiDay) {
+  const DAYS_PER_PAGE = 2;
+  const totalItineraryPages = Math.max(1, Math.ceil(itinerarySteps.length / DAYS_PER_PAGE));
+  
+  if (itinerarySteps.length === 0) {
     itineraryPages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
-        ${buildItineraryDays(itinerarySteps, labels, opts.systemSettings)}
+        <div style="font-size:12px;color:${C.slate500};font-style:italic;padding:16px 0;">${escapeHtml(lang === 'km' ? 'កាលវិភាគលម្អិតនឹងត្រូវបានចែកចាយពេលជួបជុំគណៈប្រតិភូ។' : 'Detailed itinerary will be distributed upon group assembly.')}</div>
       </div>
     `);
   } else {
-    itineraryPages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 1)</div>
-        ${buildItineraryDays(itinerarySteps.slice(0, 2), labels, opts.systemSettings)}
-      </div>
-    `);
-    itineraryPages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} (Part 2)</div>
-        ${buildItineraryDays(itinerarySteps.slice(2), labels, opts.systemSettings)}
-      </div>
-    `);
+    for (let i = 0; i < itinerarySteps.length; i += DAYS_PER_PAGE) {
+      const chunk = itinerarySteps.slice(i, i + DAYS_PER_PAGE);
+      const pageIndex = Math.floor(i / DAYS_PER_PAGE) + 1;
+      const partWord = lang === 'km' ? 'វគ្គ' : lang === 'ja' ? 'パート' : lang === 'es' ? 'Parte' : lang === 'ar' ? 'الجزء' : lang === 'he' ? 'חלק' : 'Part';
+      const partSuffix = totalItineraryPages > 1 ? ` (${partWord} ${pageIndex}/${totalItineraryPages})` : '';
+      itineraryPages.push(`
+        <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
+          ${buildPageHeader(pkg, labels, opts.systemSettings)}
+          <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}${partSuffix}</div>
+          ${buildItineraryDays(chunk, labels, opts.systemSettings)}
+        </div>
+      `);
+    }
   }
 
   // MISSION VALUE, WHO/WHY SHOULD JOIN, HIGHLIGHTS & OPTIONAL PROGRAMS PAGES
   const hasHighlights = pkg.highlights && pkg.highlights.length > 0;
-  const hasWhoShouldJoin = pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0;
-  const hasWhyShouldJoin = pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0;
+  const hasWhoShouldJoin = (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0) || (pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0);
+  const hasWhyShouldJoin = (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0) || (pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0);
   const hasPrograms = pkg.optionalPrograms && pkg.optionalPrograms.length > 0;
 
   const middlePages: string[] = [];
@@ -655,7 +656,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
   if (hasMissionBenefits && hasPrograms) {
     middlePages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         ${buildHighlights(pkg, labels, opts.systemSettings)}
         ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
@@ -663,14 +664,14 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
       </div>
     `);
     middlePages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings)}
       </div>
     `);
   } else if (hasMissionBenefits) {
     middlePages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         ${buildHighlights(pkg, labels, opts.systemSettings)}
         ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
@@ -679,7 +680,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     `);
   } else if (hasPrograms) {
     middlePages.push(`
-      <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings)}
       </div>
@@ -688,7 +689,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
   // FINAL PAGE: Inclusions, Exclusions, Emergency Assistance, Terms & Signatures
   const finalContent = `
-    <div style="margin-bottom:24px;width:100%;box-sizing:border-box;">
+    <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
       ${buildPageHeader(pkg, labels, opts.systemSettings)}
       ${buildInclusionsExclusions(pkg, labels, opts.systemSettings)}
       ${buildEmergency(pkg, labels, opts.systemSettings)}
@@ -703,9 +704,9 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   return allPageBodies.map((content, idx) => {
     const pageNum = idx + 1;
     return `
-    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:32px 36px 30px 36px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:30px;">
+    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:28px 32px 26px 32px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:30px;">
       ${watermarkHtml}
-      <div style="flex:1;display:flex;flex-direction:column;margin-bottom:24px;width:100%;box-sizing:border-box;position:relative;z-index:1;">
+      <div style="flex:1;display:flex;flex-direction:column;margin-bottom:18px;width:100%;box-sizing:border-box;position:relative;z-index:1;">
         ${content}
       </div>
       <div style="position:relative;z-index:2;">
@@ -1198,62 +1199,104 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
   @media print { 
     @page {
       size: A4 portrait;
-      margin: 0;
+      margin: 8mm 10mm 10mm 10mm;
     }
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
+      box-sizing: border-box !important;
     }
     html, body { 
-      width: 210mm !important;
+      width: 100% !important;
       height: auto !important;
+      min-height: 100% !important;
       background: #ffffff !important; 
       padding: 0 !important; 
       margin: 0 !important; 
+      overflow: visible !important;
     } 
-    .no-print, .no-print-toolbar {
+    .no-print, .no-print-toolbar, .print\:hidden {
       display: none !important;
     }
     #agenda-content { 
       display: block !important;
-      width: 210mm !important;
+      width: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
       gap: 0 !important;
     } 
     .pdf-a4-page {
-      width: 210mm !important;
-      height: 297mm !important;
-      max-height: 297mm !important;
-      min-height: 297mm !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
+      min-height: auto !important;
       margin: 0 !important;
-      padding: 14mm 16mm 12mm 16mm !important;
+      padding: 0 0 8mm 0 !important;
       box-shadow: none !important;
       border-radius: 0 !important;
       page-break-before: auto !important;
       page-break-after: always !important;
       break-after: page !important;
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
+      page-break-inside: auto !important;
+      break-inside: auto !important;
       box-sizing: border-box !important;
-      overflow: hidden !important;
+      overflow: visible !important;
+      position: relative !important;
     }
     .pdf-a4-page:last-child {
-      page-break-after: avoid !important;
-      break-after: avoid !important;
+      page-break-after: auto !important;
+      break-after: auto !important;
       margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
     }
-    [data-pdf-block] {
+    [data-pdf-block],
+    [data-pdf-break],
+    .header-main-box,
+    .gallery-hero-box,
+    .gallery-sub-grid,
+    .badges-row,
+    .guide-box,
+    .itinerary-day-box,
+    .itinerary-slot-row,
+    .inc-exc-row,
+    .opt-program-card,
+    .signatures-row,
+    .highlight-item-card,
+    .who-should-join-card,
+    .why-should-join-card,
+    .summary-block,
+    .financial-summary-grid,
+    .print-friendly-summary,
+    tr,
+    tbody tr,
+    figure,
+    blockquote,
+    .avoid-break {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
+      break-inside: avoid-page !important;
     }
-    .print-friendly-headers {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+    h1, h2, h3, h4, h5, h6,
+    .page-top-header,
+    .itinerary-day-header,
+    .section-heading {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+      break-after: avoid-page !important;
     }
-    .print-friendly-headers thead {
+    table {
+      page-break-inside: auto !important;
+      break-inside: auto !important;
+    }
+    .print-friendly-headers thead,
+    thead {
       display: table-header-group !important;
+    }
+    .print-friendly-headers tfoot,
+    tfoot {
+      display: table-footer-group !important;
     }
     .print-friendly-headers tbody tr {
       page-break-inside: avoid !important;

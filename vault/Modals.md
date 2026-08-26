@@ -28,7 +28,11 @@ To close a modal: `setActiveModal(null)`
 ### 3. `AgendaPdfModal`
 **Trigger:** Click "Preview PDF" inside `PackageDetailModal` or marketing landing pages  
 **Purpose:** High-fidelity in-browser rendering of the statutory tour agenda & trade mission dossier with direct download and print capabilities  
-**File:** `src/components/portal/AgendaPdfModal.tsx`
+**Export Features:**
+- **Zero-Cut Pagination Engine**: Dynamic 2-day-per-page itinerary chunking preventing content overflow across A4 boundaries.
+- **Anti-Cut CSS**: `@media print` rules enforcing `page-break-inside: avoid` / `break-inside: avoid` on all schedule cards, day boxes, timing rows, galleries, and summary grids.
+- **Multi-Format Export**: Generates Vector-exact Browser Print A4, HTML-to-PDF via `html2canvas` & `jsPDF`, standalone offline `.html`, and MS Word `.doc`.
+**File:** `src/components/portal/AgendaPdfModal.tsx` & `src/services/agendaExportService.ts`
 
 ---
 

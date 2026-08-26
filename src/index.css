@@ -406,19 +406,22 @@ table.print-friendly-headers tfoot,
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 8mm 10mm 10mm 10mm;
   }
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    box-sizing: border-box !important;
   }
   html, body {
-    width: 210mm !important;
+    width: 100% !important;
     height: auto !important;
+    min-height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    overflow: visible !important;
   }
   img {
     -webkit-print-color-adjust: exact !important;
@@ -428,46 +431,130 @@ table.print-friendly-headers tfoot,
     object-position: center !important;
     display: block !important;
   }
-  .print-friendly-headers thead {
-    display: table-header-group !important;
+  .no-print,
+  .no-print-toolbar,
+  .print\:hidden {
+    display: none !important;
   }
-  .print-friendly-headers tbody tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+
+  /* Reset modal containers when printing to allow full multi-page flow */
+  .fixed.inset-0,
+  #agenda-pdf-modal,
+  [id$="-modal"] {
+    position: static !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
   }
-  .print-friendly-headers .summary-block,
-  .print-friendly-headers .financial-summary-grid,
-  .print-friendly-summary {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+  .fixed.inset-0 > div,
+  #agenda-pdf-modal > div,
+  [id$="-modal"] > div {
+    position: static !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  #printable-invoice,
+  #printable-voucher {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* A4 Page Flow */
+  #agenda-content {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .pdf-a4-page {
-    width: 210mm !important;
-    height: 297mm !important;
-    max-height: 297mm !important;
-    min-height: 297mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
     margin: 0 !important;
-    padding: 14mm 16mm 12mm 16mm !important;
+    padding: 0 0 8mm 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     page-break-before: auto !important;
     page-break-after: always !important;
     break-after: page !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    position: relative !important;
   }
   .pdf-a4-page:last-child {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
     margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
-  [data-pdf-block] {
+
+  /* Complete Anti-Cutoff Rules */
+  [data-pdf-block],
+  [data-pdf-break],
+  .print-friendly-headers,
+  .print-friendly-summary,
+  .summary-block,
+  .financial-summary-grid,
+  .header-main-box,
+  .gallery-hero-box,
+  .gallery-sub-grid,
+  .badges-row,
+  .guide-box,
+  .itinerary-day-box,
+  .itinerary-slot-row,
+  .inc-exc-row,
+  .opt-program-card,
+  .signatures-row,
+  .highlight-item-card,
+  .who-should-join-card,
+  .why-should-join-card,
+  tr,
+  tbody tr,
+  figure,
+  blockquote,
+  .avoid-break {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    break-inside: avoid-page !important;
   }
-  .no-print {
-    display: none !important;
+
+  h1, h2, h3, h4, h5, h6,
+  .page-top-header,
+  .itinerary-day-header,
+  .section-header {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    break-after: avoid-page !important;
+  }
+
+  table {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+  .print-friendly-headers thead,
+  thead {
+    display: table-header-group !important;
+  }
+  .print-friendly-headers tfoot,
+  tfoot {
+    display: table-footer-group !important;
   }
 }
