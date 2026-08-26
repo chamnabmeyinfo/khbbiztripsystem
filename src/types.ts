@@ -214,8 +214,11 @@ export interface EmergencyContact {
   embassySupport: string;
 }
 
+export type TourPackageStatus = 'active' | 'draft' | 'archived' | 'deleted';
+
 export interface TourPackage {
   id: string;
+  status?: TourPackageStatus; // 'active' | 'draft' | 'archived' | 'deleted' (defaults to 'active')
   title: string;
   titleKm?: string;
   titleEn?: string;

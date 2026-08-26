@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   TourPackage,
+  TourPackageStatus,
   ItineraryStep,
   GuideScheduleSlot,
   OptionalTourProgram,
@@ -122,6 +123,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [aiError, setAiError] = useState<string | null>(null);
 
   // Basic Info State
+  const [status, setStatus] = useState<TourPackageStatus>(pkg?.status || 'active');
   const [title, setTitle] = useState(pkg?.title || '');
   const [titleKm, setTitleKm] = useState(pkg?.titleKm || pkg?.title || '');
   const [titleEn, setTitleEn] = useState(pkg?.titleEn || '');
@@ -844,8 +846,8 @@ Highlights:
   ];
 
   // Final Form Submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent, overrideStatus?: TourPackageStatus) => {
+    if (e) e.preventDefault();
 
     if (!title.trim() && !titleKm.trim() && !titleEn.trim()) {
       setActiveTab('basic');
@@ -870,6 +872,7 @@ Highlights:
     const updatedPackage: TourPackage = {
       ...(pkg || {}),
       id: pkg?.id || `pkg_${Date.now()}`,
+      status: overrideStatus || status || 'active',
       title: primaryTitle,
       titleKm: (titleKm || title || titleEn).trim(),
       titleEn: titleEn.trim() || undefined,
@@ -1333,6 +1336,111 @@ Highlights:
           {/* TAB 1: BASIC & PRICING */}
           {activeTab === 'basic' && (
             <div className="space-y-6 animate-in fade-in duration-150">
+              {/* Package Lifecycle Status Selector */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-indigo-50/40 dark:from-slate-800/80 dark:to-indigo-950/30 border border-indigo-100/80 dark:border-indigo-900/40 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Tour Package Visibility & Publication Status
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Control whether this package is live for traveler bookings, saved as an internal draft, or archived.
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider font-mono self-start sm:self-auto flex items-center gap-1.5 ${
+                    status === 'active'
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                      : status === 'draft'
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                      : status === 'archived'
+                      ? 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${
+                      status === 'active' ? 'bg-emerald-500 animate-pulse' : status === 'draft' ? 'bg-amber-500' : 'bg-slate-400'
+                    }`} />
+                    <span>Current: {status === 'active' ? '🟢 Active (Live)' : status === 'draft' ? '🟡 Draft (ព្រាង)' : status === 'archived' ? '⚪ Archived' : '🔴 Deleted'}</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Active Option */}
+                  <button
+                    type="button"
+                    onClick={() => setStatus('active')}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      status === 'active'
+                        ? 'bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-emerald-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
+                      status === 'active' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                    }`}>
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>Active (ផ្សាយផ្ទាល់)</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                        Published live on public catalog, landing pages, and available for booking.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Draft Option */}
+                  <button
+                    type="button"
+                    onClick={() => setStatus('draft')}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      status === 'draft'
+                        ? 'bg-amber-50/90 dark:bg-amber-950/60 border-amber-500 ring-2 ring-amber-500/20 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-amber-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
+                      status === 'draft' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                    }`}>
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>Draft (ព្រាងទុក)</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                        Internal work in progress. Hidden from travelers until you choose to publish.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Archived Option */}
+                  <button
+                    type="button"
+                    onClick={() => setStatus('archived')}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      status === 'archived'
+                        ? 'bg-slate-100 dark:bg-slate-800 border-slate-500 ring-2 ring-slate-500/20 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
+                      status === 'archived' ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                    }`}>
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>Archived (បានផ្អាក)</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                        Temporarily delisted from catalog. Kept intact for historical pricing & records.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Titles: Conditional Order Based on Platform Language */}
                 {isEnglishMain ? (
@@ -3681,26 +3789,40 @@ Highlights:
           )}
 
           {/* Modal Footer Controls */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
             <div className="text-xs text-slate-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>All updates sync directly to cloud database & public site</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
+
+              <button
+                type="button"
+                onClick={() => handleSubmit(undefined, 'draft')}
+                className="px-4 py-2.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                title="Save package as draft without publishing to public catalog"
+              >
+                <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span>Save as Draft</span>
+              </button>
+
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                onClick={() => {
+                  if (status === 'draft') setStatus('active');
+                }}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
-                <span>{isEditing ? 'Save All Package Updates' : 'Publish Tour Package'}</span>
+                <span>{status === 'draft' ? '🚀 Publish Live (Active)' : isEditing ? 'Save All Package Updates' : 'Publish Tour Package'}</span>
               </button>
             </div>
           </div>

@@ -9,6 +9,7 @@ import {
   LanguageCode,
   CurrencyCode,
   TourPackage,
+  TourPackageStatus,
   Booking,
   Invoice,
   SupportChat,
@@ -274,7 +275,10 @@ interface AppContextType {
   
   addPackage: (pkg: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'> | TourPackage) => void;
   updatePackage: (pkg: TourPackage) => void;
+  updatePackageStatus: (packageId: string, status: TourPackageStatus) => void;
+  clonePackageAsDraft: (pkg: TourPackage) => TourPackage;
   deletePackage: (packageId: string) => void;
+  restorePackage: (packageId: string) => void;
   
   // Tour Package Categories CRUD
   packageCategories: PackageCategory[];
@@ -2482,9 +2486,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Package Catalog Management
   const addPackage = (pkgData: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'> | TourPackage) => {
     const pkgObj = pkgData as Partial<TourPackage>;
+    const packageStatus: TourPackageStatus = pkgObj.status || 'active';
     const newPkg: TourPackage = {
       ...pkgData,
       id: pkgObj.id || `pkg_${Date.now()}`,
+      status: packageStatus,
       rating: pkgObj.rating ?? 5.0,
       reviewCount: pkgObj.reviewCount ?? 1,
       bookedThisMonth: pkgObj.bookedThisMonth ?? 0
@@ -2502,7 +2508,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Record in System Update History
     recordSystemUpdate({
       title: `Tour Package Created: ${newPkg.title}`,
-      description: `Published tour package to catalog: ${newPkg.destination}, ${newPkg.durationDays}D/${newPkg.durationNights}N at $${newPkg.priceUSD} USD.`,
+      description: `${packageStatus === 'draft' ? 'Saved draft' : 'Published'} tour package: ${newPkg.destination}, ${newPkg.durationDays}D/${newPkg.durationNights}N at $${newPkg.priceUSD} USD. Status: ${packageStatus.toUpperCase()}.`,
       category: 'package_catalog',
       updatedBy: currentUser?.name || 'Operations Lead',
       updatedByRole: currentUser?.role || 'admin',
@@ -2512,6 +2518,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           fieldLabel: 'Package ID',
           oldValue: null,
           newValue: newPkg.id,
+          type: 'added'
+        },
+        {
+          field: 'Status',
+          fieldLabel: 'Status',
+          oldValue: null,
+          newValue: packageStatus,
           type: 'added'
         },
         {
@@ -2530,42 +2543,139 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       ]
     });
-    addNotification('Package Published', `New tour package "${newPkg.title}" is now live on the public storefront.`, 'system');
+    addNotification(
+      packageStatus === 'draft' ? 'Package Draft Saved' : 'Package Published',
+      packageStatus === 'draft'
+        ? `Tour package "${newPkg.title}" saved as draft (hidden from public storefront).`
+        : `New tour package "${newPkg.title}" is now live on the public storefront.`,
+      'system'
+    );
   };
 
   const updatePackage = (pkg: TourPackage) => {
     const previous = packages.find(p => p.id === pkg.id);
+    const updatedPkg: TourPackage = {
+      ...pkg,
+      status: pkg.status || 'active'
+    };
     setPackages(prev => {
-      const next = prev.map(p => p.id === pkg.id ? pkg : p);
+      const next = prev.map(p => p.id === pkg.id ? updatedPkg : p);
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
       return next;
     });
     try {
-      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(pkg), { merge: true });
+      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg), { merge: true });
     } catch (e) {
       console.warn('Package Firestore update notice:', e);
     }
     // Record in System Update History
     const changes: SystemUpdateChangeDiff[] = [];
     if (previous) {
-      if (previous.title !== pkg.title) changes.push({ field: 'Title', fieldLabel: 'Package Title', oldValue: previous.title, newValue: pkg.title, type: 'modified' });
-      if (previous.priceUSD !== pkg.priceUSD) changes.push({ field: 'Price', fieldLabel: 'Price (USD)', oldValue: `$${previous.priceUSD}`, newValue: `$${pkg.priceUSD}`, type: 'modified' });
-      if (previous.discountPriceUSD !== pkg.discountPriceUSD) changes.push({ field: 'DiscountPrice', fieldLabel: 'Discount Price', oldValue: previous.discountPriceUSD ? `$${previous.discountPriceUSD}` : 'None', newValue: pkg.discountPriceUSD ? `$${pkg.discountPriceUSD}` : 'None', type: 'modified' });
-      if (previous.destination !== pkg.destination) changes.push({ field: 'Destination', fieldLabel: 'Destination', oldValue: previous.destination, newValue: pkg.destination, type: 'modified' });
-      if ((previous.itinerary || []).length !== (pkg.itinerary || []).length) changes.push({ field: 'ItineraryDays', fieldLabel: 'Itinerary Days', oldValue: `${(previous.itinerary || []).length} Days`, newValue: `${(pkg.itinerary || []).length} Days`, type: 'modified' });
+      if (previous.title !== updatedPkg.title) changes.push({ field: 'Title', fieldLabel: 'Package Title', oldValue: previous.title, newValue: updatedPkg.title, type: 'modified' });
+      if (previous.status !== updatedPkg.status) changes.push({ field: 'Status', fieldLabel: 'Package Status', oldValue: previous.status || 'active', newValue: updatedPkg.status || 'active', type: 'modified' });
+      if (previous.priceUSD !== updatedPkg.priceUSD) changes.push({ field: 'Price', fieldLabel: 'Price (USD)', oldValue: `$${previous.priceUSD}`, newValue: `$${updatedPkg.priceUSD}`, type: 'modified' });
+      if (previous.discountPriceUSD !== updatedPkg.discountPriceUSD) changes.push({ field: 'DiscountPrice', fieldLabel: 'Discount Price', oldValue: previous.discountPriceUSD ? `$${previous.discountPriceUSD}` : 'None', newValue: updatedPkg.discountPriceUSD ? `$${updatedPkg.discountPriceUSD}` : 'None', type: 'modified' });
+      if (previous.destination !== updatedPkg.destination) changes.push({ field: 'Destination', fieldLabel: 'Destination', oldValue: previous.destination, newValue: updatedPkg.destination, type: 'modified' });
+      if ((previous.itinerary || []).length !== (updatedPkg.itinerary || []).length) changes.push({ field: 'ItineraryDays', fieldLabel: 'Itinerary Days', oldValue: `${(previous.itinerary || []).length} Days`, newValue: `${(updatedPkg.itinerary || []).length} Days`, type: 'modified' });
     }
     if (changes.length === 0) {
       changes.push({ field: 'PackageContent', fieldLabel: 'Package Content', oldValue: 'Existing version', newValue: 'Saved version', type: 'modified' });
     }
     recordSystemUpdate({
-      title: `Tour Package Updated: ${pkg.title}`,
-      description: `Saved updates for package "${pkg.title}" (${pkg.destination}) at $${pkg.priceUSD} USD.`,
+      title: `Tour Package Updated: ${updatedPkg.title}`,
+      description: `Saved updates for package "${updatedPkg.title}" (${updatedPkg.destination}) at $${updatedPkg.priceUSD} USD. Status: ${(updatedPkg.status || 'active').toUpperCase()}.`,
       category: 'package_catalog',
       updatedBy: currentUser?.name || 'Operations Lead',
       updatedByRole: currentUser?.role || 'admin',
       changes
     });
-    addNotification('Package Updated', `Changes to "${pkg.title}" have been saved.`, 'system');
+    addNotification('Package Updated', `Changes to "${updatedPkg.title}" have been saved (${updatedPkg.status || 'active'}).`, 'system');
+  };
+
+  const updatePackageStatus = (packageId: string, status: TourPackageStatus) => {
+    const target = packages.find(p => p.id === packageId);
+    if (!target) return;
+    if (status === 'deleted') {
+      deletePackage(packageId);
+      return;
+    }
+    const previousStatus = target.status || 'active';
+    const updatedPkg: TourPackage = {
+      ...target,
+      status
+    };
+    setPackages(prev => {
+      const next = prev.map(p => p.id === packageId ? updatedPkg : p);
+      try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    try {
+      setDoc(doc(db, 'packages', packageId), sanitizeForFirestore(updatedPkg), { merge: true });
+    } catch (e) {
+      console.warn('Package status update notice:', e);
+    }
+    recordSystemUpdate({
+      title: `Tour Package Status: ${target.title}`,
+      description: `Switched status of "${target.title}" from ${previousStatus.toUpperCase()} to ${status.toUpperCase()}.`,
+      category: 'package_catalog',
+      updatedBy: currentUser?.name || 'Operations Lead',
+      updatedByRole: currentUser?.role || 'admin',
+      changes: [
+        {
+          field: 'Status',
+          fieldLabel: 'Package Status',
+          oldValue: previousStatus,
+          newValue: status,
+          type: 'modified'
+        }
+      ]
+    });
+    addNotification(
+      'Package Status Changed',
+      `"${target.title}" is now set to ${status === 'active' ? 'Active (Live)' : status === 'draft' ? 'Draft' : status === 'archived' ? 'Archived' : 'Deleted'}.`,
+      'system'
+    );
+  };
+
+  const clonePackageAsDraft = (pkg: TourPackage): TourPackage => {
+    const targetRawPkg = packages.find(p => p.id === pkg.id) || pkg;
+    const deepClone: TourPackage = JSON.parse(JSON.stringify(targetRawPkg));
+    const newId = `pkg_${Date.now()}`;
+    const copySuffix = ' (Draft)';
+    const copySuffixKm = ' (ព្រាង)';
+
+    const clonedDraft: TourPackage = {
+      ...deepClone,
+      id: newId,
+      status: 'draft',
+      title: `${deepClone.title}${copySuffix}`,
+      titleKm: deepClone.titleKm ? `${deepClone.titleKm}${copySuffixKm}` : `${deepClone.title}${copySuffixKm}`,
+      titleEn: deepClone.titleEn ? `${deepClone.titleEn}${copySuffix}` : `${deepClone.title}${copySuffix}`,
+      bookedThisMonth: 0,
+      rating: deepClone.rating || 5.0,
+      reviewCount: deepClone.reviewCount || 1,
+      itinerary: (deepClone.itinerary || []).map((step, idx) => ({
+        ...step,
+        day: idx + 1,
+        guideAgenda: (step.guideAgenda || []).map(slot => ({ ...slot }))
+      })),
+      optionalPrograms: (deepClone.optionalPrograms || []).map(prog => ({
+        ...prog,
+        id: `opt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+      }))
+    };
+
+    addPackage(clonedDraft);
+    return clonedDraft;
+  };
+
+  const restorePackage = (packageId: string) => {
+    const deletedRecord = deletedItems.find(d => d.originalId === packageId && d.entityType === 'package');
+    if (deletedRecord) {
+      recoverItem(deletedRecord.id);
+    } else {
+      updatePackageStatus(packageId, 'active');
+    }
   };
 
   const deletePackage = (packageId: string) => {
@@ -2584,7 +2694,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         subtitle: `${pkg.destination} • $${pkg.priceUSD} USD • ${pkg.durationDays} Days`,
         deletedAt: new Date().toISOString(),
         deletedBy: currentUser?.email || 'admin@khbevents.com',
-        data: pkg
+        data: { ...pkg, status: 'deleted' }
       };
       setDeletedItems(prev => [record, ...prev]);
     }
@@ -2598,7 +2708,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Package Firestore delete notice:', e);
     }
-    addNotification('Tour Package Moved to Recycle Bin', `"${pkg?.title || packageId}" was removed. You can recover it anytime from Data Recovery.`, 'system');
+    // Record in System Update History
+    recordSystemUpdate({
+      title: `Tour Package Deleted: ${pkg?.title || packageId}`,
+      description: `Package "${pkg?.title || packageId}" was moved to Recycle Bin / deleted status.`,
+      category: 'package_catalog',
+      updatedBy: currentUser?.name || 'Operations Lead',
+      updatedByRole: currentUser?.role || 'admin',
+      changes: [
+        {
+          field: 'Status',
+          fieldLabel: 'Package Status',
+          oldValue: pkg?.status || 'active',
+          newValue: 'deleted',
+          type: 'removed'
+        }
+      ]
+    });
+    addNotification('Tour Package Moved to Recycle Bin', `"${pkg?.title || packageId}" was moved to trash. You can restore it anytime.`, 'system');
   };
 
   // Package Categories CRUD
@@ -4767,7 +4894,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateBookingStatusByAdmin,
         addPackage,
         updatePackage,
+        updatePackageStatus,
+        clonePackageAsDraft,
         deletePackage,
+        restorePackage,
         packageCategories,
         addPackageCategory,
         updatePackageCategory,
