@@ -272,7 +272,7 @@ interface AppContextType {
     hotelUpdates?: Partial<HotelStatus>
   ) => void;
   
-  addPackage: (pkg: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'>) => void;
+  addPackage: (pkg: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'> | TourPackage) => void;
   updatePackage: (pkg: TourPackage) => void;
   deletePackage: (packageId: string) => void;
   
@@ -334,7 +334,13 @@ interface AppContextType {
 
   // System Update & Modification History
   systemUpdates: SystemUpdateHistoryRecord[];
-  recordSystemUpdate: (record: Omit<SystemUpdateHistoryRecord, 'id' | 'timestamp' | 'updatedBy'> & { id?: string; timestamp?: string; updatedBy?: string }) => SystemUpdateHistoryRecord;
+  recordSystemUpdate: (record: Omit<SystemUpdateHistoryRecord, 'id' | 'timestamp' | 'updatedBy' | 'source' | 'status'> & {
+    id?: string;
+    timestamp?: string;
+    updatedBy?: string;
+    source?: 'admin_action' | 'system_release' | 'auto_sync' | 'manual_log';
+    status?: 'applied' | 'pending' | 'reverted';
+  }) => SystemUpdateHistoryRecord;
   deleteSystemUpdate: (id: string) => void;
   clearSystemUpdateHistory: () => void;
 
@@ -882,8 +888,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const remotePackages: TourPackage[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data() as TourPackage;
-          if (data && data.id && !deletedSet.has(data.id)) {
-            remotePackages.push(data);
+          if (data) {
+            const pkgId = data.id || docSnap.id;
+            if (pkgId && !deletedSet.has(pkgId)) {
+              remotePackages.push({ ...data, id: pkgId });
+            }
           }
         });
         if (remotePackages.length > 0) {
@@ -2471,16 +2480,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Package Catalog Management
-  const addPackage = (pkgData: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'>) => {
+  const addPackage = (pkgData: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'> | TourPackage) => {
+    const pkgObj = pkgData as Partial<TourPackage>;
     const newPkg: TourPackage = {
       ...pkgData,
-      id: `pkg_${Date.now()}`,
-      rating: 5.0,
-      reviewCount: 1,
-      bookedThisMonth: 0
+      id: pkgObj.id || `pkg_${Date.now()}`,
+      rating: pkgObj.rating ?? 5.0,
+      reviewCount: pkgObj.reviewCount ?? 1,
+      bookedThisMonth: pkgObj.bookedThisMonth ?? 0
     };
     setPackages(prev => {
-      const next = [newPkg, ...prev];
+      const next = [newPkg, ...prev.filter(p => p.id !== newPkg.id)];
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
       return next;
     });
@@ -2489,10 +2499,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Package Firestore save notice:', e);
     }
+    // Record in System Update History
+    recordSystemUpdate({
+      title: `Tour Package Created: ${newPkg.title}`,
+      description: `Published tour package to catalog: ${newPkg.destination}, ${newPkg.durationDays}D/${newPkg.durationNights}N at $${newPkg.priceUSD} USD.`,
+      category: 'package_catalog',
+      updatedBy: currentUser?.name || 'Operations Lead',
+      updatedByRole: currentUser?.role || 'admin',
+      changes: [
+        {
+          field: 'Package ID',
+          fieldLabel: 'Package ID',
+          oldValue: null,
+          newValue: newPkg.id,
+          type: 'added'
+        },
+        {
+          field: 'Destination',
+          fieldLabel: 'Destination',
+          oldValue: null,
+          newValue: newPkg.destination,
+          type: 'added'
+        },
+        {
+          field: 'Price (USD)',
+          fieldLabel: 'Price (USD)',
+          oldValue: null,
+          newValue: `$${newPkg.priceUSD}`,
+          type: 'added'
+        }
+      ]
+    });
     addNotification('Package Published', `New tour package "${newPkg.title}" is now live on the public storefront.`, 'system');
   };
 
   const updatePackage = (pkg: TourPackage) => {
+    const previous = packages.find(p => p.id === pkg.id);
     setPackages(prev => {
       const next = prev.map(p => p.id === pkg.id ? pkg : p);
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
@@ -2503,6 +2545,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Package Firestore update notice:', e);
     }
+    // Record in System Update History
+    const changes: SystemUpdateChangeDiff[] = [];
+    if (previous) {
+      if (previous.title !== pkg.title) changes.push({ field: 'Title', fieldLabel: 'Package Title', oldValue: previous.title, newValue: pkg.title, type: 'modified' });
+      if (previous.priceUSD !== pkg.priceUSD) changes.push({ field: 'Price', fieldLabel: 'Price (USD)', oldValue: `$${previous.priceUSD}`, newValue: `$${pkg.priceUSD}`, type: 'modified' });
+      if (previous.discountPriceUSD !== pkg.discountPriceUSD) changes.push({ field: 'DiscountPrice', fieldLabel: 'Discount Price', oldValue: previous.discountPriceUSD ? `$${previous.discountPriceUSD}` : 'None', newValue: pkg.discountPriceUSD ? `$${pkg.discountPriceUSD}` : 'None', type: 'modified' });
+      if (previous.destination !== pkg.destination) changes.push({ field: 'Destination', fieldLabel: 'Destination', oldValue: previous.destination, newValue: pkg.destination, type: 'modified' });
+      if ((previous.itinerary || []).length !== (pkg.itinerary || []).length) changes.push({ field: 'ItineraryDays', fieldLabel: 'Itinerary Days', oldValue: `${(previous.itinerary || []).length} Days`, newValue: `${(pkg.itinerary || []).length} Days`, type: 'modified' });
+    }
+    if (changes.length === 0) {
+      changes.push({ field: 'PackageContent', fieldLabel: 'Package Content', oldValue: 'Existing version', newValue: 'Saved version', type: 'modified' });
+    }
+    recordSystemUpdate({
+      title: `Tour Package Updated: ${pkg.title}`,
+      description: `Saved updates for package "${pkg.title}" (${pkg.destination}) at $${pkg.priceUSD} USD.`,
+      category: 'package_catalog',
+      updatedBy: currentUser?.name || 'Operations Lead',
+      updatedByRole: currentUser?.role || 'admin',
+      changes
+    });
     addNotification('Package Updated', `Changes to "${pkg.title}" have been saved.`, 'system');
   };
 
@@ -3524,10 +3586,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const recordSystemUpdate = (
-    record: Omit<SystemUpdateHistoryRecord, 'id' | 'timestamp' | 'updatedBy'> & {
+    record: Omit<SystemUpdateHistoryRecord, 'id' | 'timestamp' | 'updatedBy' | 'source' | 'status'> & {
       id?: string;
       timestamp?: string;
       updatedBy?: string;
+      source?: 'admin_action' | 'system_release' | 'auto_sync' | 'manual_log';
+      status?: 'applied' | 'pending' | 'reverted';
     }
   ): SystemUpdateHistoryRecord => {
     const authorName = record.updatedBy || currentUser?.name || currentUser?.email || 'System Admin';

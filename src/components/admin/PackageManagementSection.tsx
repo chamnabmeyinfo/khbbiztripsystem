@@ -88,17 +88,45 @@ export const PackageManagementSection: React.FC = () => {
   };
 
   const handleDuplicate = (pkg: TourPackage) => {
+    // Lookup raw un-localized master package to guarantee 100% data preservation
+    const targetRawPkg = rawPackages?.find(p => p.id === pkg.id) || pkg;
+    const deepClone: TourPackage = JSON.parse(JSON.stringify(targetRawPkg));
+    const newId = `pkg_${Date.now()}`;
+    const copySuffix = ' (Copy)';
+    const copySuffixKm = ' (ចម្លង)';
+
     const duplicated: TourPackage = {
-      ...pkg,
-      id: `pkg_${Date.now()}`,
-      title: `${pkg.title} (Copy / Batch 2)`,
-      bookedThisMonth: 0
+      ...deepClone,
+      id: newId,
+      title: `${deepClone.title}${copySuffix}`,
+      titleKm: deepClone.titleKm ? `${deepClone.titleKm}${copySuffixKm}` : `${deepClone.title}${copySuffixKm}`,
+      titleEn: deepClone.titleEn ? `${deepClone.titleEn}${copySuffix}` : `${deepClone.title}${copySuffix}`,
+      bookedThisMonth: 0,
+      rating: deepClone.rating || 5.0,
+      reviewCount: deepClone.reviewCount || 1,
+      itinerary: (deepClone.itinerary || []).map((step, idx) => ({
+        ...step,
+        day: idx + 1,
+        guideAgenda: (step.guideAgenda || []).map(slot => ({ ...slot }))
+      })),
+      optionalPrograms: (deepClone.optionalPrograms || []).map(prog => ({
+        ...prog,
+        id: `opt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+      }))
     };
+
+    // Save duplicated package to context & Firestore
     addPackage(duplicated);
+
+    // Immediately open editor with the duplicated raw package for instant editing
+    setEditingPkg(duplicated);
+    setOpenWithAi(false);
+    setIsEditorOpen(true);
   };
 
   const handleSavePackage = (savedPkg: TourPackage) => {
-    if (editingPkg) {
+    const isExisting = rawPackages?.some(p => p.id === savedPkg.id) || (editingPkg && editingPkg.id === savedPkg.id);
+    if (isExisting) {
       updatePackage(savedPkg);
     } else {
       addPackage(savedPkg);
