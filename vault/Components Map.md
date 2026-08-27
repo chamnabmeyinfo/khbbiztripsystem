@@ -22,7 +22,7 @@
 |---|---|---|
 | `LandingPage` | `LandingPage.tsx` | Global consumer tour portal home layout with search filtering & FAQ |
 | `PackageSalesLandingPage` | `PackageSalesLandingPage.tsx` | Dedicated B2B Trade Mission & Canton Fair landing page with mobile content-first display hierarchy (title, video player, compact booking action card, expandable day timeline & policy accordions) and full 2-column desktop layout |
-| `HeroSection` | `HeroSection.tsx` | High-conversion hero banner with multi-filter search widget |
+| `HeroSection` | `HeroSection.tsx` | High-conversion hero banner with multi-slide tour image background, auto-play rotation, and modernized glassmorphic B2B mission search capsule widget |
 | `TrendingDeals` | `TrendingDeals.tsx` | Featured mission packages grid with responsive image tags, quick booking, and social boost integration |
 | `InteractiveMap` | `InteractiveMap.tsx` | Dynamic SVG world destination radar with active route markers |
 | `Testimonials` | `Testimonials.tsx` | Verified corporate and VIP delegate feedback testimonials |
