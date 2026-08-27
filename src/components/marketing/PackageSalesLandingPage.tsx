@@ -189,21 +189,15 @@ export const PackageSalesLandingPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleCopyShareLink}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
-              title="Copy landing page share link"
+              onClick={() => {
+                setSelectedPackage(pkg);
+                setActiveModal('social_share');
+              }}
+              className="px-3.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/80 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+              title="Get direct post link & boost on social media"
             >
-              {copiedLink ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-600">Link Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Share</span>
-                </>
-              )}
+              <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>{language === 'km' ? '🚀 តំណភ្ជាប់ផ្សព្វផ្សាយ (Boost Link)' : '🚀 Boost & Share Link'}</span>
             </button>
 
             <button

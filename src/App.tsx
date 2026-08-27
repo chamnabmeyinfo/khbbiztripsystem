@@ -18,6 +18,7 @@ import { InvoiceModal } from './components/portal/InvoiceModal';
 import { ModifyDatesModal } from './components/portal/ModifyDatesModal';
 import { ProfileSettingsModal } from './components/portal/ProfileSettingsModal';
 import { AgendaPdfModal } from './components/portal/AgendaPdfModal';
+import { SocialShareModal } from './components/common/SocialShareModal';
 import { SupportChatWidget } from './components/portal/SupportChatWidget';
 import { AiFloatingCopilot } from './components/common/AiFloatingCopilot';
 import { GlobalToast } from './components/common/GlobalToast';
@@ -117,6 +118,7 @@ const MainLayout: React.FC = () => {
       <ModifyDatesModal />
       <ProfileSettingsModal />
       <AgendaPdfModal />
+      <SocialShareModal />
 
       {/* KHB AI Operations Assistant (Auto-CRUD) */}
       <AiFloatingCopilot />

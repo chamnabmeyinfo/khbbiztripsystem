@@ -42,7 +42,8 @@ import {
   ChevronDown,
   Building,
   Activity,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Share2
 } from 'lucide-react';
 import { ViewContextMenu, ViewContextMenuState } from '../common/ViewContextMenu';
 
@@ -190,6 +191,11 @@ export const PackageManagementSection: React.FC = () => {
   const handlePreview = (pkg: TourPackage) => {
     setSelectedPackage(pkg);
     setActiveModal('package_detail');
+  };
+
+  const handleOpenSocialShare = (pkg: TourPackage) => {
+    setSelectedPackage(pkg);
+    setActiveModal('social_share');
   };
 
   return (
@@ -783,6 +789,13 @@ export const PackageManagementSection: React.FC = () => {
                         ) : (
                           <div className="flex items-center justify-end gap-1">
                             <button
+                              onClick={() => handleOpenSocialShare(pkg)}
+                              className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
+                              title="Social Media Boost & Post Link"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
                               onClick={() => openPackageSalesPage(pkg)}
                               className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 cursor-pointer"
                               title="Sales Page"
@@ -956,8 +969,16 @@ export const PackageManagementSection: React.FC = () => {
                   ) : (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <button
+                        onClick={() => handleOpenSocialShare(pkg)}
+                        className="px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Social Media Boost & Post Link"
+                      >
+                        <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span>Boost</span>
+                      </button>
+                      <button
                         onClick={() => openPackageSalesPage(pkg)}
-                        className="px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
                         title="Sales Page"
                       >
                         <span>🚀 Sales</span>
@@ -1461,8 +1482,17 @@ export const PackageManagementSection: React.FC = () => {
                     <>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <button
-                          onClick={() => openPackageSalesPage(pkg)}
+                          onClick={() => handleOpenSocialShare(pkg)}
                           className="px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                          title="Get direct social media post link and UTM boost campaign generator"
+                        >
+                          <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                          <span>📢 Boost Link</span>
+                        </button>
+
+                        <button
+                          onClick={() => openPackageSalesPage(pkg)}
+                          className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                           title="Open live public landing sales page for this package"
                         >
                           <span>🚀 Sales Page</span>

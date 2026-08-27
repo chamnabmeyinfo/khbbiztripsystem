@@ -30,7 +30,8 @@ import {
   MessageSquare,
   Download,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Share2
 } from 'lucide-react';
 import { OptionalTourProgram } from '../../types';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
@@ -312,9 +313,21 @@ export const PackageDetailModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
+                setSelectedPackage(pkg);
+                setActiveModal('social_share');
+              }}
+              className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              title="Get direct social media post link and campaign UTM tracker"
+            >
+              <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>{language === 'km' ? '📢 Boost Link' : '📢 Boost Link'}</span>
+            </button>
+
+            <button
+              onClick={() => {
                 openPackageSalesPage(pkg);
               }}
-              className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
               title="Open full dedicated landing sales page"
             >
               <span>🚀 Sales Page</span>

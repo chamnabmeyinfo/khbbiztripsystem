@@ -89,7 +89,11 @@ export const DynamicHead: React.FC<DynamicHeadProps> = ({
       // 2. Package Sales / Dedicated Package Page
       title = `${pkg.title} | Official Delegation Registration — ${companyName}`;
       description = `Reserve your delegate seat for ${pkg.title}. ${pkg.durationDays} Days / ${pkg.durationNights} Nights in ${pkg.destination}, ${pkg.country}. Total starting price $${pkg.priceUSD} USD.`;
-      if (pkg.images?.[0]) ogImage = pkg.images[0];
+      if (pkg.videos?.[0]?.thumbnailUrl) {
+        ogImage = pkg.videos[0].thumbnailUrl;
+      } else if (pkg.images?.[0]) {
+        ogImage = pkg.images[0];
+      }
       ogType = 'product';
       keywordsSet.add(pkg.title);
       keywordsSet.add(pkg.destination);

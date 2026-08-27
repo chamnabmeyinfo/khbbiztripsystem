@@ -91,6 +91,18 @@ To close a modal: `setActiveModal(null)`
 
 ---
 
+### 11. `SocialShareModal`
+**Trigger:** Click "🚀 Boost & Share Link" / Share icon on any Tour Package card, Package Detail, Sales Landing Page, or Admin Package Management  
+**Purpose:** Dedicated Social Media Boosting & Sharing Suite for each individual tour package:
+- Provides direct permanent post permalinks (`#package/:id` & `?pkg=:id`) loading dedicated sales pages with auto-play videos
+- Pre-written dual-language (Khmer & English) social media post captions with 1-click copy
+- 1-Click direct sharing to Facebook, Telegram, WhatsApp, LinkedIn, and Twitter/X
+- UTM Ad Boost campaign link builder for paid social campaigns
+- High-res QR code generator & PNG download for print posters and roll-ups  
+**File:** `src/components/common/SocialShareModal.tsx`
+
+---
+
 ## Related Notes
 - [[Components Map]]
 - [[App Views]]

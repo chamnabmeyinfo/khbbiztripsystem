@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   ArrowRight,
   Flame,
-  Play
+  Play,
+  Share2
 } from 'lucide-react';
 
 export const TrendingDeals: React.FC = () => {
@@ -45,6 +46,12 @@ export const TrendingDeals: React.FC = () => {
   const handleQuickBook = (pkg: TourPackage) => {
     setSelectedPackage(pkg);
     setActiveModal('checkout');
+  };
+
+  const handleOpenSocialShare = (pkg: TourPackage, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedPackage(pkg);
+    setActiveModal('social_share');
   };
 
   return (
@@ -156,6 +163,17 @@ export const TrendingDeals: React.FC = () => {
                       </span>
                     </div>
 
+                    {/* Top Right Social Boost Link Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleOpenSocialShare(pkg, e)}
+                      className="absolute top-3 right-3 p-2 rounded-xl bg-black/60 hover:bg-indigo-600 text-white backdrop-blur-md transition-all shadow-md cursor-pointer hover:scale-110 active:scale-95 z-10 flex items-center gap-1 text-[11px] font-bold"
+                      title="Get post link & boost on social media"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Boost</span>
+                    </button>
+
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
                       <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-md">
                         <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
@@ -202,6 +220,14 @@ export const TrendingDeals: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenSocialShare(pkg, e)}
+                          className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                          title="Get post link & boost on social media"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleOpenSalesLanding(pkg)}
                           className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
