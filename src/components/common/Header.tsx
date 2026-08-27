@@ -199,16 +199,16 @@ export const Header: React.FC = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-15 sm:h-18">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setActiveView('marketing')}
-              className="flex items-center gap-2.5 text-left group cursor-pointer"
+              className="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer min-w-0"
             >
               {systemSettings?.companyLogoUrl ? (
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700 shadow-md shadow-slate-900/5 group-hover:scale-105 transition-transform flex items-center justify-center overflow-hidden">
+                <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-800 p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700 shadow-md shadow-slate-900/5 group-hover:scale-105 transition-transform flex items-center justify-center overflow-hidden shrink-0">
                   <img
                     src={systemSettings.companyLogoUrl}
                     alt={systemSettings.companyName || 'Trade Mission'}
@@ -216,12 +216,12 @@ export const Header: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-teal-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform">
-                  <Compass className="w-6 h-6 animate-[spin_20s_linear_infinite]" />
+                <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-teal-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform shrink-0">
+                  <Compass className="w-5 h-5 sm:w-6 sm:h-6 animate-[spin_20s_linear_infinite]" />
                 </div>
               )}
-              <div>
-                <span className="text-lg sm:text-xl font-black tracking-tight bg-gradient-to-r from-sky-600 to-teal-600 dark:from-sky-400 dark:to-teal-400 bg-clip-text text-transparent block truncate max-w-[200px] sm:max-w-xs">
+              <div className="min-w-0">
+                <span className="text-sm sm:text-lg lg:text-xl font-black tracking-tight bg-gradient-to-r from-sky-600 to-teal-600 dark:from-sky-400 dark:to-teal-400 bg-clip-text text-transparent block truncate max-w-[130px] xs:max-w-[190px] sm:max-w-xs">
                   {systemSettings?.companyName ? systemSettings.companyName.split('—')[0].trim() : t('appName')}
                 </span>
                 <span className="hidden sm:block text-[10px] text-slate-600 dark:text-slate-300 font-bold tracking-wide uppercase truncate max-w-[220px]">
@@ -327,11 +327,11 @@ export const Header: React.FC = () => {
 
           {/* Right Action Icons: Language, Currency, Notifications, Dark Mode, Profile */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Offline Toggle Tool */}
+            {/* Offline Toggle Tool (Desktop) */}
             <button
               onClick={toggleOfflineMode}
               title={offlineMode ? 'Switch to Online Mode' : 'Simulate Offline Mode (PWA)'}
-              className={`p-2 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+              className={`hidden md:flex p-2 rounded-lg text-xs font-medium transition-colors cursor-pointer items-center gap-1 ${
                 offlineMode
                   ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300'
                   : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -340,8 +340,8 @@ export const Header: React.FC = () => {
               {offlineMode ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
             </button>
 
-            {/* Currency Selector & Converter Button */}
-            <div ref={currRef} className="relative">
+            {/* Currency Selector & Converter Button (Desktop) */}
+            <div ref={currRef} className="hidden md:block relative">
               <button
                 onClick={toggleCurrDropdown}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
@@ -398,8 +398,8 @@ export const Header: React.FC = () => {
               )}
             </div>
 
-            {/* Language Selector */}
-            <div ref={langRef} className="relative">
+            {/* Language Selector (Desktop) */}
+            <div ref={langRef} className="hidden md:block relative">
               <button
                 onClick={toggleLangDropdown}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
@@ -478,7 +478,7 @@ export const Header: React.FC = () => {
 
               {showNotifDropdown && (
                 <div
-                  className={`absolute ${rtl ? 'left-0' : 'right-0'} mt-2 w-88 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150`}
+                  className={`fixed inset-x-3 top-16 max-w-sm mx-auto sm:static sm:inset-x-auto sm:top-auto sm:absolute ${rtl ? 'sm:left-0' : 'sm:right-0'} sm:mt-2 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150`}
                 >
                   {/* Header Bar */}
                   <div className="px-4 pb-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
@@ -922,78 +922,225 @@ export const Header: React.FC = () => {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-6 space-y-3">
-          {currentUser && (
-            <div className={`grid ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3.5 pb-6 space-y-4 shadow-xl animate-in slide-in-from-top-2 duration-150 max-h-[85vh] overflow-y-auto">
+          {/* User Profile / Sign-in Card */}
+          {currentUser ? (
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5">
+              <div className="flex items-center gap-3">
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.name}
+                    className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/30"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-500 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                    {currentUser.name.charAt(0)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {currentUser.name}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate font-mono">{currentUser.email}</div>
+                  <div className="mt-0.5">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      <Shield className="w-2.5 h-2.5" />
+                      <span>{ROLE_CONFIGS[currentUser.role]?.displayName || 'Member'}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700 text-xs">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setActiveModal('profile_settings');
+                  }}
+                  className="py-2 px-3 rounded-xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200 dark:border-slate-600 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Fingerprint className="w-3.5 h-3.5 text-teal-500" />
+                  <span>{t('settings') || 'Settings'}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="py-2 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-semibold border border-rose-200 dark:border-rose-800 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>{t('logout') || 'Sign Out'}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-sky-600/10 via-indigo-600/10 to-teal-600/10 border border-sky-200 dark:border-sky-800 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white">
+                  {t('welcomeGuest') || 'Welcome Delegate'}
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Sign in to access verified vouchers & itineraries
+                </div>
+              </div>
               <button
                 onClick={() => {
-                  setActiveView('customer_portal');
                   setMobileMenuOpen(false);
+                  setActiveModal('auth');
                 }}
-                className="p-2.5 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 text-xs font-semibold flex items-center justify-center gap-2"
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-teal-600 text-white text-xs font-bold shadow-md shadow-sky-500/20 shrink-0 cursor-pointer"
               >
-                <Plane className="w-4 h-4" />
-                {t('travelerPortal')}
+                {t('signIn')}
               </button>
-              {isAdmin ? (
-                <button
-                  onClick={() => {
-                    setActiveView('admin_dashboard');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2"
-                >
-                  <Shield className="w-4 h-4" />
-                  {t('adminBackOffice')}
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setActiveModal('auth');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium flex items-center justify-center gap-2"
-                >
-                  <Shield className="w-4 h-4 text-emerald-600" />
-                  <span>Staff Login</span>
-                </button>
-              )}
             </div>
           )}
 
+          {/* Navigation Views */}
           <div className="space-y-1">
             <button
               onClick={() => {
                 setActiveView('marketing');
                 setMobileMenuOpen(false);
               }}
-              onContextMenu={(e) => {
-                setMobileMenuOpen(false);
-                handleOpenViewContextMenu(e, 'marketing', t('explorePackages') || 'Explore Packages');
-              }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
+              className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                activeView === 'marketing'
+                  ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
             >
-              <span>{t('explorePackages')}</span>
-              {defaultView === 'marketing' && (
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-              )}
+              <div className="flex items-center gap-2.5">
+                <Compass className="w-4 h-4 text-sky-500" />
+                <span>{t('explorePackages')}</span>
+              </div>
+              {defaultView === 'marketing' && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />}
             </button>
+
             <button
               onClick={() => {
                 if (!currentUser) setActiveModal('auth');
                 else setActiveView('customer_portal');
                 setMobileMenuOpen(false);
               }}
-              onContextMenu={(e) => {
-                setMobileMenuOpen(false);
-                handleOpenViewContextMenu(e, 'customer_portal', t('myTrips') || 'My Trips');
-              }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
+              className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                activeView === 'customer_portal'
+                  ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
             >
-              <span>{t('myTrips')}</span>
-              {defaultView === 'customer_portal' && (
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-              )}
+              <div className="flex items-center gap-2.5">
+                <Briefcase className="w-4 h-4 text-sky-500" />
+                <span>{t('myTrips')}</span>
+              </div>
+              {defaultView === 'customer_portal' && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />}
+            </button>
+
+            {(isAdmin || isStaff) && (
+              <button
+                onClick={() => {
+                  setActiveView('admin_dashboard');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                  activeView === 'admin_dashboard'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Shield className="w-4 h-4 text-emerald-600" />
+                  <span>{t('adminDashboard')}</span>
+                </div>
+                {defaultView === 'admin_dashboard' && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />}
+              </button>
+            )}
+          </div>
+
+          {/* Language Switcher Bar */}
+          <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-sky-500" />
+              <span>Language / ភាសា</span>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {languagesList.map(langItem => (
+                <button
+                  key={langItem.code}
+                  onClick={() => setLanguage(langItem.code)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 border transition-all cursor-pointer ${
+                    language === langItem.code
+                      ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span>{langItem.flag}</span>
+                  <span>{langItem.native}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Currency Switcher Bar */}
+          <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Currency / រូបិយប័ណ្ណ</span>
+              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setActiveModal('currency');
+                }}
+                className="text-sky-600 dark:text-sky-400 lowercase font-semibold hover:underline"
+              >
+                Converter ↗
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {Object.values(CURRENCY_CONFIGS).map(curr => (
+                <button
+                  key={curr.code}
+                  onClick={() => setCurrency(curr.code)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 border transition-all cursor-pointer font-mono ${
+                    currency === curr.code
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  <span>{curr.flag}</span>
+                  <span>{curr.code}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dark Mode & Offline Toggle Rows */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold flex items-center justify-between cursor-pointer border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-center gap-1.5">
+                {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+                <span>{darkMode ? 'Light' : 'Dark'}</span>
+              </div>
+              <span className="text-[10px] text-slate-400 uppercase font-mono">{darkMode ? 'On' : 'Off'}</span>
+            </button>
+
+            <button
+              onClick={toggleOfflineMode}
+              className={`p-2.5 rounded-xl font-bold flex items-center justify-between cursor-pointer border ${
+                offlineMode
+                  ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                {offlineMode ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
+                <span>Offline</span>
+              </div>
+              <span className="text-[10px] uppercase font-mono">{offlineMode ? 'Active' : 'Off'}</span>
             </button>
           </div>
         </div>

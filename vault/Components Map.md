@@ -6,7 +6,7 @@
 
 | Component | File | Purpose |
 |---|---|---|
-| `Header` | `Header.tsx` | Sticky top navigation bar, language/currency selectors with click-outside dismiss & mutual toggle, notifications bell, user profile identity widget on right side with live status dot & department badge, auth button |
+| `Header` | `Header.tsx` | Sticky top navigation bar (`h-15 sm:h-18`), responsive mobile header with touch hamburger drawer, language/currency selector chips, dark mode & offline toggles, notifications bell with mobile-safe floating viewport positioning, user profile identity widget with live status dot & department badge, auth button |
 | `Footer` | `Footer.tsx` | Enterprise site footer with corporate links and accreditation |
 | `AuthModal` | `AuthModal.tsx` | Multi-method login/signup dialog (Google, Biometrics, Corporate Email, Demo Fast-Switch) |
 | `CurrencyConverterModal` | `CurrencyConverterModal.tsx` | Real-time interactive multi-currency FX calculator |

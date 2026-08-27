@@ -435,7 +435,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* ── LEFT ASIDE SIDEBAR (ENTERPRISE ERP NAVIGATION) ─────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 md:z-20 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xl md:shadow-none md:sticky md:top-18 md:h-[calc(100vh-4.5rem)] transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 md:z-20 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-xl md:shadow-none md:sticky md:top-15 lg:top-18 md:h-[calc(100vh-4.5rem)] transition-transform duration-300 ${
           showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >

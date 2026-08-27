@@ -177,7 +177,7 @@ export const PackageSalesLandingPage: React.FC = () => {
       <DynamicHead customPackage={pkg} />
 
       {/* ── Top Navigation Bar ────────────────────────────────────────────── */}
-      <nav className="sticky top-18 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
+      <nav className="sticky top-15 sm:top-18 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           <button
             onClick={() => setActiveView('marketing')}
