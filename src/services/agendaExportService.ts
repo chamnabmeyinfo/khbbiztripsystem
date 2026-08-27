@@ -606,23 +606,25 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
   // PAGE 1: Cover & Mission Executive Profile
   const page1Content = `
-    <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+    <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
       ${buildHeader(pkg, labels, { selectedDate: opts.selectedDate, travelerName: opts.travelerName, docRef, systemSettings: opts.systemSettings })}
       ${buildImageGallery(pkg, labels, opts.systemSettings)}
       ${buildTitleBlock(pkg, labels, opts.systemSettings)}
       ${buildBadges(pkg, labels, opts.selectedDate, opts.systemSettings)}
       ${buildTourDirector(pkg, labels, opts.systemSettings)}
-      ${buildDescription(pkg, labels, opts.systemSettings)}
     </div>
   `;
 
   // Value, Highlights & Commercial compliance blocks
+  const hasDescription = !!(pkg.description && pkg.description.trim().length > 0);
+  const descriptionBlock = hasDescription ? buildDescription(pkg, labels, opts.systemSettings) : '';
   const hasHighlights = pkg.highlights && pkg.highlights.length > 0;
   const hasWhoShouldJoin = (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0) || (pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0);
   const hasWhyShouldJoin = (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0) || (pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0);
   const hasPrograms = pkg.optionalPrograms && pkg.optionalPrograms.length > 0;
 
-  const benefitsBlock = (hasHighlights || hasWhoShouldJoin || hasWhyShouldJoin) ? `
+  const benefitsBlock = (hasDescription || hasHighlights || hasWhoShouldJoin || hasWhyShouldJoin) ? `
+    ${descriptionBlock}
     ${buildHighlights(pkg, labels, opts.systemSettings)}
     ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
     ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
@@ -646,7 +648,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     const isSingleDayChunk = chunk.length === 1;
 
     dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+      <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} ${totalItinPages > 1 ? `(Part ${pageIndex}/${totalItinPages})` : ''}</div>
         ${buildItineraryDays(chunk, labels, opts.systemSettings)}
@@ -657,7 +659,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
   if (itinerarySteps.length === 0) {
     dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+      <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
         <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
         <div style="font-size:11.5px;color:${C.slate500};font-style:italic;padding:10px 0;">${escapeHtml(lang === 'km' ? 'កាលវិភាគលម្អិតនឹងត្រូវបានចែកចាយពេលជួបជុំគណៈប្រតិភូ។' : 'Detailed itinerary will be distributed upon group assembly.')}</div>
@@ -666,7 +668,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     `);
     if (programsBlock && programsBlock.trim().length > 0) {
       dynamicPages.push(`
-        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+        <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
           ${buildPageHeader(pkg, labels, opts.systemSettings)}
           ${programsBlock}
         </div>
@@ -676,7 +678,8 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     // If benefits were not attached to a single trailing day, give benefits a dedicated clean page
     const benefitsAlreadyRendered = itinerarySteps.length % DAYS_PER_PAGE === 1 && hasHighlights;
     const remainingBenefits = !benefitsAlreadyRendered ? benefitsBlock : (
-      (hasWhoShouldJoin || hasWhyShouldJoin) ? `
+      (hasDescription || hasWhoShouldJoin || hasWhyShouldJoin) ? `
+        ${descriptionBlock}
         ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
         ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
       ` : ''
@@ -684,7 +687,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
     if (remainingBenefits && remainingBenefits.trim().length > 0) {
       dynamicPages.push(`
-        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+        <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
           ${buildPageHeader(pkg, labels, opts.systemSettings)}
           ${remainingBenefits}
         </div>
@@ -694,7 +697,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     // VIP Commercial Optional Programs on dedicated clean page
     if (programsBlock && programsBlock.trim().length > 0) {
       dynamicPages.push(`
-        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+        <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
           ${buildPageHeader(pkg, labels, opts.systemSettings)}
           ${programsBlock}
         </div>
@@ -704,7 +707,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
   // Commercial Compliance, Inclusions/Exclusions, Emergency & Authorizations Page
   dynamicPages.push(`
-    <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+    <div class="pdf-page-content-wrapper" style="margin-bottom:12px;width:100%;box-sizing:border-box;">
       ${buildPageHeader(pkg, labels, opts.systemSettings)}
       ${complianceBlock}
     </div>
@@ -1608,6 +1611,25 @@ export async function downloadAgendaHtmlToPdf(options: AgendaExportOptions): Pro
     await waitForImagesToLoad(iframeDoc.body);
     // Apply canvas rasterization baseline compensation exclusively for html2canvas
     iframeDoc.body.classList.add('pdf-canvas-export');
+
+    // PRE-FLIGHT DYNAMIC LAYOUT ANALYZER
+    // Scans every rendered A4 page before PDF rasterization to detect any content overflow and auto-fit scale
+    const MAX_SAFE_A4_PX = 1080;
+    for (const pageEl of pageEls) {
+      const scrollHeight = pageEl.scrollHeight || pageEl.offsetHeight;
+      if (scrollHeight > MAX_SAFE_A4_PX) {
+        const scaleFactor = Math.max(0.82, Number((MAX_SAFE_A4_PX / scrollHeight).toFixed(3)));
+        const contentWrap = pageEl.querySelector('.pdf-page-content-wrapper') as HTMLElement;
+        if (contentWrap) {
+          contentWrap.style.transformOrigin = 'top center';
+          contentWrap.style.transform = `scale(${scaleFactor})`;
+        } else {
+          pageEl.style.transformOrigin = 'top center';
+          pageEl.style.transform = `scale(${scaleFactor})`;
+        }
+      }
+    }
+
     await new Promise(r => setTimeout(r, 400));
 
     const pdf = new jsPDF({
@@ -1627,7 +1649,6 @@ export async function downloadAgendaHtmlToPdf(options: AgendaExportOptions): Pro
         useCORS: true,
         logging: false,
         width: 794,
-        height: 1123,
         windowWidth: 794,
       });
 
