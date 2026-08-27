@@ -539,9 +539,9 @@ function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels, settings?
     
     const hasMeta = !!(step.hotelName || (step.mealsIncluded && step.mealsIncluded.length > 0));
     const metaTagsHtml = hasMeta ? `
-      <div class="day-meta-tags" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-        ${step.hotelName ? `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate600};padding:0 7px;border-radius:4px;font-size:9px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🏨 ${escapeHtml(step.hotelName)}</span></span>` : ''}
-        ${step.mealsIncluded?.length ? `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate600};padding:0 7px;border-radius:4px;font-size:9px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🍽️ ${escapeHtml(step.mealsIncluded.join(', '))}</span></span>` : ''}
+      <div class="day-meta-tags" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;padding-top:5px;border-top:1px dashed rgba(0,0,0,0.08);width:100%;box-sizing:border-box;">
+        ${step.hotelName ? `<span class="day-meta-pill" style="display:inline-flex;align-items:center;vertical-align:middle;text-align:center;height:20px;line-height:20px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate700};padding:0 8px;border-radius:4px;font-size:9.5px;font-weight:600;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🏨 ${escapeHtml(step.hotelName)}</span></span>` : ''}
+        ${step.mealsIncluded?.length ? `<span class="day-meta-pill" style="display:inline-flex;align-items:center;vertical-align:middle;text-align:center;height:20px;line-height:20px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate700};padding:0 8px;border-radius:4px;font-size:9.5px;font-weight:600;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🍽️ ${escapeHtml(step.mealsIncluded.join(', '))}</span></span>` : ''}
       </div>
     ` : '';
     
@@ -577,10 +577,10 @@ function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels, settings?
 
     return `
     <div class="itinerary-day-box" data-pdf-block="1" style="border:1px solid ${C.slate200};border-radius:8px;overflow:hidden;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid;">
-      <div class="itinerary-day-header" style="background:${C.slate100};padding:8px 12px;border-bottom:1px solid ${C.slate200};display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;width:100%;box-sizing:border-box;">
-        <div class="day-title-group" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-          <span class="day-number-badge" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.navy};color:${C.white};padding:0 8px;border-radius:4px;font-size:9px;font-weight:bold;flex-shrink:0;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(labels.day)} ${step.day}</span></span>
-          <span class="day-title-text" style="font-size:12px;font-weight:bold;color:${C.navy};word-break:break-word;line-height:1.35;">${escapeHtml(step.title)}</span>
+      <div class="itinerary-day-header" style="background:${C.slate100};padding:9px 12px;border-bottom:1px solid ${C.slate200};display:flex;flex-direction:column;align-items:flex-start;width:100%;box-sizing:border-box;">
+        <div class="day-title-group" style="display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;">
+          <span class="day-number-badge" style="display:inline-flex;align-items:center;justify-content:center;height:20px;line-height:20px;background:${C.navy};color:${C.white};padding:0 8px;border-radius:4px;font-size:10px;font-weight:bold;flex-shrink:0;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(labels.day)} ${step.day}</span></span>
+          <span class="day-title-text" style="font-size:12.5px;font-weight:bold;color:${C.navy};line-height:1.4;word-break:break-word;flex:1;min-width:0;">${escapeHtml(step.title)}</span>
         </div>
         ${metaTagsHtml}
       </div>
