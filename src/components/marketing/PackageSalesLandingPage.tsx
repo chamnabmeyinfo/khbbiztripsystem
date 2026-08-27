@@ -58,6 +58,8 @@ export const PackageSalesLandingPage: React.FC = () => {
   const [selectedOptionalProgramIds, setSelectedOptionalProgramIds] = useState<string[]>([]);
   const [activeDayTab, setActiveDayTab] = useState<number>(0);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [showAllTimelineSlots, setShowAllTimelineSlots] = useState<boolean>(false);
+  const [showPoliciesAccordion, setShowPoliciesAccordion] = useState<boolean>(false);
 
   if (!pkg) {
     return (
@@ -242,11 +244,175 @@ export const PackageSalesLandingPage: React.FC = () => {
         </div>
       )}
 
-      {/* ── Hero Section ─────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* ── Mobile Header Block (lg:hidden) ─────────────────────────────── */}
+      <div className="lg:hidden px-3 sm:px-4 pt-4 pb-2 space-y-2.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold">
+            <Compass className="w-3 h-3" />
+            <span>{pkg.category || 'B2B Business Expedition'}</span>
+          </span>
+          {pkg.isCantonFair && pkg.cantonFairPhase && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
+              <span>🇨🇳 Canton Fair {pkg.cantonFairPhase}</span>
+            </span>
+          )}
+          <span className="text-[11px] text-slate-500 font-medium ml-auto">
+            📍 {displayDestination}
+          </span>
+        </div>
+
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
+          {displayTitle}
+        </h1>
+
+        <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+            <span>{pkg.durationDays}D / {pkg.durationNights}N</span>
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-1">
+            <Building className="w-3.5 h-3.5 text-amber-500" />
+            <span>{pkg.hotelStars}-Star Hotel</span>
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-1">
+            <Plane className="w-3.5 h-3.5 text-emerald-500" />
+            <span>VIP Transit</span>
+          </span>
+        </div>
+      </div>
+
+      {/* ── Hero Section (Unified Video Player + Responsive Action Cards) ──── */}
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 sm:pt-6">
+        {/* Mobile View Structure (< lg) */}
+        <div className="lg:hidden space-y-4">
+          {/* Featured Video Tour & Media Gallery */}
+          <VideoGalleryPlayer
+            videos={pkg.videos}
+            featuredVideoUrl={pkg.featuredVideoUrl}
+            images={images}
+            title={displayTitle}
+            defaultMode="video"
+            aspectRatioClass="aspect-[16/10] sm:aspect-[16/9]"
+          />
+
+          {/* Compact Mobile Action & Price Card */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 text-white shadow-xl border border-slate-800 space-y-3.5">
+            {/* Price & Savings Row */}
+            <div className="flex items-baseline justify-between gap-2 flex-wrap">
+              <div>
+                <span className="text-[10px] uppercase tracking-wider text-indigo-300 font-extrabold block">
+                  {language === 'km' ? 'តម្លៃចុះឈ្មោះគណៈប្រតិភូ' : 'Registration Fee'}
+                </span>
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                    {formatMoney(totalCalculatedPrice, currency, language)}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-xs sm:text-sm line-through text-slate-400 font-mono">
+                      {formatMoney(originalPrice + optionalAddonsTotal, currency, language)}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-slate-300">/ delegate</span>
+                </div>
+              </div>
+
+              {hasDiscount && (
+                <span className="px-2.5 py-1 rounded-full bg-rose-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                  <Flame className="w-3 h-3 fill-white" />
+                  <span>Save {formatMoney(discountSavings, currency, language)}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Canton Fair Phase Selector (Mobile) */}
+            {pkg.isCantonFair && (
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                <span className="text-[10px] font-bold text-red-300 uppercase tracking-wider block">
+                  {language === 'km' ? '🇨🇳 ជ្រើសរើសវគ្គ Canton Fair:' : '🇨🇳 Select Canton Fair Phase:'}
+                </span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { phase: 'Phase 1', label: 'Phase 1', sub: 'Electronics', pkgId: 'pkg_canton_fair_phase_1_2026' },
+                    { phase: 'Phase 2', label: 'Phase 2', sub: 'Consumer', pkgId: 'pkg_canton_fair_phase_2_2026' },
+                    { phase: 'Phase 3', label: 'Phase 3', sub: 'Textiles', pkgId: 'pkg_canton_fair_phase_3_2026' }
+                  ].map(item => {
+                    const isActive = pkg.cantonFairPhase === item.phase;
+                    const targetPkg = packages.find(p => p.id === item.pkgId || (p.isCantonFair && p.cantonFairPhase === item.phase));
+                    return (
+                      <button
+                        key={item.phase}
+                        type="button"
+                        onClick={() => {
+                          if (targetPkg) setSelectedPackage(targetPkg);
+                        }}
+                        className={`p-1.5 sm:p-2 rounded-xl text-center transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-red-600 text-white shadow-md ring-1 ring-red-400'
+                            : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10'
+                        }`}
+                      >
+                        <div className="text-xs font-black">{item.label}</div>
+                        <div className={`text-[9px] truncate ${isActive ? 'text-red-100' : 'text-slate-400'}`}>{item.sub}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Departure Dates Selector (Mobile) */}
+            {pkg.availableDates && pkg.availableDates.length > 0 && (
+              <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                  📅 {language === 'km' ? 'ជ្រើសរើសថ្ងៃចេញដំណើរ:' : 'Departure Date:'}
+                </span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {pkg.availableDates.map((dateStr, dIdx) => (
+                    <button
+                      key={dIdx}
+                      type="button"
+                      onClick={() => setSelectedDepartureDate(dateStr)}
+                      className={`p-2 rounded-xl border text-xs font-bold font-mono text-center transition-all ${
+                        selectedDepartureDate === dateStr
+                          ? 'border-indigo-400 bg-indigo-600 text-white shadow-xs'
+                          : 'border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+                      }`}
+                    >
+                      {dateStr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Primary Action Buttons (Mobile) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleProceedToCheckout}
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 via-sky-500 to-teal-400 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>{language === 'km' ? 'កក់កៅអីឥឡូវនេះ (Book Now)' : 'Reserve Seat Now'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenPdfAgenda}
+                className="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-sky-300" />
+                <span>{language === 'km' ? 'ទាញយក Dossier PDF' : 'Download Dossier PDF'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop View Structure (>= lg) */}
+        <div className="hidden lg:grid grid-cols-12 gap-8 items-start">
           {/* Left Column: Visual Media Gallery + Delegate Registration Fee */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="col-span-7 space-y-6">
             {/* Featured Video Tour & Media Gallery (Auto-Plays Video by Default) */}
             <VideoGalleryPlayer
               videos={pkg.videos}
@@ -258,18 +424,18 @@ export const PackageSalesLandingPage: React.FC = () => {
             />
 
             {/* ── Delegate Registration Fee & Instant Checkout Box (Under Gallery) ── */}
-            <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 text-white shadow-2xl border border-slate-800 space-y-4 sm:space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2.5 sm:gap-3">
+            <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 text-white shadow-2xl border border-slate-800 space-y-5">
+              <div className="flex items-baseline justify-between gap-3">
                 <div>
-                  <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-indigo-300 font-extrabold block">
+                  <span className="text-[11px] uppercase tracking-wider text-indigo-300 font-extrabold block">
                     {language === 'km' ? 'តម្លៃចុះឈ្មោះគណៈប្រតិភូ (Delegate Registration Fee)' : 'Delegate Registration Fee'}
                   </span>
-                  <div className="flex items-baseline gap-2 sm:gap-3 mt-1 flex-wrap">
-                    <span className="text-2xl sm:text-4xl font-black font-mono text-white tracking-tight">
+                  <div className="flex items-baseline gap-3 mt-1 flex-wrap">
+                    <span className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
                       {formatMoney(totalCalculatedPrice, currency, language)}
                     </span>
                     {hasDiscount && (
-                      <span className="text-sm sm:text-base line-through text-slate-400 font-mono">
+                      <span className="text-base line-through text-slate-400 font-mono">
                         {formatMoney(originalPrice + optionalAddonsTotal, currency, language)}
                       </span>
                     )}
@@ -278,7 +444,7 @@ export const PackageSalesLandingPage: React.FC = () => {
                 </div>
 
                 {hasDiscount && (
-                  <span className="self-start sm:self-auto px-3.5 py-1.5 rounded-full bg-rose-500 text-white text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1">
+                  <span className="px-3.5 py-1.5 rounded-full bg-rose-500 text-white text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1">
                     <Flame className="w-3.5 h-3.5 fill-white" />
                     <span>Save {formatMoney(discountSavings, currency, language)}</span>
                   </span>
@@ -286,7 +452,7 @@ export const PackageSalesLandingPage: React.FC = () => {
               </div>
 
               {/* Price Breakdown */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-800 text-xs">
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800 text-xs">
                 <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
                   <span className="text-slate-300">Standard Delegate Seat:</span>
                   <span className="font-mono font-bold text-white">{formatMoney(basePrice, currency, language)}</span>
@@ -300,7 +466,7 @@ export const PackageSalesLandingPage: React.FC = () => {
               </div>
 
               {/* Included Benefits Quick Check */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px] text-slate-300">
+              <div className="grid grid-cols-4 gap-2 pt-1 text-[11px] text-slate-300">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <span>VIP Flights & Transit</span>
@@ -320,11 +486,11 @@ export const PackageSalesLandingPage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
+              <div className="grid grid-cols-12 gap-3 pt-2">
                 <button
                   type="button"
                   onClick={handleProceedToCheckout}
-                  className="sm:col-span-7 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 via-sky-500 to-teal-400 hover:from-indigo-600 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-indigo-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                  className="col-span-7 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 via-sky-500 to-teal-400 hover:from-indigo-600 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-indigo-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
                   <CreditCard className="w-4 h-4" />
                   <span>{language === 'km' ? 'កក់កៅអីឥឡូវនេះ (Book Now)' : 'Reserve Delegate Seat Now'}</span>
@@ -333,14 +499,14 @@ export const PackageSalesLandingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleOpenPdfAgenda}
-                  className="sm:col-span-5 py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all"
+                  className="col-span-5 py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all"
                 >
                   <Download className="w-4 h-4 text-sky-300" />
                   <span>{language === 'km' ? 'ទាញយក Dossier PDF' : 'Download PDF Dossier'}</span>
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-400 border-t border-slate-800/80">
+              <div className="flex items-center justify-between gap-2 pt-1 text-[11px] text-slate-400 border-t border-slate-800/80">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Instant confirmation & guaranteed departure</span>
@@ -351,7 +517,7 @@ export const PackageSalesLandingPage: React.FC = () => {
           </div>
 
           {/* Right Column: Hero Pitch, Canton Fair, Details & Date Selection */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="col-span-5 space-y-6">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">
@@ -365,7 +531,7 @@ export const PackageSalesLandingPage: React.FC = () => {
                 )}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
                 {displayTitle}
               </h1>
 
@@ -418,7 +584,7 @@ export const PackageSalesLandingPage: React.FC = () => {
                 </div>
               )}
 
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 {displayDescription}
               </p>
             </div>
@@ -468,7 +634,7 @@ export const PackageSalesLandingPage: React.FC = () => {
 
             {/* Departure Date Selection */}
             {pkg.availableDates && pkg.availableDates.length > 0 && (
-              <div className="space-y-2.5 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+              <div className="space-y-2.5 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
                 <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-indigo-600" />
@@ -498,7 +664,7 @@ export const PackageSalesLandingPage: React.FC = () => {
             )}
 
             {/* Mission Key Logistics & Inclusions Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="p-5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <BadgeCheck className="w-4 h-4 text-indigo-600" />
@@ -730,17 +896,28 @@ export const PackageSalesLandingPage: React.FC = () => {
                   {/* Hourly Agenda Slots */}
                   {currentDay.guideAgenda && currentDay.guideAgenda.length > 0 ? (
                     <div className="space-y-3 pt-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Hour-by-Hour Escort Timeline ({currentDay.guideAgenda.length} Slots)
-                      </h4>
-                      <div className="space-y-2.5">
-                        {currentDay.guideAgenda.map((slot, sIdx) => (
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Escort Timeline ({currentDay.guideAgenda.length} Activities)
+                        </h4>
+                        {currentDay.guideAgenda.length > 3 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllTimelineSlots(!showAllTimelineSlots)}
+                            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer sm:hidden"
+                          >
+                            {showAllTimelineSlots ? 'Show less ▴' : `View all (${currentDay.guideAgenda.length}) ▾`}
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-2 sm:space-y-2.5">
+                        {currentDay.guideAgenda.slice(0, showAllTimelineSlots ? undefined : 4).map((slot, sIdx) => (
                           <div
                             key={sIdx}
-                            className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+                            className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                           >
-                            <div className="flex items-start gap-3">
-                              <span className="w-2 h-2 rounded-full bg-indigo-600 mt-2 shrink-0" />
+                            <div className="flex items-start gap-2.5 sm:gap-3">
+                              <span className="w-2 h-2 rounded-full bg-indigo-600 mt-1.5 sm:mt-2 shrink-0" />
                               <div>
                                 <span className="text-xs font-bold text-slate-900 dark:text-white block">
                                   {slot.activity}
@@ -753,14 +930,14 @@ export const PackageSalesLandingPage: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-3 text-xs shrink-0 self-end sm:self-auto">
+                            <div className="flex items-center gap-2 sm:gap-3 text-xs shrink-0 self-end sm:self-auto">
                               {slot.location && (
                                 <span className="text-slate-500 dark:text-slate-400 text-[11px] flex items-center gap-1">
                                   <MapPin className="w-3 h-3 text-slate-400" />
                                   <span>{slot.location}</span>
                                 </span>
                               )}
-                              <span className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[11px]">
+                              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[10px] sm:text-[11px]">
                                 {slot.time}
                               </span>
                             </div>
@@ -997,27 +1174,38 @@ export const PackageSalesLandingPage: React.FC = () => {
 
       {/* ── Terms, Policies & Conditions ───────────────────────────────────── */}
       {termsList.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5" />
+        <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-16">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-4 sm:space-y-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
+                    {language === 'km' ? 'លក្ខខណ្ឌ និងគោលការណ៍ចូលរួម' : 'Reservation Policies & Terms'}
+                  </h2>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                    Essential passport validity rules, payment milestones, and cancellation terms.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                  {language === 'km' ? 'លក្ខខណ្ឌ និងគោលការណ៍ចូលរួម' : 'Reservation Policies & Terms'}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Essential passport validity rules, payment milestones, cancellation terms, and delegate code of conduct.
-                </p>
-              </div>
+              {termsList.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => setShowPoliciesAccordion(!showPoliciesAccordion)}
+                  className="sm:hidden text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 cursor-pointer"
+                >
+                  {showPoliciesAccordion ? 'Show less ▴' : `View all (${termsList.length}) ▾`}
+                </button>
+              )}
             </div>
 
-            <div className="space-y-2.5">
-              {termsList.map((term, tIdx) => (
+            <div className="space-y-2 sm:space-y-2.5">
+              {(showPoliciesAccordion ? termsList : termsList.slice(0, 3)).map((term, tIdx) => (
                 <div
                   key={tIdx}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-start gap-3"
+                  className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-start gap-2.5 sm:gap-3"
                 >
                   <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {tIdx + 1}
