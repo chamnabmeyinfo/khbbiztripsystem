@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Play, Volume2, VolumeX, Image as ImageIcon, Film } from 'lucide-react';
 import { TourVideo } from '../../types';
 
@@ -20,7 +20,7 @@ export interface VideoInfo {
   videoId?: string;
 }
 
-export function parseVideoUrl(url: string, autoPlay = true, isMuted = true): VideoInfo {
+export function parseVideoUrl(url: string, autoPlay = true, isMuted = true, customThumbnail?: string): VideoInfo {
   if (!url || typeof url !== 'string') {
     return { type: 'unknown', embedUrl: '', thumbnailUrl: '' };
   }
@@ -38,7 +38,7 @@ export function parseVideoUrl(url: string, autoPlay = true, isMuted = true): Vid
       type: 'youtube',
       videoId,
       embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${autoParam}&mute=${muteParam}&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`,
-      thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      thumbnailUrl: customThumbnail || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
     };
   }
 
@@ -53,17 +53,17 @@ export function parseVideoUrl(url: string, autoPlay = true, isMuted = true): Vid
       type: 'vimeo',
       videoId,
       embedUrl: `https://player.vimeo.com/video/${videoId}?autoplay=${autoParam}&muted=${muteParam}&playsinline=1&title=0&byline=0&portrait=0`,
-      thumbnailUrl: `https://vumbnail.com/${videoId}.jpg`
+      thumbnailUrl: customThumbnail || `https://vumbnail.com/${videoId}.jpg`
     };
   }
 
-  // 3. Direct Video (.mp4, .webm, .ogg)
-  const isDirect = cleanUrl.match(/\.(mp4|webm|ogg|m4v)(\?.*)?$/i) || cleanUrl.startsWith('blob:') || cleanUrl.startsWith('data:video');
+  // 3. Direct Video (.mp4, .webm, .ogg, .mov, data:video, blob:)
+  const isDirect = cleanUrl.match(/\.(mp4|webm|ogg|mov|m4v|avi|mkv)(\?.*)?$/i) || cleanUrl.startsWith('blob:') || cleanUrl.startsWith('data:video');
   if (isDirect) {
     return {
       type: 'direct',
       embedUrl: cleanUrl,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80'
+      thumbnailUrl: customThumbnail || 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80'
     };
   }
 
@@ -71,7 +71,7 @@ export function parseVideoUrl(url: string, autoPlay = true, isMuted = true): Vid
   return {
     type: 'direct',
     embedUrl: cleanUrl,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80'
+    thumbnailUrl: customThumbnail || 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80'
   };
 }
 
@@ -123,7 +123,7 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
   const currentVideo = normalizedVideos[activeVideoIdx] || normalizedVideos[0];
   const videoInfo = useMemo(() => {
     if (!currentVideo) return null;
-    return parseVideoUrl(currentVideo.url, true, isMuted);
+    return parseVideoUrl(currentVideo.url, true, isMuted, currentVideo.thumbnailUrl);
   }, [currentVideo, isMuted]);
 
   const handleSelectVideo = (idx: number) => {

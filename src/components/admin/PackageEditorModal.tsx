@@ -571,9 +571,13 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [emergencyEmbassy, setEmergencyEmbassy] = useState(pkg?.emergencyContact?.embassySupport || '+84 28 3829 2751 (Royal Embassy of Cambodia in Vietnam)');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
   const guidePhotoInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImages, setIsUploadingImages] = useState<boolean>(false);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
+  const [isVideoDraggingOver, setIsVideoDraggingOver] = useState<boolean>(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState<string | null>(null);
 
   // Inline Item Editing State
   const [editingHighlightIdx, setEditingHighlightIdx] = useState<number | null>(null);
@@ -644,6 +648,128 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   const handleRemoveImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
+  };
+
+  /**
+   * Extract thumbnail snapshot and duration from local video file
+   */
+  const extractVideoMetadata = (file: File): Promise<{ dataUrl: string; duration: string; thumbnailUrl: string }> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+
+      const fileUrl = URL.createObjectURL(file);
+      video.src = fileUrl;
+
+      let isResolved = false;
+
+      const finishWithReader = (thumb: string, durationStr: string) => {
+        if (isResolved) return;
+        isResolved = true;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const videoDataUrl = (e.target?.result as string) || fileUrl;
+          resolve({
+            dataUrl: videoDataUrl,
+            duration: durationStr,
+            thumbnailUrl: thumb
+          });
+        };
+        reader.onerror = () => {
+          resolve({
+            dataUrl: fileUrl,
+            duration: durationStr,
+            thumbnailUrl: thumb
+          });
+        };
+        reader.readAsDataURL(file);
+      };
+
+      video.onloadedmetadata = () => {
+        const seekTime = Math.min(1.0, (video.duration || 2) / 2);
+        video.currentTime = seekTime;
+      };
+
+      video.onseeked = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.min(video.videoWidth || 640, 800);
+          canvas.height = Math.min(video.videoHeight || 360, 450);
+          const ctx = canvas.getContext('2d');
+          let thumbDataUrl = 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80';
+          if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            thumbDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          }
+
+          const totalSeconds = Math.round(video.duration || 0);
+          const mins = Math.floor(totalSeconds / 60);
+          const secs = totalSeconds % 60;
+          const formattedDuration = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+          finishWithReader(thumbDataUrl, formattedDuration);
+        } catch {
+          finishWithReader('https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80', '02:00');
+        }
+      };
+
+      video.onerror = () => {
+        finishWithReader('https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80', '02:00');
+      };
+
+      // Safety timeout after 4 seconds
+      setTimeout(() => {
+        if (!isResolved) {
+          finishWithReader('https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80', '02:00');
+        }
+      }, 4000);
+    });
+  };
+
+  const handleVideoFilesUpload = async (files: FileList | File[] | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploadingVideo(true);
+    setVideoUploadProgress('Reading and processing video file...');
+
+    const fileArray = Array.from(files);
+    const newAddedVideos: TourVideo[] = [];
+
+    for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i];
+      if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|m4v|avi|mkv|ogg)$/i)) {
+        continue;
+      }
+      setVideoUploadProgress(`Extracting thumbnail & duration (${i + 1}/${fileArray.length})...`);
+      try {
+        const { dataUrl, duration, thumbnailUrl } = await extractVideoMetadata(file);
+        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        const videoEntry: TourVideo = {
+          id: `vid_up_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          title: cleanName || `${title || 'Mission'} Official Video`,
+          titleKm: undefined,
+          url: dataUrl,
+          thumbnailUrl,
+          duration,
+          isFeatured: videos.length === 0 && !featuredVideoUrl
+        };
+        newAddedVideos.push(videoEntry);
+      } catch (err) {
+        console.error('Failed to process video file:', err);
+      }
+    }
+
+    if (newAddedVideos.length > 0) {
+      if (!featuredVideoUrl && newAddedVideos[0]) {
+        setFeaturedVideoUrl(newAddedVideos[0].url);
+      }
+      setVideos(prev => [...prev, ...newAddedVideos]);
+    }
+
+    setIsUploadingVideo(false);
+    setVideoUploadProgress(null);
+    if (videoFileInputRef.current) videoFileInputRef.current.value = '';
   };
 
   const handleAddVideo = () => {
@@ -2490,11 +2616,69 @@ Highlights:
                   </div>
                 </div>
 
-                {/* Add Video to Gallery Form */}
+                {/* Hidden File Input for Video Upload */}
+                <input
+                  type="file"
+                  ref={videoFileInputRef}
+                  multiple
+                  accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v,video/*,.mp4,.webm,.mov,.m4v,.avi,.mkv"
+                  onChange={(e) => handleVideoFilesUpload(e.target.files)}
+                  className="hidden"
+                />
+
+                {/* Drag and Drop / Click to Upload Video Files Box */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsVideoDraggingOver(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsVideoDraggingOver(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsVideoDraggingOver(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleVideoFilesUpload(e.dataTransfer.files);
+                    }
+                  }}
+                  onClick={() => videoFileInputRef.current?.click()}
+                  className={`p-6 rounded-2xl border-2 border-dashed transition-all text-center cursor-pointer flex flex-col items-center justify-center gap-2.5 ${
+                    isVideoDraggingOver
+                      ? 'border-red-500 bg-red-50/80 dark:bg-red-950/50 scale-[1.01]'
+                      : 'border-red-200 dark:border-red-800/50 bg-red-50/30 dark:bg-red-950/20 hover:bg-red-50/60 dark:hover:bg-red-950/40 hover:border-red-400'
+                  }`}
+                >
+                  {isUploadingVideo ? (
+                    <div className="flex flex-col items-center gap-2 text-red-600 dark:text-red-400 py-2">
+                      <Loader2 className="w-8 h-8 animate-spin" />
+                      <span className="text-xs font-bold">{videoUploadProgress || 'Processing & uploading video...'}</span>
+                      <span className="text-[11px] text-slate-400">Extracting thumbnail snapshot and duration</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 flex items-center justify-center shadow-xs">
+                        <UploadCloud className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-1.5">
+                          <span>Click to browse video files from device</span>
+                          <span className="text-slate-400 font-normal">or drag & drop here</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                          Supports MP4, WebM, MOV, M4V, AVI (automatically extracts thumbnail snapshot and duration)
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Add Video to Gallery Form (or via URL) */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
                   <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Plus className="w-3.5 h-3.5 text-red-500" />
-                    <span>Add Video Clip to Gallery</span>
+                    <span>Or Add Video via YouTube / Vimeo / CDN URL</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                     <div className="sm:col-span-5">

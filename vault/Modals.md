@@ -40,7 +40,7 @@ To close a modal: `setActiveModal(null)`
 
 ### 4. `PackageEditorModal`
 **Trigger:** Click "New Package" or "Edit" inside Admin Package Management  
-**Purpose:** Multi-tab tour creation studio: basic info, pricing & early-bird tiers, itinerary day builder, inclusions/exclusions, tour director assignments, and image galleries  
+**Purpose:** Multi-tab tour creation studio: basic info, pricing & early-bird tiers, itinerary day builder, inclusions/exclusions, tour director assignments, image galleries, and **Video Gallery & File Uploads** (supports uploading MP4/WebM/MOV from local device with automated canvas thumbnail snapshots & duration calculations, or embedding YouTube/Vimeo/CDN video URLs with default auto-play controls).  
 **File:** `src/components/admin/PackageEditorModal.tsx`
 
 ---
