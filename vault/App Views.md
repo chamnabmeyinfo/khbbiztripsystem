@@ -14,7 +14,7 @@ type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package
 ## 1. Marketing View (`LandingPage`)
 **Who:** Public consumers & prospective corporate delegates (no login required)  
 **Components:**
-- `HeroSection` — Hero banner with multi-parameter destination/date/traveler search and instant filter
+- `HeroSection` — Dynamic full-screen hero slideshow auto-cycling through featured images of all active tour packages (`class="absolute inset-0 z-0"`), with smooth crossfade, zoom animations, interactive slide indicators, previous/next controls, quick package navigation pills, and multi-parameter search
 - `TrendingDeals` — Curated trade missions & luxury tour package cards with dynamic pricing and departure indicators
 - `InteractiveMap` — Interactive visual coordinate map with clickable mission destinations
 - `Testimonials` — Authentic enterprise traveler and trade delegation feedback reviews
