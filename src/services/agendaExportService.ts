@@ -664,8 +664,16 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
         ${benefitsBlock}
       </div>
     `);
+    if (programsBlock && programsBlock.trim().length > 0) {
+      dynamicPages.push(`
+        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+          ${buildPageHeader(pkg, labels, opts.systemSettings)}
+          ${programsBlock}
+        </div>
+      `);
+    }
   } else {
-    // If benefits were not attached to a single trailing day, give benefits & optional programs a dedicated clean page
+    // If benefits were not attached to a single trailing day, give benefits a dedicated clean page
     const benefitsAlreadyRendered = itinerarySteps.length % DAYS_PER_PAGE === 1 && hasHighlights;
     const remainingBenefits = !benefitsAlreadyRendered ? benefitsBlock : (
       (hasWhoShouldJoin || hasWhyShouldJoin) ? `
@@ -674,11 +682,20 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
       ` : ''
     );
 
-    if (remainingBenefits || programsBlock) {
+    if (remainingBenefits && remainingBenefits.trim().length > 0) {
       dynamicPages.push(`
         <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
           ${buildPageHeader(pkg, labels, opts.systemSettings)}
           ${remainingBenefits}
+        </div>
+      `);
+    }
+
+    // VIP Commercial Optional Programs on dedicated clean page
+    if (programsBlock && programsBlock.trim().length > 0) {
+      dynamicPages.push(`
+        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+          ${buildPageHeader(pkg, labels, opts.systemSettings)}
           ${programsBlock}
         </div>
       `);

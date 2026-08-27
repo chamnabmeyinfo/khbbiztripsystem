@@ -30,9 +30,8 @@ To close a modal: `setActiveModal(null)`
 **Purpose:** High-fidelity in-browser rendering of the statutory tour agenda & trade mission dossier with direct download and print capabilities  
 **Export Features:**
 - **Exact HTML as PDF 1:1 Engine**: Direct button allowing users to download the entire HTML page as a PDF (`downloadAgendaHtmlToPdf`) with `scale: 2.2` high-DPI rasterization, guaranteeing that the downloaded PDF is an exact visual replica of the rendered HTML page.
-- **Dedicated Page Margins & Anti-Text-Splitting**: Applied 32px top/bottom and 36px left/right margins on every A4 page container, with `@page { margin: 12mm 14mm 14mm 14mm }` print rules, `orphans: 3; widows: 3;`, and `break-inside: avoid !important;` on all paragraphs, schedule slots, day boxes, benefit cards, and signature blocks to guarantee text is never split or cropped across page breaks.
+- **Dedicated Page Margins & Anti-Text-Splitting**: Dedicated isolated pages for Itinerary (2 days/page), Delegation Value (Who/Why Should Join), and VIP Optional Programs, with 32px/36px container margins, `@page { margin: 12mm 14mm 14mm 14mm }` print rules, `orphans: 3; widows: 3;`, and `break-inside: avoid !important;` on all paragraphs, schedule slots, day boxes, benefit cards, and signature blocks to guarantee text is never split or cropped across page breaks.
 - **Cross-Component Direct Download**: Integrated across `AgendaPdfModal`, `StandaloneAgendaView` (header action bar + standalone toolbar), `PackageDetailModal`, and `CustomerDashboard`.
-- **Zero-Waste Full-Page Density Engine**: Intelligent multi-block packing combining itinerary, mission value, optional programs, and commercial terms into full, beautifully utilized A4 sheets, eliminating empty white gaps and saving paper.
 - **Multi-Format Export**: Generates Exact HTML as PDF A4, Rasterized Image PDF, standalone offline `.html`, and MS Word `.doc`.
 **File:** `src/components/portal/AgendaPdfModal.tsx`, `src/components/portal/StandaloneAgendaView.tsx` & `src/services/agendaExportService.ts`
 
