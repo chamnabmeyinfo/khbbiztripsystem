@@ -1355,7 +1355,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
           <option value="he" ${lang === 'he' ? 'selected' : ''} style="background:#0f172a;color:#fff;">🇮🇱 עברית</option>
         </select>
       </div>
-      <button onclick="triggerDownloadPdf()" style="background:linear-gradient(135deg, #059669, #047857);color:#ffffff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.25);white-space:nowrap;">
+      <button onclick="triggerDownloadPdf()" style="background:#0284c7;color:#ffffff;border:none;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.2);white-space:nowrap;">
         📥 Download HTML as PDF
       </button>
       <button onclick="window.print()">

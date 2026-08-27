@@ -393,10 +393,8 @@ export const AgendaPdfModal: React.FC = () => {
             <button
               onClick={handleDownloadPdf}
               disabled={isGenerating}
-              className={`px-4 py-2 rounded-xl text-white font-black text-xs inline-flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer leading-none ${
-                downloadSuccess
-                  ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
-                  : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 shadow-sky-500/20 active:scale-95'
+              className={`px-3 py-1 rounded-xl font-bold text-xs transition-all cursor-pointer bg-sky-600 hover:bg-sky-700 text-white shadow-xs font-black inline-flex items-center justify-center gap-1.5 leading-none active:scale-95 ${
+                downloadSuccess ? '!bg-emerald-600' : ''
               }`}
             >
               {isGenerating ? (
@@ -837,9 +835,11 @@ export const AgendaPdfModal: React.FC = () => {
             <button
               onClick={handleDownloadPdf}
               disabled={isGenerating}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-black text-xs shadow-md shadow-sky-500/20 inline-flex items-center justify-center gap-2 text-center leading-none cursor-pointer transition-all active:scale-95"
+              className={`px-3 py-1 rounded-xl font-bold text-xs transition-all cursor-pointer bg-sky-600 hover:bg-sky-700 text-white shadow-xs font-black inline-flex items-center justify-center gap-1.5 leading-none active:scale-95 ${
+                downloadSuccess ? '!bg-emerald-600' : ''
+              }`}
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-3.5 h-3.5" />
               <span>Download {FORMAT_OPTIONS.find(f => f.value === exportFormat)?.label || 'Document'}</span>
             </button>
           </div>

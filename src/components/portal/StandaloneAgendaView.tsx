@@ -247,10 +247,8 @@ export const StandaloneAgendaView: React.FC = () => {
           <button
             onClick={handleDownloadPdf}
             disabled={isDownloading}
-            className={`px-3 py-1.5 rounded-xl font-black text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95 leading-none ${
-              downloadSuccess
-                ? 'bg-emerald-600 text-white shadow-emerald-500/20'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
+            className={`px-3 py-1 rounded-xl font-bold text-xs transition-all cursor-pointer bg-sky-600 hover:bg-sky-700 text-white shadow-xs font-black inline-flex items-center justify-center gap-1.5 leading-none active:scale-95 ${
+              downloadSuccess ? '!bg-emerald-600' : ''
             }`}
             title="Download Entire HTML Page as PDF (Exact 1:1 Layout)"
           >
