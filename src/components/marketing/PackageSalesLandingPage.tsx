@@ -35,6 +35,7 @@ import {
   Gift
 } from 'lucide-react';
 import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
+import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
 
 export const PackageSalesLandingPage: React.FC = () => {
   const {
@@ -60,6 +61,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showAllTimelineSlots, setShowAllTimelineSlots] = useState<boolean>(false);
   const [showPoliciesAccordion, setShowPoliciesAccordion] = useState<boolean>(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState<boolean>(false);
 
   if (!pkg) {
     return (
@@ -160,9 +162,23 @@ export const PackageSalesLandingPage: React.FC = () => {
     setActiveModal('checkout');
   };
 
-  const handleOpenPdfAgenda = () => {
-    setSelectedPackage(pkg);
-    setActiveModal('agenda_pdf');
+  const handleDirectDownloadPdf = async () => {
+    if (isDownloadingPdf) return;
+    try {
+      setIsDownloadingPdf(true);
+      await downloadAgendaHtmlToPdf({
+        packageData: pkg,
+        selectedDate: selectedDepartureDate,
+        travelerName: 'Valued Business Delegate',
+        numberOfAdults: 1,
+        selectedOptionalProgramIds: selectedOptionalProgramIds,
+        language
+      });
+      setIsDownloadingPdf(false);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      setIsDownloadingPdf(false);
+    }
   };
 
   const images = pkg.images && pkg.images.length > 0
@@ -205,11 +221,17 @@ export const PackageSalesLandingPage: React.FC = () => {
             </button>
 
             <button
-              onClick={handleOpenPdfAgenda}
-              className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer"
+              onClick={handleDirectDownloadPdf}
+              disabled={isDownloadingPdf}
+              className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer transition-all"
+              title="Direct background PDF download without preview"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>PDF Dossier</span>
+              {isDownloadingPdf ? (
+                <div className="w-3.5 h-3.5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>{isDownloadingPdf ? 'Generating...' : 'PDF Dossier'}</span>
             </button>
 
             <button
@@ -399,11 +421,17 @@ export const PackageSalesLandingPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={handleOpenPdfAgenda}
-                className="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={handleDirectDownloadPdf}
+                disabled={isDownloadingPdf}
+                className="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                title="Direct PDF download without preview"
               >
-                <Download className="w-3.5 h-3.5 text-sky-300" />
-                <span>{language === 'km' ? 'ទាញយក Dossier PDF' : 'Download Dossier PDF'}</span>
+                {isDownloadingPdf ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5 text-sky-300" />
+                )}
+                <span>{isDownloadingPdf ? (language === 'km' ? 'កំពុងទាញយក...' : 'Downloading...') : (language === 'km' ? 'ទាញយក Dossier PDF' : 'Download Dossier PDF')}</span>
               </button>
             </div>
           </div>
@@ -498,11 +526,17 @@ export const PackageSalesLandingPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={handleOpenPdfAgenda}
+                  onClick={handleDirectDownloadPdf}
+                  disabled={isDownloadingPdf}
                   className="col-span-5 py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all"
+                  title="Direct PDF download without preview"
                 >
-                  <Download className="w-4 h-4 text-sky-300" />
-                  <span>{language === 'km' ? 'ទាញយក Dossier PDF' : 'Download PDF Dossier'}</span>
+                  {isDownloadingPdf ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 text-sky-300" />
+                  )}
+                  <span>{isDownloadingPdf ? 'Generating...' : (language === 'km' ? 'ទាញយក Dossier PDF' : 'Download PDF Dossier')}</span>
                 </button>
               </div>
 
@@ -1280,11 +1314,17 @@ export const PackageSalesLandingPage: React.FC = () => {
             </button>
 
             <button
-              onClick={handleOpenPdfAgenda}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer"
+              onClick={handleDirectDownloadPdf}
+              disabled={isDownloadingPdf}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer transition-all"
+              title="Direct background PDF download without preview"
             >
-              <Download className="w-4 h-4" />
-              <span>{t('pdfDossier') || 'Dossier'}</span>
+              {isDownloadingPdf ? (
+                <div className="w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>{isDownloadingPdf ? 'Generating...' : (t('pdfDossier') || 'Dossier')}</span>
             </button>
 
             <button

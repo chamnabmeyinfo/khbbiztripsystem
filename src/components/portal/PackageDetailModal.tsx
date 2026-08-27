@@ -706,7 +706,7 @@ export const PackageDetailModal: React.FC = () => {
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <button
                     onClick={handleOpenPdfPreview}
-                    className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-colors cursor-pointer"
+                    className="hidden sm:inline-flex px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-colors cursor-pointer"
                   >
                     Preview Document
                   </button>
