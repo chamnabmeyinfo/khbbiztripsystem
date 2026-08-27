@@ -340,13 +340,13 @@ function buildTourDirector(pkg: TourPackage, labels: PdfLabels, settings?: Syste
       <div class="guide-details-box" style="flex:1;min-width:0;">
         <div style="font-size:10.5px;font-weight:bold;color:${C.amber800};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.designatedDirector)}</div>
         <div style="font-size:14.5px;font-weight:bold;color:${C.navy};margin-top:3px;word-break:break-word;">${escapeHtml(name)} <span style="font-size:11.5px;font-weight:normal;color:${C.slate500};">(${escapeHtml(title)})</span></div>
-        <div class="guide-contacts-row" style="font-size:11.5px;color:${C.slate600};margin-top:5px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 10px;">
+        <div class="guide-contacts-row" style="font-size:11px;color:${C.slate600};margin-top:4px;line-height:1.5;display:flex;flex-wrap:wrap;gap:3px 10px;">
           <span>${escapeHtml(labels.directPhone)}: <strong>${escapeHtml(phone)}</strong></span>
           <span>${escapeHtml(labels.telegram)}: <strong>${escapeHtml(telegram)}</strong></span>
           <span>${escapeHtml(labels.badgeNumber)}: <strong style="font-family:monospace;color:${C.amber800};">${escapeHtml(guide.badgeNumber || 'KHB-TG-2026')}</strong></span>
         </div>
         ${langsHtml}
-        <div class="guide-assembly-badge" style="font-size:11px;color:${C.slate700};margin-top:8px;background:rgba(245,158,11,0.14);padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:4px;line-height:1.4;box-sizing:border-box;word-break:break-word;width:100%;">
+        <div class="guide-assembly-badge" style="font-size:10.5px;color:${C.slate700};margin-top:6px;background:rgba(245,158,11,0.14);padding:4px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;line-height:1.35;box-sizing:border-box;word-break:break-word;width:100%;">
           <span style="flex-shrink:0;">📍</span>
           <span><strong>${escapeHtml(labels.assemblyPoint)}:</strong> ${escapeHtml(guide.briefingMeetingPoint)} (${escapeHtml(guide.briefingTime)})</span>
         </div>
@@ -359,20 +359,20 @@ function buildTourDirector(pkg: TourPackage, labels: PdfLabels, settings?: Syste
 function buildDescription(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
   const C = getExportColors(settings);
   return `
-  <div data-pdf-block="1" style="margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="font-size:13.5px;font-weight:bold;color:${C.navy};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.missionDescription)}</div>
-    <div style="font-size:12.5px;color:${C.slate700};margin-top:8px;line-height:1.75;letter-spacing:0.15px;word-break:break-word;">${escapeHtml(pkg.description)}</div>
+  <div data-pdf-block="1" style="margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="font-size:13px;font-weight:bold;color:${C.navy};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.missionDescription)}</div>
+    <div style="font-size:12px;color:${C.slate700};margin-top:6px;line-height:1.7;letter-spacing:0.1px;word-break:break-word;">${escapeHtml(pkg.description)}</div>
   </div>`;
 }
 
 function buildHighlights(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
   const C = getExportColors(settings);
   if (!pkg.highlights || pkg.highlights.length === 0) return '';
-  const items = pkg.highlights.map(h => `<div data-pdf-break="1" class="highlight-item-card" style="flex:1 1 45%;min-width:260px;background:${C.slate50};border:1px solid ${C.slate200};border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;color:${C.slate800};line-height:1.55;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;"><span style="color:${C.sky};font-weight:bold;flex-shrink:0;margin-top:2px;">&#9679;</span><span style="flex:1;">${escapeHtml(h)}</span></div>`);
+  const items = pkg.highlights.map(h => `<div data-pdf-break="1" class="highlight-item-card" style="flex:1 1 45%;min-width:260px;background:${C.slate50};border:1px solid ${C.slate200};border-radius:8px;padding:10px 12px;font-size:11px;font-weight:600;color:${C.slate800};line-height:1.5;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;"><span style="color:${C.sky};font-weight:bold;flex-shrink:0;margin-top:2px;">&#9679;</span><span style="flex:1;">${escapeHtml(h)}</span></div>`);
   return `
-  <div data-pdf-block="1" style="margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="font-size:13.5px;font-weight:bold;color:${C.navy};margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.keyHighlights)}</div>
-    <div class="highlights-grid" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">${items.join('')}</div>
+  <div data-pdf-block="1" style="margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="font-size:13px;font-weight:bold;color:${C.navy};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.keyHighlights)}</div>
+    <div class="highlights-grid" style="display:flex;flex-wrap:wrap;gap:7px;width:100%;">${items.join('')}</div>
   </div>`;
 }
 
@@ -380,15 +380,15 @@ function buildWhoShouldJoin(pkg: TourPackage, labels: PdfLabels, settings?: Syst
   const C = getExportColors(settings);
   if (!pkg.whoShouldJoin || pkg.whoShouldJoin.length === 0) return '';
   const items = pkg.whoShouldJoin.map(item => `
-    <div data-pdf-break="1" class="who-should-join-card" style="flex:1 1 45%;min-width:260px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;color:${C.slate800};line-height:1.55;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;">
+    <div data-pdf-break="1" class="who-should-join-card" style="flex:1 1 45%;min-width:260px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:11px;font-weight:600;color:${C.slate800};line-height:1.5;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;">
       <span style="color:${C.emerald600};font-weight:bold;flex-shrink:0;margin-top:2px;">👥</span>
       <span style="flex:1;">${escapeHtml(item)}</span>
     </div>
   `);
   return `
-  <div data-pdf-block="1" style="margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="font-size:13.5px;font-weight:bold;color:${C.navy};margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.whoShouldJoin || 'Who Should Join?')}</div>
-    <div class="who-should-join-grid" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">${items.join('')}</div>
+  <div data-pdf-block="1" style="margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="font-size:13px;font-weight:bold;color:${C.navy};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.whoShouldJoin || 'Who Should Join?')}</div>
+    <div class="who-should-join-grid" style="display:flex;flex-wrap:wrap;gap:7px;width:100%;">${items.join('')}</div>
   </div>`;
 }
 
@@ -396,15 +396,15 @@ function buildWhyShouldJoin(pkg: TourPackage, labels: PdfLabels, settings?: Syst
   const C = getExportColors(settings);
   if (!pkg.whyShouldJoin || pkg.whyShouldJoin.length === 0) return '';
   const items = pkg.whyShouldJoin.map(item => `
-    <div data-pdf-break="1" class="why-should-join-card" style="flex:1 1 45%;min-width:260px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;color:${C.slate800};line-height:1.55;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;">
+    <div data-pdf-break="1" class="why-should-join-card" style="flex:1 1 45%;min-width:260px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;font-size:11px;font-weight:600;color:${C.slate800};line-height:1.5;display:flex;align-items:flex-start;gap:8px;box-sizing:border-box;word-break:break-word;">
       <span style="color:${C.skyDark};font-weight:bold;flex-shrink:0;margin-top:2px;">🚀</span>
       <span style="flex:1;">${escapeHtml(item)}</span>
     </div>
   `);
   return `
-  <div data-pdf-block="1" style="margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="font-size:13.5px;font-weight:bold;color:${C.navy};margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.whyShouldJoin || 'Why You Should Join')}</div>
-    <div class="why-should-join-grid" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;">${items.join('')}</div>
+  <div data-pdf-block="1" style="margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="font-size:13px;font-weight:bold;color:${C.navy};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.whyShouldJoin || 'Why You Should Join')}</div>
+    <div class="why-should-join-grid" style="display:flex;flex-wrap:wrap;gap:7px;width:100%;">${items.join('')}</div>
   </div>`;
 }
 
@@ -418,45 +418,45 @@ function buildOptionalPrograms(pkg: TourPackage, labels: PdfLabels, selectedIds:
     const badge = sel ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.emerald600};color:${C.white};padding:0 8px;border-radius:4px;font-size:9px;font-weight:bold;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">✓ ${escapeHtml(labels.includedInDelegation)}</span></span>` : '';
     
     const highlightsHtml = p.highlights?.length ? `
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">
-        ${p.highlights.map(h => `<span class="pdf-tag-pill pdf-tag-pill-slate" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.slate100};border:1px solid ${C.slate200};color:${C.slate700};font-size:9px;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">• ${escapeHtml(h)}</span></span>`).join('')}
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
+        ${p.highlights.map(h => `<span class="pdf-tag-pill pdf-tag-pill-slate" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.slate100};border:1px solid ${C.slate200};color:${C.slate700};font-size:9px;padding:0 7px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">• ${escapeHtml(h)}</span></span>`).join('')}
       </div>
     ` : '';
 
     const mealsHtml = p.includedMeals?.length ? `
-      <div style="font-size:10.5px;color:${C.emerald600};margin-top:6px;font-weight:bold;display:flex;align-items:center;gap:4px;line-height:1.4;"><span style="flex-shrink:0;">🍽️</span><span>${escapeHtml(labels.includedMealsLabel || 'Meals Included')}: ${escapeHtml(p.includedMeals.join(', '))}</span></div>
+      <div style="font-size:10px;color:${C.emerald600};margin-top:5px;font-weight:bold;display:flex;align-items:center;gap:4px;line-height:1.35;"><span style="flex-shrink:0;">🍽️</span><span>${escapeHtml(labels.includedMealsLabel || 'Meals Included')}: ${escapeHtml(p.includedMeals.join(', '))}</span></div>
     ` : '';
 
     return `
-    <div class="opt-program-card" data-pdf-block="1" style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:16px 18px;margin-top:12px;display:flex;align-items:center;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;">
+    <div class="opt-program-card" data-pdf-block="1" style="background:${bg};border:1.5px solid ${border};border-radius:9px;padding:12px 14px;margin-top:10px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:bold;color:${C.navy};line-height:1.35;word-break:break-word;">${escapeHtml(p.title)}</div>
-        <div style="font-size:11px;color:${C.slate600};margin-top:5px;line-height:1.6;word-break:break-word;">${escapeHtml(p.description)}</div>
+        <div style="font-size:12.5px;font-weight:bold;color:${C.navy};line-height:1.35;word-break:break-word;">${escapeHtml(p.title)}</div>
+        <div style="font-size:11px;color:${C.slate600};margin-top:4px;line-height:1.55;word-break:break-word;">${escapeHtml(p.description)}</div>
         ${highlightsHtml}
         ${mealsHtml}
-        <div style="font-size:10px;color:${C.slate500};margin-top:6px;line-height:1.5;word-break:break-word;">${escapeHtml(labels.durationHours)}: ${p.durationHours} hrs | ${escapeHtml(labels.audience)}: ${escapeHtml(p.recommendedAudience || labels.defaultTravelerName)} | ${escapeHtml(labels.assembly)}: ${escapeHtml(p.meetingPoint || labels.defaultAssemblyLocation)}</div>
+        <div style="font-size:10px;color:${C.slate500};margin-top:5px;line-height:1.4;word-break:break-word;">${escapeHtml(labels.durationHours)}: ${p.durationHours} hrs | ${escapeHtml(labels.audience)}: ${escapeHtml(p.recommendedAudience || labels.defaultTravelerName)} | ${escapeHtml(labels.assembly)}: ${escapeHtml(p.meetingPoint || labels.defaultAssemblyLocation)}</div>
       </div>
       <div class="opt-program-price" style="text-align:right;flex-shrink:0;max-width:150px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;">
-        <div style="font-size:14.5px;font-weight:bold;color:${C.emerald600};font-family:monospace;line-height:1.2;white-space:nowrap;">+$${p.additionalCostUSD} USD ${escapeHtml(labels.perPerson.startsWith('/') ? labels.perPerson : `/ ${labels.perPerson}`)}</div>
+        <div style="font-size:14px;font-weight:bold;color:${C.emerald600};font-family:monospace;line-height:1.2;white-space:nowrap;">+$${p.additionalCostUSD} USD ${escapeHtml(labels.perPerson.startsWith('/') ? labels.perPerson : `/ ${labels.perPerson}`)}</div>
         ${badge}
       </div>
     </div>`;
   }).join('');
-  return `<div style="margin-top:22px;width:100%;box-sizing:border-box;"><div data-pdf-block="1" data-pdf-keep-next="1" style="font-size:13.5px;font-weight:bold;color:${C.navy};margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.optionalPrograms)}</div>${progs}</div>`;
+  return `<div style="margin-top:16px;width:100%;box-sizing:border-box;"><div data-pdf-block="1" data-pdf-keep-next="1" style="font-size:13px;font-weight:bold;color:${C.navy};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.optionalPrograms)}</div>${progs}</div>`;
 }
 
 function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
   const C = getExportColors(settings);
-  const incs = pkg.inclusions.map(i => `<div data-pdf-break="1" style="font-size:11.5px;color:${C.slate700};margin-top:7px;line-height:1.6;word-break:break-word;"><span style="color:${C.emerald500};font-weight:bold;">&#10003;</span> ${escapeHtml(i)}</div>`).join('');
-  const excs = pkg.exclusions.map(e => `<div data-pdf-break="1" style="font-size:11.5px;color:${C.slate700};margin-top:7px;line-height:1.6;word-break:break-word;"><span style="color:${C.rose600};font-weight:bold;">&#10005;</span> ${escapeHtml(e)}</div>`).join('');
+  const incs = pkg.inclusions.map(i => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.55;word-break:break-word;"><span style="color:${C.emerald500};font-weight:bold;">&#10003;</span> ${escapeHtml(i)}</div>`).join('');
+  const excs = pkg.exclusions.map(e => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.55;word-break:break-word;"><span style="color:${C.rose600};font-weight:bold;">&#10005;</span> ${escapeHtml(e)}</div>`).join('');
   return `
-  <div class="inc-exc-row" data-pdf-block="1" style="display:flex;gap:14px;margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="flex:1;min-width:0;background:${C.emerald50};border:1px solid ${C.emerald200};border-radius:10px;padding:18px 20px;box-sizing:border-box;">
-      <div style="font-size:12.5px;font-weight:bold;color:${C.emerald600};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.packageInclusions)}</div>
+  <div class="inc-exc-row" data-pdf-block="1" style="display:flex;gap:12px;margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="flex:1;min-width:0;background:${C.emerald50};border:1px solid ${C.emerald200};border-radius:9px;padding:14px 16px;box-sizing:border-box;">
+      <div style="font-size:12px;font-weight:bold;color:${C.emerald600};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.packageInclusions)}</div>
       ${incs}
     </div>
-    <div style="flex:1;min-width:0;background:${C.rose50};border:1px solid ${C.rose200};border-radius:10px;padding:18px 20px;box-sizing:border-box;">
-      <div style="font-size:12.5px;font-weight:bold;color:${C.rose800};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.packageExclusions)}</div>
+    <div style="flex:1;min-width:0;background:${C.rose50};border:1px solid ${C.rose200};border-radius:9px;padding:14px 16px;box-sizing:border-box;">
+      <div style="font-size:12px;font-weight:bold;color:${C.rose800};text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.packageExclusions)}</div>
       ${excs}
     </div>
   </div>`;
@@ -467,14 +467,14 @@ function buildEmergency(pkg: TourPackage, labels: PdfLabels, settings?: SystemSe
   const e = pkg.emergencyContact;
   const hotline = settings?.emergencyHotline || settings?.companyPhone || '060 815 515';
   return `
-  <div data-pdf-block="1" style="background:${C.blue50};border:1px solid ${C.blue200};border-radius:10px;padding:18px 20px;margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="font-size:12.5px;font-weight:bold;color:${C.blue900};text-transform:uppercase;letter-spacing:0.5px;">🚨 ${escapeHtml(labels.emergencyAssistance)} (${escapeHtml(e.country)})</div>
-    <div style="font-size:11.5px;color:${C.slate700};margin-top:8px;line-height:1.75;word-break:break-word;">
+  <div data-pdf-block="1" style="background:${C.blue50};border:1px solid ${C.blue200};border-radius:9px;padding:14px 16px;margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="font-size:12px;font-weight:bold;color:${C.blue900};text-transform:uppercase;letter-spacing:0.5px;">🚨 ${escapeHtml(labels.emergencyAssistance)} (${escapeHtml(e.country)})</div>
+    <div style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.65;word-break:break-word;">
       <div>${escapeHtml(labels.localPolice)}: <strong>${escapeHtml(e.police)}</strong></div>
       <div style="margin-top:2px;">${escapeHtml(labels.ambulance)}: <strong>${escapeHtml(e.ambulance)}</strong></div>
       <div style="margin-top:2px;">${escapeHtml(labels.touristSos)}: <strong>${escapeHtml(e.touristHelpline)}</strong></div>
     </div>
-    <div style="font-size:11.5px;color:${C.slate700};margin-top:6px;line-height:1.6;display:flex;flex-wrap:wrap;gap:4px 10px;word-break:break-word;">
+    <div style="font-size:11px;color:${C.slate700};margin-top:5px;line-height:1.5;display:flex;flex-wrap:wrap;gap:4px 10px;word-break:break-word;">
       <span>${escapeHtml(labels.embassySupport)}: <strong>${escapeHtml(e.embassySupport)}</strong></span>
       <span>${escapeHtml(labels.khbDispatch)}: <strong>${escapeHtml(hotline)}</strong></span>
     </div>
@@ -484,21 +484,21 @@ function buildEmergency(pkg: TourPackage, labels: PdfLabels, settings?: SystemSe
 function buildTerms(pkg: TourPackage, labels: PdfLabels, travelerName: string, settings?: SystemSettings): string {
   const C = getExportColors(settings);
   const terms = (pkg.termsAndConditions?.length ? pkg.termsAndConditions : labels.defaultTerms);
-  const items = terms.map(t => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:7px;line-height:1.7;word-break:break-word;"><span style="color:${C.amber500}; font-weight:bold;">&#8226;</span> ${escapeHtml(t)}</div>`).join('');
+  const items = terms.map(t => `<div data-pdf-break="1" style="font-size:10.5px;color:${C.slate700};margin-top:5px;line-height:1.6;word-break:break-word;"><span style="color:${C.amber500}; font-weight:bold;">&#8226;</span> ${escapeHtml(t)}</div>`).join('');
   const signatureImg = settings?.leadCoordinatorSignatureUrl ? `
     <div style="margin-top:4px;">
-      <img src="${escapeHtml(settings.leadCoordinatorSignatureUrl)}" alt="Signature" style="max-height:36px;object-fit:contain;display:inline-block;" />
+      <img src="${escapeHtml(settings.leadCoordinatorSignatureUrl)}" alt="Signature" style="max-height:32px;object-fit:contain;display:inline-block;" />
     </div>
   ` : '';
 
   return `
-  <div data-pdf-block="1" style="background:${C.amber50};border:1px solid #fbbf24;border-radius:10px;padding:18px 20px;margin-top:20px;width:100%;box-sizing:border-box;">
-    <div style="font-size:12.5px;font-weight:bold;color:${C.amber800};text-transform:uppercase;letter-spacing:0.5px;">📜 ${escapeHtml(labels.termsAndConditions)}</div>
+  <div data-pdf-block="1" style="background:${C.amber50};border:1px solid #fbbf24;border-radius:9px;padding:14px 16px;margin-top:14px;width:100%;box-sizing:border-box;">
+    <div style="font-size:12px;font-weight:bold;color:${C.amber800};text-transform:uppercase;letter-spacing:0.5px;">📜 ${escapeHtml(labels.termsAndConditions)}</div>
     ${items}
   </div>
-  <div class="signatures-row" data-pdf-block="1" style="display:flex;justify-content:space-between;margin-top:24px;border-top:1px dashed ${C.slate300};padding-top:14px;width:100%;box-sizing:border-box;flex-wrap:wrap;gap:8px;">
-    <div style="flex:1;min-width:180px;font-size:11px;color:${C.slate500};word-break:break-word;">${escapeHtml(labels.delegateSignature)}: <strong>${escapeHtml(travelerName)}</strong></div>
-    <div style="flex:1;min-width:180px;text-align:right;font-size:11px;color:${C.slate500};word-break:break-word;">
+  <div class="signatures-row" data-pdf-block="1" style="display:flex;justify-content:space-between;margin-top:18px;border-top:1px dashed ${C.slate300};padding-top:12px;width:100%;box-sizing:border-box;flex-wrap:wrap;gap:8px;">
+    <div style="flex:1;min-width:180px;font-size:10.5px;color:${C.slate500};word-break:break-word;">${escapeHtml(labels.delegateSignature)}: <strong>${escapeHtml(travelerName)}</strong></div>
+    <div style="flex:1;min-width:180px;text-align:right;font-size:10.5px;color:${C.slate500};word-break:break-word;">
       <div>${escapeHtml(labels.operationsSeal)}: <strong>${escapeHtml(settings?.companyName || 'KHB OPERATIONS DIRECTORY')}</strong></div>
       ${signatureImg}
     </div>
@@ -509,13 +509,13 @@ function buildPageHeader(pkg: TourPackage, labels: PdfLabels, settings?: SystemS
   const C = getExportColors(settings);
   const companyName = settings?.companyName || labels.systemName;
   return `
-  <div class="page-top-header" style="background:${C.navy};border-radius:8px;padding:10px 16px;border-left:4px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;box-sizing:border-box;width:100%;">
-    <div style="font-size:12px;font-weight:bold;color:${C.white};display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap;">
+  <div class="page-top-header" style="background:${C.navy};border-radius:8px;padding:9px 14px;border-left:4px solid ${C.sky};display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;box-sizing:border-box;width:100%;">
+    <div style="font-size:11.5px;font-weight:bold;color:${C.white};display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap;">
       <span>${escapeHtml(companyName)}</span>
       <span style="color:${C.skyLight};">•</span>
       <span style="color:${C.skyLight};font-weight:normal;word-break:break-word;">${escapeHtml(pkg.title)}</span>
     </div>
-    <div style="font-size:10px;color:${C.slate400};text-align:right;flex-shrink:0;word-break:break-word;">
+    <div style="font-size:9.5px;color:${C.slate400};text-align:right;flex-shrink:0;word-break:break-word;">
       ${escapeHtml(labels.destination)}: <strong>${escapeHtml(pkg.destination)}</strong> | Ref: <strong>KHB-AGN-${pkg.id.slice(0, 8).toUpperCase()}</strong>
     </div>
   </div>`;
@@ -526,7 +526,7 @@ function buildPageFooter(pkg: TourPackage, labels: PdfLabels, pageNum: number, t
   const hotline = settings?.emergencyHotline || settings?.companyPhone || '+855 60 815 515';
   const telegram = settings?.leadCoordinatorTelegram || settings?.telegramChannel || '@VuthaTim';
   return `
-  <div class="page-bottom-footer" style="border-top:1px solid ${C.slate200};padding-top:10px;margin-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:${C.slate400};box-sizing:border-box;width:100%;flex-wrap:wrap;gap:6px;">
+  <div class="page-bottom-footer" style="border-top:1px solid ${C.slate200};padding-top:8px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:${C.slate400};box-sizing:border-box;width:100%;flex-wrap:wrap;gap:6px;">
     <div style="word-break:break-word;">${escapeHtml(labels.hotline)}: <strong>${escapeHtml(hotline)}</strong> • Telegram: <strong>${escapeHtml(telegram)}</strong></div>
     <div>${escapeHtml(labels.confidentialDocument)} • ${escapeHtml(labels.page)} ${pageNum} / ${totalPages}</div>
   </div>`;
@@ -540,47 +540,47 @@ function buildItineraryDays(steps: ItineraryStep[], labels: PdfLabels, settings?
     const hasMeta = !!(step.hotelName || (step.mealsIncluded && step.mealsIncluded.length > 0));
     const metaTagsHtml = hasMeta ? `
       <div class="day-meta-tags" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-        ${step.hotelName ? `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate600};padding:0 7px;border-radius:4px;font-size:9.5px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🏨 ${escapeHtml(step.hotelName)}</span></span>` : ''}
-        ${step.mealsIncluded?.length ? `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate600};padding:0 7px;border-radius:4px;font-size:9.5px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🍽️ ${escapeHtml(step.mealsIncluded.join(', '))}</span></span>` : ''}
+        ${step.hotelName ? `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate600};padding:0 7px;border-radius:4px;font-size:9px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🏨 ${escapeHtml(step.hotelName)}</span></span>` : ''}
+        ${step.mealsIncluded?.length ? `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.slate200};color:${C.slate600};padding:0 7px;border-radius:4px;font-size:9px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">🍽️ ${escapeHtml(step.mealsIncluded.join(', '))}</span></span>` : ''}
       </div>
     ` : '';
     
     const assemblyPart = (step.assemblyPoint || step.assemblyTime) ? `
-      <div style="font-size:11px;color:${C.amber800};background:#fef3c7;padding:6px 12px;border-bottom:1px solid ${C.slate200};display:flex;align-items:center;gap:4px;line-height:1.4;word-break:break-word;">
+      <div style="font-size:10.5px;color:${C.amber800};background:#fef3c7;padding:5px 10px;border-bottom:1px solid ${C.slate200};display:flex;align-items:center;gap:4px;line-height:1.35;word-break:break-word;">
         <span style="flex-shrink:0;">📍</span>
         <span><strong>${escapeHtml(labels.assemblyPoint)}:</strong> ${escapeHtml(step.assemblyPoint || '')} ${step.assemblyTime ? `(${escapeHtml(step.assemblyTime)})` : ''}</span>
       </div>
     ` : '';
 
     const dayHighlightsPart = step.dayHighlights?.length ? `
-      <div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 12px;background:#f0f9ff;border-bottom:1px solid ${C.slate200};align-items:center;">
-        ${step.dayHighlights.map(h => `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.skyLight};color:${C.skyDark};font-size:9.5px;font-weight:bold;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">★ ${escapeHtml(h)}</span></span>`).join('')}
+      <div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 10px;background:#f0f9ff;border-bottom:1px solid ${C.slate200};align-items:center;">
+        ${step.dayHighlights.map(h => `<span class="day-meta-pill" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.white};border:1px solid ${C.skyLight};color:${C.skyDark};font-size:9px;font-weight:bold;padding:0 7px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">★ ${escapeHtml(h)}</span></span>`).join('')}
       </div>
     ` : '';
 
     const slotRows = slots.map(s => {
-      const locPart = s.location ? `<div style="font-size:10.5px;color:${C.slate500};margin-top:2px;display:flex;align-items:center;gap:4px;line-height:1.4;word-break:break-word;"><span style="flex-shrink:0;">📍</span><span>${escapeHtml(s.location)}</span></div>` : '';
-      const notePart = s.notes ? `<div style="font-size:10.5px;color:${C.slate600};font-style:italic;margin-top:2px;display:flex;align-items:center;gap:4px;line-height:1.4;word-break:break-word;"><span style="flex-shrink:0;">💡</span><span>${escapeHtml(labels.note)} ${escapeHtml(s.notes)}</span></div>` : '';
+      const locPart = s.location ? `<div style="font-size:10px;color:${C.slate500};margin-top:1px;display:flex;align-items:center;gap:3px;line-height:1.35;word-break:break-word;"><span style="flex-shrink:0;">📍</span><span>${escapeHtml(s.location)}</span></div>` : '';
+      const notePart = s.notes ? `<div style="font-size:10px;color:${C.slate600};font-style:italic;margin-top:1px;display:flex;align-items:center;gap:3px;line-height:1.35;word-break:break-word;"><span style="flex-shrink:0;">💡</span><span>${escapeHtml(labels.note)} ${escapeHtml(s.notes)}</span></div>` : '';
       return `
-      <div class="itinerary-slot-row" style="border-bottom:1px solid ${C.slate100};padding:9px 12px;display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;">
-        <div class="itinerary-time-badge" style="min-width:160px;width:160px;height:28px;white-space:nowrap;flex-shrink:0;font-size:10.5px;font-weight:bold;color:${C.skyDark};font-family:monospace;background:${C.white};border:1px solid ${C.slate200};border-radius:5px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center;box-sizing:border-box;line-height:1;">
-          <span class="pdf-pill-text" style="display:inline-flex;align-items:center;gap:4px;"><span>⏱️</span><span>${escapeHtml(s.time)}</span></span>
+      <div class="itinerary-slot-row" style="border-bottom:1px solid ${C.slate100};padding:7px 10px;display:flex;align-items:center;gap:10px;box-sizing:border-box;width:100%;">
+        <div class="itinerary-time-badge" style="min-width:150px;width:150px;height:26px;white-space:nowrap;flex-shrink:0;font-size:10px;font-weight:bold;color:${C.skyDark};font-family:monospace;background:${C.white};border:1px solid ${C.slate200};border-radius:5px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;gap:3px;text-align:center;box-sizing:border-box;line-height:1;">
+          <span class="pdf-pill-text" style="display:inline-flex;align-items:center;gap:3px;"><span>⏱️</span><span>${escapeHtml(s.time)}</span></span>
         </div>
         <div class="itinerary-slot-body" style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
-          <div style="font-size:12px;font-weight:bold;color:${C.navy};line-height:1.4;word-break:break-word;">${escapeHtml(s.activity)}</div>
+          <div style="font-size:11.5px;font-weight:bold;color:${C.navy};line-height:1.35;word-break:break-word;">${escapeHtml(s.activity)}</div>
           ${locPart}${notePart}
         </div>
       </div>`;
     }).join('');
 
-    const descPart = step.description ? `<div style="padding:8px 12px;font-size:10.5px;color:${C.slate600};font-style:italic;line-height:1.55;background:${C.white};border-bottom:1px solid ${C.slate100};word-break:break-word;">${escapeHtml(labels.overview)} ${escapeHtml(step.description)}</div>` : '';
+    const descPart = step.description ? `<div style="padding:7px 10px;font-size:10px;color:${C.slate600};font-style:italic;line-height:1.5;background:${C.white};border-bottom:1px solid ${C.slate100};word-break:break-word;">${escapeHtml(labels.overview)} ${escapeHtml(step.description)}</div>` : '';
 
     return `
-    <div class="itinerary-day-box" data-pdf-block="1" style="border:1px solid ${C.slate200};border-radius:8px;overflow:hidden;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid;">
-      <div class="itinerary-day-header" style="background:${C.slate100};padding:10px 14px;border-bottom:1px solid ${C.slate200};display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;width:100%;box-sizing:border-box;">
+    <div class="itinerary-day-box" data-pdf-block="1" style="border:1px solid ${C.slate200};border-radius:8px;overflow:hidden;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid;">
+      <div class="itinerary-day-header" style="background:${C.slate100};padding:8px 12px;border-bottom:1px solid ${C.slate200};display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;width:100%;box-sizing:border-box;">
         <div class="day-title-group" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-          <span class="day-number-badge" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.navy};color:${C.white};padding:0 8px;border-radius:4px;font-size:9.5px;font-weight:bold;flex-shrink:0;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(labels.day)} ${step.day}</span></span>
-          <span class="day-title-text" style="font-size:12.5px;font-weight:bold;color:${C.navy};word-break:break-word;line-height:1.35;">${escapeHtml(step.title)}</span>
+          <span class="day-number-badge" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.navy};color:${C.white};padding:0 8px;border-radius:4px;font-size:9px;font-weight:bold;flex-shrink:0;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">${escapeHtml(labels.day)} ${step.day}</span></span>
+          <span class="day-title-text" style="font-size:12px;font-weight:bold;color:${C.navy};word-break:break-word;line-height:1.35;">${escapeHtml(step.title)}</span>
         </div>
         ${metaTagsHtml}
       </div>
@@ -606,7 +606,7 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
 
   // PAGE 1: Cover & Mission Executive Profile
   const page1Content = `
-    <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
+    <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
       ${buildHeader(pkg, labels, { selectedDate: opts.selectedDate, travelerName: opts.travelerName, docRef, systemSettings: opts.systemSettings })}
       ${buildImageGallery(pkg, labels, opts.systemSettings)}
       ${buildTitleBlock(pkg, labels, opts.systemSettings)}
@@ -616,97 +616,121 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
     </div>
   `;
 
-  // ITINERARY DAYS: Chunk into clean pages (max 2 days per page to prevent page overflow and slicing)
-  const itineraryPages: string[] = [];
-  const DAYS_PER_PAGE = 2;
-  const totalItineraryPages = Math.max(1, Math.ceil(itinerarySteps.length / DAYS_PER_PAGE));
-  
-  if (itinerarySteps.length === 0) {
-    itineraryPages.push(`
-      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
-        <div style="font-size:12px;color:${C.slate500};font-style:italic;padding:16px 0;">${escapeHtml(lang === 'km' ? 'កាលវិភាគលម្អិតនឹងត្រូវបានចែកចាយពេលជួបជុំគណៈប្រតិភូ។' : 'Detailed itinerary will be distributed upon group assembly.')}</div>
-      </div>
-    `);
-  } else {
-    for (let i = 0; i < itinerarySteps.length; i += DAYS_PER_PAGE) {
-      const chunk = itinerarySteps.slice(i, i + DAYS_PER_PAGE);
-      const pageIndex = Math.floor(i / DAYS_PER_PAGE) + 1;
-      const partWord = lang === 'km' ? 'វគ្គ' : lang === 'ja' ? 'パート' : lang === 'es' ? 'Parte' : lang === 'ar' ? 'الجزء' : lang === 'he' ? 'חלק' : 'Part';
-      const partSuffix = totalItineraryPages > 1 ? ` (${partWord} ${pageIndex}/${totalItineraryPages})` : '';
-      itineraryPages.push(`
-        <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
-          ${buildPageHeader(pkg, labels, opts.systemSettings)}
-          <div style="font-size:13.5px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}${partSuffix}</div>
-          ${buildItineraryDays(chunk, labels, opts.systemSettings)}
-        </div>
-      `);
-    }
-  }
-
-  // MISSION VALUE, WHO/WHY SHOULD JOIN, HIGHLIGHTS & OPTIONAL PROGRAMS PAGES
+  // Value, Highlights & Commercial compliance blocks
   const hasHighlights = pkg.highlights && pkg.highlights.length > 0;
   const hasWhoShouldJoin = (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0) || (pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0);
   const hasWhyShouldJoin = (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0) || (pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0);
   const hasPrograms = pkg.optionalPrograms && pkg.optionalPrograms.length > 0;
 
-  const middlePages: string[] = [];
-  const hasMissionBenefits = hasHighlights || hasWhoShouldJoin || hasWhyShouldJoin;
+  const benefitsBlock = (hasHighlights || hasWhoShouldJoin || hasWhyShouldJoin) ? `
+    ${buildHighlights(pkg, labels, opts.systemSettings)}
+    ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
+    ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
+  ` : '';
 
-  if (hasMissionBenefits && hasPrograms) {
-    middlePages.push(`
-      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
+  const programsBlock = hasPrograms ? buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings) : '';
+
+  const complianceBlock = `
+    ${buildInclusionsExclusions(pkg, labels, opts.systemSettings)}
+    ${buildEmergency(pkg, labels, opts.systemSettings)}
+    ${buildTerms(pkg, labels, opts.travelerName, opts.systemSettings)}
+  `;
+
+  const dynamicPages: string[] = [];
+
+  if (itinerarySteps.length <= 3) {
+    // Short tour (1-3 days): Pack Itinerary + Value/Benefits on Page 2, and Programs + Compliance on Page 3
+    const itinPart = itinerarySteps.length > 0 ? `
+      <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)}</div>
+      ${buildItineraryDays(itinerarySteps, labels, opts.systemSettings)}
+    ` : `
+      <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)}</div>
+      <div style="font-size:11.5px;color:${C.slate500};font-style:italic;padding:10px 0;">${escapeHtml(lang === 'km' ? 'កាលវិភាគលម្អិតនឹងត្រូវបានចែកចាយពេលជួបជុំគណៈប្រតិភូ។' : 'Detailed itinerary will be distributed upon group assembly.')}</div>
+    `;
+
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${buildHighlights(pkg, labels, opts.systemSettings)}
-        ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
-        ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
+        ${itinPart}
+        ${benefitsBlock}
       </div>
     `);
-    middlePages.push(`
-      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
+
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings)}
+        ${programsBlock}
+        ${complianceBlock}
       </div>
     `);
-  } else if (hasMissionBenefits) {
-    middlePages.push(`
-      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
+  } else if (itinerarySteps.length <= 5) {
+    // Medium tour (4-5 days): Days 1-3 on Page 2, Days 4-5 + Benefits on Page 3, Programs + Compliance on Page 4
+    const firstChunk = itinerarySteps.slice(0, 3);
+    const secondChunk = itinerarySteps.slice(3);
+
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${buildHighlights(pkg, labels, opts.systemSettings)}
-        ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
-        ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
+        <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)} (Part 1/2)</div>
+        ${buildItineraryDays(firstChunk, labels, opts.systemSettings)}
       </div>
     `);
-  } else if (hasPrograms) {
-    middlePages.push(`
-      <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
+
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${buildOptionalPrograms(pkg, labels, opts.selectedOptionalProgramIds, opts.systemSettings)}
+        <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)} (Part 2/2)</div>
+        ${buildItineraryDays(secondChunk, labels, opts.systemSettings)}
+        ${benefitsBlock}
+      </div>
+    `);
+
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        ${programsBlock}
+        ${complianceBlock}
+      </div>
+    `);
+  } else {
+    // Extended tour (6+ days): 3 days per page, then remaining days + benefits, then programs + compliance
+    const DAYS_PER_PAGE = 3;
+    const totalItinPages = Math.ceil(itinerarySteps.length / DAYS_PER_PAGE);
+
+    for (let i = 0; i < itinerarySteps.length; i += DAYS_PER_PAGE) {
+      const chunk = itinerarySteps.slice(i, i + DAYS_PER_PAGE);
+      const pageIndex = Math.floor(i / DAYS_PER_PAGE) + 1;
+      const isLastItinPage = pageIndex === totalItinPages;
+
+      dynamicPages.push(`
+        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+          ${buildPageHeader(pkg, labels, opts.systemSettings)}
+          <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)} (Part ${pageIndex}/${totalItinPages})</div>
+          ${buildItineraryDays(chunk, labels, opts.systemSettings)}
+          ${isLastItinPage ? benefitsBlock : ''}
+        </div>
+      `);
+    }
+
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        ${programsBlock}
+        ${complianceBlock}
       </div>
     `);
   }
 
-  // FINAL PAGE: Inclusions, Exclusions, Emergency Assistance, Terms & Signatures
-  const finalContent = `
-    <div style="margin-bottom:20px;width:100%;box-sizing:border-box;">
-      ${buildPageHeader(pkg, labels, opts.systemSettings)}
-      ${buildInclusionsExclusions(pkg, labels, opts.systemSettings)}
-      ${buildEmergency(pkg, labels, opts.systemSettings)}
-      ${buildTerms(pkg, labels, opts.travelerName, opts.systemSettings)}
-    </div>
-  `;
-
-  const allPageBodies = [page1Content, ...itineraryPages, ...middlePages, finalContent];
+  const allPageBodies = [page1Content, ...dynamicPages];
   const totalPages = allPageBodies.length;
   const watermarkHtml = buildWatermarkHtml(opts.watermark);
 
   return allPageBodies.map((content, idx) => {
     const pageNum = idx + 1;
     return `
-    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:28px 32px 26px 32px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:30px;">
+    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:24px 28px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:24px;">
       ${watermarkHtml}
-      <div style="flex:1;display:flex;flex-direction:column;margin-bottom:18px;width:100%;box-sizing:border-box;position:relative;z-index:1;">
+      <div style="flex:1;display:flex;flex-direction:column;width:100%;box-sizing:border-box;position:relative;z-index:1;">
         ${content}
       </div>
       <div style="position:relative;z-index:2;">
@@ -1233,8 +1257,9 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
       max-height: none !important;
       min-height: auto !important;
       margin: 0 !important;
-      padding: 0 0 8mm 0 !important;
+      padding: 0 0 6mm 0 !important;
       box-shadow: none !important;
+      border: none !important;
       border-radius: 0 !important;
       page-break-before: auto !important;
       page-break-after: always !important;
@@ -1250,6 +1275,12 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
       break-after: auto !important;
       margin-bottom: 0 !important;
       padding-bottom: 0 !important;
+    }
+    .page-bottom-footer {
+      margin-top: 12px !important;
+      padding-top: 6px !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     [data-pdf-block],
     [data-pdf-break],

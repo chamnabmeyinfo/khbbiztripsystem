@@ -29,8 +29,8 @@ To close a modal: `setActiveModal(null)`
 **Trigger:** Click "Preview PDF" inside `PackageDetailModal` or marketing landing pages  
 **Purpose:** High-fidelity in-browser rendering of the statutory tour agenda & trade mission dossier with direct download and print capabilities  
 **Export Features:**
-- **Zero-Cut Pagination Engine**: Dynamic 2-day-per-page itinerary chunking preventing content overflow across A4 boundaries.
-- **Anti-Cut CSS**: `@media print` rules enforcing `page-break-inside: avoid` / `break-inside: avoid` on all schedule cards, day boxes, timing rows, galleries, and summary grids.
+- **Zero-Waste Full-Page Density Engine**: Intelligent multi-block packing combining itinerary, mission value, optional programs, and commercial terms into full, beautifully utilized A4 sheets, eliminating empty white gaps and saving paper.
+- **Anti-Cut & Anti-Overflow CSS**: `@media print` rules enforcing `page-break-inside: avoid` / `break-inside: avoid` on all schedule cards, day boxes, timing rows, galleries, vouchers, tax invoices, and summary grids.
 - **Multi-Format Export**: Generates Vector-exact Browser Print A4, HTML-to-PDF via `html2canvas` & `jsPDF`, standalone offline `.html`, and MS Word `.doc`.
 **File:** `src/components/portal/AgendaPdfModal.tsx` & `src/services/agendaExportService.ts`
 

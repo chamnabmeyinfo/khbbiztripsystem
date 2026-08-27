@@ -471,6 +471,8 @@ table.print-friendly-headers tfoot,
     max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* A4 Page Flow */
@@ -479,6 +481,7 @@ table.print-friendly-headers tfoot,
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    gap: 0 !important;
   }
   .pdf-a4-page {
     width: 100% !important;
@@ -487,8 +490,9 @@ table.print-friendly-headers tfoot,
     max-height: none !important;
     min-height: auto !important;
     margin: 0 !important;
-    padding: 0 0 8mm 0 !important;
+    padding: 0 0 6mm 0 !important;
     box-shadow: none !important;
+    border: none !important;
     border-radius: 0 !important;
     page-break-before: auto !important;
     page-break-after: always !important;
@@ -504,6 +508,12 @@ table.print-friendly-headers tfoot,
     break-after: auto !important;
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
+  }
+  .page-bottom-footer {
+    margin-top: 12px !important;
+    padding-top: 6px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Complete Anti-Cutoff Rules */
