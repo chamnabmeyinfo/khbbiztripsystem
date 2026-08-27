@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { getAgendaPreviewHtml, generateShortAgendaUrl, parseAgendaUrlParams } from '../../services/agendaExportService';
+import { getAgendaPreviewHtml, generateShortAgendaUrl, parseAgendaUrlParams, downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
 import { LanguageCode } from '../../types';
 import { DynamicHead } from '../common/DynamicHead';
-import { ArrowLeft, Globe, Printer, Share2, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Globe, Printer, Share2, Check, ExternalLink, Download } from 'lucide-react';
 
 const LANGUAGE_OPTIONS: { code: LanguageCode; label: string; flag: string }[] = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -11,7 +11,7 @@ const LANGUAGE_OPTIONS: { code: LanguageCode; label: string; flag: string }[] = 
   { code: 'ja', label: '日本語', flag: '🇯🇵' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'ar', label: 'العربية', flag: '🇦🇪' },
-  { code: 'he', label: 'עברית', flag: '🇮🇱' },
+  { code: 'he', label: 'עבריត', flag: '🇮🇱' },
 ];
 
 export const StandaloneAgendaView: React.FC = () => {
@@ -28,18 +28,47 @@ export const StandaloneAgendaView: React.FC = () => {
   const { pkg, date, travelerName, selectedOptions } = parsed;
   const [currentLang, setCurrentLang] = useState<LanguageCode>(parsed.lang);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Listen for language changes from inside the iframe
+  const handleDownloadPdf = async () => {
+    if (!pkg || isDownloading) return;
+    try {
+      setIsDownloading(true);
+      await downloadAgendaHtmlToPdf({
+        packageData: pkg,
+        selectedDate: date,
+        travelerName,
+        numberOfAdults: 1,
+        selectedOptionalProgramIds: selectedOptions,
+        language: currentLang,
+        systemSettings,
+      });
+      setIsDownloading(false);
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3500);
+    } catch (err) {
+      console.error('Failed to download PDF:', err);
+      setIsDownloading(false);
+    }
+  };
+
+  // Listen for language changes or download triggers from inside the iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'KHB_CHANGE_LANG' && event.data.lang) {
-        handleLangChange(event.data.lang as LanguageCode);
+      if (event.data) {
+        if (event.data.type === 'KHB_CHANGE_LANG' && event.data.lang) {
+          handleLangChange(event.data.lang as LanguageCode);
+        }
+        if (event.data.type === 'KHB_DOWNLOAD_HTML_PDF') {
+          handleDownloadPdf();
+        }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [pkg, date, travelerName, selectedOptions, currentLang, systemSettings, isDownloading]);
 
   // Sync document title and social metadata with tour package attributes
   useEffect(() => {
@@ -214,13 +243,42 @@ export const StandaloneAgendaView: React.FC = () => {
             )}
           </button>
 
+          {/* Download HTML as PDF (Exact 1:1) Button */}
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloading}
+            className={`px-3 py-1.5 rounded-xl font-black text-xs inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95 leading-none ${
+              downloadSuccess
+                ? 'bg-emerald-600 text-white shadow-emerald-500/20'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20'
+            }`}
+            title="Download Entire HTML Page as PDF (Exact 1:1 Layout)"
+          >
+            {isDownloading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="hidden sm:inline">Generating PDF...</span>
+              </>
+            ) : downloadSuccess ? (
+              <>
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Downloaded!</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5" />
+                <span>Download HTML as PDF</span>
+              </>
+            )}
+          </button>
+
           {/* Print / Save as PDF Button */}
           <button
             onClick={handlePrint}
-            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-black text-xs shadow-md shadow-sky-500/20 inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 leading-none"
-            title="Print or Save as A4 PDF"
+            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 font-bold text-xs shadow-xs inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 leading-none"
+            title="Print or Save as A4 PDF via Browser Print Dialog"
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-3.5 h-3.5 text-slate-300" />
             <span className="hidden xs:inline">Print</span>
             <span className="hidden sm:inline">PDF</span>
           </button>

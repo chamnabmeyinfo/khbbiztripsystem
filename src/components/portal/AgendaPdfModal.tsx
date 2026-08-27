@@ -39,9 +39,9 @@ import {
 } from '../../services/agendaExportService';
 
 const FORMAT_OPTIONS: { value: ExportFormat; label: string }[] = [
-  { value: 'html_pdf', label: 'HTML As PDF' },
-  { value: 'pdf_image', label: 'PDF (Image-Based)' },
-  { value: 'html', label: 'HTML Web Page' },
+  { value: 'html_pdf', label: 'HTML As PDF (Exact 1:1)' },
+  { value: 'pdf_image', label: 'PDF (Rasterized Image)' },
+  { value: 'html', label: 'HTML Web Page (.html)' },
   { value: 'doc', label: 'Word Document (.doc)' },
 ];
 

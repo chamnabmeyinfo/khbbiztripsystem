@@ -23,7 +23,7 @@ import {
   Check
 } from 'lucide-react';
 import { Booking } from '../../types';
-import { generateTourAgendaPdf } from '../../services/pdfAgendaService';
+import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
 
 export const CustomerDashboard: React.FC = () => {
   const {
@@ -38,6 +38,7 @@ export const CustomerDashboard: React.FC = () => {
     cancelBooking,
     currency,
     language,
+    systemSettings,
     t
   } = useApp();
 
@@ -49,14 +50,14 @@ export const CustomerDashboard: React.FC = () => {
     if (!pkg) return;
     try {
       setDownloadingBookingId(b.id);
-      await generateTourAgendaPdf({
+      await downloadAgendaHtmlToPdf({
         packageData: pkg,
         selectedDate: b.startDate,
         travelerName: currentUser?.name || b.userName || 'Valued Business Delegate',
         numberOfAdults: b.numberOfAdults || 1,
         selectedOptionalProgramIds: b.selectedOptionalProgramIds || [],
-        currencySymbol: '$',
-        language
+        language,
+        systemSettings
       });
       setTimeout(() => setDownloadingBookingId(null), 2500);
     } catch (err) {

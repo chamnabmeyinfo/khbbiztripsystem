@@ -33,7 +33,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { OptionalTourProgram } from '../../types';
-import { generateTourAgendaPdf } from '../../services/pdfAgendaService';
+import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
 
 export const PackageDetailModal: React.FC = () => {
   const {
@@ -122,13 +122,12 @@ export const PackageDetailModal: React.FC = () => {
   const handleDownloadPdf = async () => {
     try {
       setIsDownloadingPdf(true);
-      await generateTourAgendaPdf({
+      await downloadAgendaHtmlToPdf({
         packageData: pkg,
         selectedDate: currentDepartureDate,
         travelerName: 'Valued Business Delegate',
         numberOfAdults: adults,
         selectedOptionalProgramIds: selectedOptionalPrograms,
-        currencySymbol: '$',
         language
       });
       setIsDownloadingPdf(false);
