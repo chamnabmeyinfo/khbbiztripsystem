@@ -67,7 +67,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({
   // Base Permalink for this Tour Package
   const baseShareUrl = useMemo(() => {
     if (!pkg) return `${origin}${pathname}`;
-    return `${origin}${pathname}#package/${pkg.id}`;
+    return `${origin}${pathname}?pkg=${pkg.id}#package/${pkg.id}`;
   }, [origin, pathname, pkg]);
 
   // Tracked Share URL with UTM tags

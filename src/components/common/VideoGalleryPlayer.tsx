@@ -149,11 +149,13 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
               <video
                 key={videoInfo.embedUrl}
                 src={videoInfo.embedUrl}
+                poster={videoInfo.thumbnailUrl || images[0]}
                 autoPlay
                 muted={isMuted}
                 playsInline
                 controls
                 loop
+                preload="auto"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -163,6 +165,7 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
                 title={currentVideo?.title || 'Tour Package Video'}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
+                loading="eager"
                 className="w-full h-full border-0 absolute inset-0"
               />
             )}

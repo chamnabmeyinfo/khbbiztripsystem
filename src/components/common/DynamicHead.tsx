@@ -28,16 +28,34 @@ export const DynamicHead: React.FC<DynamicHeadProps> = ({
 }) => {
   const {
     activeView,
+    activeModal,
+    packages,
     selectedPackage,
     selectedBooking,
     selectedInvoice,
-    activeModal,
     systemSettings,
     language,
     currency
   } = useApp();
 
-  const pkg = customPackage || selectedPackage;
+  const pkg = useMemo(() => {
+    if (customPackage) return customPackage;
+    if (selectedPackage) return selectedPackage;
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pkgParam = urlParams.get('pkg') || urlParams.get('packageId');
+        const hash = window.location.hash;
+        const hashParam = hash.startsWith('#package/') ? hash.replace('#package/', '') : (hash.startsWith('#pkg=') ? hash.replace('#pkg=', '') : null);
+        const targetId = pkgParam || hashParam;
+        if (targetId && packages && packages.length > 0) {
+          return packages.find(p => p.id === targetId) || null;
+        }
+      }
+    } catch {}
+    return null;
+  }, [customPackage, selectedPackage, packages]);
+
   const companyName = systemSettings?.companyName || 'KHB Events';
   const companyTagline = systemSettings?.companyTagline || 'B2B Trade Delegations & Business Expeditions';
   const defaultLogo = systemSettings?.companyLogoUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';

@@ -865,8 +865,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   };
 
+  // Helper to extract package ID from URL query or hash on startup
+  const getInitialPackageFromUrl = (): TourPackage | null => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pkgParam = urlParams.get('pkg') || urlParams.get('packageId');
+      const hash = window.location.hash;
+      const hashParam = hash.startsWith('#package/') ? hash.replace('#package/', '') : (hash.startsWith('#pkg=') ? hash.replace('#pkg=', '') : null);
+      const targetId = pkgParam || hashParam;
+      if (targetId) {
+        let pkgList: TourPackage[] = INITIAL_PACKAGES;
+        const saved = localStorage.getItem(STORAGE_KEYS.PACKAGES);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) pkgList = parsed;
+          } catch {}
+        }
+        return pkgList.find(p => p.id === targetId) || null;
+      }
+    } catch {}
+    return null;
+  };
+
+  const initialPkg = getInitialPackageFromUrl();
+
   const [activeView, setActiveView] = useState<ActiveView>(() => {
     try {
+      if (initialPkg) {
+        return 'package_sales_page';
+      }
       const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_VIEW) as ActiveView;
       if (saved && ['marketing', 'customer_portal', 'admin_dashboard', 'package_sales_page'].includes(saved)) {
         return saved;
@@ -884,7 +912,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const [settingsSubTab, setSettingsSubTab] = useState<string>('features');
-  const [selectedPackage, setSelectedPackage] = useState<TourPackage | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<TourPackage | null>(() => initialPkg);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -921,91 +949,101 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Deep linking for dedicated tour package sales landing pages & QR Code Verification Portal
   useEffect(() => {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const pkgParam = urlParams.get('pkg') || urlParams.get('packageId');
-      const hash = window.location.hash;
-      const hashParam = hash.startsWith('#package/') ? hash.replace('#package/', '') : (hash.startsWith('#pkg=') ? hash.replace('#pkg=', '') : null);
-      const targetId = pkgParam || hashParam;
-      if (targetId && packages.length > 0) {
-        const found = packages.find(p => p.id === targetId);
-        if (found) {
-          setSelectedPackage(found);
-          setActiveView('package_sales_page');
+    const handleUrlRouting = () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pkgParam = urlParams.get('pkg') || urlParams.get('packageId');
+        const hash = window.location.hash;
+        const hashParam = hash.startsWith('#package/') ? hash.replace('#package/', '') : (hash.startsWith('#pkg=') ? hash.replace('#pkg=', '') : null);
+        const targetId = pkgParam || hashParam;
+        if (targetId && packages.length > 0) {
+          const found = packages.find(p => p.id === targetId);
+          if (found) {
+            setSelectedPackage(found);
+            setActiveView('package_sales_page');
+          }
         }
-      }
 
-      // Deep linking for Settings Sub-Tabs (e.g. ?tab=settings&subTab=languages or #settings/languages)
-      const tabParam = urlParams.get('tab');
-      const subTabParam = urlParams.get('subTab') || urlParams.get('sub');
-      const pathname = window.location.pathname.toLowerCase();
+        // Deep linking for Settings Sub-Tabs (e.g. ?tab=settings&subTab=languages or #settings/languages)
+        const tabParam = urlParams.get('tab');
+        const subTabParam = urlParams.get('subTab') || urlParams.get('sub');
+        const pathname = window.location.pathname.toLowerCase();
 
-      if (
-        tabParam === 'settings' ||
-        hash.includes('settings') ||
-        pathname.includes('/settings')
-      ) {
-        let targetSub = subTabParam || 'updates';
-        if (hash.includes('updates') || pathname.includes('updates') || subTabParam === 'updates') {
-          targetSub = 'updates';
-        } else if (hash.includes('categories') || pathname.includes('categories') || subTabParam === 'categories') {
-          targetSub = 'categories';
-        } else if (hash.includes('languages') || pathname.includes('languages') || subTabParam === 'languages') {
-          targetSub = 'languages';
-        } else if (hash.includes('crm') || pathname.includes('crm') || subTabParam === 'crm') {
-          targetSub = 'crm';
-        } else if (hash.includes('payments') || pathname.includes('payments') || subTabParam === 'payments') {
-          targetSub = 'payments';
-        } else if (hash.includes('branding') || pathname.includes('branding') || subTabParam === 'branding') {
-          targetSub = 'branding';
-        } else if (hash.includes('theme') || pathname.includes('theme') || subTabParam === 'theme') {
-          targetSub = 'theme';
-        } else if (hash.includes('financials') || pathname.includes('financials') || subTabParam === 'financials') {
-          targetSub = 'financials';
-        } else if (hash.includes('security') || pathname.includes('security') || subTabParam === 'security') {
-          targetSub = 'security';
-        } else if (hash.includes('backup') || pathname.includes('backup') || subTabParam === 'backup') {
-          targetSub = 'backup';
-        } else if (hash.includes('features') || pathname.includes('features') || subTabParam === 'features') {
-          targetSub = 'features';
+        if (
+          tabParam === 'settings' ||
+          hash.includes('settings') ||
+          pathname.includes('/settings')
+        ) {
+          let targetSub = subTabParam || 'updates';
+          if (hash.includes('updates') || pathname.includes('updates') || subTabParam === 'updates') {
+            targetSub = 'updates';
+          } else if (hash.includes('categories') || pathname.includes('categories') || subTabParam === 'categories') {
+            targetSub = 'categories';
+          } else if (hash.includes('languages') || pathname.includes('languages') || subTabParam === 'languages') {
+            targetSub = 'languages';
+          } else if (hash.includes('crm') || pathname.includes('crm') || subTabParam === 'crm') {
+            targetSub = 'crm';
+          } else if (hash.includes('payments') || pathname.includes('payments') || subTabParam === 'payments') {
+            targetSub = 'payments';
+          } else if (hash.includes('branding') || pathname.includes('branding') || subTabParam === 'branding') {
+            targetSub = 'branding';
+          } else if (hash.includes('theme') || pathname.includes('theme') || subTabParam === 'theme') {
+            targetSub = 'theme';
+          } else if (hash.includes('financials') || pathname.includes('financials') || subTabParam === 'financials') {
+            targetSub = 'financials';
+          } else if (hash.includes('security') || pathname.includes('security') || subTabParam === 'security') {
+            targetSub = 'security';
+          } else if (hash.includes('backup') || pathname.includes('backup') || subTabParam === 'backup') {
+            targetSub = 'backup';
+          } else if (hash.includes('features') || pathname.includes('features') || subTabParam === 'features') {
+            targetSub = 'features';
+          }
+          setSettingsSubTab(targetSub);
+          setAdminActiveTab('settings');
+          setActiveView('admin_dashboard');
         }
-        setSettingsSubTab(targetSub);
-        setAdminActiveTab('settings');
-        setActiveView('admin_dashboard');
-      }
 
-      // QR Code verification scanner linking
-      const verifyType = urlParams.get('verify');
-      const verifyRef = urlParams.get('ref') || urlParams.get('bookingCode');
-      const verifyInv = urlParams.get('inv') || urlParams.get('invoiceNumber');
-      const verifyId = urlParams.get('id') || urlParams.get('bookingId');
+        // QR Code verification scanner linking
+        const verifyType = urlParams.get('verify');
+        const verifyRef = urlParams.get('ref') || urlParams.get('bookingCode');
+        const verifyInv = urlParams.get('inv') || urlParams.get('invoiceNumber');
+        const verifyId = urlParams.get('id') || urlParams.get('bookingId');
 
-      if (verifyType || verifyRef || verifyInv || verifyId) {
-        if (bookings.length > 0 || invoices.length > 0) {
-          const matchingBooking = bookings.find(
-            b => (verifyRef && b.bookingCode.toLowerCase() === verifyRef.toLowerCase()) ||
-                 (verifyId && b.id === verifyId)
-          );
-          const matchingInvoice = invoices.find(
-            i => (verifyInv && i.invoiceNumber.toLowerCase() === verifyInv.toLowerCase()) ||
-                 (verifyRef && i.bookingCode.toLowerCase() === verifyRef.toLowerCase()) ||
-                 (matchingBooking && i.bookingId === matchingBooking.id)
-          );
+        if (verifyType || verifyRef || verifyInv || verifyId) {
+          if (bookings.length > 0 || invoices.length > 0) {
+            const matchingBooking = bookings.find(
+              b => (verifyRef && b.bookingCode.toLowerCase() === verifyRef.toLowerCase()) ||
+                   (verifyId && b.id === verifyId)
+            );
+            const matchingInvoice = invoices.find(
+              i => (verifyInv && i.invoiceNumber.toLowerCase() === verifyInv.toLowerCase()) ||
+                   (verifyRef && i.bookingCode.toLowerCase() === verifyRef.toLowerCase()) ||
+                   (matchingBooking && i.bookingId === matchingBooking.id)
+            );
 
-          if (matchingBooking || matchingInvoice) {
-            setActiveView('customer_portal');
-            if (matchingBooking) setSelectedBooking(matchingBooking);
-            if (matchingInvoice) setSelectedInvoice(matchingInvoice);
+            if (matchingBooking || matchingInvoice) {
+              setActiveView('customer_portal');
+              if (matchingBooking) setSelectedBooking(matchingBooking);
+              if (matchingInvoice) setSelectedInvoice(matchingInvoice);
 
-            if (verifyType === 'invoice' || (verifyInv && !verifyType)) {
-              setActiveModal('invoice');
-            } else {
-              setActiveModal('voucher');
+              if (verifyType === 'invoice' || (verifyInv && !verifyType)) {
+                setActiveModal('invoice');
+              } else {
+                setActiveModal('voucher');
+              }
             }
           }
         }
-      }
-    } catch {}
+      } catch {}
+    };
+
+    handleUrlRouting();
+    window.addEventListener('hashchange', handleUrlRouting);
+    window.addEventListener('popstate', handleUrlRouting);
+    return () => {
+      window.removeEventListener('hashchange', handleUrlRouting);
+      window.removeEventListener('popstate', handleUrlRouting);
+    };
   }, [packages, bookings, invoices]);
 
   // Check Firestore connection
