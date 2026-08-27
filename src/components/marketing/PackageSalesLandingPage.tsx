@@ -162,6 +162,11 @@ export const PackageSalesLandingPage: React.FC = () => {
     setActiveModal('checkout');
   };
 
+  const handleOpenPdfAgenda = () => {
+    setSelectedPackage(pkg);
+    setActiveModal('agenda_pdf');
+  };
+
   const handleDirectDownloadPdf = async () => {
     if (isDownloadingPdf) return;
     try {
@@ -178,6 +183,19 @@ export const PackageSalesLandingPage: React.FC = () => {
     } catch (err) {
       console.error('Error generating PDF:', err);
       setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleAdaptivePdfAction = async () => {
+    const isMobileOrTablet = typeof window !== 'undefined' && (
+      window.innerWidth < 1024 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Tablet/i.test(navigator.userAgent)
+    );
+
+    if (isMobileOrTablet) {
+      await handleDirectDownloadPdf();
+    } else {
+      handleOpenPdfAgenda();
     }
   };
 
@@ -221,17 +239,12 @@ export const PackageSalesLandingPage: React.FC = () => {
             </button>
 
             <button
-              onClick={handleDirectDownloadPdf}
-              disabled={isDownloadingPdf}
+              onClick={handleOpenPdfAgenda}
               className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer transition-all"
-              title="Direct background PDF download without preview"
+              title="Open Official Dossier Preview on Desktop"
             >
-              {isDownloadingPdf ? (
-                <div className="w-3.5 h-3.5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Download className="w-3.5 h-3.5" />
-              )}
-              <span>{isDownloadingPdf ? 'Generating...' : 'PDF Dossier'}</span>
+              <Download className="w-3.5 h-3.5" />
+              <span>PDF Dossier</span>
             </button>
 
             <button
@@ -526,17 +539,12 @@ export const PackageSalesLandingPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={handleDirectDownloadPdf}
-                  disabled={isDownloadingPdf}
-                  className="col-span-5 py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all"
-                  title="Direct PDF download without preview"
+                  onClick={handleOpenPdfAgenda}
+                  className="col-span-5 py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                  title="Preview & Download Official Tour Agenda"
                 >
-                  {isDownloadingPdf ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4 text-sky-300" />
-                  )}
-                  <span>{isDownloadingPdf ? 'Generating...' : (language === 'km' ? 'ទាញយក Dossier PDF' : 'Download PDF Dossier')}</span>
+                  <Download className="w-4 h-4 text-sky-300" />
+                  <span>{language === 'km' ? 'មើលគំរូ & ទាញយក PDF' : 'Preview & Download PDF'}</span>
                 </button>
               </div>
 
@@ -1314,10 +1322,10 @@ export const PackageSalesLandingPage: React.FC = () => {
             </button>
 
             <button
-              onClick={handleDirectDownloadPdf}
+              onClick={handleAdaptivePdfAction}
               disabled={isDownloadingPdf}
               className="hidden sm:flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer transition-all"
-              title="Direct background PDF download without preview"
+              title="Preview on desktop or direct download on mobile/tablet"
             >
               {isDownloadingPdf ? (
                 <div className="w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
