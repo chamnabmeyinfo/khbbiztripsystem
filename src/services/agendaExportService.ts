@@ -415,34 +415,34 @@ function buildOptionalPrograms(pkg: TourPackage, labels: PdfLabels, selectedIds:
     const sel = selectedIds.includes(p.id);
     const bg = sel ? C.emerald50 : C.white;
     const border = sel ? C.emerald500 : C.slate200;
-    const badge = sel ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.emerald600};color:${C.white};padding:0 8px;border-radius:4px;font-size:9px;font-weight:bold;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">✓ ${escapeHtml(labels.includedInDelegation)}</span></span>` : '';
+    const badge = sel ? `<span class="pdf-tag-pill pdf-tag-pill-emerald" style="display:inline-flex;align-items:center;vertical-align:middle;text-align:center;height:20px;line-height:20px;background:${C.emerald600};color:${C.white};padding:0 9px;border-radius:4px;font-size:9.5px;font-weight:bold;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">✓ ${escapeHtml(labels.includedInDelegation)}</span></span>` : '';
     
     const highlightsHtml = p.highlights?.length ? `
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
-        ${p.highlights.map(h => `<span class="pdf-tag-pill pdf-tag-pill-slate" style="display:inline-block;vertical-align:middle;text-align:center;height:18px;line-height:18px;background:${C.slate100};border:1px solid ${C.slate200};color:${C.slate700};font-size:9px;padding:0 7px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">• ${escapeHtml(h)}</span></span>`).join('')}
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;">
+        ${p.highlights.map(h => `<span class="pdf-tag-pill pdf-tag-pill-slate" style="display:inline-flex;align-items:center;vertical-align:middle;text-align:center;height:19px;line-height:19px;background:${C.slate100};border:1px solid ${C.slate200};color:${C.slate700};font-size:9.5px;padding:0 8px;border-radius:4px;box-sizing:border-box;white-space:nowrap;"><span class="pdf-pill-text">• ${escapeHtml(h)}</span></span>`).join('')}
       </div>
     ` : '';
 
     const mealsHtml = p.includedMeals?.length ? `
-      <div style="font-size:10px;color:${C.emerald600};margin-top:5px;font-weight:bold;display:flex;align-items:center;gap:4px;line-height:1.35;"><span style="flex-shrink:0;">🍽️</span><span>${escapeHtml(labels.includedMealsLabel || 'Meals Included')}: ${escapeHtml(p.includedMeals.join(', '))}</span></div>
+      <div style="font-size:10.5px;color:${C.emerald600};margin-top:6px;font-weight:600;display:flex;align-items:center;gap:5px;line-height:1.4;"><span style="flex-shrink:0;">🍽️</span><span>${escapeHtml(labels.includedMealsLabel || 'Meals Included')}: ${escapeHtml(p.includedMeals.join(', '))}</span></div>
     ` : '';
 
     return `
-    <div class="opt-program-card" data-pdf-block="1" style="background:${bg};border:1.5px solid ${border};border-radius:9px;padding:12px 14px;margin-top:10px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;">
+    <div class="opt-program-card" data-pdf-block="1" style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:14px 16px;margin-top:10px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,0.02);width:100%;box-sizing:border-box;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:12.5px;font-weight:bold;color:${C.navy};line-height:1.35;word-break:break-word;">${escapeHtml(p.title)}</div>
-        <div style="font-size:11px;color:${C.slate600};margin-top:4px;line-height:1.55;word-break:break-word;">${escapeHtml(p.description)}</div>
+        <div style="font-size:13px;font-weight:bold;color:${C.navy};line-height:1.4;word-break:break-word;">${escapeHtml(p.title)}</div>
+        <div style="font-size:11px;color:${C.slate600};margin-top:4px;line-height:1.6;word-break:break-word;">${escapeHtml(p.description)}</div>
         ${highlightsHtml}
         ${mealsHtml}
-        <div style="font-size:10px;color:${C.slate500};margin-top:5px;line-height:1.4;word-break:break-word;">${escapeHtml(labels.durationHours)}: ${p.durationHours} hrs | ${escapeHtml(labels.audience)}: ${escapeHtml(p.recommendedAudience || labels.defaultTravelerName)} | ${escapeHtml(labels.assembly)}: ${escapeHtml(p.meetingPoint || labels.defaultAssemblyLocation)}</div>
+        <div style="font-size:10px;color:${C.slate500};margin-top:6px;line-height:1.4;word-break:break-word;">${escapeHtml(labels.durationHours)}: <strong>${p.durationHours} hrs</strong> &nbsp;|&nbsp; ${escapeHtml(labels.audience)}: ${escapeHtml(p.recommendedAudience || labels.defaultTravelerName)} &nbsp;|&nbsp; ${escapeHtml(labels.assembly)}: ${escapeHtml(p.meetingPoint || labels.defaultAssemblyLocation)}</div>
       </div>
-      <div class="opt-program-price" style="text-align:right;flex-shrink:0;max-width:150px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:4px;">
+      <div class="opt-program-price" style="text-align:right;flex-shrink:0;min-width:140px;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:6px;">
         <div style="font-size:14px;font-weight:bold;color:${C.emerald600};font-family:monospace;line-height:1.2;white-space:nowrap;">+$${p.additionalCostUSD} USD ${escapeHtml(labels.perPerson.startsWith('/') ? labels.perPerson : `/ ${labels.perPerson}`)}</div>
         ${badge}
       </div>
     </div>`;
   }).join('');
-  return `<div style="margin-top:16px;width:100%;box-sizing:border-box;"><div data-pdf-block="1" data-pdf-keep-next="1" style="font-size:13px;font-weight:bold;color:${C.navy};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.optionalPrograms)}</div>${progs}</div>`;
+  return `<div style="margin-top:14px;width:100%;box-sizing:border-box;"><div data-pdf-block="1" data-pdf-keep-next="1" style="font-size:13px;font-weight:bold;color:${C.navy};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">${escapeHtml(labels.optionalPrograms)}</div>${progs}</div>`;
 }
 
 function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
