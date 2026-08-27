@@ -637,89 +637,61 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   `;
 
   const dynamicPages: string[] = [];
+  const DAYS_PER_PAGE = 2;
+  const totalItinPages = Math.max(1, Math.ceil(itinerarySteps.length / DAYS_PER_PAGE));
 
-  if (itinerarySteps.length <= 3) {
-    // Short tour (1-3 days): Pack Itinerary + Value/Benefits on Page 2, and Programs + Compliance on Page 3
-    const itinPart = itinerarySteps.length > 0 ? `
-      <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)}</div>
-      ${buildItineraryDays(itinerarySteps, labels, opts.systemSettings)}
-    ` : `
-      <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)}</div>
-      <div style="font-size:11.5px;color:${C.slate500};font-style:italic;padding:10px 0;">${escapeHtml(lang === 'km' ? 'កាលវិភាគលម្អិតនឹងត្រូវបានចែកចាយពេលជួបជុំគណៈប្រតិភូ។' : 'Detailed itinerary will be distributed upon group assembly.')}</div>
-    `;
+  for (let i = 0; i < itinerarySteps.length; i += DAYS_PER_PAGE) {
+    const chunk = itinerarySteps.slice(i, i + DAYS_PER_PAGE);
+    const pageIndex = Math.floor(i / DAYS_PER_PAGE) + 1;
+    const isSingleDayChunk = chunk.length === 1;
 
     dynamicPages.push(`
       <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
         ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${itinPart}
-        ${benefitsBlock}
-      </div>
-    `);
-
-    dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${programsBlock}
-        ${complianceBlock}
-      </div>
-    `);
-  } else if (itinerarySteps.length <= 5) {
-    // Medium tour (4-5 days): Days 1-3 on Page 2, Days 4-5 + Benefits on Page 3, Programs + Compliance on Page 4
-    const firstChunk = itinerarySteps.slice(0, 3);
-    const secondChunk = itinerarySteps.slice(3);
-
-    dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)} (Part 1/2)</div>
-        ${buildItineraryDays(firstChunk, labels, opts.systemSettings)}
-      </div>
-    `);
-
-    dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)} (Part 2/2)</div>
-        ${buildItineraryDays(secondChunk, labels, opts.systemSettings)}
-        ${benefitsBlock}
-      </div>
-    `);
-
-    dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${programsBlock}
-        ${complianceBlock}
-      </div>
-    `);
-  } else {
-    // Extended tour (6+ days): 3 days per page, then remaining days + benefits, then programs + compliance
-    const DAYS_PER_PAGE = 3;
-    const totalItinPages = Math.ceil(itinerarySteps.length / DAYS_PER_PAGE);
-
-    for (let i = 0; i < itinerarySteps.length; i += DAYS_PER_PAGE) {
-      const chunk = itinerarySteps.slice(i, i + DAYS_PER_PAGE);
-      const pageIndex = Math.floor(i / DAYS_PER_PAGE) + 1;
-      const isLastItinPage = pageIndex === totalItinPages;
-
-      dynamicPages.push(`
-        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
-          ${buildPageHeader(pkg, labels, opts.systemSettings)}
-          <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">${escapeHtml(labels.detailedItinerary)} (Part ${pageIndex}/${totalItinPages})</div>
-          ${buildItineraryDays(chunk, labels, opts.systemSettings)}
-          ${isLastItinPage ? benefitsBlock : ''}
-        </div>
-      `);
-    }
-
-    dynamicPages.push(`
-      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
-        ${buildPageHeader(pkg, labels, opts.systemSettings)}
-        ${programsBlock}
-        ${complianceBlock}
+        <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)} ${totalItinPages > 1 ? `(Part ${pageIndex}/${totalItinPages})` : ''}</div>
+        ${buildItineraryDays(chunk, labels, opts.systemSettings)}
+        ${isSingleDayChunk && hasHighlights ? buildHighlights(pkg, labels, opts.systemSettings) : ''}
       </div>
     `);
   }
+
+  if (itinerarySteps.length === 0) {
+    dynamicPages.push(`
+      <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+        ${buildPageHeader(pkg, labels, opts.systemSettings)}
+        <div style="font-size:13px;font-weight:bold;color:${C.navy};font-family:${typo.headingFont};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${escapeHtml(labels.detailedItinerary)}</div>
+        <div style="font-size:11.5px;color:${C.slate500};font-style:italic;padding:10px 0;">${escapeHtml(lang === 'km' ? 'កាលវិភាគលម្អិតនឹងត្រូវបានចែកចាយពេលជួបជុំគណៈប្រតិភូ។' : 'Detailed itinerary will be distributed upon group assembly.')}</div>
+        ${benefitsBlock}
+      </div>
+    `);
+  } else {
+    // If benefits were not attached to a single trailing day, give benefits & optional programs a dedicated clean page
+    const benefitsAlreadyRendered = itinerarySteps.length % DAYS_PER_PAGE === 1 && hasHighlights;
+    const remainingBenefits = !benefitsAlreadyRendered ? benefitsBlock : (
+      (hasWhoShouldJoin || hasWhyShouldJoin) ? `
+        ${buildWhoShouldJoin(pkg, labels, opts.systemSettings)}
+        ${buildWhyShouldJoin(pkg, labels, opts.systemSettings)}
+      ` : ''
+    );
+
+    if (remainingBenefits || programsBlock) {
+      dynamicPages.push(`
+        <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+          ${buildPageHeader(pkg, labels, opts.systemSettings)}
+          ${remainingBenefits}
+          ${programsBlock}
+        </div>
+      `);
+    }
+  }
+
+  // Commercial Compliance, Inclusions/Exclusions, Emergency & Authorizations Page
+  dynamicPages.push(`
+    <div style="margin-bottom:12px;width:100%;box-sizing:border-box;">
+      ${buildPageHeader(pkg, labels, opts.systemSettings)}
+      ${complianceBlock}
+    </div>
+  `);
 
   const allPageBodies = [page1Content, ...dynamicPages];
   const totalPages = allPageBodies.length;
@@ -728,12 +700,12 @@ function buildA4Pages(pkg: TourPackage, labels: PdfLabels, opts: { selectedDate:
   return allPageBodies.map((content, idx) => {
     const pageNum = idx + 1;
     return `
-    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:24px 28px 20px 28px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin-bottom:24px;">
+    <div class="pdf-a4-page" data-page="${pageNum}" dir="${dir}" style="font-family:${getFontFamily(lang, opts.systemSettings)};width:100%;max-width:794px;min-height:1123px;padding:32px 36px 28px 36px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;background:#ffffff;position:relative;margin:0 auto 28px auto;">
       ${watermarkHtml}
       <div style="flex:1;display:flex;flex-direction:column;width:100%;box-sizing:border-box;position:relative;z-index:1;">
         ${content}
       </div>
-      <div style="position:relative;z-index:2;">
+      <div style="position:relative;z-index:2;margin-top:14px;">
         ${buildPageFooter(pkg, labels, pageNum, totalPages, opts.systemSettings)}
       </div>
     </div>`;
@@ -1223,7 +1195,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
   @media print { 
     @page {
       size: A4 portrait;
-      margin: 8mm 10mm 10mm 10mm;
+      margin: 12mm 14mm 14mm 14mm;
     }
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
@@ -1264,8 +1236,9 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
       page-break-before: auto !important;
       page-break-after: always !important;
       break-after: page !important;
-      page-break-inside: auto !important;
-      break-inside: auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      break-inside: avoid-page !important;
       box-sizing: border-box !important;
       overflow: visible !important;
       position: relative !important;
@@ -1277,11 +1250,12 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
       padding-bottom: 0 !important;
     }
     .page-bottom-footer {
-      margin-top: 12px !important;
-      padding-top: 6px !important;
+      margin-top: 14px !important;
+      padding-top: 8px !important;
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
+    p, span, div, li, td, th,
     [data-pdf-block],
     [data-pdf-break],
     .header-main-box,
@@ -1289,6 +1263,7 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
     .gallery-sub-grid,
     .badges-row,
     .guide-box,
+    .guide-details-box,
     .itinerary-day-box,
     .itinerary-slot-row,
     .inc-exc-row,
@@ -1308,6 +1283,9 @@ function buildStandaloneHtmlDocument(body: string, pkg: TourPackage, lang: Langu
       page-break-inside: avoid !important;
       break-inside: avoid !important;
       break-inside: avoid-page !important;
+      -webkit-column-break-inside: avoid !important;
+      orphans: 3;
+      widows: 3;
     }
     h1, h2, h3, h4, h5, h6,
     .page-top-header,

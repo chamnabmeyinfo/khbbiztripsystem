@@ -497,8 +497,9 @@ table.print-friendly-headers tfoot,
     page-break-before: auto !important;
     page-break-after: always !important;
     break-after: page !important;
-    page-break-inside: auto !important;
-    break-inside: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    break-inside: avoid-page !important;
     box-sizing: border-box !important;
     overflow: visible !important;
     position: relative !important;
@@ -510,13 +511,14 @@ table.print-friendly-headers tfoot,
     padding-bottom: 0 !important;
   }
   .page-bottom-footer {
-    margin-top: 12px !important;
-    padding-top: 6px !important;
+    margin-top: 14px !important;
+    padding-top: 8px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* Complete Anti-Cutoff Rules */
+  /* Complete Anti-Cutoff & Anti-Text-Splitting Rules */
+  p, span, div, li, td, th,
   [data-pdf-block],
   [data-pdf-break],
   .print-friendly-headers,
@@ -528,6 +530,7 @@ table.print-friendly-headers tfoot,
   .gallery-sub-grid,
   .badges-row,
   .guide-box,
+  .guide-details-box,
   .itinerary-day-box,
   .itinerary-slot-row,
   .inc-exc-row,
@@ -544,12 +547,16 @@ table.print-friendly-headers tfoot,
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     break-inside: avoid-page !important;
+    -webkit-column-break-inside: avoid !important;
+    orphans: 3;
+    widows: 3;
   }
 
   h1, h2, h3, h4, h5, h6,
   .page-top-header,
   .itinerary-day-header,
-  .section-header {
+  .section-header,
+  .section-heading {
     page-break-after: avoid !important;
     break-after: avoid !important;
     break-after: avoid-page !important;
