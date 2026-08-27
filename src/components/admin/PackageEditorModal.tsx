@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import {
   TourPackage,
   TourPackageStatus,
+  TourVideo,
   ItineraryStep,
   GuideScheduleSlot,
   OptionalTourProgram,
@@ -18,6 +19,9 @@ import {
   Trash2,
   Save,
   Image as ImageIcon,
+  Film,
+  Video,
+  Play,
   Calendar,
   DollarSign,
   MapPin,
@@ -167,6 +171,14 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop&q=80'
   ]);
   const [newImageUrl, setNewImageUrl] = useState('');
+
+  // Video Gallery & Featured Video State
+  const [featuredVideoUrl, setFeaturedVideoUrl] = useState<string>(pkg?.featuredVideoUrl || '');
+  const [videos, setVideos] = useState<TourVideo[]>(pkg?.videos || []);
+  const [newVideoTitle, setNewVideoTitle] = useState('');
+  const [newVideoTitleKm, setNewVideoTitleKm] = useState('');
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [newVideoDuration, setNewVideoDuration] = useState('');
 
   // Highlights Bilingual State
   const [highlightsKm, setHighlightsKm] = useState<string[]>(() => {
@@ -634,6 +646,35 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     setImages(images.filter((_, i) => i !== index));
   };
 
+  const handleAddVideo = () => {
+    if (!newVideoUrl.trim()) return;
+    const newVid: TourVideo = {
+      id: `vid_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      title: newVideoTitle.trim() || `${title || 'Mission'} Video Clip`,
+      titleKm: newVideoTitleKm.trim() || undefined,
+      url: newVideoUrl.trim(),
+      duration: newVideoDuration.trim() || undefined,
+      isFeatured: videos.length === 0 && !featuredVideoUrl
+    };
+    if (!featuredVideoUrl) {
+      setFeaturedVideoUrl(newVid.url);
+    }
+    setVideos(prev => [...prev, newVid]);
+    setNewVideoTitle('');
+    setNewVideoTitleKm('');
+    setNewVideoUrl('');
+    setNewVideoDuration('');
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSetFeaturedVideo = (videoUrl: string) => {
+    setFeaturedVideoUrl(videoUrl);
+    setVideos(prev => prev.map(v => ({ ...v, isFeatured: v.url === videoUrl })));
+  };
+
   // Departure Dates Handlers
   const handleAddDepartureDate = () => {
     if (!newDateInput.trim()) return;
@@ -1011,6 +1052,8 @@ Highlights:
       descriptionKm: (descriptionKm || description || descriptionEn).trim(),
       descriptionEn: descriptionEn.trim() || undefined,
       images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80'],
+      featuredVideoUrl: featuredVideoUrl.trim() || undefined,
+      videos: (videos || []).filter(v => v.url && v.url.trim()),
       highlights: isEnglishMain
         ? (highlightsEn.length > 0 ? highlightsEn : (highlightsKm.length > 0 ? highlightsKm : []))
         : (highlightsKm.length > 0 ? highlightsKm : (highlightsEn.length > 0 ? highlightsEn : [])),
@@ -2390,8 +2433,170 @@ Highlights:
                 )}
               </div>
 
+              {/* 🎬 Video Gallery & Featured Video (Default Auto-Play) */}
+              <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400">
+                        <Film className="w-4 h-4" />
+                      </span>
+                      <label className="block text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Featured Video & Video Gallery ({videos.length} Videos)
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Set official video tours to <strong>auto-play by default</strong> when delegates open this package (YouTube, Vimeo, or MP4 video URLs).
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-full border border-red-200 dark:border-red-800/40">
+                    Auto-Play Video Default
+                  </span>
+                </div>
+
+                {/* Primary Featured Video Quick Input */}
+                <div className="p-4 rounded-2xl bg-red-50/50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Video className="w-3.5 h-3.5 text-red-500" />
+                      <span>Primary Featured Video URL (Default Player)</span>
+                    </label>
+                    {featuredVideoUrl && (
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">
+                        ✓ Active Default Video
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={featuredVideoUrl}
+                      onChange={(e) => setFeaturedVideoUrl(e.target.value)}
+                      placeholder="e.g. https://www.youtube.com/watch?v=... or https://vimeo.com/... or https://cdn.site.com/video.mp4"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-red-200 dark:border-red-800/60 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                    />
+                    {featuredVideoUrl && (
+                      <a
+                        href={featuredVideoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-2 rounded-xl bg-red-600 text-white text-xs font-bold flex items-center gap-1 hover:bg-red-700 transition-colors shadow-xs"
+                        title="Preview video in new tab"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Test</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Add Video to Gallery Form */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5 text-red-500" />
+                    <span>Add Video Clip to Gallery</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div className="sm:col-span-5">
+                      <input
+                        type="url"
+                        value={newVideoUrl}
+                        onChange={(e) => setNewVideoUrl(e.target.value)}
+                        placeholder="Video URL (YouTube / Vimeo / MP4)..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="sm:col-span-4">
+                      <input
+                        type="text"
+                        value={newVideoTitle}
+                        onChange={(e) => setNewVideoTitle(e.target.value)}
+                        placeholder="Video Title (e.g. Expo Walkthrough)..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        value={newVideoDuration}
+                        onChange={(e) => setNewVideoDuration(e.target.value)}
+                        placeholder="Duration (03:45)..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-mono"
+                      />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <button
+                        type="button"
+                        onClick={handleAddVideo}
+                        className="w-full h-full min-h-[34px] px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center cursor-pointer shadow-xs"
+                        title="Add Video to List"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Gallery Grid */}
+                {videos.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {videos.map((vid, idx) => {
+                      const isFeatured = vid.url === featuredVideoUrl || vid.isFeatured;
+                      return (
+                        <div
+                          key={vid.id || idx}
+                          className={`p-3 rounded-2xl border transition-all space-y-2 relative bg-white dark:bg-slate-800/80 shadow-xs ${
+                            isFeatured
+                              ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50/20 dark:bg-red-950/20'
+                              : 'border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+                              <Film className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                              <span className="truncate">{vid.title}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveVideo(idx)}
+                              className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 cursor-pointer"
+                              title="Delete Video"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                            {vid.url}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {vid.duration ? `⏱️ ${vid.duration}` : 'Video Clip'}
+                            </span>
+                            {isFeatured ? (
+                              <span className="px-2 py-0.5 rounded-lg bg-red-600 text-white text-[9px] font-black uppercase tracking-wider">
+                                ⭐ Default Play
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSetFeaturedVideo(vid.url)}
+                                className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-red-500 hover:text-white text-slate-700 dark:text-slate-300 text-[10px] font-bold transition-all cursor-pointer"
+                              >
+                                Set as Default
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Image Gallery & Upload Zone */}
-              <div className="space-y-4">
+              <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">

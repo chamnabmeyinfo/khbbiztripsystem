@@ -34,6 +34,7 @@ import {
   Briefcase,
   Gift
 } from 'lucide-react';
+import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
 
 export const PackageSalesLandingPage: React.FC = () => {
   const {
@@ -250,70 +251,15 @@ export const PackageSalesLandingPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Visual Media Gallery + Delegate Registration Fee */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="relative aspect-[16/10] sm:aspect-[16/9] rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-900 group">
-              <img
-                src={images[activeImageIdx] || images[0]}
-                alt={displayTitle}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
-
-              {/* Badges on Hero */}
-              <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-xl bg-indigo-600/95 text-white text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-lg flex items-center gap-1.5">
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span>Official Trade Mission</span>
-                </span>
-                {pkg.tags?.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-amber-300 text-[11px] font-bold border border-white/10"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Bottom Hero Info */}
-              <div className="absolute bottom-4 inset-x-4 flex items-end justify-between text-white">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs text-amber-300">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <span className="font-black">{pkg.rating.toFixed(1)}</span>
-                    <span className="text-white/80">({pkg.reviewCount} Verified Delegate Reviews)</span>
-                  </div>
-                  <p className="text-xs text-slate-300 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-sky-400" />
-                    <span>{displayDestination}, {pkg.country}</span>
-                  </p>
-                </div>
-
-                <div className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-xs font-mono font-bold flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>{pkg.bookedThisMonth} Delegates Registered</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Thumbnail Strip */}
-            {images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {images.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImageIdx(i)}
-                    className={`relative w-24 h-16 rounded-2xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
-                      activeImageIdx === i
-                        ? 'border-indigo-600 ring-2 ring-indigo-500/30 scale-105'
-                        : 'border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={img} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Featured Video Tour & Media Gallery (Auto-Plays Video by Default) */}
+            <VideoGalleryPlayer
+              videos={pkg.videos}
+              featuredVideoUrl={pkg.featuredVideoUrl}
+              images={images}
+              title={displayTitle}
+              defaultMode="video"
+              aspectRatioClass="aspect-[16/10] sm:aspect-[16/9]"
+            />
 
             {/* ── Delegate Registration Fee & Instant Checkout Box (Under Gallery) ── */}
             <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-850 to-indigo-950 text-white shadow-2xl border border-slate-800 space-y-5">

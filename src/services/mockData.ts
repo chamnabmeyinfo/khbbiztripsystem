@@ -153,6 +153,29 @@ export const OFFICIAL_BIZTRIP_PACKAGE: TourPackage = {
   availableDates: ['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01'],
   flightIncluded: true, // Includes Domestic Flight SGN -> PQC & High-Speed Ferry to Kampot
   hotelStars: 4,
+  featuredVideoUrl: 'https://www.youtube.com/watch?v=21X5lGlDOfg',
+  videos: [
+    {
+      id: 'vid_vietnam_expo_2026',
+      title: 'Vietnam International Coffee & Bakery Expo 2026 Walkthrough',
+      titleKm: 'ទិដ្ឋភាពទូទៅនៃពិព័រណ៍កាហ្វេ & Bakery អន្តរជាតិ 2026',
+      titleEn: 'Vietnam International Coffee & Bakery Expo 2026 Walkthrough',
+      url: 'https://www.youtube.com/watch?v=21X5lGlDOfg',
+      duration: '03:45',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop&q=80',
+      isFeatured: true
+    },
+    {
+      id: 'vid_vietrf_franchise',
+      title: 'VIETRF Retail & Franchise Expo B2B Matchmaking',
+      titleKm: 'កម្មវិធីជំនួបពាណិជ្ជកម្ម Franchise & RetailTech',
+      titleEn: 'VIETRF Retail & Franchise Expo B2B Matchmaking',
+      url: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
+      duration: '02:30',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80',
+      isFeatured: false
+    }
+  ],
   images: [
     'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop&q=80',
@@ -777,6 +800,29 @@ export const CANTON_FAIR_PHASE_1_PACKAGE: TourPackage = {
   availableDates: ['2026-10-15', '2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19'],
   flightIncluded: true,
   hotelStars: 5,
+  featuredVideoUrl: 'https://www.youtube.com/watch?v=7WT_2bB_w4o',
+  videos: [
+    {
+      id: 'vid_canton_fair_tour',
+      title: 'The 140th Canton Fair Pazhou Complex Walkthrough & Guide',
+      titleKm: 'ទិដ្ឋភាពទូទៅនៃសាលពិព័រណ៍ក្វាងចូវ Canton Fair Pazhou Complex',
+      titleEn: 'The 140th Canton Fair Pazhou Complex Walkthrough & Guide',
+      url: 'https://www.youtube.com/watch?v=7WT_2bB_w4o',
+      duration: '04:15',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80',
+      isFeatured: true
+    },
+    {
+      id: 'vid_foshan_factory',
+      title: 'Foshan Smart Electronics & Industrial Automation Hub Tour',
+      titleKm: 'ដំណើរទស្សនកិច្ចរោងចក្រស្វ័យប្រវត្តិកម្ម និងគ្រឿងអេឡិចត្រូនិក Foshan',
+      titleEn: 'Foshan Smart Electronics & Industrial Automation Hub Tour',
+      url: 'https://www.youtube.com/watch?v=ScMzIvxBSi4',
+      duration: '03:10',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80',
+      isFeatured: false
+    }
+  ],
   coordinates: {
     lat: 23.1291,
     lng: 113.2644,

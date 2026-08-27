@@ -277,6 +277,19 @@ export interface TourPackage {
   optionalPrograms?: OptionalTourProgram[];
   isCantonFair?: boolean;
   cantonFairPhase?: 'Phase 1' | 'Phase 2' | 'Phase 3' | 'All Phases' | 'Multi-Phase';
+  featuredVideoUrl?: string;
+  videos?: TourVideo[];
+}
+
+export interface TourVideo {
+  id: string;
+  title: string;
+  titleKm?: string;
+  titleEn?: string;
+  url: string; // YouTube, Vimeo, direct MP4/WebM URL
+  thumbnailUrl?: string;
+  duration?: string; // e.g. "03:45"
+  isFeatured?: boolean;
 }
 
 export interface PackageCategory {

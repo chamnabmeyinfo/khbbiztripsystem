@@ -11,7 +11,8 @@ import {
   TrendingUp,
   ShieldCheck,
   ArrowRight,
-  Flame
+  Flame,
+  Play
 } from 'lucide-react';
 
 export const TrendingDeals: React.FC = () => {
@@ -141,6 +142,12 @@ export const TrendingDeals: React.FC = () => {
                       {hasDiscount && (
                         <span className="px-2.5 py-1 rounded-lg bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider shadow-md">
                           {t('saveAmount') || 'Save'} {formatMoney(savingsUSD, currency, language)}
+                        </span>
+                      )}
+                      {(pkg.featuredVideoUrl || (pkg.videos && pkg.videos.length > 0)) && (
+                        <span className="px-2.5 py-1 rounded-lg bg-red-600/90 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1 border border-red-400/30 backdrop-blur-xs">
+                          <Play className="w-2.5 h-2.5 fill-current" />
+                          <span>Video Tour</span>
                         </span>
                       )}
                       <span className="px-2.5 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold flex items-center gap-1 border border-white/10 shadow-md">

@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { OptionalTourProgram } from '../../types';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
+import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
 
 export const PackageDetailModal: React.FC = () => {
   const {
@@ -410,37 +411,15 @@ export const PackageDetailModal: React.FC = () => {
           {/* TAB 1: OVERVIEW */}
           {activeDetailTab === 'overview' && (
             <>
-              {/* Image Gallery */}
-              <div className="space-y-3">
-                <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden shadow-md">
-                  <img
-                    src={pkg.images[activeImageIndex] || pkg.images[0]}
-                    alt={pkg.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-all duration-500"
-                  />
-                  <div className="absolute bottom-3 left-3 bg-slate-950/70 backdrop-blur-md px-3 py-1 rounded-lg text-white text-xs font-semibold">
-                    Photo {activeImageIndex + 1} of {pkg.images.length}
-                  </div>
-                </div>
-
-                {/* Thumbnails */}
-                {pkg.images.length > 1 && (
-                  <div className="flex gap-2">
-                    {pkg.images.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveImageIndex(idx)}
-                        className={`relative w-20 h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                          activeImageIndex === idx ? 'border-sky-500 scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={img} alt="thumbnail" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Featured Video Tour & Media Gallery (Video Plays by Default) */}
+              <VideoGalleryPlayer
+                videos={pkg.videos}
+                featuredVideoUrl={pkg.featuredVideoUrl}
+                images={pkg.images}
+                title={pkg.title}
+                defaultMode="video"
+                aspectRatioClass="aspect-[16/9] sm:aspect-[21/9]"
+              />
 
               {/* Title & Key Meta */}
               <div className="space-y-3">
