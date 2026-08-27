@@ -118,10 +118,13 @@ export const DynamicHead: React.FC<DynamicHeadProps> = ({
     if (propImage) ogImage = propImage;
     if (propKeywords) propKeywords.forEach(k => keywordsSet.add(k));
 
+    // Ensure ogImage is strictly an absolute URL for social crawlers (Telegram, Facebook, WhatsApp)
+    const absoluteOgImage = ogImage.startsWith('http') ? ogImage : `${baseUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
+
     return {
       title,
       description,
-      ogImage,
+      ogImage: absoluteOgImage,
       ogType,
       keywords: Array.from(keywordsSet).join(', ')
     };

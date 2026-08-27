@@ -229,7 +229,7 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
 
       {/* ── Combined Media Thumbnail Selector (Videos + Photos) ── */}
       {(normalizedVideos.length > 0 || images.length > 1) && (
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
+        <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory -mx-1 px-1">
           {/* 1. Video Gallery Thumbnails */}
           {normalizedVideos.map((vid, idx) => {
             const isSelected = activeMediaMode === 'video' && activeVideoIdx === idx;
@@ -241,7 +241,7 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
                 key={vid.id || idx}
                 type="button"
                 onClick={() => handleSelectVideo(idx)}
-                className={`relative shrink-0 w-24 sm:w-28 h-16 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group bg-slate-900 ${
+                className={`relative shrink-0 snap-start w-22 sm:w-28 h-15 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group bg-slate-900 ${
                   isSelected
                     ? 'border-red-500 scale-105 shadow-lg ring-2 ring-red-500/30'
                     : 'border-slate-200 dark:border-slate-800 opacity-80 hover:opacity-100 hover:border-slate-400'
@@ -255,13 +255,13 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shadow-md ${
+                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md ${
                     isSelected ? 'bg-red-600 text-white animate-pulse' : 'bg-white/90 text-slate-900 group-hover:scale-110'
                   }`}>
-                    <Play className="w-3 h-3 fill-current ml-0.5" />
+                    <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current ml-0.5" />
                   </div>
                 </div>
-                <div className="absolute bottom-1 right-1 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-md uppercase tracking-wider">
+                <div className="absolute bottom-1 right-1 bg-red-600 text-white text-[8px] sm:text-[9px] font-black px-1.5 py-0.2 rounded-md uppercase tracking-wider">
                   Video
                 </div>
               </button>
@@ -276,7 +276,7 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => handleSelectPhoto(idx)}
-                className={`relative shrink-0 w-24 sm:w-28 h-16 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group bg-slate-900 ${
+                className={`relative shrink-0 snap-start w-22 sm:w-28 h-15 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all cursor-pointer group bg-slate-900 ${
                   isSelected
                     ? 'border-sky-500 scale-105 shadow-lg ring-2 ring-sky-500/30'
                     : 'border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100 hover:border-slate-400'
@@ -289,7 +289,7 @@ export const VideoGalleryPlayer: React.FC<VideoGalleryPlayerProps> = ({
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                <div className="absolute bottom-1 right-1 bg-slate-900/80 text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.2 rounded-md">
                   Photo
                 </div>
               </button>
