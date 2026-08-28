@@ -302,28 +302,30 @@ export const AgendaPdfModal: React.FC = () => {
       id="agenda-pdf-modal"
     >
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-5xl w-full my-auto h-[95vh] flex flex-col overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-850/90 backdrop-blur-sm print:hidden shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20">
-              <FileText className="w-5 h-5" />
+        <div className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/95 dark:bg-slate-850/95 backdrop-blur-md print:hidden shrink-0 gap-2 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h3 className="text-xs sm:text-sm lg:text-base font-black text-slate-900 dark:text-white truncate leading-tight">
                   {language === 'km' ? 'មើលគំរូ និងទាញយករបៀបវារៈផ្លូវការ' : 'Official Tour Agenda Preview & Export'}
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800 inline-flex items-center gap-1">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800 items-center gap-1 shrink-0">
                   <Eye className="w-3 h-3" /> Live HTML Preview
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Exact A4 page sheet layout with photo gallery, itinerary timings, and verified seal.
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                <span className="sm:hidden font-semibold text-sky-600 dark:text-sky-400">{selectedPackage.destination} • {selectedPackage.durationDays}D/{selectedPackage.durationNights}N</span>
+                <span className="hidden sm:inline">Exact A4 page sheet layout with photo gallery, itinerary timings, and verified seal.</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5 shadow-2xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Desktop Zoom Controls */}
+            <div className="hidden lg:flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-0.5 shadow-2xs">
               <button
                 onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.1))}
                 className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer inline-flex items-center justify-center text-center leading-none"
@@ -350,18 +352,20 @@ export const AgendaPdfModal: React.FC = () => {
               </button>
             </div>
 
+            {/* View Standalone HTML */}
             <button
               onClick={handleViewHtmlOnline}
-              className="px-3.5 py-2 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900 font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs leading-none"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900 font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs leading-none"
               title="Open Standalone HTML Web Page in New Tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-              <span className="hidden md:inline">View HTML Link</span>
+              <span className="hidden md:inline">View HTML</span>
             </button>
 
+            {/* Copy Link */}
             <button
               onClick={handleCopyShareLink}
-              className={`px-3.5 py-2 rounded-xl border font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs leading-none ${
+              className={`p-2 sm:px-3 sm:py-2 rounded-xl border font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs leading-none ${
                 copiedLink
                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
                   : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -371,36 +375,38 @@ export const AgendaPdfModal: React.FC = () => {
               {copiedLink ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                  <span>Copied Link!</span>
+                  <span className="hidden sm:inline">Copied!</span>
                 </>
               ) : (
                 <>
                   <Share2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-                  <span className="hidden sm:inline">Copy Client Link</span>
+                  <span className="hidden sm:inline">Share</span>
                 </>
               )}
             </button>
 
+            {/* Print Button (Tablet/Desktop) */}
             <button
               onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs leading-none"
+              className="hidden sm:inline-flex px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs leading-none"
               title="Print Document or Save as PDF"
             >
               <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-              <span className="hidden sm:inline">Print</span>
+              <span className="hidden lg:inline">Print</span>
             </button>
 
+            {/* Main Download Button */}
             <button
               onClick={handleDownloadPdf}
               disabled={isGenerating}
-              className={`px-3 py-1 rounded-xl font-bold text-xs transition-all cursor-pointer bg-sky-600 hover:bg-sky-700 text-white shadow-xs font-black inline-flex items-center justify-center gap-1.5 leading-none active:scale-95 ${
+              className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer bg-sky-600 hover:bg-sky-700 text-white shadow-xs font-black inline-flex items-center justify-center gap-1.5 leading-none active:scale-95 shrink-0 ${
                 downloadSuccess ? '!bg-emerald-600' : ''
               }`}
             >
               {isGenerating ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Generating...</span>
+                  <span className="hidden sm:inline">Generating...</span>
                 </>
               ) : downloadSuccess ? (
                 <>
@@ -410,22 +416,25 @@ export const AgendaPdfModal: React.FC = () => {
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download {FORMAT_OPTIONS.find(f => f.value === exportFormat)?.label || 'Document'}</span>
+                  <span className="sm:hidden">Download</span>
+                  <span className="hidden sm:inline">Download {FORMAT_OPTIONS.find(f => f.value === exportFormat)?.label || 'Document'}</span>
                 </>
               )}
             </button>
 
+            {/* Close Modal Button */}
             <button
               onClick={() => setActiveModal(null)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors inline-flex items-center justify-center leading-none"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors inline-flex items-center justify-center leading-none shrink-0"
+              title="Close Preview"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
-        <div className="px-5 py-2.5 bg-slate-100/90 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-750 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 text-xs print:hidden shrink-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-slate-100/90 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-750 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 text-xs overflow-x-auto no-scrollbar print:hidden shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1 inline-flex items-center leading-none shrink-0">Export As:</span>
             {FORMAT_OPTIONS.map(opt => {
               const isSelected = exportFormat === opt.value;
@@ -433,7 +442,7 @@ export const AgendaPdfModal: React.FC = () => {
                 <button
                   key={opt.value}
                   onClick={() => setExportFormat(opt.value)}
-                  className={`px-3 py-1 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1 rounded-xl font-bold text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     isSelected
                       ? 'bg-sky-600 text-white shadow-xs font-black'
                       : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
@@ -445,9 +454,9 @@ export const AgendaPdfModal: React.FC = () => {
             })}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 justify-start md:justify-end">
             {/* Language Selector */}
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 shrink-0">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 sm:px-2.5 py-1 shrink-0">
               <Globe className="w-3.5 h-3.5 text-sky-600 shrink-0" />
               <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px] shrink-0">Lang:</span>
               <select
@@ -463,9 +472,9 @@ export const AgendaPdfModal: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 shrink-0">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 sm:px-2.5 py-1 shrink-0">
               <Calendar className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-              <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px] shrink-0">Departure:</span>
+              <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px] shrink-0">Date:</span>
               <select
                 value={currentDepartureDate}
                 onChange={e => setSelectedDate(e.target.value)}
@@ -479,14 +488,14 @@ export const AgendaPdfModal: React.FC = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 shrink-0">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 sm:px-2.5 py-1 shrink-0">
               <UserCheck className="w-3.5 h-3.5 text-sky-600 shrink-0" />
               <input
                 type="text"
                 value={travelerName}
                 onChange={e => setTravelerName(e.target.value)}
-                placeholder="Delegate Name / Org"
-                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-medium focus:outline-none w-28 sm:w-36"
+                placeholder="Delegate Name"
+                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-medium focus:outline-none w-24 sm:w-36"
               />
             </div>
 
@@ -495,7 +504,7 @@ export const AgendaPdfModal: React.FC = () => {
                 setShowWatermarkDrawer(prev => !prev);
                 if (showOptionsDrawer) setShowOptionsDrawer(false);
               }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-2 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 watermarkEnabled
                   ? 'bg-sky-600 text-white border-sky-600 shadow-xs ring-2 ring-sky-400/30'
                   : showWatermarkDrawer
@@ -513,7 +522,7 @@ export const AgendaPdfModal: React.FC = () => {
                 setShowOptionsDrawer(prev => !prev);
                 if (showWatermarkDrawer) setShowWatermarkDrawer(false);
               }}
-              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              className={`px-2 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 showOptionsDrawer || selectedOptions.length > 0
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                   : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
