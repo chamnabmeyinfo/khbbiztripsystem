@@ -19,12 +19,18 @@ import {
   Building2,
   Navigation,
   Globe2,
-  Maximize2,
   Clock,
   Activity,
-  X
+  Check,
+  Bookmark,
+  Satellite,
+  Map as MapIcon,
+  Radio,
+  Eye
 } from 'lucide-react';
 import { formatMoney } from '../../services/currencyService';
+
+export type MapMode = 'dark_matter' | 'satellite' | 'street' | 'radar_atlas';
 
 interface MapRegion {
   id: string;
@@ -33,26 +39,80 @@ interface MapRegion {
   zoom: number;
   centerX: number;
   centerY: number;
+  centerLat?: number;
+  centerLng?: number;
 }
 
 const REGIONS: MapRegion[] = [
-  { id: 'all', name: 'Global Atlas', nameKm: 'ផែនទីសកល', zoom: 1, centerX: 50, centerY: 50 },
-  { id: 'asean', name: 'ASEAN Corridor', nameKm: 'អាស៊ាន', zoom: 1.8, centerX: 74, centerY: 62 },
-  { id: 'greater_bay', name: 'Greater Bay / Canton', nameKm: 'ក្វាងចូវ & ចិន', zoom: 1.9, centerX: 80, centerY: 46 },
-  { id: 'east_asia', name: 'East Asia Hub', nameKm: 'អាស៊ីបូព៌ា', zoom: 1.7, centerX: 82, centerY: 42 },
+  { id: 'all', name: 'Global Atlas', nameKm: 'ផែនទីសកល', zoom: 1, centerX: 50, centerY: 50, centerLat: 20, centerLng: 105 },
+  { id: 'asean', name: 'ASEAN Corridor', nameKm: 'អាស៊ាន', zoom: 1.8, centerX: 74, centerY: 62, centerLat: 13, centerLng: 104 },
+  { id: 'greater_bay', name: 'Greater Bay / Canton', nameKm: 'ក្វាងចូវ & ចិន', zoom: 1.9, centerX: 80, centerY: 46, centerLat: 23, centerLng: 113 },
+  { id: 'east_asia', name: 'East Asia Hub', nameKm: 'អាស៊ីបូព៌ា', zoom: 1.7, centerX: 82, centerY: 42, centerLat: 28, centerLng: 118 },
 ];
 
+const MAP_MODE_CONFIG: Record<MapMode, { label: string; labelKm: string; icon: React.FC<{ className?: string }>; description: string }> = {
+  dark_matter: {
+    label: 'Real Dark',
+    labelKm: 'ផែនទីពិភពលោកងងឹត',
+    icon: MapIcon,
+    description: 'CartoDB Dark Matter real-world borders, topography & cities'
+  },
+  satellite: {
+    label: 'Satellite',
+    labelKm: 'រូបភាពផ្កាយរណប',
+    icon: Satellite,
+    description: 'Photorealistic orbital satellite imagery of continents and terrain'
+  },
+  street: {
+    label: 'Street / Geo',
+    labelKm: 'ផែនទីភូមិសាស្ត្រ',
+    icon: Globe2,
+    description: 'OpenStreetMap high-contrast geographic navigation map'
+  },
+  radar_atlas: {
+    label: 'Cyber Radar',
+    labelKm: 'រ៉ាដាហោះហើរ B2B',
+    icon: Radio,
+    description: 'High-tech military HUD vector radar with rotating beam'
+  }
+};
+
 export const InteractiveMap: React.FC = () => {
-  const { packages, setSelectedPackage, setActiveModal, currency, language, t } = useApp();
+  const { packages, setSelectedPackage, setActiveModal, currency, language, t, systemSettings, updateSystemSettings } = useApp();
+
+  // Load saved default map mode or system default
+  const savedDefault = useMemo<MapMode>(() => {
+    try {
+      const local = localStorage.getItem('khb_default_map_mode') as MapMode | null;
+      if (local && MAP_MODE_CONFIG[local]) return local;
+      if (systemSettings?.defaultMapMode && MAP_MODE_CONFIG[systemSettings.defaultMapMode]) {
+        return systemSettings.defaultMapMode;
+      }
+    } catch {
+      // Fallback
+    }
+    return 'dark_matter';
+  }, [systemSettings?.defaultMapMode]);
+
+  const [mapMode, setMapMode] = useState<MapMode>(savedDefault);
+  const [defaultSavedStatus, setDefaultSavedStatus] = useState<boolean>(false);
   const [selectedPkgId, setSelectedPkgId] = useState<string | null>(packages[0]?.id || null);
   const [hoveredPkgId, setHoveredPkgId] = useState<string | null>(null);
   const [selectedFilterTag, setSelectedFilterTag] = useState<string>('all');
   const [activeRegion, setActiveRegion] = useState<string>('all');
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [mapTheme, setMapTheme] = useState<'radar' | 'emerald' | 'amber'>('radar');
   const [showDetailCard, setShowDetailCard] = useState<boolean>(true);
+  const [showModeDropdown, setShowModeDropdown] = useState<boolean>(false);
   const [mouseGeo, setMouseGeo] = useState<{ lat: number; lng: number }>({ lat: 11.5564, lng: 104.9282 });
+
+  // Sync if systemSettings changes
+  useEffect(() => {
+    const local = localStorage.getItem('khb_default_map_mode') as MapMode | null;
+    if (!local && systemSettings?.defaultMapMode) {
+      setMapMode(systemSettings.defaultMapMode);
+    }
+  }, [systemSettings?.defaultMapMode]);
 
   // Drag & Pan state
   const [isDragging, setIsDragging] = useState(false);
@@ -104,6 +164,19 @@ export const InteractiveMap: React.FC = () => {
     };
   }, [activePkg, originHub]);
 
+  const handleSetAsDefaultMap = (modeToSave: MapMode = mapMode) => {
+    try {
+      localStorage.setItem('khb_default_map_mode', modeToSave);
+      if (updateSystemSettings) {
+        updateSystemSettings({ defaultMapMode: modeToSave });
+      }
+      setDefaultSavedStatus(true);
+      setTimeout(() => setDefaultSavedStatus(false), 2500);
+    } catch {
+      // Fallback
+    }
+  };
+
   const handlePinClick = (pkg: TourPackage) => {
     setSelectedPkgId(pkg.id);
     setSelectedPackage(pkg);
@@ -122,7 +195,7 @@ export const InteractiveMap: React.FC = () => {
     }
   };
 
-  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.3, 3.0));
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.3, 3.2));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.3, 0.9));
   const handleResetView = () => {
     setZoomLevel(1);
@@ -140,8 +213,7 @@ export const InteractiveMap: React.FC = () => {
 
   // Pointer / Touch Dragging Handlers
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Avoid initiating drag on button clicks
-    if ((e.target as HTMLElement).closest('button')) return;
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input')) return;
     setIsDragging(true);
     dragStartRef.current = {
       startX: e.clientX,
@@ -153,7 +225,6 @@ export const InteractiveMap: React.FC = () => {
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Update live geo coordinates HUD based on cursor position
     if (mapContainerRef.current) {
       const rect = mapContainerRef.current.getBoundingClientRect();
       const normX = (e.clientX - rect.left) / rect.width;
@@ -168,8 +239,8 @@ export const InteractiveMap: React.FC = () => {
     const deltaY = (e.clientY - dragStartRef.current.startY) / (zoomLevel * 4);
 
     setPanOffset({
-      x: Math.max(-100, Math.min(100, dragStartRef.current.startPanX + deltaX)),
-      y: Math.max(-100, Math.min(100, dragStartRef.current.startPanY + deltaY))
+      x: Math.max(-120, Math.min(120, dragStartRef.current.startPanX + deltaX)),
+      y: Math.max(-120, Math.min(120, dragStartRef.current.startPanY + deltaY))
     });
   };
 
@@ -184,17 +255,18 @@ export const InteractiveMap: React.FC = () => {
     }
   };
 
-  // Wheel Zoom Listener
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     if (e.ctrlKey || e.metaKey || e.shiftKey || Math.abs(e.deltaY) > 5) {
       e.preventDefault();
       if (e.deltaY < 0) {
-        setZoomLevel(prev => Math.min(prev + 0.15, 3.0));
+        setZoomLevel(prev => Math.min(prev + 0.15, 3.2));
       } else {
         setZoomLevel(prev => Math.max(prev - 0.15, 0.9));
       }
     }
   }, []);
+
+  const CurrentModeIcon = MAP_MODE_CONFIG[mapMode]?.icon || MapIcon;
 
   return (
     <section className="py-12 sm:py-16 bg-slate-950 text-white relative overflow-hidden border-t border-slate-800">
@@ -204,14 +276,16 @@ export const InteractiveMap: React.FC = () => {
       <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
-        {/* Header Section */}
+        {/* Header Section with Map Mode Switcher & Region Filters */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-semibold mb-2.5 shadow-xs">
               <Compass className="w-3.5 h-3.5 animate-spin-slow" />
               <span>{language === 'km' ? 'ផែនទីបេសកកម្មអន្តរកម្ម B2B' : 'Interactive Trade Mission Atlas'}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">Live Radar</span>
+              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                {mapMode === 'satellite' ? 'Real Satellite' : mapMode === 'street' ? 'Real Street' : mapMode === 'dark_matter' ? 'Real World Dark' : 'Cyber Radar'}
+              </span>
             </div>
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight flex items-center gap-3">
               <span>{t('popularDestinations')}</span>
@@ -223,8 +297,111 @@ export const InteractiveMap: React.FC = () => {
             </p>
           </div>
 
-          {/* Region Quick Filters & Map Themes */}
+          {/* Map Layer Selector, Default Setter & Region Filters */}
           <div className="flex flex-wrap items-center gap-2">
+            {/* Map Mode Selector Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowModeDropdown(prev => !prev)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-slate-200 transition-all cursor-pointer shadow-xs"
+                title="Switch Map Visual Layer"
+              >
+                <CurrentModeIcon className="w-3.5 h-3.5 text-sky-400" />
+                <span>{language === 'km' ? MAP_MODE_CONFIG[mapMode].labelKm : MAP_MODE_CONFIG[mapMode].label}</span>
+                <span className="text-[10px] text-slate-500">▼</span>
+              </button>
+
+              {showModeDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowModeDropdown(false)} />
+                  <div className="absolute right-0 top-full mt-1.5 w-60 bg-slate-900/95 backdrop-blur-xl rounded-2xl p-1.5 border border-slate-750 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-800 mb-1 flex items-center justify-between">
+                      <span>{language === 'km' ? 'ជ្រើសរើសប្រភេទផែនទី' : 'Select Map View'}</span>
+                    </div>
+
+                    {(Object.keys(MAP_MODE_CONFIG) as MapMode[]).map(modeKey => {
+                      const modeCfg = MAP_MODE_CONFIG[modeKey];
+                      const ModeIconComp = modeCfg.icon;
+                      const isSelected = mapMode === modeKey;
+                      const isDefault = savedDefault === modeKey;
+
+                      return (
+                        <button
+                          key={modeKey}
+                          onClick={() => {
+                            setMapMode(modeKey);
+                            setShowModeDropdown(false);
+                          }}
+                          className={`w-full px-2.5 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                            isSelected
+                              ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30'
+                              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-sky-400 shrink-0">
+                              <ModeIconComp className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-xs truncate">
+                                  {language === 'km' ? modeCfg.labelKm : modeCfg.label}
+                                </span>
+                                {isDefault && (
+                                  <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[9px] font-bold">
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-slate-400 truncate mt-0.5">{modeCfg.description}</p>
+                            </div>
+                          </div>
+                          {isSelected && <Check className="w-4 h-4 text-sky-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+
+                    <div className="pt-1.5 mt-1 border-t border-slate-800">
+                      <button
+                        onClick={() => {
+                          handleSetAsDefaultMap(mapMode);
+                          setShowModeDropdown(false);
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/30 text-sky-300 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
+                        <span>{language === 'km' ? 'កំណត់ជាផែនទីលំនាំដើម' : 'Set Current View as Default'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Set Default Quick Button */}
+            <button
+              onClick={() => handleSetAsDefaultMap(mapMode)}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                defaultSavedStatus
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-black'
+                  : 'bg-slate-900/90 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white'
+              }`}
+              title="Save current map style as your default view"
+            >
+              {defaultSavedStatus ? (
+                <>
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>{language === 'km' ? 'បានរក្សាទុក' : 'Default Saved!'}</span>
+                </>
+              ) : (
+                <>
+                  <Bookmark className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">{language === 'km' ? 'កំណត់លំនាំដើម' : 'Set as Default'}</span>
+                </>
+              )}
+            </button>
+
+            {/* Region Filters */}
             <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-2xl p-1 shadow-inner overflow-x-auto no-scrollbar max-w-full">
               {REGIONS.map(reg => (
                 <button
@@ -240,26 +417,6 @@ export const InteractiveMap: React.FC = () => {
                 </button>
               ))}
             </div>
-
-            <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-2xl p-1">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'canton', label: 'Canton Fair' },
-                { id: 'vietnam', label: 'Vietnam F&B' },
-              ].map(tag => (
-                <button
-                  key={tag.id}
-                  onClick={() => setSelectedFilterTag(tag.id)}
-                  className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                    selectedFilterTag === tag.id
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {tag.label}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -271,9 +428,13 @@ export const InteractiveMap: React.FC = () => {
           onPointerUp={handlePointerUp}
           onPointerLeave={handlePointerUp}
           onWheel={handleWheel}
-          className={`relative w-full aspect-[4/3] sm:aspect-[16/9] min-h-[440px] sm:min-h-[500px] max-h-[640px] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-0 select-none group touch-none ${
-            isDragging ? 'cursor-grabbing' : 'cursor-grab'
-          }`}
+          className={`relative w-full aspect-[4/3] sm:aspect-[16/9] min-h-[440px] sm:min-h-[500px] max-h-[640px] rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-0 select-none group touch-none ${
+            mapMode === 'satellite'
+              ? 'bg-slate-950'
+              : mapMode === 'street'
+              ? 'bg-slate-900'
+              : 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950'
+          } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         >
           {/* Top-Left Telemetry HUD */}
           <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 flex items-center gap-2 sm:gap-3 bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-800/90 shadow-xl text-xs">
@@ -342,10 +503,42 @@ export const InteractiveMap: React.FC = () => {
               transformOrigin: 'center center'
             }}
           >
-            {/* Vector World Grid and Landmass SVG */}
+            {/* REAL WORLD RASTER TILES / SATELLITE BACKGROUND LAYER */}
+            {mapMode !== 'radar_atlas' && (
+              <div className="absolute inset-0 w-full h-full pointer-events-auto overflow-hidden">
+                <img
+                  src={
+                    mapMode === 'satellite'
+                      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/4/7/12'
+                      : mapMode === 'street'
+                      ? 'https://basemaps.cartocdn.com/rastertiles/voyager/4/12/7@2x.png'
+                      : 'https://basemaps.cartocdn.com/rastertiles/dark_all/4/12/7@2x.png'
+                  }
+                  alt="Real World Map Background"
+                  className="w-full h-full object-cover opacity-85 select-none"
+                  onError={(e) => {
+                    // Fallback to high-res static world atlas layer
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+                <div
+                  className={`absolute inset-0 ${
+                    mapMode === 'satellite'
+                      ? 'bg-slate-950/20'
+                      : mapMode === 'street'
+                      ? 'bg-slate-950/30'
+                      : 'bg-slate-950/40'
+                  }`}
+                />
+              </div>
+            )}
+
+            {/* VECTOR WORLD GRID, LANDMASS & FLIGHT CORRIDORS SVG */}
             <svg
               viewBox="0 0 1000 500"
-              className="w-full h-full text-slate-800/80 fill-current select-none pointer-events-auto"
+              className={`w-full h-full select-none pointer-events-auto ${
+                mapMode === 'radar_atlas' ? 'text-slate-800/80 fill-current' : 'fill-none'
+              }`}
               aria-hidden="true"
             >
               <defs>
@@ -361,30 +554,23 @@ export const InteractiveMap: React.FC = () => {
                   <stop offset="100%" stopColor="#06b6d4" />
                 </linearGradient>
 
-                {/* Radar Sweep Gradient */}
-                <radialGradient id="radarSweepGradient" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.25" />
-                  <stop offset="60%" stopColor="#0284c7" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
-                </radialGradient>
-
                 {/* Radar Grid Pattern */}
                 <pattern id="radarGrid" width="40" height="40" patternUnits="userSpaceOnUse">
                   <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
                 </pattern>
               </defs>
 
-              {/* Coordinate Grid Background */}
-              <rect width="1000" height="500" fill="url(#radarGrid)" />
+              {/* Coordinate Grid Background on Radar mode */}
+              {mapMode === 'radar_atlas' && <rect width="1000" height="500" fill="url(#radarGrid)" />}
 
               {/* Radar Rings Centered on Phnom Penh */}
               <circle cx="728" cy="306" r="60" fill="none" stroke="#0ea5e9" strokeWidth="0.5" strokeDasharray="3 6" opacity="0.35" />
               <circle cx="728" cy="306" r="140" fill="none" stroke="#0ea5e9" strokeWidth="0.5" strokeDasharray="3 8" opacity="0.25" />
               <circle cx="728" cy="306" r="220" fill="none" stroke="#0ea5e9" strokeWidth="0.5" strokeDasharray="4 12" opacity="0.15" />
 
-              {/* Radar Sweep Beam */}
+              {/* Radar Sweep Beam (Active in radar mode or subtle in other modes) */}
               <g transform="translate(728, 306)">
-                <line x1="0" y1="0" x2="260" y2="0" stroke="#38bdf8" strokeWidth="1.2" opacity="0.5" className="animate-radar-sweep" />
+                <line x1="0" y1="0" x2="260" y2="0" stroke="#38bdf8" strokeWidth="1.2" opacity={mapMode === 'radar_atlas' ? 0.6 : 0.25} className="animate-radar-sweep" />
               </g>
 
               {/* Equator & Meridian Reference Lines */}
@@ -392,88 +578,52 @@ export const InteractiveMap: React.FC = () => {
               <line x1="500" y1="0" x2="500" y2="500" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 6" opacity="0.4" />
               <line x1="728" y1="0" x2="728" y2="500" stroke="#0ea5e9" strokeWidth="0.5" strokeDasharray="2 8" opacity="0.25" />
 
-              {/* Continents Outlines */}
-              {/* North America */}
-              <path
-                d="M 120,60 Q 180,45 240,65 Q 290,95 270,155 Q 245,190 200,215 Q 165,230 135,190 Q 95,145 110,95 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="1"
-              />
-              <path
-                d="M 180,40 Q 230,30 275,48 Q 295,75 255,95 Q 210,80 180,40 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="0.8"
-              />
-
-              {/* South America */}
-              <path
-                d="M 255,250 Q 305,260 335,310 Q 345,370 315,430 Q 275,440 255,390 Q 225,330 235,280 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="1"
-              />
-
-              {/* Europe & Mediterranean */}
-              <path
-                d="M 465,85 Q 535,75 565,115 Q 555,155 505,165 Q 455,155 445,115 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="1"
-              />
-              <path
-                d="M 435,55 Q 455,45 475,65 Q 455,85 435,65 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="0.8"
-              />
-
-              {/* Africa */}
-              <path
-                d="M 475,175 Q 555,185 575,255 Q 565,355 515,395 Q 475,355 455,275 Q 445,215 475,175 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="1"
-              />
-
-              {/* Asia & Eurasia Continental Mass */}
-              <path
-                d="M 575,75 Q 735,65 845,115 Q 895,175 875,255 Q 795,275 715,235 Q 635,215 585,155 Z"
-                className="fill-slate-800/90 stroke-sky-900/60"
-                strokeWidth="1.2"
-              />
-
-              {/* Japan Arch & Korea Peninsula */}
-              <path
-                d="M 835,145 Q 855,165 845,195 Q 830,175 835,145 Z"
-                className="fill-slate-700/80 stroke-slate-600/70"
-                strokeWidth="1"
-              />
-              <path
-                d="M 805,155 Q 815,165 810,185 Q 800,175 805,155 Z"
-                className="fill-slate-700/80 stroke-slate-600/70"
-                strokeWidth="0.8"
-              />
-
-              {/* Indochina & Southeast Asia */}
-              <path
-                d="M 710,230 Q 755,240 765,280 Q 750,320 720,310 Q 700,270 710,230 Z"
-                className="fill-slate-750/90 stroke-sky-700/80"
-                strokeWidth="1.5"
-              />
-              {/* Maritime Southeast Asia & Indonesia */}
-              <path
-                d="M 725,325 Q 775,335 815,355 Q 785,385 735,365 Z"
-                className="fill-slate-800/80 stroke-slate-700/60"
-                strokeWidth="1"
-              />
-              <path
-                d="M 800,270 Q 820,285 810,315 Q 795,300 800,270 Z"
-                className="fill-slate-800/80 stroke-slate-700/60"
-                strokeWidth="0.8"
-              />
-
-              {/* Australia & Oceania */}
-              <path
-                d="M 775,355 Q 875,345 895,405 Q 855,455 785,435 Q 755,395 775,355 Z"
-                className="fill-slate-800/70 stroke-slate-700/60"
-                strokeWidth="1"
-              />
+              {/* Continents Outlines (Shown strongly in radar mode, subtle outline in real modes) */}
+              {mapMode === 'radar_atlas' && (
+                <>
+                  {/* North America */}
+                  <path
+                    d="M 120,60 Q 180,45 240,65 Q 290,95 270,155 Q 245,190 200,215 Q 165,230 135,190 Q 95,145 110,95 Z"
+                    className="fill-slate-800/70 stroke-slate-700/60"
+                    strokeWidth="1"
+                  />
+                  {/* South America */}
+                  <path
+                    d="M 255,250 Q 305,260 335,310 Q 345,370 315,430 Q 275,440 255,390 Q 225,330 235,280 Z"
+                    className="fill-slate-800/70 stroke-slate-700/60"
+                    strokeWidth="1"
+                  />
+                  {/* Europe & Africa */}
+                  <path
+                    d="M 465,85 Q 535,75 565,115 Q 555,155 505,165 Q 455,155 445,115 Z"
+                    className="fill-slate-800/70 stroke-slate-700/60"
+                    strokeWidth="1"
+                  />
+                  <path
+                    d="M 475,175 Q 555,185 575,255 Q 565,355 515,395 Q 475,355 455,275 Q 445,215 475,175 Z"
+                    className="fill-slate-800/70 stroke-slate-700/60"
+                    strokeWidth="1"
+                  />
+                  {/* Asia & Eurasia */}
+                  <path
+                    d="M 575,75 Q 735,65 845,115 Q 895,175 875,255 Q 795,275 715,235 Q 635,215 585,155 Z"
+                    className="fill-slate-800/90 stroke-sky-900/60"
+                    strokeWidth="1.2"
+                  />
+                  {/* Indochina & Southeast Asia */}
+                  <path
+                    d="M 710,230 Q 755,240 765,280 Q 750,320 720,310 Q 700,270 710,230 Z"
+                    className="fill-slate-750/90 stroke-sky-700/80"
+                    strokeWidth="1.5"
+                  />
+                  {/* Australia */}
+                  <path
+                    d="M 775,355 Q 875,345 895,405 Q 855,455 785,435 Q 755,395 775,355 Z"
+                    className="fill-slate-800/70 stroke-slate-700/60"
+                    strokeWidth="1"
+                  />
+                </>
+              )}
 
               {/* Flight Corridors (Geodesic Arcs from Phnom Penh Hub) */}
               {filteredPackages.map(pkg => {
@@ -481,29 +631,25 @@ export const InteractiveMap: React.FC = () => {
                 const isHovered = hoveredPkgId === pkg.id;
                 const isHighlighted = isSelected || isHovered;
 
-                // SVG coordinates (0-1000, 0-500)
                 const startX = (originHub.mapX / 100) * 1000;
                 const startY = (originHub.mapY / 100) * 500;
                 const endX = (pkg.coordinates.mapX / 100) * 1000;
                 const endY = (pkg.coordinates.mapY / 100) * 500;
 
-                // Arc control point for curvature
                 const midX = (startX + endX) / 2;
                 const midY = Math.min(startY, endY) - 35;
 
                 return (
                   <g key={`corridor-${pkg.id}`} className="transition-opacity duration-300">
-                    {/* Background Guide Arc */}
                     <path
                       d={`M ${startX},${startY} Q ${midX},${midY} ${endX},${endY}`}
                       fill="none"
                       stroke={isHighlighted ? '#38bdf8' : '#334155'}
                       strokeWidth={isHighlighted ? 2.5 : 1}
-                      strokeOpacity={isHighlighted ? 0.9 : 0.35}
+                      strokeOpacity={isHighlighted ? 0.95 : 0.4}
                       strokeDasharray={isHighlighted ? '6 4' : '3 4'}
                     />
 
-                    {/* Animated moving comet pulse on highlighted corridor */}
                     {isHighlighted && (
                       <path
                         d={`M ${startX},${startY} Q ${midX},${midY} ${endX},${endY}`}
@@ -520,7 +666,7 @@ export const InteractiveMap: React.FC = () => {
 
               {/* Base Hub SVG Beacon (Phnom Penh) */}
               <g transform={`translate(${(originHub.mapX / 100) * 1000}, ${(originHub.mapY / 100) * 500})`}>
-                <circle r="16" fill="none" stroke="#10b981" strokeWidth="1" opacity="0.4" className="animate-ping" />
+                <circle r="16" fill="none" stroke="#10b981" strokeWidth="1" opacity="0.5" className="animate-ping" />
                 <circle r="8" fill="#065f46" stroke="#34d399" strokeWidth="2" />
                 <circle r="3" fill="#ffffff" />
               </g>

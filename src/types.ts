@@ -833,6 +833,7 @@ export interface SystemSettings {
 
   // UI Theme, Palette & Typography Scaling
   themePreset?: 'navy' | 'emerald' | 'crimson' | 'indigo' | 'amber' | 'cyan' | 'slate' | 'custom';
+  defaultMapMode?: 'dark_matter' | 'satellite' | 'street' | 'radar_atlas';
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;

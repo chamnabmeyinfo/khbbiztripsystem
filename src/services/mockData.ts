@@ -1527,6 +1527,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
 
   // UI Theme, Palette & Typography Scaling Defaults
   themePreset: 'navy',
+  defaultMapMode: 'dark_matter',
   primaryColor: '#0284c7',
   secondaryColor: '#0f172a',
   accentColor: '#f59e0b',
