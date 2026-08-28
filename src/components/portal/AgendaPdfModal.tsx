@@ -23,7 +23,8 @@ import {
   Stamp,
   Sparkles,
   Layers,
-  RotateCcw
+  RotateCcw,
+  ChevronDown
 } from 'lucide-react';
 import { OptionalTourProgram, LanguageCode } from '../../types';
 import {
@@ -51,7 +52,7 @@ const LANGUAGE_OPTIONS: { code: LanguageCode; label: string; flag: string }[] = 
   { code: 'ja', label: '日本語', flag: '🇯🇵' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'ar', label: 'العربية', flag: '🇦🇪' },
-  { code: 'he', label: 'עברית', flag: '🇮🇱' },
+  { code: 'he', label: 'עבריត', flag: '🇮🇱' },
 ];
 
 const WATERMARK_PRESETS = [
@@ -89,6 +90,7 @@ export const AgendaPdfModal: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('html_pdf');
+  const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
   const [showOptionsDrawer, setShowOptionsDrawer] = useState(false);
   const [showWatermarkDrawer, setShowWatermarkDrawer] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<number>(0.9);
@@ -395,32 +397,110 @@ export const AgendaPdfModal: React.FC = () => {
               <span className="hidden lg:inline">Print</span>
             </button>
 
-            {/* Main Download Button */}
-            <button
-              onClick={handleDownloadPdf}
-              disabled={isGenerating}
-              className={`px-3 sm:px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer bg-sky-600 hover:bg-sky-700 text-white shadow-xs font-black inline-flex items-center justify-center gap-1.5 leading-none active:scale-95 shrink-0 ${
-                downloadSuccess ? '!bg-emerald-600' : ''
-              }`}
-            >
-              {isGenerating ? (
+            {/* Main Download Button with Format Dropdown */}
+            <div className="relative shrink-0">
+              <div className="inline-flex items-stretch rounded-xl shadow-xs overflow-hidden bg-sky-600 hover:bg-sky-700 transition-colors">
+                <button
+                  onClick={() => handleDownloadPdf()}
+                  disabled={isGenerating}
+                  className={`px-3 sm:px-3.5 py-2 font-bold text-xs text-white inline-flex items-center justify-center gap-1.5 cursor-pointer leading-none active:scale-95 transition-all ${
+                    downloadSuccess ? '!bg-emerald-600' : ''
+                  }`}
+                  title={`Download Agenda as ${FORMAT_OPTIONS.find(f => f.value === exportFormat)?.label || 'Document'}`}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="hidden sm:inline">Generating...</span>
+                    </>
+                  ) : downloadSuccess ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Downloaded!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                      <span className="hidden lg:inline text-[11px] font-medium opacity-90">
+                        ({exportFormat === 'doc' ? 'DOC' : exportFormat === 'html' ? 'HTML' : 'PDF'})
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDownloadDropdown(prev => !prev)}
+                  disabled={isGenerating}
+                  className="px-2 border-l border-sky-500/60 hover:bg-sky-800/40 text-white flex items-center justify-center cursor-pointer transition-colors"
+                  title="Choose Export Format (PDF, Word, HTML)"
+                >
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showDownloadDropdown ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {/* Format Dropdown Menu */}
+              {showDownloadDropdown && (
                 <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span className="hidden sm:inline">Generating...</span>
-                </>
-              ) : downloadSuccess ? (
-                <>
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Downloaded!</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="sm:hidden">Download</span>
-                  <span className="hidden sm:inline">Download {FORMAT_OPTIONS.find(f => f.value === exportFormat)?.label || 'Document'}</span>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowDownloadDropdown(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 w-64 sm:w-72 bg-white dark:bg-slate-850 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700/80 p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800 mb-1">
+                      Choose Export Format
+                    </div>
+                    {FORMAT_OPTIONS.map(opt => {
+                      const isSelected = exportFormat === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setExportFormat(opt.value);
+                            setShowDownloadDropdown(false);
+                            setTimeout(() => handleDownloadPdf(), 100);
+                          }}
+                          className={`w-full px-2.5 py-2 rounded-xl text-left text-xs transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                            isSelected
+                              ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800/60'
+                              : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                              opt.value === 'doc'
+                                ? 'bg-blue-100 dark:bg-blue-950 text-blue-600'
+                                : opt.value === 'html'
+                                ? 'bg-amber-100 dark:bg-amber-950 text-amber-600'
+                                : 'bg-rose-100 dark:bg-rose-950 text-rose-600'
+                            }`}>
+                              <FileText className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900 dark:text-white truncate text-[11px] leading-tight">
+                                {opt.label}
+                              </p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                                {opt.value === 'html_pdf'
+                                  ? 'Official A4 with embedded seals'
+                                  : opt.value === 'pdf_image'
+                                  ? 'Rasterized image PDF'
+                                  : opt.value === 'doc'
+                                  ? 'Editable Microsoft Word format'
+                                  : 'Standalone HTML webpage file'}
+                              </p>
+                            </div>
+                          </div>
+                          {isSelected && <Check className="w-4 h-4 text-sky-600 shrink-0 stroke-[2.5]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </>
               )}
-            </button>
+            </div>
 
             {/* Close Modal Button */}
             <button
@@ -433,34 +513,17 @@ export const AgendaPdfModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 text-xs overflow-x-auto no-scrollbar print:hidden shrink-0">
-          {/* Format Options */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 shrink-0">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-0.5 sm:mr-1 inline-flex items-center leading-none shrink-0">
-              Export:
+        <div className="px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 sm:gap-3 text-xs overflow-x-auto no-scrollbar print:hidden shrink-0">
+          {/* Left: Summary Badge / Format Tag */}
+          <div className="flex items-center gap-1.5 py-0.5 shrink-0">
+            <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-bold text-[11px] inline-flex items-center gap-1.5 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+              <span className="font-mono text-sky-600 dark:text-sky-400 uppercase">{exportFormat === 'doc' ? 'Word Doc' : exportFormat === 'html' ? 'HTML Page' : 'PDF Document'}</span>
             </span>
-            <div className="inline-flex items-center p-0.5 bg-slate-200/70 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-2xs shrink-0">
-              {FORMAT_OPTIONS.map(opt => {
-                const isSelected = exportFormat === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => setExportFormat(opt.value)}
-                    className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold text-[11px] sm:text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 leading-none ${
-                      isSelected
-                        ? 'bg-sky-600 text-white shadow-xs font-black'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {/* Config Controls Track */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 justify-start sm:justify-end shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5 justify-end shrink-0">
             {/* Language Selector */}
             <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 rounded-xl px-2.5 py-1 shrink-0 shadow-2xs">
               <Globe className="w-3.5 h-3.5 text-sky-600 shrink-0" />
