@@ -4310,11 +4310,12 @@ Highlights:
             </div>
           )}
 
-          {/* Modal Footer Controls */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-            <div className="text-xs text-slate-400 flex items-center gap-1.5">
+          {/* Sticky Modal Footer Controls */}
+          <div className="sticky bottom-0 -mx-6 -mb-6 px-6 py-3.5 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.5)]">
+            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
+              <span className="hidden sm:inline">Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
+              <span className="sm:hidden">Auto-syncs to Cloud & Storage</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -4341,7 +4342,7 @@ Highlights:
                 onClick={() => {
                   if (status === 'draft') setStatus('active');
                 }}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
               >
                 <Save className="w-4 h-4" />
                 <span>{status === 'draft' ? '🚀 Publish Live (Active)' : isEditing ? 'Save All Package Updates' : 'Publish Tour Package'}</span>
