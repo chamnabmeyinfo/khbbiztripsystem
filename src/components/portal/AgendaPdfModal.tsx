@@ -304,7 +304,7 @@ export const AgendaPdfModal: React.FC = () => {
       id="agenda-pdf-modal"
     >
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-5xl w-full my-auto h-[95vh] flex flex-col overflow-hidden">
-        <div className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/95 dark:bg-slate-850/95 backdrop-blur-md print:hidden shrink-0 gap-2 sm:gap-4">
+        <div className="relative z-40 px-3.5 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/95 dark:bg-slate-850/95 backdrop-blur-md print:hidden shrink-0 gap-2 sm:gap-4">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20 shrink-0">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -398,7 +398,7 @@ export const AgendaPdfModal: React.FC = () => {
             </button>
 
             {/* Main Download Button with Format Dropdown */}
-            <div className="relative shrink-0">
+            <div className="relative z-50 shrink-0">
               <div className="inline-flex items-stretch rounded-xl shadow-xs overflow-hidden bg-sky-600 hover:bg-sky-700 transition-colors">
                 <button
                   onClick={() => handleDownloadPdf()}
@@ -447,7 +447,7 @@ export const AgendaPdfModal: React.FC = () => {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowDownloadDropdown(false)}
                   />
-                  <div className="absolute right-0 top-full mt-1.5 w-64 sm:w-72 bg-white dark:bg-slate-850 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700/80 p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="absolute right-0 top-full mt-1.5 w-64 sm:w-72 bg-white dark:bg-slate-850 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-750 p-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800 mb-1">
                       Choose Export Format
                     </div>
@@ -513,7 +513,7 @@ export const AgendaPdfModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 sm:gap-3 text-xs overflow-x-auto no-scrollbar print:hidden shrink-0">
+        <div className="relative z-10 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 sm:gap-3 text-xs overflow-x-auto no-scrollbar print:hidden shrink-0">
           {/* Left: Summary Badge / Format Tag */}
           <div className="flex items-center gap-1.5 py-0.5 shrink-0">
             <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-bold text-[11px] inline-flex items-center gap-1.5 shadow-2xs">
