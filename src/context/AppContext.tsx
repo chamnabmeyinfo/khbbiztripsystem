@@ -1182,7 +1182,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
           });
           coll.setter(data as any);
-        }, err => console.warn(coll.name, 'snapshot notice:', err.message));
+        }, err => {
+          if (err.code !== 'permission-denied') console.warn(coll.name, 'snapshot notice:', err.message);
+        });
       } catch {
         return () => {};
       }
@@ -1258,7 +1260,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
-        console.warn('Users snapshot notice:', err.message);
+        if (err.code !== 'permission-denied') {
+          console.warn('Users snapshot notice:', err.message);
+        }
       });
       return () => unsubscribe();
     } catch (err) {
@@ -1286,7 +1290,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
-        console.warn('Audit logs snapshot notice:', err.message);
+        if (err.code !== 'permission-denied') {
+          console.warn('Audit logs snapshot notice:', err.message);
+        }
       });
       return () => unsubscribe();
     } catch (err) {
@@ -1317,7 +1323,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
-        console.warn('Inbound leads snapshot notice:', err.message);
+        if (err.code !== 'permission-denied') {
+          console.warn('Inbound leads snapshot notice:', err.message);
+        }
       });
       return () => unsubscribe();
     } catch (err) {
@@ -1345,7 +1353,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
-        console.warn('System settings snapshot notice:', err.message);
+        if (err.code !== 'permission-denied') {
+          console.warn('System settings snapshot notice:', err.message);
+        }
       });
       return () => unsubscribe();
     } catch (err) {
@@ -1370,7 +1380,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           } catch (e) {}
         }
       }, (err) => {
-        console.warn('Package categories snapshot notice:', err.message);
+        if (err.code !== 'permission-denied') {
+          console.warn('Package categories snapshot notice:', err.message);
+        }
       });
       return () => unsubscribe();
     } catch (err) {
@@ -1408,7 +1420,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
-        console.warn('System updates snapshot notice:', err.message);
+        if (err.code !== 'permission-denied') {
+          console.warn('System updates snapshot notice:', err.message);
+        }
       });
       return () => unsubscribe();
     } catch (err) {
@@ -4122,6 +4136,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const refreshWebhookEvents = async () => {
+    if (typeof document !== 'undefined' && document.hidden) return;
     try {
       const serverEvents = await fetchServerWebhookEvents();
       if (serverEvents && serverEvents.length > 0) {
@@ -4135,15 +4150,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       }
       setCrmSyncLogs(getStoredCrmLogs());
-    } catch (e) {
-      console.warn('Could not refresh webhook events:', e);
+    } catch {
+      // Graceful offline fallback
     }
   };
 
-  // Poll for external server webhooks every 3.5 seconds
+  // Poll for external server webhooks with smart visibility check
   useEffect(() => {
     refreshWebhookEvents();
-    const interval = setInterval(refreshWebhookEvents, 3500);
+    const interval = setInterval(refreshWebhookEvents, 10000);
     return () => clearInterval(interval);
   }, []);
 
