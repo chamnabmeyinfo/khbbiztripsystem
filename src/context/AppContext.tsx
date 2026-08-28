@@ -3977,7 +3977,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify([newRecord, ...systemUpdates.filter(r => r.id !== id)]));
       const cleanPayload = sanitizeForFirestore(newRecord);
       setDoc(doc(db, 'system_updates', id), cleanPayload, { merge: true }).catch(err => {
-        console.warn('Firestore recordSystemUpdate notice:', err);
+        if (err?.code !== 'permission-denied') {
+          console.warn('Firestore recordSystemUpdate notice:', err);
+        }
       });
     } catch (e) {}
 
@@ -3990,7 +3992,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       const remaining = systemUpdates.filter(u => u.id !== id);
       localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(remaining));
-      deleteDoc(doc(db, 'system_updates', id)).catch(err => console.warn(err));
+      deleteDoc(doc(db, 'system_updates', id)).catch(err => {
+        if (err?.code !== 'permission-denied') {
+          console.warn(err);
+        }
+      });
     } catch (e) {}
   };
 
@@ -4155,10 +4161,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  // Poll for external server webhooks with smart visibility check
+  // Poll for external server webhooks when active in admin dashboard
   useEffect(() => {
+    if (activeView !== 'admin_dashboard') return;
     refreshWebhookEvents();
-    const interval = setInterval(refreshWebhookEvents, 10000);
+    const interval = setInterval(refreshWebhookEvents, 15000);
     return () => clearInterval(interval);
   }, []);
 
