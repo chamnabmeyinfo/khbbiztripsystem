@@ -341,6 +341,8 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       setDescriptionKm(pkg.descriptionKm || pkg.description || '');
       setDescriptionEn(pkg.descriptionEn || '');
       setImages(pkg.images || []);
+      setVideos(pkg.videos || []);
+      setFeaturedVideoUrl(pkg.featuredVideoUrl || '');
       setHighlightsKm(pkg.highlightsKm !== undefined ? pkg.highlightsKm : (pkg.highlights || []));
       setHighlightsEn(pkg.highlightsEn !== undefined ? pkg.highlightsEn : []);
       setWhoShouldJoinKm(pkg.whoShouldJoinKm !== undefined ? pkg.whoShouldJoinKm : (pkg.whoShouldJoin || []));
@@ -624,9 +626,23 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   const handleSetHeroImage = (index: number) => {
     if (index === 0 || index >= images.length) return;
-    const hero = images[index];
-    const rest = images.filter((_, i) => i !== index);
-    setImages([hero, ...rest]);
+    setImages(prev => {
+      const hero = prev[index];
+      const rest = prev.filter((_, i) => i !== index);
+      return [hero, ...rest];
+    });
+  };
+
+  const handleMoveImage = (index: number, direction: 'left' | 'right') => {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= images.length) return;
+    setImages(prev => {
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
   };
 
   const handleGuidePhotoUpload = async (file: File | null) => {
@@ -642,12 +658,19 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   const handleAddImage = () => {
     if (!newImageUrl.trim()) return;
-    setImages([...images, newImageUrl.trim()]);
+    const splitUrls = newImageUrl
+      .split(/[\n,]+/)
+      .map(u => u.trim())
+      .filter(u => u.length > 0);
+    
+    if (splitUrls.length > 0) {
+      setImages(prev => [...prev, ...splitUrls]);
+    }
     setNewImageUrl('');
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   /**
@@ -793,7 +816,15 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   };
 
   const handleRemoveVideo = (index: number) => {
-    setVideos(prev => prev.filter((_, i) => i !== index));
+    const removedVid = videos[index];
+    const remaining = videos.filter((_, i) => i !== index);
+    setVideos(remaining);
+    if (removedVid && (removedVid.url === featuredVideoUrl || removedVid.isFeatured)) {
+      setFeaturedVideoUrl(remaining.length > 0 ? remaining[0].url : '');
+      if (remaining.length > 0) {
+        remaining[0].isFeatured = true;
+      }
+    }
   };
 
   const handleSetFeaturedVideo = (videoUrl: string) => {
@@ -2787,12 +2818,27 @@ Highlights:
                       Tour Package Image Gallery ({images.length} Images)
                     </label>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Upload photos directly from your device or paste image URLs. The first image will be used as the primary hero cover.
+                      Upload photos directly from your device or paste image URLs. The first image is used as the primary hero cover.
                     </p>
                   </div>
-                  <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-800/40">
-                    JPG, PNG, WEBP, AVIF
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {images.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('Remove all photos from this tour gallery?')) {
+                            setImages([]);
+                          }
+                        }}
+                        className="text-[10px] text-rose-500 hover:text-rose-700 font-bold cursor-pointer transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                    <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-800/40">
+                      JPG, PNG, WEBP, AVIF
+                    </span>
+                  </div>
                 </div>
 
                 {/* Hidden File Input for Image Upload */}
@@ -2865,7 +2911,7 @@ Highlights:
                           handleAddImage();
                         }
                       }}
-                      placeholder="Or paste direct image URL (Unsplash, CDN, or Cloud Storage link)..."
+                      placeholder="Or paste direct image URLs (comma or line separated)..."
                       className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
                     />
                     <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -2873,7 +2919,7 @@ Highlights:
                   <button
                     type="button"
                     onClick={handleAddImage}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs active:scale-95 transition-all"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Add URL</span>
@@ -2881,56 +2927,92 @@ Highlights:
                 </div>
 
                 {/* Image Thumbnails Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                  {images.map((imgUrl, i) => (
-                    <div
-                      key={i}
-                      className={`relative group rounded-2xl overflow-hidden border transition-all aspect-[16/10] bg-slate-100 dark:bg-slate-800 shadow-xs ${
-                        i === 0
-                          ? 'border-indigo-500 ring-2 ring-indigo-500/20'
-                          : 'border-slate-200 dark:border-slate-700/80 hover:border-indigo-300'
-                      }`}
-                    >
-                      <img
-                        src={imgUrl}
-                        alt={`Photo ${i + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                {images.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                    {images.map((imgUrl, i) => (
+                      <div
+                        key={i}
+                        className={`relative rounded-2xl overflow-hidden border transition-all aspect-[16/10] bg-slate-100 dark:bg-slate-800 shadow-sm flex flex-col justify-between ${
+                          i === 0
+                            ? 'border-indigo-500 ring-2 ring-indigo-500/30'
+                            : 'border-slate-200 dark:border-slate-700/80 hover:border-indigo-300'
+                        }`}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`Photo ${i + 1}`}
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80';
+                          }}
+                          className="w-full h-full object-cover"
+                        />
 
-                      {/* Top Overlay Badges & Actions */}
-                      <div className="absolute top-2 inset-x-2 flex items-center justify-between">
-                        {i === 0 ? (
-                          <span className="px-2 py-0.5 rounded-lg bg-indigo-600 text-white text-[9px] font-bold shadow-md flex items-center gap-1">
-                            ⭐ Primary Hero
+                        {/* Top Bar Badges & Actions */}
+                        <div className="absolute top-2 inset-x-2 flex items-center justify-between pointer-events-auto">
+                          {i === 0 ? (
+                            <span className="px-2 py-0.5 rounded-lg bg-indigo-600/90 text-white text-[9px] font-bold shadow-md flex items-center gap-1 backdrop-blur-xs">
+                              ⭐ Hero Cover
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSetHeroImage(i)}
+                              className="px-2 py-0.5 rounded-lg bg-black/70 hover:bg-indigo-600 text-white text-[9px] font-bold transition-all cursor-pointer backdrop-blur-xs shadow-md"
+                              title="Make this the primary hero cover image"
+                            >
+                              ⭐ Set Hero
+                            </button>
+                          )}
+
+                          <div className="flex items-center gap-1">
+                            {i > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => handleMoveImage(i, 'left')}
+                                className="p-1 rounded-lg bg-black/70 hover:bg-indigo-600 text-white text-[10px] transition-all cursor-pointer backdrop-blur-xs shadow-md"
+                                title="Move image left"
+                              >
+                                ◀
+                              </button>
+                            )}
+                            {i < images.length - 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleMoveImage(i, 'right')}
+                                className="p-1 rounded-lg bg-black/70 hover:bg-indigo-600 text-white text-[10px] transition-all cursor-pointer backdrop-blur-xs shadow-md"
+                                title="Move image right"
+                              >
+                                ▶
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(i)}
+                              className="p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white transition-all cursor-pointer shadow-md"
+                              title="Remove Photo"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Bottom Info Bar */}
+                        <div className="absolute bottom-1.5 inset-x-2 flex items-center justify-between pointer-events-none">
+                          <span className="px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono backdrop-blur-xs">
+                            #{i + 1}
                           </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleSetHeroImage(i)}
-                            className="px-2 py-0.5 rounded-lg bg-black/60 hover:bg-indigo-600 text-white text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-xs shadow-md"
-                            title="Make this the main cover image"
-                          >
-                            Set as Hero
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(i)}
-                          className="p-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-700 text-white opacity-0 group-hover:opacity-100 transition-all cursor-pointer shadow-md"
-                          title="Remove Image"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          <span className="px-1.5 py-0.5 rounded bg-black/60 text-white text-[8px] truncate max-w-[120px] font-mono backdrop-blur-xs">
+                            {imgUrl.startsWith('data:') ? 'Local Image' : imgUrl.split('/').pop()?.split('?')[0] || 'Image'}
+                          </span>
+                        </div>
                       </div>
-
-                      {/* Bottom Info */}
-                      <div className="absolute bottom-1.5 right-2 px-1.5 py-0.5 rounded bg-black/50 text-white text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                        #{i + 1}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 text-center text-slate-400 text-xs">
+                    No images added yet. Upload photos from your device or paste image URLs above.
+                  </div>
+                )}
               </div>
 
               {/* Bilingual Highlights */}
