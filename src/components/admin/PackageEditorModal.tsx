@@ -60,6 +60,7 @@ import {
   Tag
 } from 'lucide-react';
 import { PackageCategoryModal } from './PackageCategoryModal';
+import { uploadImage } from '../../services/imageUploadService';
 
 /**
  * Utility to compress and convert client image files into lightweight Base64 DataURLs.
@@ -576,6 +577,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const guidePhotoInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImages, setIsUploadingImages] = useState<boolean>(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
   const [isVideoDraggingOver, setIsVideoDraggingOver] = useState<boolean>(false);
@@ -604,16 +606,26 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const handleImageFilesUpload = async (files: FileList | File[] | null) => {
     if (!files || files.length === 0) return;
     setIsUploadingImages(true);
+    setImageUploadProgress('Preparing photos...');
     const uploadedUrls: string[] = [];
 
     const fileArray = Array.from(files);
-    for (const file of fileArray) {
+    for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i];
       if (!file.type.startsWith('image/')) continue;
+      setImageUploadProgress(`Processing photo ${i + 1} of ${fileArray.length}...`);
       try {
-        const compressedBase64 = await compressAndReadImage(file);
-        uploadedUrls.push(compressedBase64);
+        const permanentUrl = await uploadImage(file, {
+          folder: 'packages',
+          maxWidth: 1200,
+          maxHeight: 900,
+          quality: 0.78,
+          maxSizeBytes: 65000,
+          onProgress: (status) => setImageUploadProgress(`${status} (${i + 1}/${fileArray.length})`)
+        });
+        uploadedUrls.push(permanentUrl);
       } catch (err) {
-        console.error('Failed to compress/read image:', err);
+        console.error('Failed to compress/upload image:', err);
       }
     }
 
@@ -621,6 +633,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       setImages(prev => [...prev, ...uploadedUrls]);
     }
     setIsUploadingImages(false);
+    setImageUploadProgress(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -648,8 +661,14 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const handleGuidePhotoUpload = async (file: File | null) => {
     if (!file || !file.type.startsWith('image/')) return;
     try {
-      const compressedBase64 = await compressAndReadImage(file, 600, 0.85);
-      setGuidePhoto(compressedBase64);
+      const permanentUrl = await uploadImage(file, {
+        folder: 'guides',
+        maxWidth: 500,
+        maxHeight: 500,
+        quality: 0.80,
+        maxSizeBytes: 45000
+      });
+      setGuidePhoto(permanentUrl);
     } catch (err) {
       console.error('Failed to upload guide photo:', err);
     }
@@ -2878,7 +2897,7 @@ Highlights:
                   {isUploadingImages ? (
                     <div className="flex flex-col items-center gap-2 text-indigo-600 dark:text-indigo-400 py-2">
                       <Loader2 className="w-8 h-8 animate-spin" />
-                      <span className="text-xs font-bold">Compressing & Uploading Photos...</span>
+                      <span className="text-xs font-bold">{imageUploadProgress || 'Optimizing & Uploading Photos...'}</span>
                     </div>
                   ) : (
                     <>

@@ -98,6 +98,7 @@ import {
 } from '../../services/aiThemeService';
 import { SUPPORTED_LANGUAGES, isRTL, getFontFamilyClass } from '../../i18n/translations';
 import { translateTextField } from '../../services/geminiService';
+import { uploadImage } from '../../services/imageUploadService';
 
 const LOGO_PRESETS = [
   {
@@ -1892,25 +1893,29 @@ export const SettingsSection: React.FC = () => {
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (uploadEvent) => {
-                              const result = uploadEvent.target?.result as string;
-                              if (result) {
-                                handleChange('companyLogoUrl', result);
-                                addNotification('Logo Uploaded', 'Official trade mission logo updated successfully.', 'system');
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const permanentUrl = await uploadImage(file, {
+                                folder: 'branding',
+                                maxWidth: 600,
+                                maxHeight: 600,
+                                quality: 0.85,
+                                maxSizeBytes: 45000
+                              });
+                              handleChange('companyLogoUrl', permanentUrl);
+                              addNotification('Logo Uploaded', 'Official trade mission logo updated successfully.', 'system');
+                            } catch (err) {
+                              console.error('Failed to upload logo:', err);
+                            }
                           }
                         }}
                       />
                     </label>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Direct local file upload automatically converts images to secure base64 format for instant rendering.
+                    Direct local file upload automatically optimizes and secures images for persistent cloud rendering.
                   </p>
                 </div>
 
@@ -1938,18 +1943,22 @@ export const SettingsSection: React.FC = () => {
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (uploadEvent) => {
-                              const result = uploadEvent.target?.result as string;
-                              if (result) {
-                                handleChange('companyBannerUrl', result);
-                                addNotification('Banner Uploaded', 'Mission letterhead banner updated successfully.', 'system');
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const permanentUrl = await uploadImage(file, {
+                                folder: 'branding',
+                                maxWidth: 1400,
+                                maxHeight: 600,
+                                quality: 0.80,
+                                maxSizeBytes: 65000
+                              });
+                              handleChange('companyBannerUrl', permanentUrl);
+                              addNotification('Banner Uploaded', 'Mission letterhead banner updated successfully.', 'system');
+                            } catch (err) {
+                              console.error('Failed to upload banner:', err);
+                            }
                           }
                         }}
                       />
@@ -2117,18 +2126,22 @@ export const SettingsSection: React.FC = () => {
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (uploadEvent) => {
-                              const result = uploadEvent.target?.result as string;
-                              if (result) {
-                                handleChange('leadCoordinatorAvatar', result);
-                                addNotification('Avatar Uploaded', 'Coordinator headshot updated.', 'system');
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const permanentUrl = await uploadImage(file, {
+                                folder: 'coordinator',
+                                maxWidth: 500,
+                                maxHeight: 500,
+                                quality: 0.82,
+                                maxSizeBytes: 45000
+                              });
+                              handleChange('leadCoordinatorAvatar', permanentUrl);
+                              addNotification('Avatar Uploaded', 'Coordinator headshot updated.', 'system');
+                            } catch (err) {
+                              console.error('Failed to upload headshot:', err);
+                            }
                           }
                         }}
                       />
@@ -2160,18 +2173,22 @@ export const SettingsSection: React.FC = () => {
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (uploadEvent) => {
-                              const result = uploadEvent.target?.result as string;
-                              if (result) {
-                                handleChange('leadCoordinatorSignatureUrl', result);
-                                addNotification('Signature Uploaded', 'Official approval stamp updated.', 'system');
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const permanentUrl = await uploadImage(file, {
+                                folder: 'branding',
+                                maxWidth: 500,
+                                maxHeight: 300,
+                                quality: 0.85,
+                                maxSizeBytes: 35000
+                              });
+                              handleChange('leadCoordinatorSignatureUrl', permanentUrl);
+                              addNotification('Signature Uploaded', 'Official approval stamp updated.', 'system');
+                            } catch (err) {
+                              console.error('Failed to upload signature:', err);
+                            }
                           }
                         }}
                       />

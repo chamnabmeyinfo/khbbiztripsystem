@@ -2708,7 +2708,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return next;
     });
     try {
-      setDoc(doc(db, 'packages', newPkg.id), sanitizeForFirestore(newPkg));
+      setDoc(doc(db, 'packages', newPkg.id), sanitizeForFirestore(newPkg)).catch(e => {
+        console.warn('Package Firestore save notice:', e);
+      });
     } catch (e) {
       console.warn('Package Firestore save notice:', e);
     }
@@ -2772,7 +2774,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return next;
     });
     try {
-      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg));
+      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg)).catch(e => {
+        console.warn('Package Firestore update notice:', e);
+      });
     } catch (e) {
       console.warn('Package Firestore update notice:', e);
     }
@@ -2819,7 +2823,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return next;
     });
     try {
-      setDoc(doc(db, 'packages', packageId), sanitizeForFirestore(updatedPkg), { merge: true });
+      setDoc(doc(db, 'packages', packageId), sanitizeForFirestore(updatedPkg), { merge: true }).catch(e => {
+        console.warn('Package status update notice:', e);
+      });
     } catch (e) {
       console.warn('Package status update notice:', e);
     }

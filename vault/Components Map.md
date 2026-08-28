@@ -55,6 +55,7 @@
 | `PackageManagementSection` | `PackageManagementSection.tsx` | Tour package catalogue CRUD with 4 View Modes (Card Grid, Detailed List, Compact Table, Kanban Board), status lifecycle (Active, Draft, Archived, Recycle Bin), and Clone-as-Draft |
 | `PackageEditorModal` | `PackageEditorModal.tsx` | Detailed modal editor for creating/updating multi-day tour packages, mission agendas, bilingual English/Khmer arrays, draft saving, and persistent sticky action footer (`sticky bottom-0`) |
 | `BilingualListEditor` | `BilingualListEditor.tsx` | Reusable bilingual list editor component with tabs for Khmer/English, presets insertion, drag reordering, and item validation |
+| `imageUploadService` | `src/services/imageUploadService.ts` | Multi-tier image compressor (≤65KB binary safeguard) and Firebase Storage CDN uploader with fallback to prevent Firestore 1MB quota rejections |
 | `CostingSection` | `CostingSection.tsx` | Unit economics, supplier cost estimation, margin targets, and per-pax pricing calculations |
 | `SuppliersSection` | `SuppliersSection.tsx` | Vendor database (airlines, hotels, coach operators, caterers, translators) and rate cards |
 | `PurchaseOrdersSection` | `PurchaseOrdersSection.tsx` | Procurement PO generation, vendor order tracking, and approval workflows |
