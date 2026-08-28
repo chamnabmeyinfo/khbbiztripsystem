@@ -89,6 +89,20 @@ p:last-child {
   animation: spinSlow 12s linear infinite;
 }
 
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 6s linear infinite;
+  transform-origin: 72.8% 61.2%;
+}
+
 .font-bold-boost {
   -webkit-text-stroke: 0.35px currentColor;
 }
