@@ -503,11 +503,12 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Smart Dual-Array AI Batch Translator */}
+          {/* Smart Dual-Array AI Batch Translator (Defaults EN -> KM) */}
           <FieldAiTranslator
             kmArray={kmItems}
             enArray={enItems}
             fieldHint={fieldCategoryHint}
+            preferredDirection="en_to_km"
             onTranslateArrayToKm={(translated) => onKmChange(translated)}
             onTranslateArrayToEn={(translated) => onEnChange(translated)}
             size="xs"
@@ -526,74 +527,36 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
             >
               Dual View
             </button>
-            {isEnglishMain ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setActiveLangTab('en')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                    activeLangTab === 'en'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  🇺🇸 English (Main)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveLangTab('km')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                    activeLangTab === 'km'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  🇰🇭 Khmer
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setActiveLangTab('km')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                    activeLangTab === 'km'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  🇰🇭 Khmer (ចម្បង)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveLangTab('en')}
-                  className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
-                    activeLangTab === 'en'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  🇺🇸 English
-                </button>
-              </>
-            )}
+            <button
+              type="button"
+              onClick={() => setActiveLangTab('en')}
+              className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
+                activeLangTab === 'en'
+                  ? 'bg-indigo-600 text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              🇺🇸 English (Primary)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveLangTab('km')}
+              className={`px-2 py-0.5 rounded-md cursor-pointer transition-all ${
+                activeLangTab === 'km'
+                  ? 'bg-indigo-600 text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              🇰🇭 Khmer (Translation)
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Lists Container - Ordered according to selected platform language */}
+      {/* Main Lists Container - English Primary First, Khmer Translation Second */}
       <div className={`grid gap-4 ${activeLangTab === 'dual' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-        {isEnglishMain ? (
-          <>
-            {(activeLangTab === 'dual' || activeLangTab === 'en') && renderEnglishColumn()}
-            {(activeLangTab === 'dual' || activeLangTab === 'km') && renderKhmerColumn()}
-          </>
-        ) : (
-          <>
-            {(activeLangTab === 'dual' || activeLangTab === 'km') && renderKhmerColumn()}
-            {(activeLangTab === 'dual' || activeLangTab === 'en') && renderEnglishColumn()}
-          </>
-        )}
+        {(activeLangTab === 'dual' || activeLangTab === 'en') && renderEnglishColumn()}
+        {(activeLangTab === 'dual' || activeLangTab === 'km') && renderKhmerColumn()}
       </div>
     </div>
   );

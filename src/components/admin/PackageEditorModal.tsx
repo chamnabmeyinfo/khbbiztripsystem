@@ -1027,84 +1027,105 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     }
   };
 
-  const handleUpdateDayField = (index: number, field: keyof ItineraryStep, value: any) => {
-    setItinerary(itinerary.map((day, i) => i === index ? { ...day, [field]: value } : day));
+  const handleUpdateDayField = (index: number, fieldOrUpdates: keyof ItineraryStep | Partial<ItineraryStep>, value?: any) => {
+    setItinerary(prev => prev.map((day, i) => {
+      if (i !== index) return day;
+      if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
+        return { ...day, ...fieldOrUpdates };
+      }
+      return { ...day, [fieldOrUpdates]: value };
+    }));
   };
 
   // Guide Agenda Item Handlers for a Day
   const handleAddAgendaItem = (dayIndex: number) => {
-    const day = itinerary[dayIndex];
-    const currentAgenda = day.guideAgenda || [];
     const newSlot: GuideScheduleSlot = {
       time: '09:00 AM - 12:00 PM',
-      activity: 'ទស្សនកិច្ចពាណិជ្ជកម្ម និងពិព័រណ៍',
-      activityKm: 'ទស្សនកិច្ចពាណិជ្ជកម្ម និងពិព័រណ៍',
+      activity: 'B2B Trade Session & Exhibition Walkthrough',
       activityEn: 'B2B Trade Session & Exhibition Walkthrough',
+      activityKm: 'ទស្សនកិច្ចពាណិជ្ជកម្ម និងពិព័រណ៍',
       location: 'Main Exhibition Hall',
-      locationKm: 'សាលពិព័រណ៍ធំ',
       locationEn: 'Main Exhibition Hall',
+      locationKm: 'សាលពិព័រណ៍ធំ',
       notes: '',
-      notesKm: '',
       notesEn: '',
+      notesKm: '',
       type: 'exhibition'
     };
-    handleUpdateDayField(dayIndex, 'guideAgenda', [...currentAgenda, newSlot]);
+    setItinerary(prev => prev.map((day, dIdx) => {
+      if (dIdx !== dayIndex) return day;
+      const currentAgenda = day.guideAgenda || [];
+      return { ...day, guideAgenda: [...currentAgenda, newSlot] };
+    }));
   };
 
-  const handleUpdateAgendaItem = (dayIndex: number, slotIndex: number, field: keyof GuideScheduleSlot, value: any) => {
-    const day = itinerary[dayIndex];
-    const currentAgenda = day.guideAgenda || [];
-    const updatedAgenda = currentAgenda.map((slot, sIdx) => {
-      if (sIdx !== slotIndex) return slot;
-      const updated = { ...slot, [field]: value };
-      if (field === 'activity' && !updated.activityKm) updated.activityKm = value;
-      if (field === 'activityKm' && !updated.activity) updated.activity = value;
-      if (field === 'location' && !updated.locationKm) updated.locationKm = value;
-      if (field === 'locationKm' && !updated.location) updated.location = value;
-      return updated;
-    });
-    handleUpdateDayField(dayIndex, 'guideAgenda', updatedAgenda);
+  const handleUpdateAgendaItem = (
+    dayIndex: number,
+    slotIndex: number,
+    fieldOrUpdates: keyof GuideScheduleSlot | Partial<GuideScheduleSlot>,
+    value?: any
+  ) => {
+    setItinerary(prev => prev.map((day, dIdx) => {
+      if (dIdx !== dayIndex) return day;
+      const currentAgenda = day.guideAgenda || [];
+      const updatedAgenda = currentAgenda.map((slot, sIdx) => {
+        if (sIdx !== slotIndex) return slot;
+        if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
+          return { ...slot, ...fieldOrUpdates };
+        }
+        const updated = { ...slot, [fieldOrUpdates]: value };
+        if (fieldOrUpdates === 'activityEn') {
+          updated.activity = value;
+        } else if (fieldOrUpdates === 'locationEn') {
+          updated.location = value;
+        } else if (fieldOrUpdates === 'notesEn') {
+          updated.notes = value;
+        }
+        return updated;
+      });
+      return { ...day, guideAgenda: updatedAgenda };
+    }));
   };
 
   const handleRemoveAgendaItem = (dayIndex: number, slotIndex: number) => {
-    const day = itinerary[dayIndex];
-    const currentAgenda = day.guideAgenda || [];
-    handleUpdateDayField(dayIndex, 'guideAgenda', currentAgenda.filter((_, sIdx) => sIdx !== slotIndex));
+    setItinerary(prev => prev.map((day, dIdx) => {
+      if (dIdx !== dayIndex) return day;
+      const currentAgenda = day.guideAgenda || [];
+      return { ...day, guideAgenda: currentAgenda.filter((_, sIdx) => sIdx !== slotIndex) };
+    }));
   };
 
   const handleAutoTranslateDaySlots = async (dayIndex: number) => {
     const day = itinerary[dayIndex];
-    const currentAgenda = day.guideAgenda || [];
+    const currentAgenda = day?.guideAgenda || [];
     if (currentAgenda.length === 0) return;
 
     setTranslatingDaySlotIndex(dayIndex);
     try {
-      const fromLang = isEnglishMain ? 'en' : 'km';
-      const toLang = isEnglishMain ? 'km' : 'en';
-
       const updatedAgenda = await Promise.all(
         currentAgenda.map(async (slot) => {
-          const srcAct = isEnglishMain ? (slot.activityEn || slot.activity || '') : (slot.activityKm || slot.activity || '');
-          const srcLoc = isEnglishMain ? (slot.locationEn || slot.location || '') : (slot.locationKm || slot.location || '');
-          const srcNotes = isEnglishMain ? (slot.notesEn || slot.notes || '') : (slot.notesKm || slot.notes || '');
+          // Default EN -> KM
+          const srcAct = slot.activityEn || slot.activity || slot.activityKm || '';
+          const srcLoc = slot.locationEn || slot.location || slot.locationKm || '';
+          const srcNotes = slot.notesEn || slot.notes || slot.notesKm || '';
 
           const [actRes, locRes, notesRes] = await Promise.all([
-            srcAct ? translateTextField(srcAct, toLang, fromLang, 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
-            srcLoc ? translateTextField(srcLoc, toLang, fromLang, 'Agenda Location') : Promise.resolve({ translatedText: '' }),
-            srcNotes ? translateTextField(srcNotes, toLang, fromLang, 'Agenda Notes') : Promise.resolve({ translatedText: '' })
+            srcAct ? translateTextField(srcAct, 'km', 'en', 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
+            srcLoc ? translateTextField(srcLoc, 'km', 'en', 'Agenda Location') : Promise.resolve({ translatedText: '' }),
+            srcNotes ? translateTextField(srcNotes, 'km', 'en', 'Agenda Notes') : Promise.resolve({ translatedText: '' })
           ]);
 
           return {
             ...slot,
-            activity: isEnglishMain ? (slot.activity || srcAct) : (actRes.translatedText || slot.activity || srcAct),
-            activityKm: isEnglishMain ? (slot.activityKm || actRes.translatedText) : (slot.activityKm || srcAct),
-            activityEn: isEnglishMain ? (slot.activityEn || srcAct) : (slot.activityEn || actRes.translatedText),
-            location: isEnglishMain ? (slot.location || srcLoc) : (locRes.translatedText || slot.location || srcLoc),
-            locationKm: isEnglishMain ? (slot.locationKm || locRes.translatedText) : (slot.locationKm || srcLoc),
-            locationEn: isEnglishMain ? (slot.locationEn || srcLoc) : (slot.locationEn || locRes.translatedText),
-            notes: isEnglishMain ? (slot.notes || srcNotes) : (notesRes.translatedText || slot.notes || srcNotes),
-            notesKm: isEnglishMain ? (slot.notesKm || notesRes.translatedText) : (slot.notesKm || srcNotes),
-            notesEn: isEnglishMain ? (slot.notesEn || srcNotes) : (slot.notesEn || notesRes.translatedText)
+            activity: srcAct,
+            activityEn: srcAct,
+            activityKm: actRes.translatedText || slot.activityKm || '',
+            location: srcLoc,
+            locationEn: srcLoc,
+            locationKm: locRes.translatedText || slot.locationKm || '',
+            notes: srcNotes,
+            notesEn: srcNotes,
+            notesKm: notesRes.translatedText || slot.notesKm || ''
           };
         })
       );
@@ -1122,7 +1143,11 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     const newProg: OptionalTourProgram = {
       id: `opt_${Date.now()}`,
       title: 'New Optional Program / Site Tour',
+      titleEn: 'New Optional Program / Site Tour',
+      titleKm: '',
       description: 'Detailed description of the optional program.',
+      descriptionEn: 'Detailed description of the optional program.',
+      descriptionKm: '',
       additionalCostUSD: 50,
       durationHours: 3,
       recommendedAudience: 'All Delegates',
@@ -1131,15 +1156,31 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       includedMeals: ['Refreshments'],
       meetingPoint: 'Hotel Main Lobby'
     };
-    setOptionalPrograms([...optionalPrograms, newProg]);
+    setOptionalPrograms(prev => [...prev, newProg]);
   };
 
-  const handleUpdateOptionalProgram = (index: number, field: keyof OptionalTourProgram, value: any) => {
-    setOptionalPrograms(optionalPrograms.map((prog, i) => i === index ? { ...prog, [field]: value } : prog));
+  const handleUpdateOptionalProgram = (
+    index: number,
+    fieldOrUpdates: keyof OptionalTourProgram | Partial<OptionalTourProgram>,
+    value?: any
+  ) => {
+    setOptionalPrograms(prev => prev.map((prog, i) => {
+      if (i !== index) return prog;
+      if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
+        return { ...prog, ...fieldOrUpdates };
+      }
+      const updated = { ...prog, [fieldOrUpdates]: value };
+      if (fieldOrUpdates === 'titleEn') {
+        updated.title = value;
+      } else if (fieldOrUpdates === 'descriptionEn') {
+        updated.description = value;
+      }
+      return updated;
+    }));
   };
 
   const handleRemoveOptionalProgram = (index: number) => {
-    setOptionalPrograms(optionalPrograms.filter((_, i) => i !== index));
+    setOptionalPrograms(prev => prev.filter((_, i) => i !== index));
   };
 
   // AI Text-to-Package Auto Input Handler
@@ -2653,148 +2694,74 @@ Highlights:
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Titles: Conditional Order Based on Platform Language */}
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                              🇺🇸 EN
-                            </span>
-                            <span>Tour Title (English / Primary) *</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={titleKm || title}
-                            enText={titleEn}
-                            preferredDirection="en_to_km"
-                            fieldHint="Tour Package Title"
-                            onTranslateToKm={(trans) => {
-                              setTitleKm(trans);
-                              setTitle(trans);
-                            }}
-                            onTranslateToEn={(trans) => setTitleEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          required
-                          value={titleEn}
-                          onChange={(e) => setTitleEn(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou Canton Fair 2026 Phase 1 VIP Mission"</span>
-                        </p>
-                      </div>
+                  {/* Tour Title: English Primary (Left) & Khmer Secondary (Right) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                          🇺🇸 EN
+                        </span>
+                        <span>Tour Title (English / Primary) *</span>
+                      </label>
+                      <FieldAiTranslator
+                        kmText={titleKm || title}
+                        enText={titleEn}
+                        preferredDirection="en_to_km"
+                        fieldHint="Tour Package Title"
+                        onTranslateToKm={(trans) => {
+                          setTitleKm(trans);
+                          setTitle(trans);
+                        }}
+                        onTranslateToEn={(trans) => setTitleEn(trans)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={titleEn}
+                      onChange={(e) => setTitleEn(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou Canton Fair 2026 Phase 1 VIP Mission"</span>
+                    </p>
+                  </div>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              🇰🇭 KM
-                            </span>
-                            <span className="font-khmer">ចំណងជើងដំណើរទស្សនកិច្ច (ខ្មែរ / Khmer Secondary)</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={titleKm || title}
-                            enText={titleEn}
-                            preferredDirection="km_to_en"
-                            fieldHint="Tour Package Title"
-                            onTranslateToKm={(trans) => {
-                              setTitleKm(trans);
-                              setTitle(trans);
-                            }}
-                            onTranslateToEn={(trans) => setTitleEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={titleKm || title}
-                          onChange={(e) => {
-                            setTitle(e.target.value);
-                            setTitleKm(e.target.value);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium font-khmer focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="ឧទាហរណ៍៖ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"បេសកកម្មពាណិជ្ជកម្មពិព័រណ៍ក្វាងចូវ Canton Fair 2026"</span>
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              🇰🇭 KM
-                            </span>
-                            <span className="font-khmer">ចំណងជើងដំណើរទស្សនកិច្ច (ខ្មែរ / Khmer Primary) *</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={titleKm || title}
-                            enText={titleEn}
-                            preferredDirection="km_to_en"
-                            fieldHint="Tour Package Title"
-                            onTranslateToKm={(trans) => {
-                              setTitleKm(trans);
-                              setTitle(trans);
-                            }}
-                            onTranslateToEn={(trans) => setTitleEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          required
-                          value={titleKm || title}
-                          onChange={(e) => {
-                            setTitle(e.target.value);
-                            setTitleKm(e.target.value);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium font-khmer focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="ឧទាហរណ៍៖ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"បេសកកម្មពាណិជ្ជកម្មពិព័រណ៍ក្វាងចូវ Canton Fair 2026"</span>
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                              🇺🇸 EN
-                            </span>
-                            <span>Tour Title (English Title)</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={titleKm || title}
-                            enText={titleEn}
-                            preferredDirection="en_to_km"
-                            fieldHint="Tour Package Title"
-                            onTranslateToKm={(trans) => {
-                              setTitleKm(trans);
-                              setTitle(trans);
-                            }}
-                            onTranslateToEn={(trans) => setTitleEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={titleEn}
-                          onChange={(e) => setTitleEn(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou Canton Fair 2026 Phase 1 VIP Mission"</span>
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                          🇰🇭 KM
+                        </span>
+                        <span className="font-khmer">ចំណងជើងដំណើរទស្សនកិច្ច (ខ្មែរ / Khmer Translation)</span>
+                      </label>
+                      <FieldAiTranslator
+                        kmText={titleKm || title}
+                        enText={titleEn}
+                        preferredDirection="en_to_km"
+                        fieldHint="Tour Package Title"
+                        onTranslateToKm={(trans) => {
+                          setTitleKm(trans);
+                          setTitle(trans);
+                        }}
+                        onTranslateToEn={(trans) => setTitleEn(trans)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={titleKm || title}
+                      onChange={(e) => {
+                        setTitle(e.target.value);
+                        setTitleKm(e.target.value);
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="ឧទាហរណ៍៖ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                      ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"បេសកកម្មពាណិជ្ជកម្មពិព័រណ៍ក្វាងចូវ Canton Fair 2026"</span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -2815,291 +2782,143 @@ Highlights:
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Destinations: Conditional Order Based on Platform Language */}
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                              🇺🇸 EN
-                            </span>
-                            <span>Destination City / Province (English / Primary) *</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={destinationKm || destination}
-                            enText={destinationEn}
-                            preferredDirection="en_to_km"
-                            fieldHint="Destination City or Province"
-                            onTranslateToKm={(trans) => {
-                              setDestinationKm(trans);
-                              setDestination(trans);
-                            }}
-                            onTranslateToEn={(trans) => setDestinationEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          required
-                          value={destinationEn}
-                          onChange={(e) => setDestinationEn(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou & Shenzhen"</span>
-                        </p>
-                      </div>
+                  {/* Destinations: English Primary & Khmer Translation */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                          🇺🇸 EN
+                        </span>
+                        <span>Destination City / Province (English / Primary) *</span>
+                      </label>
+                      <FieldAiTranslator
+                        kmText={destinationKm || destination}
+                        enText={destinationEn}
+                        preferredDirection="en_to_km"
+                        fieldHint="Destination City or Province"
+                        onTranslateToKm={(trans) => {
+                          setDestinationKm(trans);
+                          setDestination(trans);
+                        }}
+                        onTranslateToEn={(trans) => setDestinationEn(trans)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={destinationEn}
+                      onChange={(e) => setDestinationEn(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou & Shenzhen"</span>
+                    </p>
+                  </div>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              🇰🇭 KM
-                            </span>
-                            <span className="font-khmer">គោលដៅទីក្រុង/ខេត្ត (ខ្មែរ / Khmer Secondary)</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={destinationKm || destination}
-                            enText={destinationEn}
-                            preferredDirection="km_to_en"
-                            fieldHint="Destination City or Province"
-                            onTranslateToKm={(trans) => {
-                              setDestinationKm(trans);
-                              setDestination(trans);
-                            }}
-                            onTranslateToEn={(trans) => setDestinationEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={destinationKm || destination}
-                          onChange={(e) => {
-                            setDestination(e.target.value);
-                            setDestinationKm(e.target.value);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="ឧទាហរណ៍៖ ហូជីមិញ + កោះត្រល់"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ក្វាងចូវ & សិនជិន"</span>
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              🇰🇭 KM
-                            </span>
-                            <span className="font-khmer">គោលដៅទីក្រុង/ខេត្ត (ខ្មែរ / Primary) *</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={destinationKm || destination}
-                            enText={destinationEn}
-                            preferredDirection="km_to_en"
-                            fieldHint="Destination City or Province"
-                            onTranslateToKm={(trans) => {
-                              setDestinationKm(trans);
-                              setDestination(trans);
-                            }}
-                            onTranslateToEn={(trans) => setDestinationEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          required
-                          value={destinationKm || destination}
-                          onChange={(e) => {
-                            setDestination(e.target.value);
-                            setDestinationKm(e.target.value);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="ឧទាហរណ៍៖ ហូជីមិញ + កោះត្រល់"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ក្វាងចូវ & សិនជិន"</span>
-                        </p>
-                      </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                          🇰🇭 KM
+                        </span>
+                        <span className="font-khmer">គោលដៅទីក្រុង/ខេត្ត (ខ្មែរ / Khmer Translation)</span>
+                      </label>
+                      <FieldAiTranslator
+                        kmText={destinationKm || destination}
+                        enText={destinationEn}
+                        preferredDirection="en_to_km"
+                        fieldHint="Destination City or Province"
+                        onTranslateToKm={(trans) => {
+                          setDestinationKm(trans);
+                          setDestination(trans);
+                        }}
+                        onTranslateToEn={(trans) => setDestinationEn(trans)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={destinationKm || destination}
+                      onChange={(e) => {
+                        setDestination(e.target.value);
+                        setDestinationKm(e.target.value);
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="ឧទាហរណ៍៖ ហូជីមិញ + កោះត្រល់"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                      ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ក្វាងចូវ & សិនជិន"</span>
+                    </p>
+                  </div>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                              🇺🇸 EN
-                            </span>
-                            <span>Destination City (English)</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={destinationKm || destination}
-                            enText={destinationEn}
-                            preferredDirection="en_to_km"
-                            fieldHint="Destination City or Province"
-                            onTranslateToKm={(trans) => {
-                              setDestinationKm(trans);
-                              setDestination(trans);
-                            }}
-                            onTranslateToEn={(trans) => setDestinationEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={destinationEn}
-                          onChange={(e) => setDestinationEn(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou & Shenzhen"</span>
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  {/* Country: English Primary & Khmer Translation */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                          🇺🇸 EN
+                        </span>
+                        <span>Country (English / Primary) *</span>
+                      </label>
+                      <FieldAiTranslator
+                        kmText={countryKm || country}
+                        enText={countryEn}
+                        preferredDirection="en_to_km"
+                        fieldHint="Country Name"
+                        onTranslateToKm={(trans) => {
+                          setCountryKm(trans);
+                          setCountry(trans);
+                        }}
+                        onTranslateToEn={(trans) => setCountryEn(trans)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={countryEn}
+                      onChange={(e) => setCountryEn(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="e.g. Vietnam, Thailand, China, Japan"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"China", "Vietnam", "Thailand"</span>
+                    </p>
+                  </div>
 
-                  {/* Country: Conditional Order Based on Platform Language */}
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                              🇺🇸 EN
-                            </span>
-                            <span>Country (English / Primary) *</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={countryKm || country}
-                            enText={countryEn}
-                            preferredDirection="en_to_km"
-                            fieldHint="Country Name"
-                            onTranslateToKm={(trans) => {
-                              setCountryKm(trans);
-                              setCountry(trans);
-                            }}
-                            onTranslateToEn={(trans) => setCountryEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          required
-                          value={countryEn}
-                          onChange={(e) => setCountryEn(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="e.g. Vietnam, Thailand, China, Japan"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"China", "Vietnam", "Thailand"</span>
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              🇰🇭 KM
-                            </span>
-                            <span className="font-khmer">ប្រទេស (ខ្មែរ / Khmer Secondary)</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={countryKm || country}
-                            enText={countryEn}
-                            preferredDirection="km_to_en"
-                            fieldHint="Country Name"
-                            onTranslateToKm={(trans) => {
-                              setCountryKm(trans);
-                              setCountry(trans);
-                            }}
-                            onTranslateToEn={(trans) => setCountryEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={countryKm || country}
-                          onChange={(e) => {
-                            setCountry(e.target.value);
-                            setCountryKm(e.target.value);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="ឧទាហរណ៍៖ វៀតណាម, ប្រទេសថៃ, ចិន"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ប្រទេសចិន", "ប្រទេសវៀតណាម", "ប្រទេសថៃ"</span>
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              🇰🇭 KM
-                            </span>
-                            <span className="font-khmer">ប្រទេស (ខ្មែរ / Primary) *</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={countryKm || country}
-                            enText={countryEn}
-                            preferredDirection="km_to_en"
-                            fieldHint="Country Name"
-                            onTranslateToKm={(trans) => {
-                              setCountryKm(trans);
-                              setCountry(trans);
-                            }}
-                            onTranslateToEn={(trans) => setCountryEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          required
-                          value={countryKm || country}
-                          onChange={(e) => {
-                            setCountry(e.target.value);
-                            setCountryKm(e.target.value);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="ឧទាហរណ៍៖ វៀតណាម, ប្រទេសថៃ, ប្រទេសចិន"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ប្រទេសចិន", "ប្រទេសវៀតណាម", "ប្រទេសថៃ"</span>
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                              🇺🇸 EN
-                            </span>
-                            <span>Country (English)</span>
-                          </label>
-                          <FieldAiTranslator
-                            kmText={countryKm || country}
-                            enText={countryEn}
-                            preferredDirection="en_to_km"
-                            fieldHint="Country Name"
-                            onTranslateToKm={(trans) => {
-                              setCountryKm(trans);
-                              setCountry(trans);
-                            }}
-                            onTranslateToEn={(trans) => setCountryEn(trans)}
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={countryEn}
-                          onChange={(e) => setCountryEn(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
-                          placeholder="e.g. Vietnam, Thailand, China, Japan"
-                        />
-                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"China", "Vietnam", "Thailand"</span>
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                          🇰🇭 KM
+                        </span>
+                        <span className="font-khmer">ប្រទេស (ខ្មែរ / Khmer Translation)</span>
+                      </label>
+                      <FieldAiTranslator
+                        kmText={countryKm || country}
+                        enText={countryEn}
+                        preferredDirection="en_to_km"
+                        fieldHint="Country Name"
+                        onTranslateToKm={(trans) => {
+                          setCountryKm(trans);
+                          setCountry(trans);
+                        }}
+                        onTranslateToEn={(trans) => setCountryEn(trans)}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={countryKm || country}
+                      onChange={(e) => {
+                        setCountry(e.target.value);
+                        setCountryKm(e.target.value);
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="ឧទាហរណ៍៖ វៀតណាម, ប្រទេសថៃ, ចិន"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                      ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ប្រទេសចិន", "ប្រទេសវៀតណាម", "ប្រទេសថៃ"</span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -3531,147 +3350,73 @@ Highlights:
           {activeTab === 'media' && (
             <div className="space-y-6 animate-in fade-in duration-150">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {isEnglishMain ? (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                            🇺🇸 EN
-                          </span>
-                          <span>Full Package Overview (English / Primary) *</span>
-                        </label>
-                        <FieldAiTranslator
-                          kmText={descriptionKm || description}
-                          enText={descriptionEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Tour Package Full Description and Overview"
-                          onTranslateToKm={(trans) => {
-                            setDescriptionKm(trans);
-                            setDescription(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
-                        />
-                      </div>
-                      <textarea
-                        rows={4}
-                        required
-                        value={descriptionEn}
-                        onChange={(e) => setDescriptionEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
-                        placeholder="e.g. Join our exclusive B2B trade mission connecting Cambodian entrepreneurs directly with high-level manufacturers and suppliers..."
-                      />
-                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                        Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Join our exclusive delegation with VIP factory tours and networking events."</span>
-                      </p>
-                    </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                        🇺🇸 EN
+                      </span>
+                      <span>Full Package Overview (English / Primary) *</span>
+                    </label>
+                    <FieldAiTranslator
+                      kmText={descriptionKm || description}
+                      enText={descriptionEn}
+                      preferredDirection="en_to_km"
+                      fieldHint="Tour Package Full Description and Overview"
+                      onTranslateToKm={(trans) => {
+                        setDescriptionKm(trans);
+                        setDescription(trans);
+                      }}
+                      onTranslateToEn={(trans) => setDescriptionEn(trans)}
+                    />
+                  </div>
+                  <textarea
+                    rows={4}
+                    required
+                    value={descriptionEn}
+                    onChange={(e) => setDescriptionEn(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
+                    placeholder="e.g. Join our exclusive B2B trade mission connecting Cambodian entrepreneurs directly with high-level manufacturers and suppliers..."
+                  />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                    Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Join our exclusive delegation with VIP factory tours and networking events."</span>
+                  </p>
+                </div>
 
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                            🇰🇭 KM
-                          </span>
-                          <span className="font-khmer">សេចក្តីសង្ខេបកញ្ចប់ទស្សនកិច្ច (ខ្មែរ / Khmer Secondary)</span>
-                        </label>
-                        <FieldAiTranslator
-                          kmText={descriptionKm || description}
-                          enText={descriptionEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Tour Package Full Description and Overview"
-                          onTranslateToKm={(trans) => {
-                            setDescriptionKm(trans);
-                            setDescription(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
-                        />
-                      </div>
-                      <textarea
-                        rows={4}
-                        value={descriptionKm || description}
-                        onChange={(e) => {
-                          setDescription(e.target.value);
-                          setDescriptionKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed font-khmer"
-                        placeholder="ឧទាហរណ៍៖ ចូលរួមដំណើរទស្សនកិច្ចពាណិជ្ជកម្មលំដាប់ខ្ពស់ ដែលភ្ជាប់ទំនាក់ទំនងដោយផ្ទាល់ជាមួយរោងចក្រផលិត..."
-                      />
-                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                        ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ចូលរួមគណៈប្រតិភូអាជីវកម្មពិសេសជាមួយការទស្សនកិច្ចរោងចក្រ និងកម្មវិធីជំនួបពាណិជ្ជកម្ម B2B។"</span>
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                            🇰🇭 KM
-                          </span>
-                          <span className="font-khmer">សេចក្តីសង្ខេបកញ្ចប់ទស្សនកិច្ច (ខ្មែរ / Primary) *</span>
-                        </label>
-                        <FieldAiTranslator
-                          kmText={descriptionKm || description}
-                          enText={descriptionEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Tour Package Full Description and Overview"
-                          onTranslateToKm={(trans) => {
-                            setDescriptionKm(trans);
-                            setDescription(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
-                        />
-                      </div>
-                      <textarea
-                        rows={4}
-                        required
-                        value={descriptionKm || description}
-                        onChange={(e) => {
-                          setDescription(e.target.value);
-                          setDescriptionKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed font-khmer"
-                        placeholder="ឧទាហរណ៍៖ ចូលរួមដំណើរទស្សនកិច្ចពាណិជ្ជកម្មលំដាប់ខ្ពស់ ដែលភ្ជាប់ទំនាក់ទំនងដោយផ្ទាល់ជាមួយរោងចក្រផលិត..."
-                      />
-                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
-                        ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ចូលរួមគណៈប្រតិភូអាជីវកម្មពិសេសជាមួយការទស្សនកិច្ចរោងចក្រ និងកម្មវិធីជំនួបពាណិជ្ជកម្ម B2B។"</span>
-                      </p>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                            🇺🇸 EN
-                          </span>
-                          <span>Full Package Overview (English Description)</span>
-                        </label>
-                        <FieldAiTranslator
-                          kmText={descriptionKm || description}
-                          enText={descriptionEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Tour Package Full Description and Overview"
-                          onTranslateToKm={(trans) => {
-                            setDescriptionKm(trans);
-                            setDescription(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDescriptionEn(trans)}
-                        />
-                      </div>
-                      <textarea
-                        rows={4}
-                        value={descriptionEn}
-                        onChange={(e) => setDescriptionEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
-                        placeholder="e.g. Join our exclusive B2B trade mission connecting Cambodian entrepreneurs directly with high-level manufacturers and suppliers..."
-                      />
-                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                        Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Join our exclusive delegation with VIP factory tours and networking events."</span>
-                      </p>
-                    </div>
-                  </>
-                )}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                        🇰🇭 KM
+                      </span>
+                      <span className="font-khmer">សេចក្តីសង្ខេបកញ្ចប់ទស្សនកិច្ច (ខ្មែរ / Khmer Translation)</span>
+                    </label>
+                    <FieldAiTranslator
+                      kmText={descriptionKm || description}
+                      enText={descriptionEn}
+                      preferredDirection="en_to_km"
+                      fieldHint="Tour Package Full Description and Overview"
+                      onTranslateToKm={(trans) => {
+                        setDescriptionKm(trans);
+                        setDescription(trans);
+                      }}
+                      onTranslateToEn={(trans) => setDescriptionEn(trans)}
+                    />
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={descriptionKm || description}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      setDescriptionKm(e.target.value);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed font-khmer"
+                    placeholder="ឧទាហរណ៍៖ ចូលរួមដំណើរទស្សនកិច្ចពាណិជ្ជកម្មលំដាប់ខ្ពស់ ដែលភ្ជាប់ទំនាក់ទំនងដោយផ្ទាល់ជាមួយរោងចក្រផលិត..."
+                  />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                    ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ចូលរួមគណៈប្រតិភូអាជីវកម្មពិសេសជាមួយការទស្សនកិច្ចរោងចក្រ និងកម្មវិធីជំនួបពាណិជ្ជកម្ម B2B។"</span>
+                  </p>
+                </div>
               </div>
 
               {/* 🎬 Video Gallery & Featured Video (Default Auto-Play) */}
@@ -4186,7 +3931,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={guideNameKm || guideName}
                     enText={guideNameEn}
-                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                    preferredDirection="en_to_km"
                     fieldHint="Tour Director or Guide Full Name"
                     onTranslateToKm={(trans) => {
                       setGuideName(trans);
@@ -4196,69 +3941,34 @@ Highlights:
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Name (Primary) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={guideNameEn}
-                          onChange={(e) => setGuideNameEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                          placeholder="e.g. Mr. Tim Vutha"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Name (Secondary)
-                        </label>
-                        <input
-                          type="text"
-                          value={guideNameKm || guideName}
-                          onChange={(e) => {
-                            setGuideName(e.target.value);
-                            setGuideNameKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                          placeholder="e.g. លោក ទឹម វុទ្ធា"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Name (Primary) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={guideNameKm || guideName}
-                          onChange={(e) => {
-                            setGuideName(e.target.value);
-                            setGuideNameKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                          placeholder="e.g. លោក ទឹម វុទ្ធា"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Name
-                        </label>
-                        <input
-                          type="text"
-                          value={guideNameEn}
-                          onChange={(e) => setGuideNameEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                          placeholder="e.g. Mr. Tim Vutha"
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇺🇸 English Name (Primary) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={guideNameEn}
+                      onChange={(e) => setGuideNameEn(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                      placeholder="e.g. Mr. Tim Vutha"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇰🇭 Khmer Name (Translation)
+                    </label>
+                    <input
+                      type="text"
+                      value={guideNameKm || guideName}
+                      onChange={(e) => {
+                        setGuideName(e.target.value);
+                        setGuideNameKm(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                      placeholder="e.g. លោក ទឹម វុទ្ធា"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -4271,7 +3981,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={guideTitleKm || guideTitle}
                     enText={guideTitleEn}
-                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                    preferredDirection="en_to_km"
                     fieldHint="Tour Director or Guide Professional Title"
                     onTranslateToKm={(trans) => {
                       setGuideTitle(trans);
@@ -4281,69 +3991,34 @@ Highlights:
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Title (Primary) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={guideTitleEn}
-                          onChange={(e) => setGuideTitleEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. Lead Trade Mission Coordinator & Tour Director"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Title (Secondary)
-                        </label>
-                        <input
-                          type="text"
-                          value={guideTitleKm || guideTitle}
-                          onChange={(e) => {
-                            setGuideTitle(e.target.value);
-                            setGuideTitleKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. ប្រធានសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្ម & Tour Director"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Title (Primary) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={guideTitleKm || guideTitle}
-                          onChange={(e) => {
-                            setGuideTitle(e.target.value);
-                            setGuideTitleKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. ប្រធានសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្ម & Tour Director"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Title
-                        </label>
-                        <input
-                          type="text"
-                          value={guideTitleEn}
-                          onChange={(e) => setGuideTitleEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. Lead Trade Mission Coordinator & Tour Director"
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇺🇸 English Title (Primary) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={guideTitleEn}
+                      onChange={(e) => setGuideTitleEn(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="e.g. Lead Trade Mission Coordinator & Tour Director"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇰🇭 Khmer Title (Translation)
+                    </label>
+                    <input
+                      type="text"
+                      value={guideTitleKm || guideTitle}
+                      onChange={(e) => {
+                        setGuideTitle(e.target.value);
+                        setGuideTitleKm(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="e.g. ប្រធានសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្ម & Tour Director"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -4435,7 +4110,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={briefingMeetingPointKm || briefingMeetingPoint}
                     enText={briefingMeetingPointEn}
-                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                    preferredDirection="en_to_km"
                     fieldHint="Tour Departure Gathering Location or Meeting Point"
                     onTranslateToKm={(trans) => {
                       setBriefingMeetingPoint(trans);
@@ -4445,67 +4120,33 @@ Highlights:
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Location (Primary)
-                        </label>
-                        <input
-                          type="text"
-                          value={briefingMeetingPointEn || ''}
-                          onChange={(e) => setBriefingMeetingPointEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. Phnom Penh KHB Head Office Departure Bay"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Location (Secondary)
-                        </label>
-                        <input
-                          type="text"
-                          value={briefingMeetingPointKm || briefingMeetingPoint || ''}
-                          onChange={(e) => {
-                            setBriefingMeetingPoint(e.target.value);
-                            setBriefingMeetingPointKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. រាជធានីភ្នំពេញ (ចំណុចប្រមូលផ្តុំ KHB Head Office)"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Location (Primary)
-                        </label>
-                        <input
-                          type="text"
-                          value={briefingMeetingPointKm || briefingMeetingPoint || ''}
-                          onChange={(e) => {
-                            setBriefingMeetingPoint(e.target.value);
-                            setBriefingMeetingPointKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. រាជធានីភ្នំពេញ (ចំណុចប្រមូលផ្តុំ KHB Head Office)"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Location
-                        </label>
-                        <input
-                          type="text"
-                          value={briefingMeetingPointEn || ''}
-                          onChange={(e) => setBriefingMeetingPointEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="e.g. Phnom Penh KHB Head Office Departure Bay"
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇺🇸 English Location (Primary)
+                    </label>
+                    <input
+                      type="text"
+                      value={briefingMeetingPointEn || ''}
+                      onChange={(e) => setBriefingMeetingPointEn(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="e.g. Phnom Penh KHB Head Office Departure Bay"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇰🇭 Khmer Location (Translation)
+                    </label>
+                    <input
+                      type="text"
+                      value={briefingMeetingPointKm || briefingMeetingPoint || ''}
+                      onChange={(e) => {
+                        setBriefingMeetingPoint(e.target.value);
+                        setBriefingMeetingPointKm(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="e.g. រាជធានីភ្នំពេញ (ចំណុចប្រមូលផ្តុំ KHB Head Office)"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -4534,7 +4175,7 @@ Highlights:
                   <FieldAiTranslator
                     kmText={guideBioKm || guideBio}
                     enText={guideBioEn}
-                    preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                    preferredDirection="en_to_km"
                     fieldHint="Tour Director Professional Bio and Qualifications"
                     onTranslateToKm={(trans) => {
                       setGuideBio(trans);
@@ -4544,67 +4185,33 @@ Highlights:
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {isEnglishMain ? (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Bio (Primary)
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={guideBioEn}
-                          onChange={(e) => setGuideBioEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="Professional biography and credentials..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Bio (Secondary)
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={guideBioKm || guideBio}
-                          onChange={(e) => {
-                            setGuideBio(e.target.value);
-                            setGuideBioKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="ជីវប្រវត្តិ និងបទពិសោធន៍របស់មគ្គុទ្ទេសក៍..."
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇰🇭 Khmer Bio (Primary)
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={guideBioKm || guideBio}
-                          onChange={(e) => {
-                            setGuideBio(e.target.value);
-                            setGuideBioKm(e.target.value);
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="ជីវប្រវត្តិ និងបទពិសោធន៍របស់មគ្គុទ្ទេសក៍..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                          🇺🇸 English Bio
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={guideBioEn}
-                          onChange={(e) => setGuideBioEn(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                          placeholder="Professional biography and credentials..."
-                        />
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇺🇸 English Bio (Primary)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={guideBioEn}
+                      onChange={(e) => setGuideBioEn(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="Professional biography and credentials..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      🇰🇭 Khmer Bio (Translation)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={guideBioKm || guideBio}
+                      onChange={(e) => {
+                        setGuideBio(e.target.value);
+                        setGuideBioKm(e.target.value);
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="ជីវប្រវត្តិ និងបទពិសោធន៍របស់មគ្គុទ្ទេសក៍..."
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -4739,77 +4346,41 @@ Highlights:
                               <FieldAiTranslator
                                 kmText={day.titleKm || day.title}
                                 enText={day.titleEn}
-                                preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                preferredDirection="en_to_km"
                                 fieldHint={`Tour Itinerary Day ${day.day} Headline Title`}
                                 onTranslateToKm={(trans) => {
-                                  handleUpdateDayField(dIdx, 'titleKm', trans);
-                                  handleUpdateDayField(dIdx, 'title', trans);
+                                  handleUpdateDayField(dIdx, { titleKm: trans, title: trans });
                                 }}
                                 onTranslateToEn={(trans) => handleUpdateDayField(dIdx, 'titleEn', trans)}
                               />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {isEnglishMain ? (
-                                <>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇺🇸 English Title (Primary)
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={day.titleEn || ''}
-                                      onChange={(e) => handleUpdateDayField(dIdx, 'titleEn', e.target.value)}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                      placeholder={`Day ${day.day}: Trade Mission & Business Activity`}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇰🇭 Khmer Title (Secondary)
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={day.titleKm || day.title}
-                                      onChange={(e) => {
-                                        handleUpdateDayField(dIdx, 'title', e.target.value);
-                                        handleUpdateDayField(dIdx, 'titleKm', e.target.value);
-                                      }}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                      placeholder={`ថ្ងៃទី ${day.day}: កម្មវិធីបេសកកម្មពាណិជ្ជកម្ម`}
-                                    />
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇰🇭 Khmer Title (Primary)
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={day.titleKm || day.title}
-                                      onChange={(e) => {
-                                        handleUpdateDayField(dIdx, 'title', e.target.value);
-                                        handleUpdateDayField(dIdx, 'titleKm', e.target.value);
-                                      }}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                      placeholder={`ថ្ងៃទី ${day.day}: កម្មវិធីបេសកកម្មពាណិជ្ជកម្ម`}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇺🇸 English Title
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={day.titleEn || ''}
-                                      onChange={(e) => handleUpdateDayField(dIdx, 'titleEn', e.target.value)}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                      placeholder={`Day ${day.day}: Trade Mission & Business Activity`}
-                                    />
-                                  </div>
-                                </>
-                              )}
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                  🇺🇸 English Title (Primary)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={day.titleEn || ''}
+                                  onChange={(e) => handleUpdateDayField(dIdx, 'titleEn', e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                                  placeholder={`Day ${day.day}: Trade Mission & Business Activity`}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                  🇰🇭 Khmer Title (Translation)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={day.titleKm || day.title}
+                                  onChange={(e) => {
+                                    handleUpdateDayField(dIdx, { title: e.target.value, titleKm: e.target.value });
+                                  }}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                                  placeholder={`ថ្ងៃទី ${day.day}: កម្មវិធីបេសកកម្មពាណិជ្ជកម្ម`}
+                                />
+                              </div>
                             </div>
                           </div>
 
@@ -4822,55 +4393,43 @@ Highlights:
                               <FieldAiTranslator
                                 kmText={day.hotelNameKm || day.hotelName}
                                 enText={day.hotelNameEn}
-                                preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                preferredDirection="en_to_km"
                                 fieldHint={`Tour Itinerary Day ${day.day} Hotel Lodging`}
                                 onTranslateToKm={(trans) => {
                                   handleUpdateDayField(dIdx, 'hotelNameKm', trans);
-                                  if (!isEnglishMain) handleUpdateDayField(dIdx, 'hotelName', trans);
                                 }}
                                 onTranslateToEn={(trans) => {
-                                  handleUpdateDayField(dIdx, 'hotelNameEn', trans);
-                                  if (isEnglishMain) handleUpdateDayField(dIdx, 'hotelName', trans);
+                                  handleUpdateDayField(dIdx, { hotelNameEn: trans, hotelName: trans });
                                 }}
                               />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                  {isEnglishMain ? '🇺🇸 Hotel Name (Primary)' : '🇰🇭 Hotel Name (Primary)'}
+                                  🇺🇸 Hotel Name (Primary)
                                 </label>
                                 <input
                                   type="text"
-                                  value={isEnglishMain ? (day.hotelNameEn || day.hotelName || '') : (day.hotelNameKm || day.hotelName || '')}
+                                  value={day.hotelNameEn || day.hotelName || ''}
                                   onChange={(e) => {
-                                    if (isEnglishMain) {
-                                      handleUpdateDayField(dIdx, 'hotelNameEn', e.target.value);
-                                      handleUpdateDayField(dIdx, 'hotelName', e.target.value);
-                                    } else {
-                                      handleUpdateDayField(dIdx, 'hotelNameKm', e.target.value);
-                                      handleUpdateDayField(dIdx, 'hotelName', e.target.value);
-                                    }
+                                    handleUpdateDayField(dIdx, { hotelNameEn: e.target.value, hotelName: e.target.value });
                                   }}
                                   className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                  placeholder={isEnglishMain ? "e.g. Guangzhou Marriott Pazhou (5-Star Luxury)" : "ឧ. សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)"}
+                                  placeholder="e.g. Guangzhou Marriott Pazhou (5-Star Luxury)"
                                 />
                               </div>
                               <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                  {isEnglishMain ? '🇰🇭 Hotel Name (Secondary)' : '🇺🇸 Hotel Name (Secondary)'}
+                                  🇰🇭 Hotel Name (Translation)
                                 </label>
                                 <input
                                   type="text"
-                                  value={isEnglishMain ? (day.hotelNameKm || '') : (day.hotelNameEn || '')}
+                                  value={day.hotelNameKm || ''}
                                   onChange={(e) => {
-                                    if (isEnglishMain) {
-                                      handleUpdateDayField(dIdx, 'hotelNameKm', e.target.value);
-                                    } else {
-                                      handleUpdateDayField(dIdx, 'hotelNameEn', e.target.value);
-                                    }
+                                    handleUpdateDayField(dIdx, 'hotelNameKm', e.target.value);
                                   }}
                                   className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                  placeholder={isEnglishMain ? "ឧ. សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)" : "e.g. Guangzhou Marriott Pazhou (5-Star Luxury)"}
+                                  placeholder="ឧ. សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)"
                                 />
                               </div>
                             </div>
@@ -4887,59 +4446,47 @@ Highlights:
                                 <FieldAiTranslator
                                   kmText={day.mealsIncludedKm?.join(', ') || day.mealsIncluded?.join(', ')}
                                   enText={day.mealsIncludedEn?.join(', ')}
-                                  preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                  preferredDirection="en_to_km"
                                   fieldHint={`Tour Day ${day.day} Included Meals`}
                                   onTranslateToKm={(trans) => {
                                     const arr = trans.split(',').map(s => s.trim()).filter(Boolean);
                                     handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
-                                    if (!isEnglishMain) handleUpdateDayField(dIdx, 'mealsIncluded', arr);
                                   }}
                                   onTranslateToEn={(trans) => {
                                     const arr = trans.split(',').map(s => s.trim()).filter(Boolean);
-                                    handleUpdateDayField(dIdx, 'mealsIncludedEn', arr);
-                                    if (isEnglishMain) handleUpdateDayField(dIdx, 'mealsIncluded', arr);
+                                    handleUpdateDayField(dIdx, { mealsIncludedEn: arr, mealsIncluded: arr });
                                   }}
                                 />
                               </div>
                               <div className="space-y-1.5">
                                 <div>
                                   <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                    {isEnglishMain ? '🇺🇸 English Meals' : '🇰🇭 Khmer Meals'}
+                                    🇺🇸 English Meals (Primary)
                                   </label>
                                   <input
                                     type="text"
-                                    value={isEnglishMain ? (day.mealsIncludedEn?.join(', ') || day.mealsIncluded?.join(', ') || '') : (day.mealsIncludedKm?.join(', ') || day.mealsIncluded?.join(', ') || '')}
+                                    value={day.mealsIncludedEn?.join(', ') || day.mealsIncluded?.join(', ') || ''}
                                     onChange={(e) => {
                                       const arr = e.target.value.split(',').map(m => m.trim());
-                                      if (isEnglishMain) {
-                                        handleUpdateDayField(dIdx, 'mealsIncludedEn', arr);
-                                        handleUpdateDayField(dIdx, 'mealsIncluded', arr);
-                                      } else {
-                                        handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
-                                        handleUpdateDayField(dIdx, 'mealsIncluded', arr);
-                                      }
+                                      handleUpdateDayField(dIdx, { mealsIncludedEn: arr, mealsIncluded: arr });
                                     }}
                                     className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                    placeholder={isEnglishMain ? "Hotel Buffet Breakfast, Executive Lunch, Dinner" : "អាហារពេលព្រឹកប៊ូហ្វេ, អាហារថ្ងៃត្រង់, អាហារពេលល្ងាច"}
+                                    placeholder="Hotel Buffet Breakfast, Executive Lunch, Dinner"
                                   />
                                 </div>
                                 <div>
                                   <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                    {isEnglishMain ? '🇰🇭 Khmer Meals' : '🇺🇸 English Meals'}
+                                    🇰🇭 Khmer Meals (Translation)
                                   </label>
                                   <input
                                     type="text"
-                                    value={isEnglishMain ? (day.mealsIncludedKm?.join(', ') || '') : (day.mealsIncludedEn?.join(', ') || '')}
+                                    value={day.mealsIncludedKm?.join(', ') || ''}
                                     onChange={(e) => {
                                       const arr = e.target.value.split(',').map(m => m.trim());
-                                      if (isEnglishMain) {
-                                        handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
-                                      } else {
-                                        handleUpdateDayField(dIdx, 'mealsIncludedEn', arr);
-                                      }
+                                      handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
                                     }}
                                     className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                    placeholder={isEnglishMain ? "អាហារពេលព្រឹកប៊ូហ្វេ, អាហារថ្ងៃត្រង់, អាហារពេលល្ងាច" : "Hotel Buffet Breakfast, Executive Lunch, Dinner"}
+                                    placeholder="អាហារពេលព្រឹកប៊ូហ្វេ, អាហារថ្ងៃត្រង់, អាហារពេលល្ងាច"
                                   />
                                 </div>
                               </div>
@@ -4954,15 +4501,13 @@ Highlights:
                                 <FieldAiTranslator
                                   kmText={day.assemblyPointKm || day.assemblyPoint}
                                   enText={day.assemblyPointEn}
-                                  preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                  preferredDirection="en_to_km"
                                   fieldHint={`Tour Day ${day.day} Assembly Point`}
                                   onTranslateToKm={(trans) => {
                                     handleUpdateDayField(dIdx, 'assemblyPointKm', trans);
-                                    if (!isEnglishMain) handleUpdateDayField(dIdx, 'assemblyPoint', trans);
                                   }}
                                   onTranslateToEn={(trans) => {
-                                    handleUpdateDayField(dIdx, 'assemblyPointEn', trans);
-                                    if (isEnglishMain) handleUpdateDayField(dIdx, 'assemblyPoint', trans);
+                                    handleUpdateDayField(dIdx, { assemblyPointEn: trans, assemblyPoint: trans });
                                   }}
                                 />
                               </div>
@@ -4970,40 +4515,30 @@ Highlights:
                                 <div className="grid grid-cols-2 gap-2">
                                   <div>
                                     <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      {isEnglishMain ? '🇺🇸 Assembly (EN)' : '🇰🇭 Assembly (KM)'}
+                                      🇺🇸 Assembly (EN Primary)
                                     </label>
                                     <input
                                       type="text"
-                                      value={isEnglishMain ? (day.assemblyPointEn || day.assemblyPoint || '') : (day.assemblyPointKm || day.assemblyPoint || '')}
+                                      value={day.assemblyPointEn || day.assemblyPoint || ''}
                                       onChange={(e) => {
-                                        if (isEnglishMain) {
-                                          handleUpdateDayField(dIdx, 'assemblyPointEn', e.target.value);
-                                          handleUpdateDayField(dIdx, 'assemblyPoint', e.target.value);
-                                        } else {
-                                          handleUpdateDayField(dIdx, 'assemblyPointKm', e.target.value);
-                                          handleUpdateDayField(dIdx, 'assemblyPoint', e.target.value);
-                                        }
+                                        handleUpdateDayField(dIdx, { assemblyPointEn: e.target.value, assemblyPoint: e.target.value });
                                       }}
                                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder={isEnglishMain ? "Hotel Main Lobby Portico" : "មុខឡប់ប៊ីសណ្ឋាគារ"}
+                                      placeholder="Hotel Main Lobby Portico"
                                     />
                                   </div>
                                   <div>
                                     <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      {isEnglishMain ? '🇰🇭 Assembly (KM)' : '🇺🇸 Assembly (EN)'}
+                                      🇰🇭 Assembly (KM Translation)
                                     </label>
                                     <input
                                       type="text"
-                                      value={isEnglishMain ? (day.assemblyPointKm || '') : (day.assemblyPointEn || '')}
+                                      value={day.assemblyPointKm || ''}
                                       onChange={(e) => {
-                                        if (isEnglishMain) {
-                                          handleUpdateDayField(dIdx, 'assemblyPointKm', e.target.value);
-                                        } else {
-                                          handleUpdateDayField(dIdx, 'assemblyPointEn', e.target.value);
-                                        }
+                                        handleUpdateDayField(dIdx, 'assemblyPointKm', e.target.value);
                                       }}
                                       className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder={isEnglishMain ? "មុខឡប់ប៊ីសណ្ឋាគារ" : "Hotel Main Lobby Portico"}
+                                      placeholder="មុខឡប់ប៊ីសណ្ឋាគារ"
                                     />
                                   </div>
                                 </div>
@@ -5032,77 +4567,43 @@ Highlights:
                               <FieldAiTranslator
                                 kmText={day.descriptionKm || day.description}
                                 enText={day.descriptionEn}
-                                preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                preferredDirection="en_to_km"
                                 fieldHint={`Tour Itinerary Day ${day.day} Full Day Description`}
                                 onTranslateToKm={(trans) => {
                                   handleUpdateDayField(dIdx, 'descriptionKm', trans);
-                                  handleUpdateDayField(dIdx, 'description', trans);
                                 }}
-                                onTranslateToEn={(trans) => handleUpdateDayField(dIdx, 'descriptionEn', trans)}
+                                onTranslateToEn={(trans) => {
+                                  handleUpdateDayField(dIdx, { descriptionEn: trans, description: trans });
+                                }}
                               />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {isEnglishMain ? (
-                                <>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇺🇸 English Description (Primary)
-                                    </label>
-                                    <textarea
-                                      rows={3}
-                                      value={day.descriptionEn || ''}
-                                      onChange={(e) => handleUpdateDayField(dIdx, 'descriptionEn', e.target.value)}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder="Full day activity overview and schedule..."
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇰🇭 Khmer Description (Secondary)
-                                    </label>
-                                    <textarea
-                                      rows={3}
-                                      value={day.descriptionKm || day.description}
-                                      onChange={(e) => {
-                                        handleUpdateDayField(dIdx, 'description', e.target.value);
-                                        handleUpdateDayField(dIdx, 'descriptionKm', e.target.value);
-                                      }}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder="ព័ត៌មានលម្អិតសកម្មភាពប្រចាំថ្ងៃ..."
-                                    />
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇰🇭 Khmer Description (Primary)
-                                    </label>
-                                    <textarea
-                                      rows={3}
-                                      value={day.descriptionKm || day.description}
-                                      onChange={(e) => {
-                                        handleUpdateDayField(dIdx, 'description', e.target.value);
-                                        handleUpdateDayField(dIdx, 'descriptionKm', e.target.value);
-                                      }}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder="ព័ត៌មានលម្អិតសកម្មភាពប្រចាំថ្ងៃ..."
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                      🇺🇸 English Description
-                                    </label>
-                                    <textarea
-                                      rows={3}
-                                      value={day.descriptionEn || ''}
-                                      onChange={(e) => handleUpdateDayField(dIdx, 'descriptionEn', e.target.value)}
-                                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder="Full day activity overview and schedule..."
-                                    />
-                                  </div>
-                                </>
-                              )}
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                  🇺🇸 English Description (Primary)
+                                </label>
+                                <textarea
+                                  rows={3}
+                                  value={day.descriptionEn || day.description || ''}
+                                  onChange={(e) => handleUpdateDayField(dIdx, { descriptionEn: e.target.value, description: e.target.value })}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                  placeholder="Full day activity overview and schedule..."
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                  🇰🇭 Khmer Description (Translation)
+                                </label>
+                                <textarea
+                                  rows={3}
+                                  value={day.descriptionKm || ''}
+                                  onChange={(e) => {
+                                    handleUpdateDayField(dIdx, 'descriptionKm', e.target.value);
+                                  }}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-khmer"
+                                  placeholder="ព័ត៌មានលម្អិតសកម្មភាពប្រចាំថ្ងៃ..."
+                                />
+                              </div>
                             </div>
                           </div>
 
@@ -5153,12 +4654,8 @@ Highlights:
 
                             <div className="space-y-3">
                               {(day.guideAgenda || []).map((slot, sIdx) => {
-                                const kmAct = slot.activityKm || (!isEnglishMain ? slot.activity : '') || '';
-                                const enAct = slot.activityEn || (isEnglishMain ? slot.activity : '') || '';
-                                const kmLoc = slot.locationKm || (!isEnglishMain ? slot.location : '') || '';
-                                const enLoc = slot.locationEn || (isEnglishMain ? slot.location : '') || '';
-                                const kmNote = slot.notesKm || (!isEnglishMain ? slot.notes : '') || '';
-                                const enNote = slot.notesEn || (isEnglishMain ? slot.notes : '') || '';
+                                const kmAct = slot.activityKm || '';
+                                const enAct = slot.activityEn || slot.activity || '';
 
                                 return (
                                   <div
@@ -5184,16 +4681,14 @@ Highlights:
                                         <FieldAiTranslator
                                           kmText={kmAct}
                                           enText={enAct}
-                                          preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                          preferredDirection="en_to_km"
                                           fieldHint={`Tour Day ${day.day} Slot ${sIdx + 1} Activity`}
                                           size="xs"
                                           onTranslateToKm={(trans) => {
                                             handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', trans);
-                                            if (!isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
                                           }}
                                           onTranslateToEn={(trans) => {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', trans);
-                                            if (isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
+                                            handleUpdateAgendaItem(dIdx, sIdx, { activityEn: trans, activity: trans });
                                           }}
                                         />
                                         <button
@@ -5211,82 +4706,62 @@ Highlights:
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       <div>
                                         <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                          {isEnglishMain ? '🇺🇸 Activity (English - Primary)' : '🇰🇭 សកម្មភាពកម្មវិធី (ភាសាខ្មែរ)'}
+                                          🇺🇸 Activity (English - Primary)
                                         </label>
                                         <input
                                           type="text"
-                                          value={isEnglishMain ? enAct : (slot.activityKm || slot.activity || '')}
+                                          value={slot.activityEn || slot.activity || ''}
                                           onChange={(e) => {
-                                            if (isEnglishMain) {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
-                                            } else {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
-                                            }
+                                            handleUpdateAgendaItem(dIdx, sIdx, { activityEn: e.target.value, activity: e.target.value });
                                           }}
                                           className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
-                                          placeholder={isEnglishMain ? "e.g. Pazhou Complex Area A Exhibition Walkthrough" : "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A"}
+                                          placeholder="e.g. Pazhou Complex Area A Exhibition Walkthrough"
                                         />
                                       </div>
                                       <div>
                                         <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                          {isEnglishMain ? '🇰🇭 Activity (Khmer - Secondary)' : '🇺🇸 សកម្មភាពកម្មវិធី (ភាសាអង់គ្លេស)'}
+                                          🇰🇭 សកម្មភាពកម្មវិធី (ភាសាខ្មែរ / Translation)
                                         </label>
                                         <input
                                           type="text"
-                                          value={isEnglishMain ? (slot.activityKm || '') : (slot.activityEn || '')}
+                                          value={slot.activityKm || ''}
                                           onChange={(e) => {
-                                            if (isEnglishMain) {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
-                                            } else {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
-                                            }
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
                                           }}
-                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
-                                          placeholder={isEnglishMain ? "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A" : "e.g. Pazhou Complex Area A Exhibition Walkthrough"}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold font-khmer"
+                                          placeholder="ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A"
                                         />
                                       </div>
                                     </div>
 
-                                    {/* Location & Notes (Bilingual) */}
+                                    {/* Location (Bilingual) */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       <div>
                                         <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                          📍 {isEnglishMain ? '🇺🇸 Location (EN)' : '🇰🇭 ទីតាំង (KM)'}
+                                          📍 🇺🇸 Location (EN Primary)
                                         </label>
                                         <input
                                           type="text"
-                                          value={isEnglishMain ? enLoc : (slot.locationKm || slot.location || '')}
+                                          value={slot.locationEn || slot.location || ''}
                                           onChange={(e) => {
-                                            if (isEnglishMain) {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
-                                            } else {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
-                                            }
+                                            handleUpdateAgendaItem(dIdx, sIdx, { locationEn: e.target.value, location: e.target.value });
                                           }}
                                           className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                                          placeholder={isEnglishMain ? "Pazhou Complex Area A" : "សាលពិព័រណ៍ Pazhou តំបន់ A"}
+                                          placeholder="Pazhou Complex Area A"
                                         />
                                       </div>
                                       <div>
                                         <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                          📍 {isEnglishMain ? '🇰🇭 Location (KM)' : '🇺🇸 ទីតាំង (EN)'}
+                                          📍 🇰🇭 ទីតាំង (KM Translation)
                                         </label>
                                         <input
                                           type="text"
-                                          value={isEnglishMain ? (slot.locationKm || '') : (slot.locationEn || '')}
+                                          value={slot.locationKm || ''}
                                           onChange={(e) => {
-                                            if (isEnglishMain) {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
-                                            } else {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
-                                            }
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
                                           }}
-                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                                          placeholder={isEnglishMain ? "សាលពិព័រណ៍ Pazhou តំបន់ A" : "Pazhou Complex Area A"}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-khmer"
+                                          placeholder="សាលពិព័រណ៍ Pazhou តំបន់ A"
                                         />
                                       </div>
                                     </div>
@@ -5295,40 +4770,30 @@ Highlights:
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
                                       <div>
                                         <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                          💡 {isEnglishMain ? '🇺🇸 Notes / Tips (EN)' : '🇰🇭 ការណែនាំ / កំណត់សម្គាល់ (KM)'}
+                                          💡 🇺🇸 Notes / Tips (EN Primary)
                                         </label>
                                         <input
                                           type="text"
-                                          value={isEnglishMain ? enNote : (slot.notesKm || slot.notes || '')}
+                                          value={slot.notesEn || slot.notes || ''}
                                           onChange={(e) => {
-                                            if (isEnglishMain) {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesEn', e.target.value);
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'notes', e.target.value);
-                                            } else {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesKm', e.target.value);
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'notes', e.target.value);
-                                            }
+                                            handleUpdateAgendaItem(dIdx, sIdx, { notesEn: e.target.value, notes: e.target.value });
                                           }}
                                           className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px]"
-                                          placeholder={isEnglishMain ? "Optional tips, escort instructions..." : "ការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍..."}
+                                          placeholder="Optional tips, escort instructions..."
                                         />
                                       </div>
                                       <div>
                                         <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                          💡 {isEnglishMain ? '🇰🇭 Notes / Tips (KM)' : '🇺🇸 ការណែនាំ / កំណត់សម្គាល់ (EN)'}
+                                          💡 🇰🇭 ការណែនាំ / កំណត់សម្គាល់ (KM Translation)
                                         </label>
                                         <input
                                           type="text"
-                                          value={isEnglishMain ? (slot.notesKm || '') : (slot.notesEn || '')}
+                                          value={slot.notesKm || ''}
                                           onChange={(e) => {
-                                            if (isEnglishMain) {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesKm', e.target.value);
-                                            } else {
-                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesEn', e.target.value);
-                                            }
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'notesKm', e.target.value);
                                           }}
-                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px]"
-                                          placeholder={isEnglishMain ? "ការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍..." : "Optional tips, escort instructions..."}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-khmer"
+                                          placeholder="ការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍..."
                                         />
                                       </div>
                                     </div>
@@ -5384,13 +4849,14 @@ Highlights:
                           <FieldAiTranslator
                             kmText={prog.titleKm || prog.title}
                             enText={prog.titleEn}
-                            preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                            preferredDirection="en_to_km"
                             fieldHint="Tour Package Optional Add-on Program Name"
                             onTranslateToKm={(trans) => {
                               handleUpdateOptionalProgram(pIdx, 'titleKm', trans);
-                              handleUpdateOptionalProgram(pIdx, 'title', trans);
                             }}
-                            onTranslateToEn={(trans) => handleUpdateOptionalProgram(pIdx, 'titleEn', trans)}
+                            onTranslateToEn={(trans) => {
+                              handleUpdateOptionalProgram(pIdx, { titleEn: trans, title: trans });
+                            }}
                           />
                           <button
                             type="button"
@@ -5403,67 +4869,32 @@ Highlights:
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {isEnglishMain ? (
-                          <>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇺🇸 English Title (Primary)
-                              </label>
-                              <input
-                                type="text"
-                                value={prog.titleEn || ''}
-                                onChange={(e) => handleUpdateOptionalProgram(pIdx, 'titleEn', e.target.value)}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                placeholder="e.g. Automated Smart Factory Visit & VIP Networking Dinner"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇰🇭 Khmer Title (Secondary)
-                              </label>
-                              <input
-                                type="text"
-                                value={prog.titleKm || prog.title}
-                                onChange={(e) => {
-                                  handleUpdateOptionalProgram(pIdx, 'title', e.target.value);
-                                  handleUpdateOptionalProgram(pIdx, 'titleKm', e.target.value);
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                placeholder="e.g. កម្មវិធីទស្សនកិច្ចរោងចក្រស្វ័យប្រវត្ត & ពិសាអាហារពេលល្ងាច VIP"
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇰🇭 Khmer Title (Primary)
-                              </label>
-                              <input
-                                type="text"
-                                value={prog.titleKm || prog.title}
-                                onChange={(e) => {
-                                  handleUpdateOptionalProgram(pIdx, 'title', e.target.value);
-                                  handleUpdateOptionalProgram(pIdx, 'titleKm', e.target.value);
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                placeholder="e.g. កម្មវិធីទស្សនកិច្ចរោងចក្រស្វ័យប្រវត្ត & ពិសាអាហារពេលល្ងាច VIP"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇺🇸 English Title
-                              </label>
-                              <input
-                                type="text"
-                                value={prog.titleEn || ''}
-                                onChange={(e) => handleUpdateOptionalProgram(pIdx, 'titleEn', e.target.value)}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                                placeholder="e.g. Automated Smart Factory Visit & VIP Networking Dinner"
-                              />
-                            </div>
-                          </>
-                        )}
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                            🇺🇸 English Title (Primary)
+                          </label>
+                          <input
+                            type="text"
+                            value={prog.titleEn || prog.title || ''}
+                            onChange={(e) => handleUpdateOptionalProgram(pIdx, { titleEn: e.target.value, title: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                            placeholder="e.g. Automated Smart Factory Visit & VIP Networking Dinner"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                            🇰🇭 Khmer Title (Translation)
+                          </label>
+                          <input
+                            type="text"
+                            value={prog.titleKm || ''}
+                            onChange={(e) => {
+                              handleUpdateOptionalProgram(pIdx, 'titleKm', e.target.value);
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold font-khmer"
+                            placeholder="e.g. កម្មវិធីទស្សនកិច្ចរោងចក្រស្វ័យប្រវត្ត & ពិសាអាហារពេលល្ងាច VIP"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -5555,77 +4986,43 @@ Highlights:
                         <FieldAiTranslator
                           kmText={prog.descriptionKm || prog.description}
                           enText={prog.descriptionEn}
-                          preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                          preferredDirection="en_to_km"
                           fieldHint="Tour Package Optional Add-on Program Description"
                           onTranslateToKm={(trans) => {
                             handleUpdateOptionalProgram(pIdx, 'descriptionKm', trans);
-                            handleUpdateOptionalProgram(pIdx, 'description', trans);
                           }}
-                          onTranslateToEn={(trans) => handleUpdateOptionalProgram(pIdx, 'descriptionEn', trans)}
+                          onTranslateToEn={(trans) => {
+                            handleUpdateOptionalProgram(pIdx, { descriptionEn: trans, description: trans });
+                          }}
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {isEnglishMain ? (
-                          <>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇺🇸 English Description (Primary)
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={prog.descriptionEn || ''}
-                                onChange={(e) => handleUpdateOptionalProgram(pIdx, 'descriptionEn', e.target.value)}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="Detailed description of the optional activity..."
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇰🇭 Khmer Description (Secondary)
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={prog.descriptionKm || prog.description}
-                                onChange={(e) => {
-                                  handleUpdateOptionalProgram(pIdx, 'description', e.target.value);
-                                  handleUpdateOptionalProgram(pIdx, 'descriptionKm', e.target.value);
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="ការពិពណ៌នាលម្អិតអំពីកម្មវិធីបន្ថែម..."
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇰🇭 Khmer Description (Primary)
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={prog.descriptionKm || prog.description}
-                                onChange={(e) => {
-                                  handleUpdateOptionalProgram(pIdx, 'description', e.target.value);
-                                  handleUpdateOptionalProgram(pIdx, 'descriptionKm', e.target.value);
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="ការពិពណ៌នាលម្អិតអំពីកម្មវិធីបន្ថែម..."
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                🇺🇸 English Description
-                              </label>
-                              <textarea
-                                rows={2}
-                                value={prog.descriptionEn || ''}
-                                onChange={(e) => handleUpdateOptionalProgram(pIdx, 'descriptionEn', e.target.value)}
-                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="Detailed description of the optional activity..."
-                              />
-                            </div>
-                          </>
-                        )}
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                            🇺🇸 English Description (Primary)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={prog.descriptionEn || prog.description || ''}
+                            onChange={(e) => handleUpdateOptionalProgram(pIdx, { descriptionEn: e.target.value, description: e.target.value })}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                            placeholder="Detailed description of the optional activity..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                            🇰🇭 Khmer Description (Translation)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={prog.descriptionKm || ''}
+                            onChange={(e) => {
+                              handleUpdateOptionalProgram(pIdx, 'descriptionKm', e.target.value);
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-khmer"
+                            placeholder="ការពិពណ៌នាលម្អិតអំពីកម្មវិធីបន្ថែម..."
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

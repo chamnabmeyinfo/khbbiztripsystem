@@ -35,10 +35,13 @@ t('navInboundLeads')    // Returns "Inbound Leads (CRM)" or translated equivalen
 
 ## Field-Level AI Translation & Language Indicators
 In addition to UI system localization, the system provides high-precision **Field-Level AI Translation and Visual Language Guidance** across all dynamic forms (`PackageEditorModal`, `PackageCategoryModal`, `BilingualListEditor`):
-- **Visual Language Badges**: Unambiguous visual indicators (`🇰🇭 KM`, `🇺🇸 EN`, `🇨🇳 ZH`) attached to every input header so administrators immediately know which language belongs in which field.
+- **English-First Primary Source Standard (`EN ➔ KM`)**: English is standardized as the master source across all editor tabs and lists. Column 1 (Left / Top) is always `🇺🇸 EN (Primary)` and Column 2 (Right / Bottom) is `🇰🇭 KM (Translation)`. Translators default to `preferredDirection="en_to_km"`.
+- **Atomic Functional State Mutation Architecture**: State handlers (`handleUpdateDayField`, `handleUpdateAgendaItem`, `handleUpdateOptionalProgram`, `setItinerary`, `setOptionalPrograms`) employ functional updater callbacks `prev => prev.map(...)` with atomic partial merging. This completely prevents stale closure evaluation and guarantees zero input freezing / uneditable text during rapid typing and background auto-save debouncing.
+- **Hour-by-Hour Guide Agenda Timeline (`guideAgenda`)**: Full bilingual support for `activityKm`/`En`, `locationKm`/`En`, and `notesKm`/`En` with individual and day-wide batch AI translation (`handleAutoTranslateDaySlots`).
+- **Visual Language Badges**: Unambiguous visual indicators (`🇺🇸 EN (Primary)`, `🇰🇭 KM (Translation)`, `🇨🇳 ZH`) attached to every input header so administrators immediately know which language belongs in which field.
 - **Contextual Example Hints**: Tailored, domain-specific examples underneath each input field (e.g. `"China"`, `"Join our exclusive delegation with VIP factory tours"`, `"ឧ. ពិព័រណ៍ក្វាងចូវ"`) ensuring intuitive data entry.
-- **`FieldAiTranslator` Component** (`src/components/admin/FieldAiTranslator.tsx`): Provides seamless single/dual-field and array bidirectional translation (Khmer 🇰🇭 ⇄ English 🇺🇸 ⇄ Multilingual) with clear direction indicators (`⚡ Translate 🇰🇭 KM ➔ 🇺🇸 EN`, `⚡ Translate 🇺🇸 EN ➔ 🇰🇭 KM`).
-- **Package Localization Utility** (`src/utils/packageLocalization.ts`): Resolves runtime localized fields (`titleKm`/`titleEn`, `descriptionKm`/`descriptionEn`, `highlightsKm`/`highlightsEn`, itinerary agendas, etc.) based on active system language.
+- **`FieldAiTranslator` Component** (`src/components/admin/FieldAiTranslator.tsx`): Provides seamless single/dual-field and array bidirectional translation (Khmer 🇰🇭 ⇄ English 🇺🇸 ⇄ Multilingual) with clear direction indicators (`⚡ Translate 🇺🇸 EN ➔ 🇰🇭 KM`, `⚡ Translate 🇰🇭 KM ➔ 🇺🇸 EN`).
+- **Package Localization Utility** (`src/utils/packageLocalization.ts`): Resolves runtime localized fields (`titleKm`/`titleEn`, `descriptionKm`/`descriptionEn`, `highlightsKm`/`highlightsEn`, itinerary agendas `guideAgenda`, optional programs `optionalPrograms`, etc.) based on active system language.
 - **Server Translation Endpoint** (`/api/ai-translate` in `app.ts`): Secure server-side proxy powered by `@google/genai` with fallback cascade models (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-flash-latest`, `gemini-2.5-flash`).
 - **Client Offline Translation Fallback** (`src/services/geminiService.ts`): Comprehensive `TRAVEL_TRANSLATION_FALLBACK_DICT` covering travel, Canton Fair B2B missions, VIP transport, hotels, meals, flight tickets, and itinerary milestones.
 
@@ -50,3 +53,5 @@ In addition to UI system localization, the system provides high-precision **Fiel
 ## Related Notes
 - [[Currency Service]]
 - [[AppContext]]
+- [[Data Models]]
+- [[Components Map]]

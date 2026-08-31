@@ -191,49 +191,50 @@ export const PackageDetailModal: React.FC = () => {
     if (step.guideAgenda && step.guideAgenda.length > 0) {
       return step.guideAgenda;
     }
+    const isKm = language === 'km';
     // Fallback professional agenda slots
     return [
       {
         time: '07:00 AM - 08:30 AM',
-        activity: 'Hotel International Breakfast & Morning Briefing',
-        location: step.hotelName || 'Hotel Restaurant',
+        activity: isKm ? 'អាហារពេលព្រឹកប៊ូហ្វេអន្តរជាតិ & ការណែនាំពេលព្រឹក' : 'Hotel International Breakfast & Morning Briefing',
+        location: step.hotelName || (isKm ? 'ភោជនីយដ្ឋានសណ្ឋាគារ' : 'Hotel Restaurant'),
         type: 'briefing' as const,
-        notes: 'Tour guide distributes entry badges and daily schedule.'
+        notes: isKm ? 'មគ្គុទ្ទេសក៍ទេសចរណ៍ចែកប័ណ្ណសម្គាល់ខ្លួន និងកាលវិភាគប្រចាំថ្ងៃ' : 'Tour guide distributes entry badges and daily schedule.'
       },
       {
         time: '08:45 AM - 09:15 AM',
-        activity: 'Assembly & Group VIP Coach Transfer',
-        location: 'Hotel Main Lobby Portico',
+        activity: isKm ? 'ជួបជុំប្រតិភូ & ធ្វើដំណើរតាមរថយន្តក្រុង VIP' : 'Assembly & Group VIP Coach Transfer',
+        location: isKm ? 'មុខឡប់ប៊ីសណ្ឋាគារ' : 'Hotel Main Lobby Portico',
         type: 'gathering' as const,
-        notes: 'Please wear your official mission badge.'
+        notes: isKm ? 'សូមពាក់ប័ណ្ណសម្គាល់បេសកកម្មផ្លូវការ' : 'Please wear your official mission badge.'
       },
       {
         time: '09:30 AM - 12:30 PM',
-        activity: step.title || 'Official Mission Sessions / Exhibition Walkthrough',
-        location: 'Main Exhibition & Convention Center',
+        activity: step.title || (isKm ? 'ទស្សនកិច្ចស្តង់ពិព័រណ៍ និងកិច្ចប្រជុំពាណិជ្ជកម្មផ្លូវការ' : 'Official Mission Sessions / Exhibition Walkthrough'),
+        location: isKm ? 'មជ្ឈមណ្ឌលពិព័រណ៍ & សន្និបាតធំ' : 'Main Exhibition & Convention Center',
         type: 'exhibition' as const,
-        notes: 'Tour guide stationed at KHB info booth for assistance.'
+        notes: isKm ? 'មគ្គុទ្ទេសក៍ទេសចរណ៍ប្រចាំការនៅស្តង់ព័ត៌មាន KHB សម្រាប់ជំនួយ' : 'Tour guide stationed at KHB info booth for assistance.'
       },
       {
         time: '12:30 PM - 02:00 PM',
-        activity: 'Delegation Networking Lunch',
-        location: 'VIP Hall Restaurant',
+        activity: isKm ? 'អាហារថ្ងៃត្រង់ទំនាក់ទំនងបណ្តាញអាជីវកម្ម' : 'Delegation Networking Lunch',
+        location: isKm ? 'ភោជនីយដ្ឋានសាល VIP' : 'VIP Hall Restaurant',
         type: 'networking_lunch' as const,
-        notes: step.mealsIncluded?.includes('Lunch') ? 'Included in package' : 'Optional group meal'
+        notes: step.mealsIncluded?.some(m => m.toLowerCase().includes('lunch') || m.includes('ថ្ងៃត្រង់')) ? (isKm ? 'រួមបញ្ចូលក្នុងកញ្ចប់' : 'Included in package') : (isKm ? 'អាហារជម្រើសក្រុម' : 'Optional group meal')
       },
       {
         time: '02:15 PM - 05:30 PM',
-        activity: 'B2B Trade Meetings, Industry Workshops & Site Visits',
-        location: 'Convention Center / Industrial Zone',
+        activity: isKm ? 'ជំនួបពាណិជ្ជកម្ម B2B សិក្ខាសាលា & ទស្សនកិច្ចទីតាំងជាក់ស្តែង' : 'B2B Trade Meetings, Industry Workshops & Site Visits',
+        location: isKm ? 'មជ្ឈមណ្ឌលសន្និបាត / តំបន់ឧស្សាហកម្ម' : 'Convention Center / Industrial Zone',
         type: 'b2b_meeting' as const,
-        notes: 'Translators available upon request.'
+        notes: isKm ? 'មានអ្នកបកប្រែភាសាជូនដំណើរបម្រើជូនតាមការស្នើសុំ' : 'Translators available upon request.'
       },
       {
         time: '06:00 PM onwards',
-        activity: 'Return to Hotel / Optional Evening Tour & Cultural Dinner',
-        location: step.hotelName || 'City Center',
+        activity: isKm ? 'ត្រឡប់មកសណ្ឋាគារ / កម្មវិធីដំណើរកម្សាន្តពេលរាត្រី & អាហារពេលល្ងាច' : 'Return to Hotel / Optional Evening Tour & Cultural Dinner',
+        location: step.hotelName || (isKm ? 'កណ្តាលក្រុង' : 'City Center'),
         type: 'free_time' as const,
-        notes: 'Free evening or join optional tour program.'
+        notes: isKm ? 'ពេលសម្រាកផ្ទាល់ខ្លួន ឬចូលរួមកម្មវិធីបន្ថែម' : 'Free evening or join optional tour program.'
       }
     ];
   };
