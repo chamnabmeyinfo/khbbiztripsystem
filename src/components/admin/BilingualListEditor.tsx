@@ -336,7 +336,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-            🇺🇸 EN
+            🇬🇧 EN
           </span>
           <span>English Version {isEnglishMain ? '(English Primary)' : '(English Secondary)'} ({enItems.length})</span>
         </label>
