@@ -90,6 +90,7 @@ restorePackage(packageId: string);
 // - packageReconciler (reconcileTourPackages): Safe dual-layer conflict resolution comparing createdAt, updatedAt, and version counters
 // - Firestore snapshot synchronization: Reconciles local and remote packages, preserving local updates and safely pushing them to the cloud
 // - Deleted item tracking (deletedIds): Prevents remote snapshots or initial fallback seeds from resurrecting deleted packages
+// - Seed Translation Hydration: Automatically enriches cached localStorage packages with updated English translations from INITIAL_PACKAGES on startup
 
 // Package Categories
 addPackageCategory(cat);

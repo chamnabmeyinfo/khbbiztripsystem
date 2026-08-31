@@ -597,7 +597,57 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const valid = parsed.filter((p: TourPackage) => p && p.id && !delSet.has(p.id));
-          if (valid.length > 0) return valid;
+          if (valid.length > 0) {
+            return valid.map((savedPkg: TourPackage) => {
+              const seedMatch = INITIAL_PACKAGES.find(ip => ip.id === savedPkg.id);
+              if (!seedMatch) return savedPkg;
+              return {
+                ...seedMatch,
+                ...savedPkg,
+                titleKm: savedPkg.titleKm || seedMatch.titleKm,
+                titleEn: savedPkg.titleEn || seedMatch.titleEn,
+                descriptionKm: savedPkg.descriptionKm || seedMatch.descriptionKm,
+                descriptionEn: savedPkg.descriptionEn || seedMatch.descriptionEn,
+                destinationKm: savedPkg.destinationKm || seedMatch.destinationKm,
+                destinationEn: savedPkg.destinationEn || seedMatch.destinationEn,
+                countryKm: savedPkg.countryKm || seedMatch.countryKm,
+                countryEn: savedPkg.countryEn || seedMatch.countryEn,
+                categoryKm: savedPkg.categoryKm || seedMatch.categoryKm,
+                categoryEn: savedPkg.categoryEn || seedMatch.categoryEn,
+                highlightsKm: (savedPkg.highlightsKm && savedPkg.highlightsKm.length > 0) ? savedPkg.highlightsKm : seedMatch.highlightsKm,
+                highlightsEn: (savedPkg.highlightsEn && savedPkg.highlightsEn.length > 0) ? savedPkg.highlightsEn : seedMatch.highlightsEn,
+                whoShouldJoinKm: (savedPkg.whoShouldJoinKm && savedPkg.whoShouldJoinKm.length > 0) ? savedPkg.whoShouldJoinKm : seedMatch.whoShouldJoinKm,
+                whoShouldJoinEn: (savedPkg.whoShouldJoinEn && savedPkg.whoShouldJoinEn.length > 0) ? savedPkg.whoShouldJoinEn : seedMatch.whoShouldJoinEn,
+                whyShouldJoinKm: (savedPkg.whyShouldJoinKm && savedPkg.whyShouldJoinKm.length > 0) ? savedPkg.whyShouldJoinKm : seedMatch.whyShouldJoinKm,
+                whyShouldJoinEn: (savedPkg.whyShouldJoinEn && savedPkg.whyShouldJoinEn.length > 0) ? savedPkg.whyShouldJoinEn : seedMatch.whyShouldJoinEn,
+                inclusionsKm: (savedPkg.inclusionsKm && savedPkg.inclusionsKm.length > 0) ? savedPkg.inclusionsKm : seedMatch.inclusionsKm,
+                inclusionsEn: (savedPkg.inclusionsEn && savedPkg.inclusionsEn.length > 0) ? savedPkg.inclusionsEn : seedMatch.inclusionsEn,
+                exclusionsKm: (savedPkg.exclusionsKm && savedPkg.exclusionsKm.length > 0) ? savedPkg.exclusionsKm : seedMatch.exclusionsKm,
+                exclusionsEn: (savedPkg.exclusionsEn && savedPkg.exclusionsEn.length > 0) ? savedPkg.exclusionsEn : seedMatch.exclusionsEn,
+                termsAndConditionsKm: (savedPkg.termsAndConditionsKm && savedPkg.termsAndConditionsKm.length > 0) ? savedPkg.termsAndConditionsKm : seedMatch.termsAndConditionsKm,
+                termsAndConditionsEn: (savedPkg.termsAndConditionsEn && savedPkg.termsAndConditionsEn.length > 0) ? savedPkg.termsAndConditionsEn : seedMatch.termsAndConditionsEn,
+                itinerary: (savedPkg.itinerary && savedPkg.itinerary.length > 0) ? savedPkg.itinerary.map((step, idx) => {
+                  const seedStep = seedMatch.itinerary?.[idx];
+                  if (!seedStep) return step;
+                  return {
+                    ...seedStep,
+                    ...step,
+                    titleKm: step.titleKm || seedStep.titleKm,
+                    titleEn: step.titleEn || seedStep.titleEn,
+                    descriptionKm: step.descriptionKm || seedStep.descriptionKm,
+                    descriptionEn: step.descriptionEn || seedStep.descriptionEn,
+                    hotelNameKm: step.hotelNameKm || seedStep.hotelNameKm,
+                    hotelNameEn: step.hotelNameEn || seedStep.hotelNameEn,
+                    guideAgenda: step.guideAgenda || seedStep.guideAgenda
+                  };
+                }) : seedMatch.itinerary,
+                tourGuide: seedMatch.tourGuide ? {
+                  ...seedMatch.tourGuide,
+                  ...(savedPkg.tourGuide || {})
+                } : savedPkg.tourGuide
+              };
+            });
+          }
         }
       }
     } catch {}

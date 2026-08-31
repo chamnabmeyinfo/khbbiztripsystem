@@ -22,16 +22,22 @@ import {
 } from 'lucide-react';
 import { formatMoney } from '../../services/currencyService';
 import { getFontFamilyClass } from '../../i18n/translations';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import { QRCodeSVG } from 'qrcode.react';
 
 export const VoucherModal: React.FC = () => {
-  const { selectedBooking, bookings, activeModal, setActiveModal, systemSettings, currency, language, t } = useApp();
+  const { selectedBooking, bookings, packages, activeModal, setActiveModal, systemSettings, currency, language, t } = useApp();
   const [copiedLink, setCopiedLink] = useState(false);
 
   if (activeModal !== 'voucher') return null;
 
   const booking = selectedBooking || bookings[0];
   if (!booking) return null;
+
+  const matchedPkg = packages.find(p => p.id === booking.packageId);
+  const locPkg = matchedPkg ? getLocalizedPackage(matchedPkg, language) : null;
+  const displayTitle = locPkg?.title || booking.packageTitle;
+  const displayDestination = locPkg?.destination || booking.packageDestination;
 
   const handlePrint = () => {
     window.print();
@@ -120,10 +126,10 @@ export const VoucherModal: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center p-5 rounded-2xl bg-slate-50 border border-slate-200 print-friendly-summary">
             <div className="sm:col-span-2 space-y-3">
               <span className="text-xs font-bold text-theme-primary uppercase tracking-wider">
-                {booking.packageDestination}
+                {displayDestination}
               </span>
               <h2 className="text-lg font-black text-slate-900 leading-tight font-heading">
-                {booking.packageTitle}
+                {displayTitle}
               </h2>
 
               <div className="grid grid-cols-2 gap-3 text-xs pt-1">

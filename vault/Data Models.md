@@ -348,6 +348,15 @@ export interface SystemSettings {
 }
 ```
 
+## Package Localization Engine & Strict Bilingual Resolution
+All packages support deep bilingual structures (`*Km` and `*En` paired fields). The helper `getLocalizedPackage(pkg, language)` guarantees:
+- Complete transformation of root package strings (`title`, `destination`, `description`, `highlights`, `whoShouldJoin`, `whyShouldJoin`, `inclusions`, `exclusions`, `termsAndConditions`).
+- Day-by-day `itinerary` translations (`title`, `description`, `hotelName`, `mealsIncluded`, `assemblyPoint`, and `guideAgenda`).
+- Optional add-on program localization (`title`, `description`, `recommendedAudience`, `meetingPoint`).
+- Dedicated Tour Guide profiles (`name`, `title`, `bio`, `briefingMeetingPoint`, `briefingTime`).
+- Zero-leak regex filtering (`/[\u1780-\u17FF]/`) and fallback domain dictionaries preventing untranslated Khmer text from appearing in English (`EN`) mode.
+
 ## Related Notes
 - [[Firebase and Firestore]]
 - [[Mock Data]]
+

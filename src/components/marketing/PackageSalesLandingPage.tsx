@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 
 export const PackageSalesLandingPage: React.FC = () => {
   const {
@@ -50,7 +51,8 @@ export const PackageSalesLandingPage: React.FC = () => {
   } = useApp();
 
   // Fallback to first package if none selected
-  const pkg = selectedPackage || packages[0];
+  const rawPkg = selectedPackage || packages[0];
+  const pkg = useMemo(() => getLocalizedPackage(rawPkg, language), [rawPkg, language]);
 
   const [activeImageIdx, setActiveImageIdx] = useState<number>(0);
   const [selectedDepartureDate, setSelectedDepartureDate] = useState<string>(
@@ -79,53 +81,12 @@ export const PackageSalesLandingPage: React.FC = () => {
     );
   }
 
-  const highlightsList = (language === 'km' && pkg.highlightsKm && pkg.highlightsKm.length > 0)
-    ? pkg.highlightsKm
-    : (language !== 'km' && pkg.highlightsEn && pkg.highlightsEn.length > 0
-        ? pkg.highlightsEn
-        : (pkg.highlights || []));
-
-  const whoShouldJoinList = (language === 'km' && pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0)
-    ? pkg.whoShouldJoinKm
-    : (language !== 'km' && pkg.whoShouldJoinEn && pkg.whoShouldJoinEn.length > 0
-        ? pkg.whoShouldJoinEn
-        : (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0
-            ? pkg.whoShouldJoin
-            : [
-                language === 'km' ? 'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ' : 'Coffee shop, bakery, and F&B restaurant owners seeking direct factory-wholesale pricing and suppliers',
-                language === 'km' ? 'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា' : 'Entrepreneurs & investors looking to license proven international F&B franchise brands for Cambodia',
-                language === 'km' ? 'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ' : 'Importers & commercial distributors of raw bakery ingredients, packaging, and commercial food equipment'
-              ]));
-
-  const whyShouldJoinList = (language === 'km' && pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0)
-    ? pkg.whyShouldJoinKm
-    : (language !== 'km' && pkg.whyShouldJoinEn && pkg.whyShouldJoinEn.length > 0
-        ? pkg.whyShouldJoinEn
-        : (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0
-            ? pkg.whyShouldJoin
-            : [
-                language === 'km' ? 'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល' : 'Acquire direct factory-gate wholesale pricing without broker markups and middleman fees',
-                language === 'km' ? 'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន' : 'Meet and negotiate in person with 1,000+ top verified international manufacturers and brand owners',
-                language === 'km' ? 'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត' : 'Enjoy seamless VIP Fast-Track border clearance, 4-star luxury accommodation, and dedicated translators'
-              ]));
-
-  const inclusionsList = (language === 'km' && pkg.inclusionsKm && pkg.inclusionsKm.length > 0)
-    ? pkg.inclusionsKm
-    : (language !== 'km' && pkg.inclusionsEn && pkg.inclusionsEn.length > 0
-        ? pkg.inclusionsEn
-        : (pkg.inclusions || []));
-
-  const exclusionsList = (language === 'km' && pkg.exclusionsKm && pkg.exclusionsKm.length > 0)
-    ? pkg.exclusionsKm
-    : (language !== 'km' && pkg.exclusionsEn && pkg.exclusionsEn.length > 0
-        ? pkg.exclusionsEn
-        : (pkg.exclusions || []));
-
-  const termsList = (language === 'km' && pkg.termsAndConditionsKm && pkg.termsAndConditionsKm.length > 0)
-    ? pkg.termsAndConditionsKm
-    : (language !== 'km' && pkg.termsAndConditionsEn && pkg.termsAndConditionsEn.length > 0
-        ? pkg.termsAndConditionsEn
-        : (pkg.termsAndConditions || []));
+  const highlightsList = pkg.highlights || [];
+  const whoShouldJoinList = pkg.whoShouldJoin || [];
+  const whyShouldJoinList = pkg.whyShouldJoin || [];
+  const inclusionsList = pkg.inclusions || [];
+  const exclusionsList = pkg.exclusions || [];
+  const termsList = pkg.termsAndConditions || [];
 
   // Price calculations
   const basePrice = pkg.discountPriceUSD || pkg.priceUSD;
@@ -203,9 +164,9 @@ export const PackageSalesLandingPage: React.FC = () => {
     ? pkg.images
     : ['https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80'];
 
-  const displayTitle = language === 'km' && pkg.titleKm ? pkg.titleKm : pkg.title;
-  const displayDestination = language === 'km' && pkg.destinationKm ? pkg.destinationKm : pkg.destination;
-  const displayDescription = language === 'km' && pkg.descriptionKm ? pkg.descriptionKm : pkg.description;
+  const displayTitle = pkg.title;
+  const displayDestination = pkg.destination;
+  const displayDescription = pkg.description;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-28">

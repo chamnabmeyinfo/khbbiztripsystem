@@ -29,6 +29,7 @@ import {
   Eye
 } from 'lucide-react';
 import { formatMoney } from '../../services/currencyService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 
 export type MapMode = 'dark_matter' | 'satellite' | 'street' | 'radar_atlas';
 
@@ -145,8 +146,9 @@ export const InteractiveMap: React.FC = () => {
   }, [packages, selectedFilterTag]);
 
   const activePkg = useMemo(() => {
-    return packages.find(p => p.id === (hoveredPkgId || selectedPkgId)) || packages[0] || null;
-  }, [packages, hoveredPkgId, selectedPkgId]);
+    const raw = packages.find(p => p.id === (hoveredPkgId || selectedPkgId)) || packages[0] || null;
+    return raw ? getLocalizedPackage(raw, language) : null;
+  }, [packages, hoveredPkgId, selectedPkgId, language]);
 
   // Compute flight metrics from PNH
   const activeFlightMetrics = useMemo(() => {

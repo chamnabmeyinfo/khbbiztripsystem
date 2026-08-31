@@ -256,59 +256,47 @@ export const OFFICIAL_BIZTRIP_PACKAGE: TourPackage = {
     '🗣️ Dedicated trilingual business escorts (Khmer/Vietnamese/English) for contract negotiations and logistics clarity',
     '🚀 Turnkey VIP logistics with domestic flights, 4-star lodging, fast-track border clearance, and high-value delegate networking'
   ],
-  inclusions: [
-    'រថយន្តក្រុង VIP ពីភ្នំពេញ ទៅកាន់ប្រទេសវៀតណាម (Phnom Penh to Vietnam VIP Coach)',
-    'សណ្ឋាគារស្នាក់នៅស្តង់ដារ ៤ ផ្កាយ (៣ យប់ / ៤ ថ្ងៃ)',
-    'អាហារពេលព្រឹកប៊ូហ្វេប្រចាំថ្ងៃនៅសណ្ឋាគារ (Daily Hotel Buffet Breakfast)',
-    'រថយន្តក្រុង VIP ដឹកជញ្ជូនពេញដំណើរបេសកកម្មនៅប្រទេសវៀតណាម (Dedicated Bus in Vietnam)',
-    'សំបុត្រជិះកប៉ាល់ល្បឿនលឿនពី កោះត្រល់ មកកាន់ខេត្តកំពត (High-Speed Ferry: Phu Quoc to Kampot)',
-    'រថយន្តក្រុង VIP ពីខេត្តកំពត ត្រឡប់មកកាន់រាជធានីភ្នំពេញ (VIP Coach: Kampot to Phnom Penh)',
-    'មគ្គុទ្ទេសក៍ទេសចរណ៍ជំនាញនិយាយ វៀតណាម-អង់គ្លេស-ខ្មែរ (Certified Bilingual Escort & Guide)',
-    'ការចុះឈ្មោះ និងកាតផ្លូវការចូលទស្សនាពិព័រណ៍ទាំង ៣ ដោយឥតគិតថ្លៃ (Official VIP Expo Passes)',
-    'សេវាសម្រួលបែបបទឆ្លងដែន VIP (Fast-Track Border & Immigration VIP Clearance)',
-    'សំបុត្រយន្តហោះក្នុងស្រុកពី ហូជីមិញ ទៅកាន់ កោះត្រល់ (Domestic Flight: HCMC to Phu Quoc)'
+    inclusions: [
+    'សំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ - ក្វាងចូវ (Roundtrip Flight PNH - CAN)',
+    'សណ្ឋាគារប្រណិតកម្រិត ៥ ផ្កាយ (៥ យប់ នៅក្រុងក្វាងចូវ)',
+    'សេវាបំពេញបែបបទ និងទទួលកាត Buyer Badge ផ្លូវការចូល Canton Fair',
+    'រថយន្តក្រុង VIP ជូនដំណើរពេញដំណើរកម្សាន្ត និងទៅ Pazhou Complex រាល់ថ្ងៃ',
+    'អាហារប៊ូហ្វេពេលព្រឹក និងអាហារពេលល្ងាចម្ហូបក្វាងទុងពិសេស (Guangdong Banquets)',
+    'មគ្គុទ្ទេសក៍ទេសចរណ៍ និងអ្នកបកប្រែភាសាចិន-ខ្មែរ ជំនាញចរចាពាណិជ្ជកម្ម',
+    'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ (International Travel Insurance)'
   ],
   inclusionsKm: [
-    'រថយន្តក្រុង VIP ពីភ្នំពេញ ទៅកាន់ប្រទេសវៀតណាម (Phnom Penh to Vietnam VIP Coach)',
-    'សណ្ឋាគារស្នាក់នៅស្តង់ដារ ៤ ផ្កាយ (៣ យប់ / ៤ ថ្ងៃ)',
-    'អាហារពេលព្រឹកប៊ូហ្វេប្រចាំថ្ងៃនៅសណ្ឋាគារ (Daily Hotel Buffet Breakfast)',
-    'រថយន្តក្រុង VIP ដឹកជញ្ជូនពេញដំណើរបេសកកម្មនៅប្រទេសវៀតណាម (Dedicated Bus in Vietnam)',
-    'សំបុត្រជិះកប៉ាល់ល្បឿនលឿនពី កោះត្រល់ មកកាន់ខេត្តកំពត (High-Speed Ferry: Phu Quoc to Kampot)',
-    'រថយន្តក្រុង VIP ពីខេត្តកំពត ត្រឡប់មកកាន់រាជធានីភ្នំពេញ (VIP Coach: Kampot to Phnom Penh)',
-    'មគ្គុទ្ទេសក៍ទេសចរណ៍ជំនាញនិយាយ វៀតណាម-អង់គ្លេស-ខ្មែរ (Certified Bilingual Escort & Guide)',
-    'ការចុះឈ្មោះ និងកាតផ្លូវការចូលទស្សនាពិព័រណ៍ទាំង ៣ ដោយឥតគិតថ្លៃ (Official VIP Expo Passes)',
-    'សេវាសម្រួលបែបបទឆ្លងដែន VIP (Fast-Track Border & Immigration VIP Clearance)',
-    'សំបុត្រយន្តហោះក្នុងស្រុកពី ហូជីមិញ ទៅកាន់ កោះត្រល់ (Domestic Flight: HCMC to Phu Quoc)'
+    'សំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ - ក្វាងចូវ (Roundtrip Flight PNH - CAN)',
+    'សណ្ឋាគារប្រណិតកម្រិត ៥ ផ្កាយ (៥ យប់ នៅក្រុងក្វាងចូវ)',
+    'សេវាបំពេញបែបបទ និងទទួលកាត Buyer Badge ផ្លូវការចូល Canton Fair',
+    'រថយន្តក្រុង VIP ជូនដំណើរពេញដំណើរកម្សាន្ត និងទៅ Pazhou Complex រាល់ថ្ងៃ',
+    'អាហារប៊ូហ្វេពេលព្រឹក និងអាហារពេលល្ងាចម្ហូបក្វាងទុងពិសេស (Guangdong Banquets)',
+    'មគ្គុទ្ទេសក៍ទេសចរណ៍ និងអ្នកបកប្រែភាសាចិន-ខ្មែរ ជំនាញចរចាពាណិជ្ជកម្ម',
+    'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ (International Travel Insurance)'
   ],
   inclusionsEn: [
-    'Phnom Penh to Vietnam air-conditioned VIP charter coach',
-    '3 Nights in 4-Star premier business hotels & beach resorts',
-    'Daily International hotel buffet breakfast',
-    'Dedicated private VIP coach transport throughout Vietnam',
-    'International high-speed ferry ticket: Phu Quoc Island to Kampot Port',
-    'VIP coach transport from Kampot Port back to Phnom Penh',
-    'Certified trilingual escort & tour directors (Khmer / Vietnamese / English)',
-    'Official pre-registered VIP delegate badges to all 3 international trade expos',
-    'Fast-track border immigration assistance at Bavet/Moc Bai',
-    'Domestic scheduled flight ticket: Ho Chi Minh City (SGN) to Phu Quoc (PQC)'
+    'Roundtrip International Flights: Phnom Penh (PNH) to Guangzhou (CAN) with luggage',
+    '5-Star Luxury Hotel Accommodations (5 Nights in Tianhe / Pazhou District)',
+    'Official Canton Fair VIP Buyer Badge pre-issuance & expedited entrance pass',
+    'Dedicated VIP air-conditioned coach transfers for all scheduled itinerary trips',
+    'Daily Hotel Buffet Breakfasts & Authentic Cantonese Executive Dinners / Banquets',
+    'Trilingual Commercial Business Interpreters (Khmer, Mandarin Chinese, English)',
+    'Comprehensive International Business Travel & Medical Insurance Coverage'
   ],
   exclusions: [
-    'អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចផ្ទាល់ខ្លួន (លើកលែងតែកម្មវិធីដែលបានបញ្ជាក់)',
-    'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាបោកអ៊ុត, ទូរស័ព្ទ)',
-    'ថ្លៃកម្មវិធីជម្រើសបន្ថែម (Optional Tour Programs / VIP 1-on-1 Dinner)',
-    'ធានារ៉ាប់រងការធ្វើដំណើរក្រៅប្រទេសផ្ទាល់ខ្លួន'
+    'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំឯកសារអញ្ជើញ Official Invitation Letter)',
+    'ការចំណាយផ្ទាល់ខ្លួនក្រៅពីកម្មវិធី និងទម្ងន់វ៉ាលីសលើសកំណត់',
+    'ថ្លៃដឹកជញ្ជូនទំនិញគំរូ ឬការកុម្ម៉ង់ទិញទំនិញផ្ទាល់ខ្លួន'
   ],
   exclusionsKm: [
-    'អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចផ្ទាល់ខ្លួន (លើកលែងតែកម្មវិធីដែលបានបញ្ជាក់)',
-    'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាបោកអ៊ុត, ទូរស័ព្ទ)',
-    'ថ្លៃកម្មវិធីជម្រើសបន្ថែម (Optional Tour Programs / VIP 1-on-1 Dinner)',
-    'ធានារ៉ាប់រងការធ្វើដំណើរក្រៅប្រទេសផ្ទាល់ខ្លួន'
+    'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំឯកសារអញ្ជើញ Official Invitation Letter)',
+    'ការចំណាយផ្ទាល់ខ្លួនក្រៅពីកម្មវិធី និងទម្ងន់វ៉ាលីសលើសកំណត់',
+    'ថ្លៃដឹកជញ្ជូនទំនិញគំរូ ឬការកុម្ម៉ង់ទិញទំនិញផ្ទាល់ខ្លួន'
   ],
   exclusionsEn: [
-    'Personal lunches and dinners (outside of official scheduled banquets)',
-    'Personal shopping expenses, room laundry, mini-bar, and roaming telephony',
-    'Optional specialized add-on programs and private B2B matchmaking packages',
-    'Personal international travel and medical insurance'
+    'China Entry Visa processing fee (KHB provides Official Corporate Invitation Letter)',
+    'Personal expenditures (souvenirs, private laundry, telecommunications, minibar)',
+    'International freight, shipping container fees, or commercial sample cargo costs'
   ],
   termsAndConditions: [
     'លិខិតឆ្លងដែន (Passport) ត្រូវតែមានសុពលភាពយ៉ាងតិច ៦ ខែ គិតចាប់ពីថ្ងៃចេញដំណើរ។',
@@ -921,16 +909,56 @@ export const CANTON_FAIR_PHASE_1_PACKAGE: TourPackage = {
     'មគ្គុទ្ទេសក៍ទេសចរណ៍ និងអ្នកបកប្រែភាសាចិន-ខ្មែរ ជំនាញចរចាពាណិជ្ជកម្ម',
     'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ (International Travel Insurance)'
   ],
+  inclusionsKm: [
+    'សំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ - ក្វាងចូវ (Roundtrip Flight PNH - CAN)',
+    'សណ្ឋាគារប្រណិតកម្រិត ៥ ផ្កាយ (៥ យប់ នៅក្រុងក្វាងចូវ)',
+    'សេវាបំពេញបែបបទ និងទទួលកាត Buyer Badge ផ្លូវការចូល Canton Fair',
+    'រថយន្តក្រុង VIP ជូនដំណើរពេញដំណើរកម្សាន្ត និងទៅ Pazhou Complex រាល់ថ្ងៃ',
+    'អាហារប៊ូហ្វេពេលព្រឹក និងអាហារពេលល្ងាចម្ហូបក្វាងទុងពិសេស (Guangdong Banquets)',
+    'មគ្គុទ្ទេសក៍ទេសចរណ៍ និងអ្នកបកប្រែភាសាចិន-ខ្មែរ ជំនាញចរចាពាណិជ្ជកម្ម',
+    'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ (International Travel Insurance)'
+  ],
+  inclusionsEn: [
+    'Roundtrip International Flights: Phnom Penh (PNH) to Guangzhou (CAN) with luggage allowance',
+    '5-Star Luxury Accommodations in Guangzhou (5 Nights in Pazhou/Tianhe District)',
+    'Official Canton Fair Phase 1 VIP Buyer Badge processing & access badge',
+    'Dedicated VIP air-conditioned coach transfers for all daily scheduled trips',
+    'Daily Hotel Buffet Breakfasts & Authentic Cantonese Banquets',
+    'Trilingual Commercial Business Interpreters (Khmer, Mandarin Chinese, English)',
+    'Comprehensive International Business Travel & Medical Insurance Coverage'
+  ],
   exclusions: [
     'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំឯកសារអញ្ជើញ Official Invitation Letter)',
     'ការចំណាយផ្ទាល់ខ្លួនក្រៅពីកម្មវិធី និងទម្ងន់វ៉ាលីសលើសកំណត់',
     'ថ្លៃដឹកជញ្ជូនទំនិញគំរូ ឬការកុម្ម៉ង់ទិញទំនិញផ្ទាល់ខ្លួន'
+  ],
+  exclusionsKm: [
+    'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំឯកសារអញ្ជើញ Official Invitation Letter)',
+    'ការចំណាយផ្ទាល់ខ្លួនក្រៅពីកម្មវិធី និងទម្ងន់វ៉ាលីសលើសកំណត់',
+    'ថ្លៃដឹកជញ្ជូនទំនិញគំរូ ឬការកុម្ម៉ង់ទិញទំនិញផ្ទាល់ខ្លួន'
+  ],
+  exclusionsEn: [
+    'China Entry Visa processing fee (KHB provides Official Invitation Letter)',
+    'Personal expenditures (souvenirs, private laundry, telecommunications, minibar)',
+    'International freight or commercial sample cargo shipping fees'
   ],
   termsAndConditions: [
     'លិខិតឆ្លងដែន Passport ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតចាប់ពីថ្ងៃចេញដំណើរ។',
     'តម្រូវឱ្យកក់ប្រាក់កក់ចំនួន 50% នៅពេលចុះឈ្មោះដើម្បីធានាសំបុត្រយន្តហោះ និងសណ្ឋាគារ ៥ ផ្កាយ។',
     'KHB នឹងចេញលិខិតអញ្ជើញពាណិជ្ជកម្មផ្លូវការ (Official Canton Fair Invitation) សម្រាប់ធ្វើ Visa ចិន។',
     'ឈប់ទទួលចុះឈ្មោះមុនថ្ងៃទី 20 ខែកញ្ញា ឆ្នាំ 2026 ឬនៅពេលគ្រប់ចំនួនគណៈប្រតិភូ 25 នាក់។'
+  ],
+  termsAndConditionsKm: [
+    'លិខិតឆ្លងដែន Passport ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតចាប់ពីថ្ងៃចេញដំណើរ។',
+    'តម្រូវឱ្យកក់ប្រាក់កក់ចំនួន 50% នៅពេលចុះឈ្មោះដើម្បីធានាសំបុត្រយន្តហោះ និងសណ្ឋាគារ ៥ ផ្កាយ។',
+    'KHB នឹងចេញលិខិតអញ្ជើញពាណិជ្ជកម្មផ្លូវការ (Official Canton Fair Invitation) សម្រាប់ធ្វើ Visa ចិន។',
+    'ឈប់ទទួលចុះឈ្មោះមុនថ្ងៃទី 20 ខែកញ្ញា ឆ្នាំ 2026 ឬនៅពេលគ្រប់ចំនួនគណៈប្រតិភូ 25 នាក់។'
+  ],
+  termsAndConditionsEn: [
+    'Passport must maintain a minimum validity of 6 months from the date of departure.',
+    'A 50% initial deposit is required upon delegate registration to secure 5-star hotel & flights.',
+    'KHB Events issues official corporate invitation letters for Chinese commercial visa applications.',
+    'Registration closes September 20, 2026 or upon reaching the maximum capacity of 25 delegates.'
   ],
   tags: ['trending', 'popular', 'luxury'],
   emergencyContact: {
@@ -942,91 +970,149 @@ export const CANTON_FAIR_PHASE_1_PACKAGE: TourPackage = {
   },
   tourGuide: {
     name: 'Mr. Tim Vutha & China Operations Escort Team',
+    nameKm: 'លោក ទឹម វុទ្ធា & ក្រុមការងារសម្របសម្រួលចិន',
+    nameEn: 'Mr. Tim Vutha & China Operations Escort Team',
     title: 'Lead Trade Mission Director (Cambodia-China Trade)',
+    titleKm: 'ប្រធានដឹកនាំបេសកកម្មពាណិជ្ជកម្ម (កម្ពុជា-ចិន)',
+    titleEn: 'Lead Trade Mission Director (Cambodia-China Trade)',
     phone: '060 815 515',
     telegram: 'https://t.me/VuthaTim',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
     badgeNumber: 'KHB-CANTON-2026-01',
     bio: 'Experienced bilateral trade specialist with over 10 years leading Cambodian business delegations to Guangzhou, Shenzhen, and Yiwu. Directly assists delegates with factory verifications and customs tariffs.',
+    bioKm: 'អ្នកជំនាញសម្របសម្រួលពាណិជ្ជកម្មទ្វេភាគីជាមួយបទពិសោធន៍ជាង ១០ ឆ្នាំ ដឹកនាំគណៈប្រតិភូធុរកិច្ចកម្ពុជាទៅកាន់ទីក្រុងក្វាងចូវ សិនជិន និងយីអ៊ូ។ ជួយគណៈប្រតិភូក្នុងការផ្ទៀងផ្ទាត់រោងចក្រ និងពន្ធគយ។',
+    bioEn: 'Experienced bilateral trade specialist with over 10 years leading Cambodian business delegations to Guangzhou, Shenzhen, and Yiwu. Directly assists delegates with factory verifications and customs tariffs.',
     languages: ['Khmer', 'Chinese (Mandarin)', 'English'],
     briefingMeetingPoint: 'Phnom Penh International Airport (PNH) International Departure Gate - KHB VIP Desk',
-    briefingTime: '07:30 AM (ថ្ងៃទី 15/10/2026)'
+    briefingMeetingPointKm: 'ព្រលានយន្តហោះអន្តរជាតិភ្នំពេញ (PNH) ច្រកចេញដំណើរអន្តរជាតិ - បញ្ជរ KHB VIP',
+    briefingMeetingPointEn: 'Phnom Penh International Airport (PNH) International Departure Gate - KHB VIP Desk',
+    briefingTime: '07:30 AM (Oct 15, 2026)',
+    briefingTimeKm: '07:30 AM (ថ្ងៃទី 15/10/2026)',
+    briefingTimeEn: '07:30 AM (Oct 15, 2026)'
   },
   itinerary: [
     {
       day: 1,
       title: 'ភ្នំពេញ - ហោះហើរទៅកាន់ក្វាងចូវ (CAN) - ទទួលកាត Buyer Badge & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      titleKm: 'ភ្នំពេញ - ហោះហើរទៅកាន់ក្វាងចូវ (CAN) - ទទួលកាត Buyer Badge & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      titleEn: 'Phnom Penh to Guangzhou (CAN) - VIP Buyer Badge Issuance & Welcome Delegation Gala',
       description: 'ហោះហើរពីរាជធានីភ្នំពេញទៅកាន់អាកាសយានដ្ឋានអន្តរជាតិ Guangzhou Baiyun (CAN)។ រថយន្ត VIP ទទួល និងសម្រួលការធ្វើកាត Buyer Badge ផ្លូវការ ចូលឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ និងពិសារអាហារពេលល្ងាចស្វាគមន៍បែបក្វាងទុង។',
+      descriptionKm: 'ហោះហើរពីរាជធានីភ្នំពេញទៅកាន់អាកាសយានដ្ឋានអន្តរជាតិ Guangzhou Baiyun (CAN)។ រថយន្ត VIP ទទួល និងសម្រួលការធ្វើកាត Buyer Badge ផ្លូវការ ចូលឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ និងពិសារអាហារពេលល្ងាចស្វាគមន៍បែបក្វាងទុង។',
+      descriptionEn: 'Direct international flight from Phnom Penh to Guangzhou Baiyun International Airport (CAN). VIP coach transfer, official Canton Fair Buyer Badge expedited processing, 5-star hotel check-in, and Grand Cantonese Welcome Banquet.',
       hotelName: 'Guangzhou Marriott Pazhou / Crowne Plaza (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou / Crowne Plaza (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou / Crowne Plaza (5-Star Luxury)',
       mealsIncluded: ['Breakfast', 'Welcome Banquet'],
+      mealsIncludedKm: ['អាហារពេលព្រឹក', 'ពិធីលៀងសាយភាយស្វាគមន៍'],
+      mealsIncludedEn: ['In-Flight / Hotel Breakfast', 'Grand Cantonese Welcome Gala Banquet'],
       guideAgenda: [
-        { time: '07:30 AM - 09:30 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ & ចែកឯកសារបេសកកម្ម', location: 'Phnom Penh International Airport' },
-        { time: '10:15 AM - 02:00 PM', activity: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ (PNH -> CAN)', location: 'Flight PNH -> CAN' },
-        { time: '03:30 PM - 05:30 PM', activity: 'សម្រួលបែបបទទទួលកាត VIP Buyer Badge ចូល Pazhou Complex & ឆែកអ៊ីនសណ្ឋាគារ', location: 'Canton Fair Buyer Registration Center' },
-        { time: '06:30 PM - 09:00 PM', activity: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូកម្ពុជា Welcome Gala Dinner', location: 'Hotel Grand Ballroom' }
+        { time: '07:30 AM - 09:30 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ & ចែកឯកសារបេសកកម្ម', activityKm: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ & ចែកឯកសារបេសកកម្ម', activityEn: 'Delegation Assembly at Phnom Penh Airport & Mission Dossier Distribution', location: 'Phnom Penh International Airport', locationKm: 'ព្រលានយន្តហោះអន្តរជាតិភ្នំពេញ', locationEn: 'Phnom Penh International Airport' },
+        { time: '10:15 AM - 02:00 PM', activity: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ (PNH -> CAN)', activityKm: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ (PNH -> CAN)', activityEn: 'Direct Flight: Phnom Penh (PNH) to Guangzhou Baiyun (CAN)', location: 'Flight PNH -> CAN', locationKm: 'ជើងហោះហើរ PNH -> CAN', locationEn: 'Flight PNH -> CAN' },
+        { time: '03:30 PM - 05:30 PM', activity: 'សម្រួលបែបបទទទួលកាត VIP Buyer Badge ចូល Pazhou Complex & ឆែកអ៊ីនសណ្ឋាគារ', activityKm: 'សម្រួលបែបបទទទួលកាត VIP Buyer Badge ចូល Pazhou Complex & ឆែកអ៊ីនសណ្ឋាគារ', activityEn: 'VIP Fast-Track Canton Fair Badge Pickup & 5-Star Hotel Check-in', location: 'Canton Fair Buyer Registration Center', locationKm: 'មជ្ឈមណ្ឌលធ្វើកាត Canton Fair', locationEn: 'Canton Fair Buyer Registration Center' },
+        { time: '06:30 PM - 09:00 PM', activity: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូកម្ពុជា Welcome Gala Dinner', activityKm: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូកម្ពុជា Welcome Gala Dinner', activityEn: 'Official Welcome Gala Dinner & Bilateral Trade Networking', location: 'Hotel Grand Ballroom', locationKm: 'សាលពិធីធំសណ្ឋាគារ', locationEn: 'Hotel Grand Ballroom' }
       ]
     },
     {
       day: 2,
       title: 'Canton Fair Phase 1 (ថ្ងៃទី ១): អេឡិចត្រូនិក គ្រឿងម៉ាស៊ីន និងបច្ចេកវិទ្យាស្វ័យប្រវត្តិកម្ម',
+      titleKm: 'Canton Fair Phase 1 (ថ្ងៃទី ១): អេឡិចត្រូនិក គ្រឿងម៉ាស៊ីន និងបច្ចេកវិទ្យាស្វ័យប្រវត្តិកម្ម',
+      titleEn: 'Canton Fair Phase 1 (Day 1): Consumer Electronics, Heavy Machinery & Automation Tech',
       description: 'ពេញមួយថ្ងៃនៅសាលពិព័រណ៍ Pazhou Complex (Area A & B) ជួបម្ចាស់រោងចក្រផលិតឧបករណ៍អេឡិចត្រូនិក គ្រឿងម៉ាស៊ីនឧស្សាហកម្មធុនធ្ងន់ និងបច្ចេកវិទ្យា AI Automation។',
+      descriptionKm: 'ពេញមួយថ្ងៃនៅសាលពិព័រណ៍ Pazhou Complex (Area A & B) ជួបម្ចាស់រោងចក្រផលិតឧបករណ៍អេឡិចត្រូនិក គ្រឿងម៉ាស៊ីនឧស្សាហកម្មធុនធ្ងន់ និងបច្ចេកវិទ្យា AI Automation។',
+      descriptionEn: 'Full-day VIP exploration across Pazhou Complex Areas A & B. Meet premier manufacturers of consumer electronics, smart appliances, industrial automation, and power equipment.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'VIP Networking Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ VIP', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'VIP Business Networking Lunch', 'Cantonese Dinner'],
       guideAgenda: [
-        { time: '08:30 AM - 09:00 AM', activity: 'រថយន្ត VIP ជូនគណៈប្រតិភូទៅកាន់ Pazhou Complex', location: 'Hotel to Pazhou Complex' },
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 1-5: គ្រឿងអេឡិចត្រូនិក ឧបករណ៍ប្រើប្រាស់ និងប្រព័ន្ធ Smart Home', location: 'Pazhou Complex Area A' },
-        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់បណ្តាញពាណិជ្ជកម្ម VIP', location: 'VIP Hall Restaurant' },
-        { time: '01:30 PM - 05:30 PM', activity: 'ទស្សនា Hall 6-8: គ្រឿងម៉ាស៊ីនឧស្សាហកម្ម និងឧបករណ៍កែច្នៃស្វ័យប្រវត្តិកម្ម', location: 'Pazhou Complex Area B' }
+        { time: '08:30 AM - 09:00 AM', activity: 'រថយន្ត VIP ជូនគណៈប្រតិភូទៅកាន់ Pazhou Complex', activityKm: 'រថយន្ត VIP ជូនគណៈប្រតិភូទៅកាន់ Pazhou Complex', activityEn: 'VIP Coach Transfer from Hotel to Pazhou Complex', location: 'Hotel to Pazhou Complex', locationKm: 'សណ្ឋាគារ ទៅ Pazhou Complex', locationEn: 'Hotel to Pazhou Complex' },
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 1-5: គ្រឿងអេឡិចត្រូនិក ឧបករណ៍ប្រើប្រាស់ និងប្រព័ន្ធ Smart Home', activityKm: 'ទស្សនា Hall 1-5: គ្រឿងអេឡិចត្រូនិក ឧបករណ៍ប្រើប្រាស់ និងប្រព័ន្ធ Smart Home', activityEn: 'Hall 1-5 Inspection: Consumer Electronics, Gadgets & Smart Home Ecosystems', location: 'Pazhou Complex Area A', locationKm: 'Pazhou Complex តំបន់ A', locationEn: 'Pazhou Complex Area A' },
+        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់បណ្តាញពាណិជ្ជកម្ម VIP', activityKm: 'អាហារថ្ងៃត្រង់បណ្តាញពាណិជ្ជកម្ម VIP', activityEn: 'VIP Lounge Executive Business Networking Lunch', location: 'VIP Hall Restaurant', locationKm: 'ភោជនីយដ្ឋាន VIP សាលពិព័រណ៍', locationEn: 'VIP Hall Restaurant' },
+        { time: '01:30 PM - 05:30 PM', activity: 'ទស្សនា Hall 6-8: គ្រឿងម៉ាស៊ីនឧស្សាហកម្ម និងឧបករណ៍កែច្នៃស្វ័យប្រវត្តិកម្ម', activityKm: 'ទស្សនា Hall 6-8: គ្រឿងម៉ាស៊ីនឧស្សាហកម្ម និងឧបករណ៍កែច្នៃស្វ័យប្រវត្តិកម្ម', activityEn: 'Hall 6-8 Inspection: Industrial Processing Machinery, CNC, and Robotic Automation', location: 'Pazhou Complex Area B', locationKm: 'Pazhou Complex តំបន់ B', locationEn: 'Pazhou Complex Area B' }
       ]
     },
     {
       day: 3,
       title: 'Canton Fair Phase 1 (ថ្ងៃទី ២): ឧបករណ៍ជាង សម្ភារៈសំណង់ & ថាមពលកកើតឡើងវិញ',
+      titleKm: 'Canton Fair Phase 1 (ថ្ងៃទី ២): ឧបករណ៍ជាង សម្ភារៈសំណង់ & ថាមពលកកើតឡើងវិញ',
+      titleEn: 'Canton Fair Phase 1 (Day 2): Hardware Tools, Building Materials & Renewable Energy',
       description: 'ផ្តោតលើការចរចា និងចុះកិច្ចសន្យាផ្គត់ផ្គង់សម្ភារៈសំណង់ ឧបករណ៍ជាង Hardware ភ្លើងបំភ្លឺ LED និងបច្ចេកវិទ្យាថាមពលពន្លឺព្រះអាទិត្យ Solar/Battery។',
+      descriptionKm: 'ផ្តោតលើការចរចា និងចុះកិច្ចសន្យាផ្គត់ផ្គង់សម្ភារៈសំណង់ ឧបករណ៍ជាង Hardware ភ្លើងបំភ្លឺ LED និងបច្ចេកវិទ្យាថាមពលពន្លឺព្រះអាទិត្យ Solar/Battery។',
+      descriptionEn: 'Contract negotiations and factory sourcing for construction materials, power tools, LED lighting, and solar PV energy systems. Evening Pearl River VIP cruise.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Business Lunch', 'Pearl River Cruise Banquet'],
       guideAgenda: [
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 9-11: សម្ភារៈសំណង់ ឧបករណ៍ជាង និងបរិក្ខារបំពង់ទឹក/អគ្គិសនី', location: 'Pazhou Complex Area B' },
-        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនា Hall 14-16: ថាមពលពន្លឺព្រះអាទិត្យ Solar Panels, Inverters & EV Chargers', location: 'Pazhou Complex Area C' },
-        { time: '06:30 PM - 09:00 PM', activity: 'ទស្សនាក្រុងក្វាងចូវពេលរាត្រី & ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', location: 'Pearl River Pier' }
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 9-11: សម្ភារៈសំណង់ ឧបករណ៍ជាង និងបរិក្ខារបំពង់ទឹក/អគ្គិសនី', activityKm: 'ទស្សនា Hall 9-11: សម្ភារៈសំណង់ ឧបករណ៍ជាង និងបរិក្ខារបំពង់ទឹក/អគ្គិសនី', activityEn: 'Hall 9-11 Sourcing: Construction Materials, Hardware, Sanitary & Electrical Tools', location: 'Pazhou Complex Area B', locationKm: 'Pazhou Complex តំបន់ B', locationEn: 'Pazhou Complex Area B' },
+        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនា Hall 14-16: ថាមពលពន្លឺព្រះអាទិត្យ Solar Panels, Inverters & EV Chargers', activityKm: 'ទស្សនា Hall 14-16: ថាមពលពន្លឺព្រះអាទិត្យ Solar Panels, Inverters & EV Chargers', activityEn: 'Hall 14-16 Sourcing: Solar Photovoltaics, Commercial Inverters & EV Infrastructure', location: 'Pazhou Complex Area C', locationKm: 'Pazhou Complex តំបន់ C', locationEn: 'Pazhou Complex Area C' },
+        { time: '06:30 PM - 09:00 PM', activity: 'ទស្សនាក្រុងក្វាងចូវពេលរាត្រី & ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', activityKm: 'ទស្សនាក្រុងក្វាងចូវពេលរាត្រី & ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', activityEn: 'Guangzhou Skyline Sightseeing & Pearl River Luxury Dinner Cruise', location: 'Pearl River Pier', locationKm: 'កំពង់ផែទន្លេគុជ', locationEn: 'Pearl River Pier' }
       ]
     },
     {
       day: 4,
       title: 'ដំណើរទស្សនកិច្ចរោងចក្រ Foshan: រោងចក្រផលិតសម្ភារៈសំណង់ & មជ្ឈមណ្ឌលលក់ដុំ',
+      titleKm: 'ដំណើរទស្សនកិច្ចរោងចក្រ Foshan: រោងចក្រផលិតសម្ភារៈសំណង់ & មជ្ឈមណ្ឌលលក់ដុំ',
+      titleEn: 'Foshan Industrial Plant Expedition: Building Materials & Mega Wholesale Wholesale Hubs',
       description: 'ចេញដំណើរទៅកាន់ទីក្រុង Foshan ទស្សនកិច្ចផ្ទាល់ដល់រោងចក្រផលិត និងមជ្ឈមណ្ឌលលក់ដុំសម្ភារៈសំណង់ ក្បឿង សេរ៉ាមិច និងគ្រឿងសង្ហារិមខ្នាតយក្ស។',
+      descriptionKm: 'ចេញដំណើរទៅកាន់ទីក្រុង Foshan ទស្សនកិច្ចផ្ទាល់ដល់រោងចក្រផលិត និងមជ្ឈមណ្ឌលលក់ដុំសម្ភារៈសំណង់ ក្បឿង សេរ៉ាមិច និងគ្រឿងសង្ហារិមខ្នាតយក្ស។',
+      descriptionEn: 'Field study to Foshan manufacturing bases. Direct factory floor inspection of ceramic tiles, architectural glass, furniture plants, and Shunde culinary experience.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Shunde Gourmet Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ Shunde', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Shunde Gourmet Lunch (UNESCO City of Gastronomy)', 'Dinner'],
       guideAgenda: [
-        { time: '08:30 AM - 10:00 AM', activity: 'រថយន្ត VIP ជូនដំណើរទៅកាន់ទីក្រុង Foshan', location: 'Guangzhou -> Foshan' },
-        { time: '10:00 AM - 01:00 PM', activity: 'ទស្សនកិច្ចរោងចក្រផលិតសម្ភារៈសំណង់ & ជួបអ្នកគ្រប់គ្រងផលិតកម្ម', location: 'Foshan Industrial Park' },
-        { time: '01:00 PM - 02:30 PM', activity: 'ទទួលទានអាហារថ្ងៃត្រង់ម្ហូបពិសេស Shunde Cuisine (UNESCO City of Gastronomy)', location: 'Shunde Famous Restaurant' },
-        { time: '03:00 PM - 05:30 PM', activity: 'ទស្សនាមជ្ឈមណ្ឌលលក់ដុំគ្រឿងសំណង់ និងឧបករណ៍ជាង Foshan Wholesale Hub', location: 'Foshan Wholesale Trade Center' }
+        { time: '08:30 AM - 10:00 AM', activity: 'រថយន្ត VIP ជូនដំណើរទៅកាន់ទីក្រុង Foshan', activityKm: 'រថយន្ត VIP ជូនដំណើរទៅកាន់ទីក្រុង Foshan', activityEn: 'Private Coach Transit to Foshan Manufacturing Zone', location: 'Guangzhou -> Foshan', locationKm: 'ក្វាងចូវ ទៅ ហ្វូសាន', locationEn: 'Guangzhou -> Foshan' },
+        { time: '10:00 AM - 01:00 PM', activity: 'ទស្សនកិច្ចរោងចក្រផលិតសម្ភារៈសំណង់ & ជួបអ្នកគ្រប់គ្រងផលិតកម្ម', activityKm: 'ទស្សនកិច្ចរោងចក្រផលិតសម្ភារៈសំណង់ & ជួបអ្នកគ្រប់គ្រងផលិតកម្ម', activityEn: 'Ceramics & Building Materials Plant Walkthrough with Plant Directors', location: 'Foshan Industrial Park', locationKm: 'តំបន់ឧស្សាហកម្ម Foshan', locationEn: 'Foshan Industrial Park' },
+        { time: '01:00 PM - 02:30 PM', activity: 'ទទួលទានអាហារថ្ងៃត្រង់ម្ហូបពិសេស Shunde Cuisine (UNESCO City of Gastronomy)', activityKm: 'ទទួលទានអាហារថ្ងៃត្រង់ម្ហូបពិសេស Shunde Cuisine (UNESCO City of Gastronomy)', activityEn: 'Authentic Shunde Gastronomic Experience Lunch', location: 'Shunde Famous Restaurant', locationKm: 'ភោជនីយដ្ឋានល្បី Shunde', locationEn: 'Shunde Famous Restaurant' },
+        { time: '03:00 PM - 05:30 PM', activity: 'ទស្សនាមជ្ឈមណ្ឌលលក់ដុំគ្រឿងសំណង់ និងឧបករណ៍ជាង Foshan Wholesale Hub', activityKm: 'ទស្សនាមជ្ឈមណ្ឌលលក់ដុំគ្រឿងសំណង់ និងឧបករណ៍ជាង Foshan Wholesale Hub', activityEn: 'Foshan Mega Wholesale Hardware & Building Supply Expo Center', location: 'Foshan Wholesale Trade Center', locationKm: 'មជ្ឈមណ្ឌលពាណិជ្ជកម្មលក់ដុំ Foshan', locationEn: 'Foshan Wholesale Trade Center' }
       ]
     },
     {
       day: 5,
       title: 'ជំនួបពាណិជ្ជកម្ម B2B Matchmaking & មជ្ឈមណ្ឌលលក់ដុំអេឡិចត្រូនិច Dashatou',
+      titleKm: 'ជំនួបពាណិជ្ជកម្ម B2B Matchmaking & មជ្ឈមណ្ឌលលក់ដុំអេឡិចត្រូនិច Dashatou',
+      titleEn: '1-on-1 Bilateral B2B Matchmaking & Dashatou Electronics Wholesale Supermarket',
       description: 'ការជួបចរចាទល់មុខជាមួយក្រុមហ៊ុនផ្គត់ផ្គង់ចិន និងទស្សនាផ្សារលក់ដុំអេឡិចត្រូនិច និងគ្រឿងបន្លាស់ទូរស័ព្ទធំបំផុតនៅក្វាងចូវ Dashatou & Nanfang Building។',
+      descriptionKm: 'ការជួបចរចាទល់មុខជាមួយក្រុមហ៊ុនផ្គត់ផ្គង់ចិន និងទស្សនាផ្សារលក់ដុំអេឡិចត្រូនិច និងគ្រឿងបន្លាស់ទូរស័ព្ទធំបំផុតនៅក្វាងចូវ Dashatou & Nanfang Building។',
+      descriptionEn: 'Pre-arranged 1-on-1 B2B meetings with verified suppliers followed by a guided tour of Dashatou and Nanfang electronics wholesale districts. Grand Farewell Seafood Banquet.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Executive Farewell Banquet'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'ពិធីលៀងសាយភាយលាគ្នា'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Executive Lunch', 'Grand Seafood Farewell Banquet'],
       guideAgenda: [
-        { time: '09:00 AM - 12:00 PM', activity: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking Session', location: 'Hotel Business Center' },
-        { time: '02:00 PM - 05:30 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំគ្រឿងអេឡិចត្រូនិច និងគ្រឿងបន្លាស់ Dashatou & Nanfang', location: 'Guangzhou Electronics Wholesale Market' },
-        { time: '06:30 PM - 09:30 PM', activity: 'ពិធីជប់លៀងលាគ្នាពិសេស Executive Farewell Seafood Banquet', location: 'Guangzhou Famous Seafood Restaurant' }
+        { time: '09:00 AM - 12:00 PM', activity: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking Session', activityKm: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking Session', activityEn: 'Pre-Scheduled Bilateral B2B Trade Matchmaking Session', location: 'Hotel Business Center', locationKm: 'មជ្ឈមណ្ឌលធុរកិច្ចសណ្ឋាគារ', locationEn: 'Hotel Business Center' },
+        { time: '02:00 PM - 05:30 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំគ្រឿងអេឡិចត្រូនិច និងគ្រឿងបន្លាស់ Dashatou & Nanfang', activityKm: 'ទស្សនកិច្ចផ្សារបោះដុំគ្រឿងអេឡិចត្រូនិច និងគ្រឿងបន្លាស់ Dashatou & Nanfang', activityEn: 'Dashatou & Nanfang Electronics & Mobile Accessories Wholesale Center', location: 'Guangzhou Electronics Wholesale Market', locationKm: 'ផ្សារលក់ដុំអេឡិចត្រូនិចក្វាងចូវ', locationEn: 'Guangzhou Electronics Wholesale Market' },
+        { time: '06:30 PM - 09:30 PM', activity: 'ពិធីជប់លៀងលាគ្នាពិសេស Executive Farewell Seafood Banquet', activityKm: 'ពិធីជប់លៀងលាគ្នាពិសេស Executive Farewell Seafood Banquet', activityEn: 'Official Delegation Farewell Seafood Banquet', location: 'Guangzhou Famous Seafood Restaurant', locationKm: 'ភោជនីយដ្ឋានគ្រឿងសមុទ្រល្បី', locationEn: 'Guangzhou Famous Seafood Restaurant' }
       ]
     },
     {
       day: 6,
       title: 'ទិញទំនិញ Beijing Road Pedestrian Street - ហោះហើរត្រឡប់មកភ្នំពេញ',
+      titleKm: 'ទិញទំនិញ Beijing Road Pedestrian Street - ហោះហើរត្រឡប់មកភ្នំពេញ',
+      titleEn: 'Beijing Road Pedestrian Shopping - Scheduled Flight Return to Phnom Penh',
       description: 'ទស្សនាតំបន់ពាណិជ្ជកម្ម និងប្រវត្តិសាស្ត្រ Beijing Road Pedestrian Street មុនពេលរថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun ដើម្បីហោះហើរត្រឡប់មកភ្នំពេញ។',
+      descriptionKm: 'ទស្សនាតំបន់ពាណិជ្ជកម្ម និងប្រវត្តិសាស្ត្រ Beijing Road Pedestrian Street មុនពេលរថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun ដើម្បីហោះហើរត្រឡប់មកភ្នំពេញ។',
+      descriptionEn: 'Morning cultural walk and shopping on historic Beijing Road. Authentic Dim Sum lunch, followed by airport transfer to Baiyun (CAN) for flight back to Phnom Penh.',
       hotelName: 'Trip Completion (Phnom Penh Arrival)',
+      hotelNameKm: 'បញ្ចប់ដំណើរបេសកកម្ម (មកដល់ភ្នំពេញ)',
+      hotelNameEn: 'Mission Completion (Arrival in Phnom Penh)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ ឌីមសាំ'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Famous Guangdong Dim Sum Lunch'],
       guideAgenda: [
-        { time: '09:00 AM - 12:00 PM', activity: 'ទស្សនា និងទិញទំនិញនៅផ្លូវថ្មើរជើង Beijing Road Pedestrian Street', location: 'Beijing Road' },
-        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុង (Guangdong Famous Dim Sum)', location: 'Guangzhou Dim Sum Restaurant' },
-        { time: '02:30 PM - 04:00 PM', activity: 'រថយន្ត VIP ជូនដំណើរទៅកាន់ព្រលានយន្តហោះ Baiyun (CAN)', location: 'Guangzhou Baiyun Airport' },
-        { time: '06:30 PM - 08:30 PM', activity: 'ជើងហោះហើរត្រង់មកដល់អាកាសយានដ្ឋានអន្តរជាតិភ្នំពេញដោយជោគជ័យ', location: 'Phnom Penh Arrival' }
+        { time: '09:00 AM - 12:00 PM', activity: 'ទស្សនា និងទិញទំនិញនៅផ្លូវថ្មើរជើង Beijing Road Pedestrian Street', activityKm: 'ទស្សនា និងទិញទំនិញនៅផ្លូវថ្មើរជើង Beijing Road Pedestrian Street', activityEn: 'Beijing Road Pedestrian Street Cultural Walk & Retail Discovery', location: 'Beijing Road', locationKm: 'ផ្លូវថ្មើរជើង Beijing Road', locationEn: 'Beijing Road Pedestrian Street' },
+        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុង (Guangdong Famous Dim Sum)', activityKm: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុង (Guangdong Famous Dim Sum)', activityEn: 'Traditional Guangdong Dim Sum Experience', location: 'Guangzhou Dim Sum Restaurant', locationKm: 'ភោជនីយដ្ឋានឌីមសាំ', locationEn: 'Guangzhou Dim Sum Restaurant' },
+        { time: '02:30 PM - 04:00 PM', activity: 'រថយន្ត VIP ជូនដំណើរទៅកាន់ព្រលានយន្តហោះ Baiyun (CAN)', activityKm: 'រថយន្ត VIP ជូនដំណើរទៅកាន់ព្រលានយន្តហោះ Baiyun (CAN)', activityEn: 'Airport Coach Transfer to Guangzhou Baiyun International Airport', location: 'Guangzhou Baiyun Airport', locationKm: 'ព្រលានយន្តហោះ Baiyun', locationEn: 'Guangzhou Baiyun Airport (CAN)' },
+        { time: '06:30 PM - 08:30 PM', activity: 'ជើងហោះហើរត្រង់មកដល់អាកាសយានដ្ឋានអន្តរជាតិភ្នំពេញដោយជោគជ័យ', activityKm: 'ជើងហោះហើរត្រង់មកដល់អាកាសយានដ្ឋានអន្តរជាតិភ្នំពេញដោយជោគជ័យ', activityEn: 'Flight Arrival at Phnom Penh International Airport (PNH) - Mission Accomplished', location: 'Phnom Penh Arrival', locationKm: 'មកដល់ភ្នំពេញ', locationEn: 'Phnom Penh International Airport' }
       ]
     }
   ]
@@ -1085,6 +1171,22 @@ export const CANTON_FAIR_PHASE_2_PACKAGE: TourPackage = {
     '💡 ទស្សនកិច្ចទីផ្សារលក់ដុំអំពូលភ្លើងតុបតែង និងគ្រឿងសង្ហារិម Guzhen / Shunde',
     '✈️ រួមបញ្ចូលសំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ-ក្វាងចូវ + សណ្ឋាគារ ៥ ផ្កាយ ៥ យប់'
   ],
+  highlightsKm: [
+    '🏠 ស្វែងរកផលិតផលបោះដុំផ្ទាល់ពីរោងចក្រ៖ របស់របរផ្ទះបាយ សេរ៉ាមិច គ្រឿងតុបតែងផ្ទះ និងគ្រឿងសង្ហារិម',
+    '🎁 ជួបក្រុមហ៊ុនផលិតទំនិញកាដូអនុស្សាវរីយ៍ និងសម្ភារៈប្រើប្រាស់ទូទៅរាប់ម៉ឺនមុខ',
+    '🪪 សម្រួលបែបបទធ្វើកាត Buyer Badge ផ្លូវការ & VIP Fast-Track ចូលសាលពិព័រណ៍ Pazhou Complex',
+    '🗣️ អ្នកបកប្រែចិន-ខ្មែរ-អង់គ្លេស ជួយចរចាតម្លៃ និងការបញ្ជាទិញ OEM/ODM ផ្ទាល់',
+    '💡 ទស្សនកិច្ចទីផ្សារលក់ដុំអំពូលភ្លើងតុបតែង និងគ្រឿងសង្ហារិម Guzhen / Shunde',
+    '✈️ រួមបញ្ចូលសំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ-ក្វាងចូវ + សណ្ឋាគារ ៥ ផ្កាយ ៥ យប់'
+  ],
+  highlightsEn: [
+    '🏠 Direct factory wholesale sourcing: Kitchenware, fine ceramics, home decor & modern furniture',
+    '🎁 Access 10,000+ verified manufacturers for seasonal gifts, tableware, and general consumer goods',
+    '🪪 Official Canton Fair VIP Buyer Badge issuance with express line-free entrance to Pazhou Complex',
+    '🗣️ Trilingual commercial interpreters (Khmer, Chinese, English) for direct OEM/ODM negotiations',
+    '💡 Guided sourcing field trips to the world-renowned Guzhen Lighting Capital and Shunde Furniture Hub',
+    '✈️ All-inclusive package: Roundtrip flights Phnom Penh to Guangzhou + 5-Star luxury hotel (5 Nights)'
+  ],
   whoShouldJoin: [
     '🍳 ម្ចាស់ហាងលក់ទំនិញប្រើប្រាស់ សម្ភារៈផ្ទះបាយ និងរបស់របរក្នុងផ្ទះ (Houseware & Kitchenware Retailers)',
     '🛋️ អ្នករចនាផ្ទៃក្នុង និងអ្នកចែកចាយគ្រឿងសង្ហារិម/គ្រឿងតុបតែងគេហដ្ឋាន (Interior Designers & Furniture Dealers)',
@@ -1136,10 +1238,56 @@ export const CANTON_FAIR_PHASE_2_PACKAGE: TourPackage = {
     'អ្នកបកប្រែភាសាចិន-ខ្មែរ-អង់គ្លេស ជួយចរចា និងចុះកិច្ចសន្យា',
     'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ'
   ],
+  inclusionsKm: [
+    'សំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ - ក្វាងចូវ (Roundtrip Flight PNH - CAN)',
+    'សណ្ឋាគារប្រណិតកម្រិត ៥ ផ្កាយ (៥ យប់ នៅក្រុងក្វាងចូវ)',
+    'សេវាធ្វើកាត VIP Buyer Badge ផ្លូវការចូល Canton Fair Phase 2',
+    'រថយន្ត VIP ជូនដំណើរពេញដំណើរកម្សាន្ត និងទៅ Pazhou Complex',
+    'អាហារប៊ូហ្វេពេលព្រឹក និងអាហារពេលល្ងាចម្ហូបក្វាងទុងពិសេស',
+    'អ្នកបកប្រែភាសាចិន-ខ្មែរ-អង់គ្លេស ជួយចរចា និងចុះកិច្ចសន្យា',
+    'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ'
+  ],
+  inclusionsEn: [
+    'Roundtrip International Flights: Phnom Penh (PNH) to Guangzhou (CAN) with luggage',
+    '5-Star Luxury Accommodations in Guangzhou (5 Nights in Pazhou/Tianhe District)',
+    'Official Canton Fair Phase 2 VIP Buyer Badge processing & access badge',
+    'Dedicated VIP air-conditioned coach transfers for all daily scheduled trips',
+    'Daily Hotel Buffet Breakfasts & Authentic Cantonese Banquets',
+    'Trilingual Commercial Business Interpreters (Khmer, Mandarin Chinese, English)',
+    'Comprehensive International Business Travel & Medical Insurance Coverage'
+  ],
   exclusions: [
     'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំ Official Invitation Letter)',
     'ការចំណាយផ្ទាល់ខ្លួន និងទម្ងន់វ៉ាលីសលើសកំណត់',
     'ថ្លៃដឹកជញ្ជូនទំនិញ ឬទិញទំនិញផ្ទាល់ខ្លួន'
+  ],
+  exclusionsKm: [
+    'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំ Official Invitation Letter)',
+    'ការចំណាយផ្ទាល់ខ្លួន និងទម្ងន់វ៉ាលីសលើសកំណត់',
+    'ថ្លៃដឹកជញ្ជូនទំនិញ ឬទិញទំនិញផ្ទាល់ខ្លួន'
+  ],
+  exclusionsEn: [
+    'China Entry Visa processing fee (KHB provides Official Invitation Letter)',
+    'Personal expenditures (souvenirs, private laundry, telecommunications, minibar)',
+    'International freight or commercial sample shipping fees'
+  ],
+  termsAndConditions: [
+    'លិខិតឆ្លងដែន Passport ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតចាប់ពីថ្ងៃចេញដំណើរ។',
+    'តម្រូវឱ្យកក់ប្រាក់កក់ចំនួន 50% នៅពេលចុះឈ្មោះដើម្បីធានាសំបុត្រយន្តហោះ និងសណ្ឋាគារ ៥ ផ្កាយ។',
+    'KHB នឹងចេញលិខិតអញ្ជើញពាណិជ្ជកម្មផ្លូវការ (Official Canton Fair Invitation) សម្រាប់ធ្វើ Visa ចិន។',
+    'ឈប់ទទួលចុះឈ្មោះមុនថ្ងៃទី 25 ខែកញ្ញា ឆ្នាំ 2026 ឬនៅពេលគ្រប់ចំនួនគណៈប្រតិភូ 25 នាក់។'
+  ],
+  termsAndConditionsKm: [
+    'លិខិតឆ្លងដែន Passport ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតចាប់ពីថ្ងៃចេញដំណើរ។',
+    'តម្រូវឱ្យកក់ប្រាក់កក់ចំនួន 50% នៅពេលចុះឈ្មោះដើម្បីធានាសំបុត្រយន្តហោះ និងសណ្ឋាគារ ៥ ផ្កាយ។',
+    'KHB នឹងចេញលិខិតអញ្ជើញពាណិជ្ជកម្មផ្លូវការ (Official Canton Fair Invitation) សម្រាប់ធ្វើ Visa ចិន។',
+    'ឈប់ទទួលចុះឈ្មោះមុនថ្ងៃទី 25 ខែកញ្ញា ឆ្នាំ 2026 ឬនៅពេលគ្រប់ចំនួនគណៈប្រតិភូ 25 នាក់។'
+  ],
+  termsAndConditionsEn: [
+    'Passport must maintain a minimum validity of 6 months from the date of departure.',
+    'A 50% initial deposit is required upon delegate registration to secure 5-star hotel & flights.',
+    'KHB Events issues official corporate invitation letters for Chinese commercial visa applications.',
+    'Registration closes September 25, 2026 or upon reaching the maximum capacity of 25 delegates.'
   ],
   tags: ['trending', 'popular', 'cultural'],
   emergencyContact: {
@@ -1151,88 +1299,146 @@ export const CANTON_FAIR_PHASE_2_PACKAGE: TourPackage = {
   },
   tourGuide: {
     name: 'Mr. Tim Vutha & China Operations Escort Team',
+    nameKm: 'លោក ទឹម វុទ្ធា & ក្រុមការងារសម្របសម្រួលចិន',
+    nameEn: 'Mr. Tim Vutha & China Operations Escort Team',
     title: 'Lead Trade Mission Director (Cambodia-China Trade)',
+    titleKm: 'ប្រធានដឹកនាំបេសកកម្មពាណិជ្ជកម្ម (កម្ពុជា-ចិន)',
+    titleEn: 'Lead Trade Mission Director (Cambodia-China Trade)',
     phone: '060 815 515',
     telegram: 'https://t.me/VuthaTim',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
     badgeNumber: 'KHB-CANTON-2026-02',
     bio: 'Senior trade delegation coordinator specializing in consumer retail, home living, and wholesale sourcing from Guangdong factories.',
+    bioKm: 'អ្នកសម្របសម្រួលគណៈប្រតិភូពាណិជ្ជកម្មជាន់ខ្ពស់ ឯកទេសផ្នែកទំនិញប្រើប្រាស់ គ្រឿងតុបតែងគេហដ្ឋាន និងការស្វែងរកប្រភពទំនិញបោះដុំពីរោងចក្រនៅក្វាងទុង។',
+    bioEn: 'Senior trade delegation coordinator specializing in consumer retail, home living, and wholesale sourcing from Guangdong factories.',
     languages: ['Khmer', 'Chinese (Mandarin)', 'English'],
     briefingMeetingPoint: 'Phnom Penh International Airport (PNH) International Departure Gate',
-    briefingTime: '07:30 AM (ថ្ងៃទី 23/10/2026)'
+    briefingMeetingPointKm: 'ព្រលានយន្តហោះអន្តរជាតិភ្នំពេញ (PNH) ច្រកចេញដំណើរអន្តរជាតិ - បញ្ជរ KHB VIP',
+    briefingMeetingPointEn: 'Phnom Penh International Airport (PNH) International Departure Gate - KHB VIP Desk',
+    briefingTime: '07:30 AM (Oct 23, 2026)',
+    briefingTimeKm: '07:30 AM (ថ្ងៃទី 23/10/2026)',
+    briefingTimeEn: '07:30 AM (Oct 23, 2026)'
   },
   itinerary: [
     {
       day: 1,
       title: 'ភ្នំពេញ - ក្វាងចូវ - ទទួលកាត Buyer Badge & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      titleKm: 'ភ្នំពេញ - ក្វាងចូវ - ទទួលកាត Buyer Badge & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      titleEn: 'Phnom Penh to Guangzhou - Buyer Badge Registration & Welcome Delegation Banquet',
       description: 'ហោះហើរទៅក្វាងចូវ សម្រួលកាត Buyer Badge ចូលឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ និងពិសារអាហារពេលល្ងាចស្វាគមន៍។',
+      descriptionKm: 'ហោះហើរទៅក្វាងចូវ សម្រួលកាត Buyer Badge ចូលឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ និងពិសារអាហារពេលល្ងាចស្វាគមន៍។',
+      descriptionEn: 'Direct flight from Phnom Penh to Guangzhou Baiyun (CAN). Priority VIP Buyer Badge pickup, 5-star hotel check-in, and Grand Cantonese Welcome Banquet.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Breakfast', 'Welcome Banquet'],
+      mealsIncludedKm: ['អាហារពេលព្រឹក', 'ពិធីលៀងសាយភាយស្វាគមន៍'],
+      mealsIncludedEn: ['In-Flight / Hotel Breakfast', 'Grand Welcome Gala Banquet'],
       guideAgenda: [
-        { time: '08:00 AM - 10:00 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ', location: 'Phnom Penh Airport' },
-        { time: '10:30 AM - 02:15 PM', activity: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ', location: 'Flight PNH -> CAN' },
-        { time: '03:45 PM - 05:30 PM', activity: 'ទទួលកាត VIP Buyer Badge & ឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ', location: 'Pazhou Center' },
-        { time: '06:30 PM - 09:00 PM', activity: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូ', location: 'Grand Ballroom' }
+        { time: '08:00 AM - 10:00 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ', activityKm: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ', activityEn: 'Delegation Assembly at Phnom Penh Airport', location: 'Phnom Penh Airport', locationKm: 'ព្រលានយន្តហោះភ្នំពេញ', locationEn: 'Phnom Penh International Airport' },
+        { time: '10:30 AM - 02:15 PM', activity: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ', activityKm: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ', activityEn: 'Direct Flight: Phnom Penh (PNH) to Guangzhou (CAN)', location: 'Flight PNH -> CAN', locationKm: 'ជើងហោះហើរ PNH -> CAN', locationEn: 'Flight PNH -> CAN' },
+        { time: '03:45 PM - 05:30 PM', activity: 'ទទួលកាត VIP Buyer Badge & ឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ', activityKm: 'ទទួលកាត VIP Buyer Badge & ឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ', activityEn: 'VIP Fast-Track Canton Fair Badge Pickup & 5-Star Hotel Check-in', location: 'Pazhou Center', locationKm: 'Pazhou Registration Center', locationEn: 'Pazhou Registration Center' },
+        { time: '06:30 PM - 09:00 PM', activity: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូ', activityKm: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូ', activityEn: 'Official Delegation Welcome Gala Dinner', location: 'Grand Ballroom', locationKm: 'សាលពិធីធំសណ្ឋាគារ', locationEn: 'Hotel Grand Ballroom' }
       ]
     },
     {
       day: 2,
       title: 'Canton Fair Phase 2 (ថ្ងៃទី ១): របស់របរប្រើប្រាស់ក្នុងផ្ទះ ផ្ទះបាយ និងសេរ៉ាមិច',
+      titleKm: 'Canton Fair Phase 2 (ថ្ងៃទី ១): របស់របរប្រើប្រាស់ក្នុងផ្ទះ ផ្ទះបាយ និងសេរ៉ាមិច',
+      titleEn: 'Canton Fair Phase 2 (Day 1): Houseware, Kitchenware, Tableware & Daily Ceramics',
       description: 'ពេញមួយថ្ងៃនៅ Pazhou Complex ជួបក្រុមហ៊ុនផលិតរបស់របរផ្ទះបាយ ចានកែវ សេរ៉ាមិច និងទំនិញប្រើប្រាស់ប្រចាំថ្ងៃ។',
+      descriptionKm: 'ពេញមួយថ្ងៃនៅ Pazhou Complex ជួបក្រុមហ៊ុនផលិតរបស់របរផ្ទះបាយ ចានកែវ សេរ៉ាមិច និងទំនិញប្រើប្រាស់ប្រចាំថ្ងៃ។',
+      descriptionEn: 'Full-day sourcing at Pazhou Complex (Areas A & B). Direct negotiations with certified manufacturers of cookware, glassware, kitchen tools, and ceramics.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'VIP Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ VIP', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'VIP Networking Lunch', 'Dinner'],
       guideAgenda: [
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 1-4: របស់របរផ្ទះបាយ ចានឆ្នាំង និងសេរ៉ាមិចប្រណិត', location: 'Pazhou Complex Area A' },
-        { time: '01:30 PM - 05:30 PM', activity: 'ទស្សនា Hall 5-7: របស់របរប្រើប្រាស់ទូទៅ និងផលិតផលផ្លាស្ទិកកែច្នៃ', location: 'Pazhou Complex Area B' }
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 1-4: របស់របរផ្ទះបាយ ចានឆ្នាំង និងសេរ៉ាមិចប្រណិត', activityKm: 'ទស្សនា Hall 1-4: របស់របរផ្ទះបាយ ចានឆ្នាំង និងសេរ៉ាមិចប្រណិត', activityEn: 'Hall 1-4 Sourcing: Cookware, Tableware, Fine Porcelain & Glassware', location: 'Pazhou Complex Area A', locationKm: 'Pazhou Complex តំបន់ A', locationEn: 'Pazhou Complex Area A' },
+        { time: '01:30 PM - 05:30 PM', activity: 'ទស្សនា Hall 5-7: របស់របរប្រើប្រាស់ទូទៅ និងផលិតផលផ្លាស្ទិកកែច្នៃ', activityKm: 'ទស្សនា Hall 5-7: របស់របរប្រើប្រាស់ទូទៅ និងផលិតផលផ្លាស្ទិកកែច្នៃ', activityEn: 'Hall 5-7 Sourcing: Daily Essentials, Household Organizers & Eco-Plastic Ware', location: 'Pazhou Complex Area B', locationKm: 'Pazhou Complex តំបន់ B', locationEn: 'Pazhou Complex Area B' }
       ]
     },
     {
       day: 3,
       title: 'Canton Fair Phase 2 (ថ្ងៃទី ២): គ្រឿងតុបតែងផ្ទះ កាដូ និងគ្រឿងសង្ហារិម',
+      titleKm: 'Canton Fair Phase 2 (ថ្ងៃទី ២): គ្រឿងតុបតែងផ្ទះ កាដូ និងគ្រឿងសង្ហារិម',
+      titleEn: 'Canton Fair Phase 2 (Day 2): Home Decor, Festive Gifts, Art Lighting & Furniture',
       description: 'ទស្សនាគ្រឿងតុបតែងលម្អគេហដ្ឋាន អំពូលភ្លើងសិល្បៈ កាដូអនុស្សាវរីយ៍ និងគ្រឿងសង្ហារិមទំនើប។',
+      descriptionKm: 'ទស្សនាគ្រឿងតុបតែងលម្អគេហដ្ឋាន អំពូលភ្លើងសិល្បៈ កាដូអនុស្សាវរីយ៍ និងគ្រឿងសង្ហារិមទំនើប។',
+      descriptionEn: 'Inspect home furnishings, aesthetic lighting fixtures, holiday gifts, and modern indoor/outdoor furniture at Pazhou Complex. Evening Pearl River Night Cruise.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Executive Lunch', 'Pearl River Cruise Banquet'],
       guideAgenda: [
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 8-10: គ្រឿងតុបតែងគេហដ្ឋាន ផ្កាសិប្បនិម្មិត និងសិល្បៈកែវ', location: 'Pazhou Complex Area B' },
-        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនា Hall 11-13: គ្រឿងសង្ហារិមក្នុងផ្ទះ និងក្រៅផ្ទះ (Indoor & Outdoor Furniture)', location: 'Pazhou Complex Area C' },
-        { time: '06:30 PM - 09:00 PM', activity: 'ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', location: 'Pearl River Pier' }
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 8-10: គ្រឿងតុបតែងគេហដ្ឋាន ផ្កាសិប្បនិម្មិត និងសិល្បៈកែវ', activityKm: 'ទស្សនា Hall 8-10: គ្រឿងតុបតែងគេហដ្ឋាន ផ្កាសិប្បនិម្មិត និងសិល្បៈកែវ', activityEn: 'Hall 8-10 Sourcing: Home Ornaments, Artificial Flora, Festive Gifts & Glass Art', location: 'Pazhou Complex Area B', locationKm: 'Pazhou Complex តំបន់ B', locationEn: 'Pazhou Complex Area B' },
+        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនា Hall 11-13: គ្រឿងសង្ហារិមក្នុងផ្ទះ និងក្រៅផ្ទះ (Indoor & Outdoor Furniture)', activityKm: 'ទស្សនា Hall 11-13: គ្រឿងសង្ហារិមក្នុងផ្ទះ និងក្រៅផ្ទះ (Indoor & Outdoor Furniture)', activityEn: 'Hall 11-13 Sourcing: Living Room, Bedroom, Office & Outdoor Patio Furniture', location: 'Pazhou Complex Area C', locationKm: 'Pazhou Complex តំបន់ C', locationEn: 'Pazhou Complex Area C' },
+        { time: '06:30 PM - 09:00 PM', activity: 'ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', activityKm: 'ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', activityEn: 'Pearl River Luxury Night Skyline Cruise & Banquet', location: 'Pearl River Pier', locationKm: 'កំពង់ផែទន្លេគុជ', locationEn: 'Pearl River Pier' }
       ]
     },
     {
       day: 4,
       title: 'ទស្សនកិច្ចរោងចក្រ & ផ្សារលក់ដុំអំពូលភ្លើង Guzhen Lighting Capital',
+      titleKm: 'ទស្សនកិច្ចរោងចក្រ & ផ្សារលក់ដុំអំពូលភ្លើង Guzhen Lighting Capital',
+      titleEn: 'Zhongshan Expedition: Guzhen Lighting Wholesale Capital & Factory Floor Inspection',
       description: 'ធ្វើដំណើរទៅកាន់ទីក្រុងចុងសាន ទស្សនាទីក្រុងអំពូលភ្លើងធំបំផុត Guzhen Lighting Wholesale Capital។',
+      descriptionKm: 'ធ្វើដំណើរទៅកាន់ទីក្រុងចុងសាន ទស្សនាទីក្រុងអំពូលភ្លើងធំបំផុត Guzhen Lighting Wholesale Capital។',
+      descriptionEn: 'Excursion to Zhongshan to inspect the world\'s largest architectural & residential lighting wholesale market (Guzhen) with direct factory pricing.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Zhongshan Regional Lunch', 'Dinner'],
       guideAgenda: [
-        { time: '08:30 AM - 10:00 AM', activity: 'រថយន្ត VIP ជូនដំណើរទៅ Guzhen, Zhongshan', location: 'Guangzhou -> Zhongshan' },
-        { time: '10:00 AM - 01:00 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំអំពូលភ្លើង និងគ្រឿងតុបតែង Guzhen Plaza', location: 'Guzhen Lighting Market' },
-        { time: '02:30 PM - 05:30 PM', activity: 'ទស្សនារោងចក្រផលិតសម្ភារៈតុបតែង និងចរចាតម្លៃផ្ទាល់', location: 'Zhongshan Manufacturing Hub' }
+        { time: '08:30 AM - 10:00 AM', activity: 'រថយន្ត VIP ជូនដំណើរទៅ Guzhen, Zhongshan', activityKm: 'រថយន្ត VIP ជូនដំណើរទៅ Guzhen, Zhongshan', activityEn: 'VIP Coach Transit from Guangzhou to Guzhen, Zhongshan', location: 'Guangzhou -> Zhongshan', locationKm: 'ក្វាងចូវ ទៅ ចុងសាន', locationEn: 'Guangzhou -> Zhongshan' },
+        { time: '10:00 AM - 01:00 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំអំពូលភ្លើង និងគ្រឿងតុបតែង Guzhen Plaza', activityKm: 'ទស្សនកិច្ចផ្សារបោះដុំអំពូលភ្លើង និងគ្រឿងតុបតែង Guzhen Plaza', activityEn: 'Guzhen Lighting Plaza Wholesale Exhibition Walkthrough', location: 'Guzhen Lighting Market', locationKm: 'ផ្សារលក់ដុំអំពូលភ្លើង Guzhen', locationEn: 'Guzhen Lighting Market' },
+        { time: '02:30 PM - 05:30 PM', activity: 'ទស្សនារោងចក្រផលិតសម្ភារៈតុបតែង និងចរចាតម្លៃផ្ទាល់', activityKm: 'ទស្សនារោងចក្រផលិតសម្ភារៈតុបតែង និងចរចាតម្លៃផ្ទាល់', activityEn: 'Direct Factory Inspection & Contract Sourcing at Zhongshan Plant', location: 'Zhongshan Manufacturing Hub', locationKm: 'មជ្ឈមណ្ឌលផលិតកម្មចុងសាន', locationEn: 'Zhongshan Manufacturing Hub' }
       ]
     },
     {
       day: 5,
       title: 'ជំនួបពាណិជ្ជកម្ម B2B & ផ្សារលក់ដុំទំនិញទូទៅ OneLink International Plaza',
+      titleKm: 'ជំនួបពាណិជ្ជកម្ម B2B & ផ្សារលក់ដុំទំនិញទូទៅ OneLink International Plaza',
+      titleEn: '1-on-1 B2B Matchmaking & OneLink International Plaza Wholesale Center',
       description: 'ទស្សនាផ្សារលក់ដុំកាដូ របស់របរតុបតែង និងរបស់ក្មេងលេងធំបំផុតនៅក្វាងចូវ OneLink Plaza។',
+      descriptionKm: 'ទស្សនាផ្សារលក់ដុំកាដូ របស់របរតុបតែង និងរបស់ក្មេងលេងធំបំផុតនៅក្វាងចូវ OneLink Plaza។',
+      descriptionEn: 'Morning bilateral B2B meeting with verified suppliers. Afternoon guided tour of Guangzhou\'s premier toy, gift, and boutique home decor wholesale supermall.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Farewell Banquet'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'ពិធីលៀងសាយភាយលាគ្នា'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Lunch', 'Executive Farewell Banquet'],
       guideAgenda: [
-        { time: '09:00 AM - 12:00 PM', activity: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking', location: 'Hotel Business Center' },
-        { time: '02:00 PM - 05:30 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំ OneLink International Plaza', location: 'OneLink Plaza Guangzhou' },
-        { time: '06:30 PM - 09:30 PM', activity: 'ពិធីជប់លៀងលាគ្នា Executive Farewell Banquet', location: 'Seafood Banquet Hall' }
+        { time: '09:00 AM - 12:00 PM', activity: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking', activityKm: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking', activityEn: 'Bilateral B2B Matchmaking Conference', location: 'Hotel Business Center', locationKm: 'មជ្ឈមណ្ឌលធុរកិច្ចសណ្ឋាគារ', locationEn: 'Hotel Business Center' },
+        { time: '02:00 PM - 05:30 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំ OneLink International Plaza', activityKm: 'ទស្សនកិច្ចផ្សារបោះដុំ OneLink International Plaza', activityEn: 'OneLink International Plaza Wholesale Walkthrough', location: 'OneLink Plaza Guangzhou', locationKm: 'ផ្សារ OneLink Plaza ក្វាងចូវ', locationEn: 'OneLink Plaza Guangzhou' },
+        { time: '06:30 PM - 09:30 PM', activity: 'ពិធីជប់លៀងលាគ្នា Executive Farewell Banquet', activityKm: 'ពិធីជប់លៀងលាគ្នា Executive Farewell Banquet', activityEn: 'Official Delegation Farewell Seafood Banquet', location: 'Seafood Banquet Hall', locationKm: 'សាលពិធីលៀងសាយភាយ', locationEn: 'Seafood Banquet Hall' }
       ]
     },
     {
       day: 6,
       title: 'ទិញទំនិញ Shamian Island & Beijing Road - ហោះហើរត្រឡប់មកភ្នំពេញ',
+      titleKm: 'ទិញទំនិញ Shamian Island & Beijing Road - ហោះហើរត្រឡប់មកភ្នំពេញ',
+      titleEn: 'Shamian Island Heritage Walk - Beijing Road Shopping & Return Flight to Phnom Penh',
       description: 'ទស្សនាកោះប្រវត្តិសាស្ត្រ Shamian Island និងផ្លូវពាណិជ្ជកម្ម Beijing Road មុនពេលហោះហើរត្រឡប់មកភ្នំពេញ។',
+      descriptionKm: 'ទស្សនាកោះប្រវត្តិសាស្ត្រ Shamian Island និងផ្លូវពាណិជ្ជកម្ម Beijing Road មុនពេលហោះហើរត្រឡប់មកភ្នំពេញ។',
+      descriptionEn: 'Morning cultural visit to colonial Shamian Island and shopping along Beijing Road. Traditional Dim Sum lunch and airport transit for return flight to Phnom Penh.',
       hotelName: 'Trip Completion (Phnom Penh Arrival)',
+      hotelNameKm: 'បញ្ចប់ដំណើរបេសកកម្ម (មកដល់ភ្នំពេញ)',
+      hotelNameEn: 'Mission Completion (Arrival in Phnom Penh)',
       mealsIncluded: ['Buffet Breakfast', 'Dim Sum Lunch'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ ឌីមសាំ'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Guangdong Dim Sum Farewell Lunch'],
       guideAgenda: [
-        { time: '09:00 AM - 12:00 PM', activity: 'ទស្សនាកោះបេតិកភណ្ឌ Shamian Island & Beijing Road', location: 'Shamian Island' },
-        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុងពិសេស', location: 'Dim Sum Restaurant' },
-        { time: '03:00 PM - 04:30 PM', activity: 'រថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun (CAN)', location: 'Guangzhou Airport' },
-        { time: '06:30 PM - 08:30 PM', activity: 'ជើងហោះហើរត្រង់មកដល់ភ្នំពេញដោយជោគជ័យ', location: 'Phnom Penh Arrival' }
+        { time: '09:00 AM - 12:00 PM', activity: 'ទស្សនាកោះបេតិកភណ្ឌ Shamian Island & Beijing Road', activityKm: 'ទស្សនាកោះបេតិកភណ្ឌ Shamian Island & Beijing Road', activityEn: 'Shamian Island Heritage Walk & Beijing Road Retail Experience', location: 'Shamian Island', locationKm: 'កោះ Shamian', locationEn: 'Shamian Island & Beijing Road' },
+        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុងពិសេស', activityKm: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុងពិសេស', activityEn: 'Traditional Dim Sum Gastronomic Experience', location: 'Dim Sum Restaurant', locationKm: 'ភោជនីយដ្ឋានឌីមសាំ', locationEn: 'Dim Sum Restaurant' },
+        { time: '03:00 PM - 04:30 PM', activity: 'រថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun (CAN)', activityKm: 'រថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun (CAN)', activityEn: 'Airport Transfer to Guangzhou Baiyun International Airport', location: 'Guangzhou Airport', locationKm: 'ព្រលានយន្តហោះ Baiyun', locationEn: 'Guangzhou Baiyun Airport (CAN)' },
+        { time: '06:30 PM - 08:30 PM', activity: 'ជើងហោះហើរត្រង់មកដល់ភ្នំពេញដោយជោគជ័យ', activityKm: 'ជើងហោះហើរត្រង់មកដល់ភ្នំពេញដោយជោគជ័យ', activityEn: 'Flight Arrival at Phnom Penh International Airport (PNH)', location: 'Phnom Penh Arrival', locationKm: 'មកដល់ភ្នំពេញ', locationEn: 'Phnom Penh International Airport' }
       ]
     }
   ]
@@ -1291,6 +1497,22 @@ export const CANTON_FAIR_PHASE_3_PACKAGE: TourPackage = {
     '🧵 ទស្សនកិច្ចទីផ្សារបោះដុំក្រណាត់ និងវត្ថុធាតុដើមកាត់ដេរធំបំផុតនៅអាស៊ី Zhongda Textile City',
     '✈️ រួមបញ្ចូលសំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ-ក្វាងចូវ + សណ្ឋាគារ ៥ ផ្កាយ ៥ យប់'
   ],
+  highlightsKm: [
+    '👗 ស្វែងរកប្រភពនាំចូលរោងចក្រផ្ទាល់៖ សម្លៀកបំពាក់ ក្រណាត់ វាយនភណ្ឌ ស្បែកជើង និងកាបូប',
+    '🏥 ជួបក្រុមហ៊ុនផលិតឧបករណ៍វេជ្ជសាស្ត្រ សម្ភារៈមន្ទីរពេទ្យ ឱសថ និងផលិតផលថែទាំសុខភាព',
+    '🪪 សម្រួលបែបបទធ្វើកាត Buyer Badge ផ្លូវការ & VIP Fast-Track ចូលសាលពិព័រណ៍ Pazhou Complex',
+    '🗣️ អ្នកបកប្រែចិន-ខ្មែរ-អង់គ្លេស ជួយចរចាតម្លៃ និងកុម្ម៉ង់កាត់ដេរ OEM/ODM',
+    '🧵 ទស្សនកិច្ចទីផ្សារបោះដុំក្រណាត់ និងវត្ថុធាតុដើមកាត់ដេរធំបំផុតនៅអាស៊ី Zhongda Textile City',
+    '✈️ រួមបញ្ចូលសំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ-ក្វាងចូវ + សណ្ឋាគារ ៥ ផ្កាយ ៥ យប់'
+  ],
+  highlightsEn: [
+    '👗 Direct factory sourcing: Fashion apparel, activewear, textiles, footwear, and designer luggage',
+    '🏥 Access audited manufacturers for medical devices, diagnostic kits, and wellness consumables',
+    '🪪 Official expedited Canton Fair VIP Buyer Badge issuance with zero queues at Pazhou Complex',
+    '🗣️ Trilingual commercial interpreters (Khmer, Chinese, English) for flexible OEM/ODM agreements',
+    '🧵 Sourcing excursion to Zhongda International Textile City — Asia\'s largest fabric marketplace',
+    '✈️ All-inclusive package: Roundtrip flights Phnom Penh to Guangzhou + 5-Star luxury hotel (5 Nights)'
+  ],
   whoShouldJoin: [
     '👗 ម្ចាស់ប្រេនសម្លៀកបំពាក់ ស្បែកជើង កាបូប និងហាងម៉ូដ (Fashion Brand Owners, Apparel & Footwear Retailers)',
     '🧵 អ្នកនាំចូលក្រណាត់ វត្ថុធាតុដើមកាត់ដេរ និងគ្រឿងបន្លាស់ម៉ូដ (Textile, Fabric & Garment Accessory Importers)',
@@ -1342,10 +1564,56 @@ export const CANTON_FAIR_PHASE_3_PACKAGE: TourPackage = {
     'អ្នកបកប្រែភាសាចិន-ខ្មែរ-អង់គ្លេស ជួយចរចា និងចុះកិច្ចសន្យា',
     'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ'
   ],
+  inclusionsKm: [
+    'សំបុត្រយន្តហោះទៅ-មក ភ្នំពេញ - ក្វាងចូវ (Roundtrip Flight PNH - CAN)',
+    'សណ្ឋាគារប្រណិតកម្រិត ៥ ផ្កាយ (៥ យប់ នៅក្រុងក្វាងចូវ)',
+    'សេវាធ្វើកាត VIP Buyer Badge ផ្លូវការចូល Canton Fair Phase 3',
+    'រថយន្ត VIP ជូនដំណើរពេញដំណើរកម្សាន្ត និងទៅ Pazhou Complex',
+    'អាហារប៊ូហ្វេពេលព្រឹក និងអាហារពេលល្ងាចម្ហូបក្វាងទុងពិសេស',
+    'អ្នកបកប្រែភាសាចិន-ខ្មែរ-អង់គ្លេស ជួយចរចា និងចុះកិច្ចសន្យា',
+    'ធានារ៉ាប់រងការធ្វើដំណើរបេសកកម្មអន្តរជាតិ'
+  ],
+  inclusionsEn: [
+    'Roundtrip International Flights: Phnom Penh (PNH) to Guangzhou (CAN) with luggage allowance',
+    '5-Star Luxury Accommodations in Guangzhou (5 Nights in Pazhou/Tianhe District)',
+    'Official Canton Fair Phase 3 VIP Buyer Badge issuance & expedited registration',
+    'Dedicated VIP air-conditioned coach transfers for all daily scheduled trips',
+    'Daily Hotel Buffet Breakfasts & Authentic Cantonese Banquets',
+    'Trilingual Commercial Business Interpreters (Khmer, Mandarin Chinese, English)',
+    'Comprehensive International Business Travel & Medical Insurance Coverage'
+  ],
   exclusions: [
     'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំ Official Invitation Letter)',
     'ការចំណាយផ្ទាល់ខ្លួន និងទម្ងន់វ៉ាលីសលើសកំណត់',
     'ថ្លៃដឹកជញ្ជូនទំនិញ ឬទិញទំនិញផ្ទាល់ខ្លួន'
+  ],
+  exclusionsKm: [
+    'ទិដ្ឋាការចូលប្រទេសចិន China Visa Fee (KHB ជួយរៀបចំ Official Invitation Letter)',
+    'ការចំណាយផ្ទាល់ខ្លួន និងទម្ងន់វ៉ាលីសលើសកំណត់',
+    'ថ្លៃដឹកជញ្ជូនទំនិញ ឬទិញទំនិញផ្ទាល់ខ្លួន'
+  ],
+  exclusionsEn: [
+    'China Entry Visa processing fee (KHB provides Official Invitation Letter)',
+    'Personal expenditures (souvenirs, private laundry, telecommunications, minibar)',
+    'International freight, shipping container fees, or commercial sample cargo costs'
+  ],
+  termsAndConditions: [
+    'លិខិតឆ្លងដែន Passport ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតចាប់ពីថ្ងៃចេញដំណើរ។',
+    'តម្រូវឱ្យកក់ប្រាក់កក់ចំនួន 50% នៅពេលចុះឈ្មោះដើម្បីធានាសំបុត្រយន្តហោះ និងសណ្ឋាគារ ៥ ផ្កាយ។',
+    'KHB នឹងចេញលិខិតអញ្ជើញពាណិជ្ជកម្មផ្លូវការ (Official Canton Fair Invitation) សម្រាប់ធ្វើ Visa ចិន។',
+    'ឈប់ទទួលចុះឈ្មោះមុនថ្ងៃទី 05 ខែតុលា ឆ្នាំ 2026 ឬនៅពេលគ្រប់ចំនួនគណៈប្រតិភូ 25 នាក់។'
+  ],
+  termsAndConditionsKm: [
+    'លិខិតឆ្លងដែន Passport ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតចាប់ពីថ្ងៃចេញដំណើរ។',
+    'តម្រូវឱ្យកក់ប្រាក់កក់ចំនួន 50% នៅពេលចុះឈ្មោះដើម្បីធានាសំបុត្រយន្តហោះ និងសណ្ឋាគារ ៥ ផ្កាយ។',
+    'KHB នឹងចេញលិខិតអញ្ជើញពាណិជ្ជកម្មផ្លូវការ (Official Canton Fair Invitation) សម្រាប់ធ្វើ Visa ចិន។',
+    'ឈប់ទទួលចុះឈ្មោះមុនថ្ងៃទី 05 ខែតុលា ឆ្នាំ 2026 ឬនៅពេលគ្រប់ចំនួនគណៈប្រតិភូ 25 នាក់។'
+  ],
+  termsAndConditionsEn: [
+    'Passport must maintain a minimum validity of 6 months from the date of departure.',
+    'A 50% initial deposit is required upon delegate registration to secure 5-star hotel & flights.',
+    'KHB Events issues official corporate invitation letters for Chinese commercial visa applications.',
+    'Registration closes October 5, 2026 or upon reaching the maximum capacity of 25 delegates.'
   ],
   tags: ['trending', 'popular', 'cultural'],
   emergencyContact: {
@@ -1357,87 +1625,145 @@ export const CANTON_FAIR_PHASE_3_PACKAGE: TourPackage = {
   },
   tourGuide: {
     name: 'Mr. Tim Vutha & China Operations Escort Team',
+    nameKm: 'លោក ទឹម វុទ្ធា & ក្រុមការងារសម្របសម្រួលចិន',
+    nameEn: 'Mr. Tim Vutha & China Operations Escort Team',
     title: 'Lead Trade Mission Director (Cambodia-China Trade)',
+    titleKm: 'ប្រធានដឹកនាំបេសកកម្មពាណិជ្ជកម្ម (កម្ពុជា-ចិន)',
+    titleEn: 'Lead Trade Mission Director (Cambodia-China Trade)',
     phone: '060 815 515',
     telegram: 'https://t.me/VuthaTim',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
     badgeNumber: 'KHB-CANTON-2026-03',
     bio: 'Senior trade escort specialist with extensive experience in garment manufacturing, textile sourcing, and medical device procurement across Guangzhou and Zhejiang.',
+    bioKm: 'អ្នកជំនាញសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្មជាន់ខ្ពស់ ប្រកបដោយបទពិសោធន៍ទូលំទូលាយក្នុងវិស័យកាត់ដេរ វាយនភណ្ឌ និងឧបករណ៍វេជ្ជសាស្ត្រនៅក្វាងចូវ និងចេជាំង។',
+    bioEn: 'Senior trade escort specialist with extensive experience in garment manufacturing, textile sourcing, and medical device procurement across Guangzhou and Zhejiang.',
     languages: ['Khmer', 'Chinese (Mandarin)', 'English'],
     briefingMeetingPoint: 'Phnom Penh International Airport (PNH) International Departure Gate',
-    briefingTime: '07:30 AM (ថ្ងៃទី 31/10/2026)'
+    briefingMeetingPointKm: 'ព្រលានយន្តហោះអន្តរជាតិភ្នំពេញ (PNH) ច្រកចេញដំណើរអន្តរជាតិ - បញ្ជរ KHB VIP',
+    briefingMeetingPointEn: 'Phnom Penh International Airport (PNH) International Departure Gate - KHB VIP Desk',
+    briefingTime: '07:30 AM (Oct 31, 2026)',
+    briefingTimeKm: '07:30 AM (ថ្ងៃទី 31/10/2026)',
+    briefingTimeEn: '07:30 AM (Oct 31, 2026)'
   },
   itinerary: [
     {
       day: 1,
       title: 'ភ្នំពេញ - ក្វាងចូវ - ទទួលកាត Buyer Badge & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      titleKm: 'ភ្នំពេញ - ក្វាងចូវ - ទទួលកាត Buyer Badge & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      titleEn: 'Phnom Penh to Guangzhou - Buyer Badge Registration & Welcome Delegation Banquet',
       description: 'ហោះហើរទៅក្វាងចូវ សម្រួលកាត Buyer Badge ចូលឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ និងពិសារអាហារពេលល្ងាចស្វាគមន៍។',
+      descriptionKm: 'ហោះហើរទៅក្វាងចូវ សម្រួលកាត Buyer Badge ចូលឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ និងពិសារអាហារពេលល្ងាចស្វាគមន៍។',
+      descriptionEn: 'Direct international flight to Guangzhou (CAN). Expedited VIP Buyer Badge pickup, 5-star hotel check-in, and Grand Cantonese Welcome Banquet.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Breakfast', 'Welcome Banquet'],
+      mealsIncludedKm: ['អាហារពេលព្រឹក', 'ពិធីលៀងសាយភាយស្វាគមន៍'],
+      mealsIncludedEn: ['In-Flight / Hotel Breakfast', 'Grand Welcome Gala Banquet'],
       guideAgenda: [
-        { time: '08:00 AM - 10:00 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ', location: 'Phnom Penh Airport' },
-        { time: '10:30 AM - 02:15 PM', activity: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ', location: 'Flight PNH -> CAN' },
-        { time: '03:45 PM - 05:30 PM', activity: 'ទទួលកាត VIP Buyer Badge & ឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ', location: 'Pazhou Center' },
-        { time: '06:30 PM - 09:00 PM', activity: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូ', location: 'Grand Ballroom' }
+        { time: '08:00 AM - 10:00 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ', activityKm: 'ជួបជុំគណៈប្រតិភូនៅព្រលានយន្តហោះភ្នំពេញ', activityEn: 'Delegation Assembly at Phnom Penh Airport', location: 'Phnom Penh Airport', locationKm: 'ព្រលានយន្តហោះភ្នំពេញ', locationEn: 'Phnom Penh International Airport' },
+        { time: '10:30 AM - 02:15 PM', activity: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ', activityKm: 'ជើងហោះហើរត្រង់ ភ្នំពេញ ទៅ ក្វាងចូវ', activityEn: 'Direct Flight: Phnom Penh (PNH) to Guangzhou (CAN)', location: 'Flight PNH -> CAN', locationKm: 'ជើងហោះហើរ PNH -> CAN', locationEn: 'Flight PNH -> CAN' },
+        { time: '03:45 PM - 05:30 PM', activity: 'ទទួលកាត VIP Buyer Badge & ឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ', activityKm: 'ទទួលកាត VIP Buyer Badge & ឆែកអ៊ីនសណ្ឋាគារ ៥ ផ្កាយ', activityEn: 'VIP Fast-Track Canton Fair Badge Pickup & 5-Star Hotel Check-in', location: 'Pazhou Center', locationKm: 'Pazhou Registration Center', locationEn: 'Pazhou Registration Center' },
+        { time: '06:30 PM - 09:00 PM', activity: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូ', activityKm: 'ពិធីលៀងសាយភាយស្វាគមន៍គណៈប្រតិភូ', activityEn: 'Official Delegation Welcome Gala Dinner', location: 'Grand Ballroom', locationKm: 'សាលពិធីធំសណ្ឋាគារ', locationEn: 'Hotel Grand Ballroom' }
       ]
     },
     {
       day: 2,
       title: 'Canton Fair Phase 3 (ថ្ងៃទី ១): សម្លៀកបំពាក់ វាយនភណ្ឌ ស្បែកជើង & កាបូប',
+      titleKm: 'Canton Fair Phase 3 (ថ្ងៃទី ១): សម្លៀកបំពាក់ វាយនភណ្ឌ ស្បែកជើង & កាបូប',
+      titleEn: 'Canton Fair Phase 3 (Day 1): Fashion Apparel, Fabrics, Footwear, Leather Goods & Luggage',
       description: 'ពេញមួយថ្ងៃនៅ Pazhou Complex ជួបក្រុមហ៊ុនផលិតសម្លៀកបំពាក់ ស្បែកជើង កាបូប និងក្រណាត់វាយនភណ្ឌ។',
+      descriptionKm: 'ពេញមួយថ្ងៃនៅ Pazhou Complex ជួបក្រុមហ៊ុនផលិតសម្លៀកបំពាក់ ស្បែកជើង កាបូប និងក្រណាត់វាយនភណ្ឌ។',
+      descriptionEn: 'Full-day factory sourcing across Pazhou Complex (Areas A & B). Meet direct suppliers of men\'s/women\'s apparel, activewear, footwear, and travel luggage.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'VIP Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ VIP', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'VIP Networking Lunch', 'Dinner'],
       guideAgenda: [
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 1-4: សម្លៀកបំពាក់បុរស-នារី និងម៉ូតសម្លៀកបំពាក់ទាន់សម័យ', location: 'Pazhou Complex Area A' },
-        { time: '01:30 PM - 05:30 PM', activity: 'ទស្សនា Hall 5-7: ស្បែកជើង កាបូបធ្វើដំណើរ និងសម្ភារៈស្បែក', location: 'Pazhou Complex Area B' }
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 1-4: សម្លៀកបំពាក់បុរស-នារី និងម៉ូតសម្លៀកបំពាក់ទាន់សម័យ', activityKm: 'ទស្សនា Hall 1-4: សម្លៀកបំពាក់បុរស-នារី និងម៉ូតសម្លៀកបំពាក់ទាន់សម័យ', activityEn: 'Hall 1-4 Sourcing: Men\'s & Women\'s Fashion Apparel, Casual Wear & Sportswear', location: 'Pazhou Complex Area A', locationKm: 'Pazhou Complex តំបន់ A', locationEn: 'Pazhou Complex Area A' },
+        { time: '01:30 PM - 05:30 PM', activity: 'ទស្សនា Hall 5-7: ស្បែកជើង កាបូបធ្វើដំណើរ និងសម្ភារៈស្បែក', activityKm: 'ទស្សនា Hall 5-7: ស្បែកជើង កាបូបធ្វើដំណើរ និងសម្ភារៈស្បែក', activityEn: 'Hall 5-7 Sourcing: Fashion Footwear, Hard/Soft Luggage, Backpacks & Leather Trims', location: 'Pazhou Complex Area B', locationKm: 'Pazhou Complex តំបន់ B', locationEn: 'Pazhou Complex Area B' }
       ]
     },
     {
       day: 3,
       title: 'Canton Fair Phase 3 (ថ្ងៃទី ២): ឧបករណ៍វេជ្ជសាស្ត្រ ឱសថ & ម្ហូបអាហារ',
+      titleKm: 'Canton Fair Phase 3 (ថ្ងៃទី ២): ឧបករណ៍វេជ្ជសាស្ត្រ ឱសថ & ម្ហូបអាហារ',
+      titleEn: 'Canton Fair Phase 3 (Day 2): Medical & Health Devices, Pharmaceuticals, Stationery & Food',
       description: 'ទស្សនាឧបករណ៍វេជ្ជសាស្ត្រ សម្ភារៈមន្ទីរពេទ្យ អាហារបំប៉នសុខភាព និងម្ហូបអាហារកែច្នៃនាំចេញ។',
+      descriptionKm: 'ទស្សនាឧបករណ៍វេជ្ជសាស្ត្រ សម្ភារៈមន្ទីរពេទ្យ អាហារបំប៉នសុខភាព និងម្ហូបអាហារកែច្នៃនាំចេញ។',
+      descriptionEn: 'Inspect diagnostic medical supplies, hospital consumables, health supplements, and international export foods. Evening Pearl River Skyline Cruise.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Executive Lunch', 'Pearl River Cruise Banquet'],
       guideAgenda: [
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 8-10: ឧបករណ៍វេជ្ជសាស្ត្រ បរិក្ខារមន្ទីរពេទ្យ និងផលិតផលថែទាំសុខភាព', location: 'Pazhou Complex Area B' },
-        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនា Hall 11-13: ម្ហូបអាហារកែច្នៃ តែ និងកសិផលនាំចេញអន្តរជាតិ', location: 'Pazhou Complex Area C' },
-        { time: '06:30 PM - 09:00 PM', activity: 'ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', location: 'Pearl River Pier' }
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនា Hall 8-10: ឧបករណ៍វេជ្ជសាស្ត្រ បរិក្ខារមន្ទីរពេទ្យ និងផលិតផលថែទាំសុខភាព', activityKm: 'ទស្សនា Hall 8-10: ឧបករណ៍វេជ្ជសាស្ត្រ បរិក្ខារមន្ទីរពេទ្យ និងផលិតផលថែទាំសុខភាព', activityEn: 'Hall 8-10 Sourcing: Diagnostic Medical Equipment, Rehabilitation & Health Consumables', location: 'Pazhou Complex Area B', locationKm: 'Pazhou Complex តំបន់ B', locationEn: 'Pazhou Complex Area B' },
+        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនា Hall 11-13: ម្ហូបអាហារកែច្នៃ តែ និងកសិផលនាំចេញអន្តរជាតិ', activityKm: 'ទស្សនា Hall 11-13: ម្ហូបអាហារកែច្នៃ តែ និងកសិផលនាំចេញអន្តរជាតិ', activityEn: 'Hall 11-13 Sourcing: Processed Food Products, Specialty Teas & Nutritional Items', location: 'Pazhou Complex Area C', locationKm: 'Pazhou Complex តំបន់ C', locationEn: 'Pazhou Complex Area C' },
+        { time: '06:30 PM - 09:00 PM', activity: 'ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', activityKm: 'ជិះទូកកម្សាន្តទន្លេគុជ Pearl River Night Cruise', activityEn: 'Pearl River Luxury Night Skyline Cruise & Banquet', location: 'Pearl River Pier', locationKm: 'កំពង់ផែទន្លេគុជ', locationEn: 'Pearl River Pier' }
       ]
     },
     {
       day: 4,
       title: 'ទស្សនកិច្ចផ្សារបោះដុំក្រណាត់ធំបំផុតនៅអាស៊ី Zhongda International Textile City',
+      titleKm: 'ទស្សនកិច្ចផ្សារបោះដុំក្រណាត់ធំបំផុតនៅអាស៊ី Zhongda International Textile City',
+      titleEn: 'Zhongda International Textile City: Asia\'s Largest Fabric & Garment Accessory Wholesale Superhub',
       description: 'ទស្សនកិច្ចផ្សារបោះដុំក្រណាត់ និងវត្ថុធាតុដើមកាត់ដេរធំបំផុតនៅអាស៊ី Zhongda Fabric & Accessories Market។',
+      descriptionKm: 'ទស្សនកិច្ចផ្សារបោះដុំក្រណាត់ និងវត្ថុធាតុដើមកាត់ដេរធំបំផុតនៅអាស៊ី Zhongda Fabric & Accessories Market។',
+      descriptionEn: 'Field study to Zhongda International Textile City. Explore 10,000+ fabric mills, sample pattern books, buttons, zippers, and custom garment trims.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Dinner'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'អាហារពេលល្ងាច'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Regional Textile Hub Lunch', 'Dinner'],
       guideAgenda: [
-        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនកិច្ច និងជ្រើសរើសគំរូក្រណាត់ Zhongda Fabric Market', location: 'Zhongda International Textile City' },
-        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនាផ្សារបោះដុំគ្រឿងតុបតែងកាត់ដេរ និងឡេវ/ខ្សែរ៉ូត Accessories Market', location: 'Zhongda Garment Accessories' }
+        { time: '09:00 AM - 12:30 PM', activity: 'ទស្សនកិច្ច និងជ្រើសរើសគំរូក្រណាត់ Zhongda Fabric Market', activityKm: 'ទស្សនកិច្ច និងជ្រើសរើសគំរូក្រណាត់ Zhongda Fabric Market', activityEn: 'Zhongda Fabric Market Sample Selection & Direct Mill Sourcing', location: 'Zhongda International Textile City', locationKm: 'ផ្សារក្រណាត់ Zhongda', locationEn: 'Zhongda International Textile City' },
+        { time: '01:30 PM - 05:00 PM', activity: 'ទស្សនាផ្សារបោះដុំគ្រឿងតុបតែងកាត់ដេរ និងឡេវ/ខ្សែរ៉ូត Accessories Market', activityKm: 'ទស្សនាផ្សារបោះដុំគ្រឿងតុបតែងកាត់ដេរ និងឡេវ/ខ្សែរ៉ូត Accessories Market', activityEn: 'Zhongda Garment Accessories: Zippers, Buttons, Labels & Trims Wholesale Sourcing', location: 'Zhongda Garment Accessories', locationKm: 'ផ្សារគ្រឿងតុបតែងកាត់ដេរ Zhongda', locationEn: 'Zhongda Garment Accessories Market' }
       ]
     },
     {
       day: 5,
       title: 'ជំនួបពាណិជ្ជកម្ម B2B & ផ្សារលក់ដុំស្បែកជើង Zhanxi Road Shoe Market',
+      titleKm: 'ជំនួបពាណិជ្ជកម្ម B2B & ផ្សារលក់ដុំស្បែកជើង Zhanxi Road Shoe Market',
+      titleEn: '1-on-1 Bilateral B2B Matchmaking & Zhanxi Road Footwear/Bag Wholesale Center',
       description: 'ជំនួបពាណិជ្ជកម្មទល់មុខ និងទស្សនាផ្សារលក់ដុំស្បែកជើង និងកាបូបធំបំផុត Zhanxi Road Shoe Plaza។',
+      descriptionKm: 'ជំនួបពាណិជ្ជកម្មទល់មុខ និងទស្សនាផ្សារលក់ដុំស្បែកជើង និងកាបូបធំបំផុត Zhanxi Road Shoe Plaza។',
+      descriptionEn: 'Morning pre-arranged B2B trade conference with verified suppliers. Afternoon guided sourcing walk at Zhanxi Road wholesale shoe & bag plaza.',
       hotelName: 'Guangzhou Marriott Pazhou (5-Star)',
+      hotelNameKm: 'សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)',
+      hotelNameEn: 'Guangzhou Marriott Pazhou (5-Star Luxury)',
       mealsIncluded: ['Buffet Breakfast', 'Lunch', 'Farewell Banquet'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់', 'ពិធីលៀងសាយភាយលាគ្នា'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Executive Lunch', 'Official Farewell Banquet'],
       guideAgenda: [
-        { time: '09:00 AM - 12:00 PM', activity: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking Session', location: 'Hotel Business Center' },
-        { time: '02:00 PM - 05:30 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំស្បែកជើង និងកាបូប Zhanxi Road Wholesale Center', location: 'Zhanxi Road Shoe Market' },
-        { time: '06:30 PM - 09:30 PM', activity: 'ពិធីជប់លៀងលាគ្នា Executive Farewell Banquet', location: 'Seafood Banquet Hall' }
+        { time: '09:00 AM - 12:00 PM', activity: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking Session', activityKm: 'ជំនួបពាណិជ្ជកម្មទល់មុខ B2B Matchmaking Session', activityEn: 'Bilateral B2B Trade Matchmaking Conference', location: 'Hotel Business Center', locationKm: 'មជ្ឈមណ្ឌលធុរកិច្ចសណ្ឋាគារ', locationEn: 'Hotel Business Center' },
+        { time: '02:00 PM - 05:30 PM', activity: 'ទស្សនកិច្ចផ្សារបោះដុំស្បែកជើង និងកាបូប Zhanxi Road Wholesale Center', activityKm: 'ទស្សនកិច្ចផ្សារបោះដុំស្បែកជើង និងកាបូប Zhanxi Road Wholesale Center', activityEn: 'Zhanxi Road Footwear, Sneakers & Luggage Wholesale Supermarket Walkthrough', location: 'Zhanxi Road Shoe Market', locationKm: 'ផ្សារស្បែកជើង Zhanxi Road', locationEn: 'Zhanxi Road Shoe Market' },
+        { time: '06:30 PM - 09:30 PM', activity: 'ពិធីជប់លៀងលាគ្នា Executive Farewell Banquet', activityKm: 'ពិធីជប់លៀងលាគ្នា Executive Farewell Banquet', activityEn: 'Official Delegation Farewell Seafood Banquet', location: 'Seafood Banquet Hall', locationKm: 'សាលពិធីលៀងសាយភាយ', locationEn: 'Seafood Banquet Hall' }
       ]
     },
     {
       day: 6,
       title: 'ទិញទំនិញ Beijing Road - ហោះហើរត្រឡប់មកភ្នំពេញ',
+      titleKm: 'ទិញទំនិញ Beijing Road - ហោះហើរត្រឡប់មកភ្នំពេញ',
+      titleEn: 'Beijing Road Retail Discovery - Scheduled Return Flight to Phnom Penh',
       description: 'ទស្សនាផ្លូវថ្មើរជើង Beijing Road មុនពេលរថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun ដើម្បីហោះហើរត្រឡប់មកភ្នំពេញ។',
+      descriptionKm: 'ទស្សនាផ្លូវថ្មើរជើង Beijing Road មុនពេលរថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun ដើម្បីហោះហើរត្រឡប់មកភ្នំពេញ។',
+      descriptionEn: 'Morning cultural discovery and shopping along Beijing Road Pedestrian Street. Authentic Dim Sum lunch, followed by airport transfer for flight back to Phnom Penh.',
       hotelName: 'Trip Completion (Phnom Penh Arrival)',
+      hotelNameKm: 'បញ្ចប់ដំណើរបេសកកម្ម (មកដល់ភ្នំពេញ)',
+      hotelNameEn: 'Mission Completion (Arrival in Phnom Penh)',
       mealsIncluded: ['Buffet Breakfast', 'Dim Sum Lunch'],
+      mealsIncludedKm: ['អាហារពេលព្រឹកប៊ូហ្វេ', 'អាហារថ្ងៃត្រង់ ឌីមសាំ'],
+      mealsIncludedEn: ['Hotel Buffet Breakfast', 'Guangdong Dim Sum Farewell Lunch'],
       guideAgenda: [
-        { time: '09:00 AM - 12:00 PM', activity: 'ទស្សនា និងទិញទំនិញនៅផ្លូវថ្មើរជើង Beijing Road', location: 'Beijing Road' },
-        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុងពិសេស', location: 'Dim Sum Restaurant' },
-        { time: '03:00 PM - 04:30 PM', activity: 'រថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun (CAN)', location: 'Guangzhou Airport' },
-        { time: '06:30 PM - 08:30 PM', activity: 'ជើងហោះហើរត្រង់មកដល់ភ្នំពេញដោយជោគជ័យ', location: 'Phnom Penh Arrival' }
+        { time: '09:00 AM - 12:00 PM', activity: 'ទស្សនា និងទិញទំនិញនៅផ្លូវថ្មើរជើង Beijing Road', activityKm: 'ទស្សនា និងទិញទំនិញនៅផ្លូវថ្មើរជើង Beijing Road', activityEn: 'Beijing Road Pedestrian Street Shopping & Cultural Heritage', location: 'Beijing Road', locationKm: 'ផ្លូវថ្មើរជើង Beijing Road', locationEn: 'Beijing Road Pedestrian Street' },
+        { time: '12:30 PM - 01:30 PM', activity: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុងពិសេស', activityKm: 'អាហារថ្ងៃត្រង់ ឌីមសាំក្វាងទុងពិសេស', activityEn: 'Guangdong Dim Sum Gastronomic Lunch', location: 'Dim Sum Restaurant', locationKm: 'ភោជនីយដ្ឋានឌីមសាំ', locationEn: 'Dim Sum Restaurant' },
+        { time: '03:00 PM - 04:30 PM', activity: 'រថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun (CAN)', activityKm: 'រថយន្ត VIP ជូនដំណើរទៅព្រលានយន្តហោះ Baiyun (CAN)', activityEn: 'Airport Transfer to Guangzhou Baiyun International Airport', location: 'Guangzhou Airport', locationKm: 'ព្រលានយន្តហោះ Baiyun', locationEn: 'Guangzhou Baiyun Airport (CAN)' },
+        { time: '06:30 PM - 08:30 PM', activity: 'ជើងហោះហើរត្រង់មកដល់ភ្នំពេញដោយជោគជ័យ', activityKm: 'ជើងហោះហើរត្រង់មកដល់ភ្នំពេញដោយជោគជ័យ', activityEn: 'Flight Arrival at Phnom Penh International Airport (PNH) - Mission Accomplished', location: 'Phnom Penh Arrival', locationKm: 'មកដល់ភ្នំពេញ', locationEn: 'Phnom Penh International Airport' }
       ]
     }
   ]

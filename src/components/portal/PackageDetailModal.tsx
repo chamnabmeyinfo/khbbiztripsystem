@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatMoney, convertFromUSD } from '../../services/currencyService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import {
   X,
   Star,
@@ -61,65 +62,16 @@ export const PackageDetailModal: React.FC = () => {
 
   if (activeModal !== 'package_detail' || !selectedPackage) return null;
 
-  const pkg = selectedPackage;
+  const rawPkg = selectedPackage;
+  const pkg = useMemo(() => getLocalizedPackage(rawPkg, language), [rawPkg, language]);
   const currentDepartureDate = selectedDate || pkg.availableDates[0] || '2026-09-15';
 
-  const highlightsList = (language === 'km' && pkg.highlightsKm && pkg.highlightsKm.length > 0)
-    ? pkg.highlightsKm
-    : (language !== 'km' && pkg.highlightsEn && pkg.highlightsEn.length > 0
-        ? pkg.highlightsEn
-        : (pkg.highlights || []));
-
-  const inclusionsList = (language === 'km' && pkg.inclusionsKm && pkg.inclusionsKm.length > 0)
-    ? pkg.inclusionsKm
-    : (language !== 'km' && pkg.inclusionsEn && pkg.inclusionsEn.length > 0
-        ? pkg.inclusionsEn
-        : (pkg.inclusions || []));
-
-  const exclusionsList = (language === 'km' && pkg.exclusionsKm && pkg.exclusionsKm.length > 0)
-    ? pkg.exclusionsKm
-    : (language !== 'km' && pkg.exclusionsEn && pkg.exclusionsEn.length > 0
-        ? pkg.exclusionsEn
-        : (pkg.exclusions || []));
-
-  const termsList = (language === 'km' && pkg.termsAndConditionsKm && pkg.termsAndConditionsKm.length > 0)
-    ? pkg.termsAndConditionsKm
-    : (language !== 'km' && pkg.termsAndConditionsEn && pkg.termsAndConditionsEn.length > 0
-        ? pkg.termsAndConditionsEn
-        : (pkg.termsAndConditions && pkg.termsAndConditions.length > 0
-            ? pkg.termsAndConditions
-            : [
-                language === 'km' ? 'លិខិតឆ្លងដែន (Passport) ត្រូវតែមានសុពលភាពយ៉ាងតិច ៦ ខែ គិតចាប់ពីថ្ងៃចេញដំណើរ។' : 'All delegates must hold a valid passport with at least 6 months validity.',
-                language === 'km' ? 'ការកក់កន្លែង និងធានាសិទ្ធិចូលរួម ត្រូវតម្កល់ប្រាក់កក់យ៉ាងតិច 50% នៃតម្លៃសរុបពេលចុះឈ្មោះ។' : 'A 50% deposit is required at registration to secure seat and bookings.',
-                language === 'km' ? 'ការបង់ប្រាក់បង្គ្រប់ 100% ត្រូវធ្វើឡើងយ៉ាងតិច ៧ ថ្ងៃ មុនកាលបរិច្ឆេទចេញដំណើរ។' : 'Full settlement of balance must be completed at least 7 days prior to departure.',
-                language === 'km' ? 'ករណីលុបចោលការធ្វើដំណើរមុន ១៥ ថ្ងៃ នឹងទទួលបានការបង្វិលប្រាក់វិញ 70%។ ករណីលុបចោលក្រោម ៧ ថ្ងៃ មិនអាចបង្វិលប្រាក់បានទេ។' : 'Cancellation 15+ days prior receives a 70% refund. Cancellations within 7 days are non-refundable.',
-                language === 'km' ? 'អ្នកចូលរួមត្រូវគោរពតាមពេលវេលា និងការណែនាំរបស់មគ្គុទ្ទេសក៍ និងអ្នកសម្របសម្រួលបេសកកម្ម។' : 'Delegates are expected to adhere to scheduled assembly times and instructions.',
-                language === 'km' ? 'ក្រុមហ៊ុនសូមរក្សាសិទ្ធិកែប្រែកាលវិភាគ ឬសណ្ឋាគារក្នុងកម្រិតស្មើគ្នា ករណីមានប្រធានសក្តិ ឬហេតុការណ៍ចៃដន្យ។' : 'KHB reserves the right to adjust sequence or lodging to equivalent 4-star standards under force majeure.'
-              ]));
-
-  const whoShouldJoinList = (language === 'km' && pkg.whoShouldJoinKm && pkg.whoShouldJoinKm.length > 0)
-    ? pkg.whoShouldJoinKm
-    : (language !== 'km' && pkg.whoShouldJoinEn && pkg.whoShouldJoinEn.length > 0
-        ? pkg.whoShouldJoinEn
-        : (pkg.whoShouldJoin && pkg.whoShouldJoin.length > 0
-            ? pkg.whoShouldJoin
-            : [
-                language === 'km' ? 'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ' : 'Coffee shop, bakery, and F&B restaurant owners seeking direct factory-wholesale pricing and suppliers',
-                language === 'km' ? 'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា' : 'Entrepreneurs & investors looking to license proven international F&B franchise brands for Cambodia',
-                language === 'km' ? 'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ' : 'Importers & commercial distributors of raw bakery ingredients, packaging, and commercial food equipment'
-              ]));
-
-  const whyShouldJoinList = (language === 'km' && pkg.whyShouldJoinKm && pkg.whyShouldJoinKm.length > 0)
-    ? pkg.whyShouldJoinKm
-    : (language !== 'km' && pkg.whyShouldJoinEn && pkg.whyShouldJoinEn.length > 0
-        ? pkg.whyShouldJoinEn
-        : (pkg.whyShouldJoin && pkg.whyShouldJoin.length > 0
-            ? pkg.whyShouldJoin
-            : [
-                language === 'km' ? 'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល' : 'Acquire direct factory-gate wholesale pricing without broker markups and middleman fees',
-                language === 'km' ? 'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន' : 'Meet and negotiate in person with 1,000+ top verified international manufacturers and brand owners',
-                language === 'km' ? 'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត' : 'Enjoy seamless VIP Fast-Track border clearance, 4-star luxury accommodation, and dedicated translators'
-              ]));
+  const highlightsList = pkg.highlights || [];
+  const inclusionsList = pkg.inclusions || [];
+  const exclusionsList = pkg.exclusions || [];
+  const termsList = pkg.termsAndConditions || [];
+  const whoShouldJoinList = pkg.whoShouldJoin || [];
+  const whyShouldJoinList = pkg.whyShouldJoin || [];
 
   const handleDownloadPdf = async () => {
     try {

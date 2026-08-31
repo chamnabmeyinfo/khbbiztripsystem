@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Booking } from '../../types';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 
 export const CustomerDashboard: React.FC = () => {
   const {
@@ -189,8 +190,9 @@ export const CustomerDashboard: React.FC = () => {
           (activeTab === 'upcoming' ? upcomingBookings : pastBookings).map(booking => {
             const isConfirmed = booking.status === 'confirmed';
             const matchedPkg = packages.find(p => p.id === booking.packageId);
-            const displayTitle = matchedPkg?.title || booking.packageTitle;
-            const displayDestination = matchedPkg?.destination || booking.packageDestination;
+            const locPkg = matchedPkg ? getLocalizedPackage(matchedPkg, language) : null;
+            const displayTitle = locPkg?.title || booking.packageTitle;
+            const displayDestination = locPkg?.destination || booking.packageDestination;
             return (
               <div
                 key={booking.id}

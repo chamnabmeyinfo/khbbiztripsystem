@@ -4,6 +4,7 @@ import { TourPackage, TourPackageStatus, PackageViewMode } from '../../types';
 import { PackageEditorModal } from './PackageEditorModal';
 import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
 import { formatMoney } from '../../services/currencyService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import {
   Plane,
   Plus,
@@ -650,7 +651,8 @@ export const PackageManagementSection: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                {filteredPackages.map(pkg => {
+                {filteredPackages.map(rawPkg => {
+                  const pkg = getLocalizedPackage(rawPkg, language);
                   const currentStatus: TourPackageStatus = pkg.status || 'active';
                   const isTrashItem = statusFilter === 'deleted' || currentStatus === 'deleted';
                   const matchedCat = packageCategories.find(c => c.id === pkg.category);

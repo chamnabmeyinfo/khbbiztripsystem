@@ -1,5 +1,38 @@
 import { TourPackage, ItineraryStep, GuideScheduleSlot, OptionalTourProgram, TourGuide, LanguageCode } from '../types';
-import { OFFICIAL_BIZTRIP_PACKAGE } from '../services/mockData';
+
+const KHMER_CHAR_REGEX = /[\u1780-\u17FF]/;
+
+/**
+ * Built-in domain translation dictionary to convert common Khmer terms into English
+ * in case a custom user tour or old database record lacks an explicit englishVal.
+ */
+const TRAVEL_FALLBACK_TERMS_EN: Record<string, string> = {
+  'បេសកកម្មពាណិជ្ជកម្ម': 'Business Trade Mission',
+  'ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម': 'Business Trade Mission',
+  'ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស': 'Special Business Trade Mission',
+  'ពិព័រណ៍ក្វាងចូវ': 'Guangzhou Canton Fair',
+  'ក្វាងចូវ': 'Guangzhou',
+  'វៀតណាម': 'Vietnam',
+  'ប្រទេសវៀតណាម': 'Vietnam',
+  'ប្រទេសចិន': 'China',
+  'ចិន': 'China',
+  'ប្រទេសថៃ': 'Thailand',
+  'ថៃ': 'Thailand',
+  'កម្ពុជា': 'Cambodia',
+  'ភ្នំពេញ': 'Phnom Penh',
+  'ហូជីមិញ': 'Ho Chi Minh City',
+  'កោះត្រល់': 'Phu Quoc Island',
+  'កំពត': 'Kampot',
+  'សណ្ឋាគារ': 'Hotel',
+  'អាហារពេលព្រឹក': 'Breakfast',
+  'អាហារថ្ងៃត្រង់': 'Lunch',
+  'អាហារពេលល្ងាច': 'Dinner',
+  'សំបុត្រយន្តហោះ': 'Flight Ticket',
+  'មគ្គុទ្ទេសក៍': 'Tour Guide / Escort',
+  'ថ្ងៃទី': 'Day',
+  'ទាំងអស់': 'All',
+  'កក់': 'Book Now',
+};
 
 /**
  * Resolves a localized text string based on active language.
@@ -7,14 +40,52 @@ import { OFFICIAL_BIZTRIP_PACKAGE } from '../services/mockData';
 export function getLocalizedText(
   khmerVal: string | undefined,
   englishVal: string | undefined,
-  fallbackVal: string,
+  fallbackVal: string = '',
   lang: LanguageCode = 'km'
 ): string {
+  // Khmer language mode
   if (lang === 'km') {
-    return khmerVal?.trim() || fallbackVal || englishVal || '';
+    if (khmerVal && khmerVal.trim()) return khmerVal.trim();
+    if (fallbackVal && fallbackVal.trim() && KHMER_CHAR_REGEX.test(fallbackVal)) return fallbackVal.trim();
+    return khmerVal?.trim() || fallbackVal?.trim() || englishVal?.trim() || '';
   }
-  // For 'en' and all other non-Khmer languages, prefer English
-  return englishVal?.trim() || (khmerVal ? undefined : fallbackVal) || fallbackVal || khmerVal || '';
+
+  // English & other multilingual modes (lang !== 'km')
+  if (englishVal && englishVal.trim()) {
+    return englishVal.trim();
+  }
+
+  // Check if fallbackVal is already in English/Latin (contains NO Khmer characters)
+  if (fallbackVal && fallbackVal.trim() && !KHMER_CHAR_REGEX.test(fallbackVal)) {
+    return fallbackVal.trim();
+  }
+
+  // Check if khmerVal has no Khmer characters (e.g. written in English originally)
+  if (khmerVal && khmerVal.trim() && !KHMER_CHAR_REGEX.test(khmerVal)) {
+    return khmerVal.trim();
+  }
+
+  // If text contains English in parentheses e.g. "ហូជីមិញ + កោះត្រល់ (Ho Chi Minh & Phu Quoc)" -> extract "Ho Chi Minh & Phu Quoc"
+  const candidate = englishVal || fallbackVal || khmerVal || '';
+  const parenMatch = candidate.match(/\(([^)]+)\)/);
+  if (parenMatch && parenMatch[1] && !KHMER_CHAR_REGEX.test(parenMatch[1])) {
+    return parenMatch[1].trim();
+  }
+
+  // Check dictionary translations
+  for (const [kmTerm, enTerm] of Object.entries(TRAVEL_FALLBACK_TERMS_EN)) {
+    if (candidate.includes(kmTerm)) {
+      // If candidate also contains English terms like "Phase 1", preserve it
+      const latinParts = candidate.match(/[A-Za-z0-9\s&+\-:,()]+/g)?.map(s => s.trim()).filter(Boolean).join(' ');
+      if (latinParts && latinParts.length > 3) {
+        return `${enTerm}: ${latinParts}`;
+      }
+      return enTerm;
+    }
+  }
+
+  // Fallback to whatever text exists if no other option
+  return candidate.trim();
 }
 
 /**
@@ -23,13 +94,36 @@ export function getLocalizedText(
 export function getLocalizedArray(
   khmerArr: string[] | undefined,
   englishArr: string[] | undefined,
-  fallbackArr: string[],
+  fallbackArr: string[] = [],
   lang: LanguageCode = 'km'
 ): string[] {
   if (lang === 'km') {
-    return khmerArr && khmerArr.length > 0 ? khmerArr : fallbackArr || englishArr || [];
+    if (khmerArr && khmerArr.length > 0) return khmerArr;
+    if (fallbackArr && fallbackArr.length > 0 && fallbackArr.some(item => KHMER_CHAR_REGEX.test(item))) {
+      return fallbackArr;
+    }
+    return khmerArr || fallbackArr || englishArr || [];
   }
-  return englishArr && englishArr.length > 0 ? englishArr : fallbackArr || khmerArr || [];
+
+  // For English / non-Khmer:
+  if (englishArr && englishArr.length > 0) {
+    return englishArr;
+  }
+
+  // Check fallback array for English items
+  if (fallbackArr && fallbackArr.length > 0) {
+    const latinItems = fallbackArr.map(item => {
+      if (!KHMER_CHAR_REGEX.test(item)) return item;
+      const parenMatch = item.match(/\(([^)]+)\)/);
+      if (parenMatch && parenMatch[1] && !KHMER_CHAR_REGEX.test(parenMatch[1])) {
+        return parenMatch[1].trim();
+      }
+      return item;
+    });
+    return latinItems;
+  }
+
+  return englishArr || fallbackArr || khmerArr || [];
 }
 
 /**
@@ -98,8 +192,8 @@ export function getLocalizedPackage(pkg: TourPackage, lang: LanguageCode = 'km')
       return {
         ...slot,
         activity: getLocalizedText(slotActKm, slotActEn, slot.activity, lang),
-        location: slot.location ? getLocalizedText(slotLocKm, slotLocEn, slot.location, lang) : (slotLocEn || slotLocKm),
-        notes: slot.notes ? getLocalizedText(slotNotesKm, slotNotesEn, slot.notes, lang) : (slotNotesEn || slotNotesKm),
+        location: slot.location ? getLocalizedText(slotLocKm, slotLocEn, slot.location, lang) : (slotLocEn || slotLocKm || ''),
+        notes: slot.notes ? getLocalizedText(slotNotesKm, slotNotesEn, slot.notes, lang) : (slotNotesEn || slotNotesKm || ''),
       };
     });
 
@@ -137,10 +231,10 @@ export function getLocalizedPackage(pkg: TourPackage, lang: LanguageCode = 'km')
       ...prog,
       title: getLocalizedText(progTitleKm, progTitleEn, prog.title, lang),
       description: getLocalizedText(progDescKm, progDescEn, prog.description, lang),
-      recommendedAudience: prog.recommendedAudience ? getLocalizedText(progAudKm, progAudEn, prog.recommendedAudience, lang) : (progAudEn || progAudKm),
+      recommendedAudience: prog.recommendedAudience ? getLocalizedText(progAudKm, progAudEn, prog.recommendedAudience, lang) : (progAudEn || progAudKm || ''),
       highlights: getLocalizedArray(progHlKm, progHlEn, prog.highlights || [], lang),
-      includedMeals: prog.includedMeals ? getLocalizedArray(progMealsKm, progMealsEn, prog.includedMeals, lang) : (progMealsEn || progMealsKm),
-      meetingPoint: prog.meetingPoint ? getLocalizedText(progMeetingKm, progMeetingEn, prog.meetingPoint, lang) : (progMeetingEn || progMeetingKm),
+      includedMeals: prog.includedMeals ? getLocalizedArray(progMealsKm, progMealsEn, prog.includedMeals, lang) : (progMealsEn || progMealsKm || []),
+      meetingPoint: prog.meetingPoint ? getLocalizedText(progMeetingKm, progMeetingEn, prog.meetingPoint, lang) : (progMeetingEn || progMeetingKm || ''),
     };
   });
 
@@ -160,7 +254,7 @@ export function getLocalizedPackage(pkg: TourPackage, lang: LanguageCode = 'km')
     description: getLocalizedText(descriptionKm, descriptionEn, pkg.description, lang),
     destination: getLocalizedText(destinationKm, destinationEn, pkg.destination, lang),
     country: getLocalizedText(countryKm, countryEn, pkg.country, lang),
-    category: pkg.category ? getLocalizedText(categoryKm, categoryEn, pkg.category, lang) : (categoryEn || categoryKm),
+    category: pkg.category ? getLocalizedText(categoryKm, categoryEn, pkg.category, lang) : (categoryEn || categoryKm || pkg.category),
     highlights: getLocalizedArray(highlightsKm, highlightsEn, pkg.highlights || [], lang),
     whoShouldJoin: getLocalizedArray(whoShouldJoinKm, whoShouldJoinEn, pkg.whoShouldJoin || [], lang),
     whyShouldJoin: getLocalizedArray(whyShouldJoinKm, whyShouldJoinEn, pkg.whyShouldJoin || [], lang),

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TourPackage } from '../../types';
 import { formatMoney } from '../../services/currencyService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import {
   Star,
   Clock,
@@ -118,12 +119,13 @@ export const TrendingDeals: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filtered.map(pkg => {
-              const hasDiscount = pkg.discountPriceUSD && pkg.discountPriceUSD < pkg.priceUSD;
-              const savingsUSD = hasDiscount ? pkg.priceUSD - (pkg.discountPriceUSD || 0) : 0;
+              const locPkg = getLocalizedPackage(pkg, language);
+              const hasDiscount = locPkg.discountPriceUSD && locPkg.discountPriceUSD < locPkg.priceUSD;
+              const savingsUSD = hasDiscount ? locPkg.priceUSD - (locPkg.discountPriceUSD || 0) : 0;
 
               return (
                 <div
-                  key={pkg.id}
+                  key={locPkg.id}
                   className="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col group"
                 >
                   {/* Image Container with Badges */}
@@ -132,8 +134,8 @@ export const TrendingDeals: React.FC = () => {
                     className="relative aspect-[16/10] overflow-hidden cursor-pointer"
                   >
                     <img
-                      src={pkg.images[0]}
-                      alt={pkg.title}
+                      src={locPkg.images[0]}
+                      alt={locPkg.title}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700"
                     />
@@ -141,9 +143,9 @@ export const TrendingDeals: React.FC = () => {
 
                     {/* Top Left Social Proof & Tags */}
                     <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-                      {pkg.isCantonFair && pkg.cantonFairPhase && (
+                      {locPkg.isCantonFair && locPkg.cantonFairPhase && (
                         <span className="px-2.5 py-1 rounded-lg bg-red-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1 border border-red-400/30">
-                          <span>🇨🇳 Canton Fair {pkg.cantonFairPhase}</span>
+                          <span>🇨🇳 Canton Fair {locPkg.cantonFairPhase}</span>
                         </span>
                       )}
                       {hasDiscount && (
@@ -151,7 +153,7 @@ export const TrendingDeals: React.FC = () => {
                           {t('saveAmount') || 'Save'} {formatMoney(savingsUSD, currency, language)}
                         </span>
                       )}
-                      {(pkg.featuredVideoUrl || (pkg.videos && pkg.videos.length > 0)) && (
+                      {(locPkg.featuredVideoUrl || (locPkg.videos && locPkg.videos.length > 0)) && (
                         <span className="px-2.5 py-1 rounded-lg bg-red-600/90 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1 border border-red-400/30 backdrop-blur-xs">
                           <Play className="w-2.5 h-2.5 fill-current" />
                           <span>Video Tour</span>
@@ -159,7 +161,7 @@ export const TrendingDeals: React.FC = () => {
                       )}
                       <span className="hidden sm:flex px-2.5 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold items-center gap-1 border border-white/10 shadow-md">
                         <TrendingUp className="w-3 h-3" />
-                        <span>{pkg.bookedThisMonth} {t('bookedThisMonth')}</span>
+                        <span>{locPkg.bookedThisMonth} {t('bookedThisMonth')}</span>
                       </span>
                     </div>
 
@@ -177,12 +179,12 @@ export const TrendingDeals: React.FC = () => {
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
                       <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-md">
                         <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                        <span className="font-bold">{pkg.rating.toFixed(1)}</span>
-                        <span className="text-white/70">({pkg.reviewCount})</span>
+                        <span className="font-bold">{locPkg.rating.toFixed(1)}</span>
+                        <span className="text-white/70">({locPkg.reviewCount})</span>
                       </div>
                       <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-md font-medium">
                         <Clock className="w-3.5 h-3.5 text-slate-300" />
-                        <span>{pkg.durationDays}{t('days')} / {pkg.durationNights}{t('nights')}</span>
+                        <span>{locPkg.durationDays}{t('days')} / {locPkg.durationNights}{t('nights')}</span>
                       </div>
                     </div>
                   </div>
@@ -191,13 +193,13 @@ export const TrendingDeals: React.FC = () => {
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div onClick={() => handleOpenSalesLanding(pkg)} className="cursor-pointer">
                       <div className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                        {pkg.destination}
+                        {locPkg.destination}
                       </div>
                       <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                        {pkg.title}
+                        {locPkg.title}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
-                        {pkg.description}
+                        {locPkg.description}
                       </p>
                     </div>
 

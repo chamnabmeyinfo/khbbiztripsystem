@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatMoney } from '../../services/currencyService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import confetti from 'canvas-confetti';
 import {
   X,
@@ -270,7 +271,7 @@ export const CheckoutModal: React.FC = () => {
 
   if (activeModal !== 'checkout' || !selectedPackage) return null;
 
-  const pkg = selectedPackage;
+  const pkg = getLocalizedPackage(selectedPackage, language);
   const unitPriceUSD = pkg.discountPriceUSD || pkg.priceUSD;
   const baseSubtotalUSD = (unitPriceUSD * adults) + (unitPriceUSD * 0.7 * children);
   const taxUSD = Math.round(baseSubtotalUSD * 0.075 * 100) / 100;

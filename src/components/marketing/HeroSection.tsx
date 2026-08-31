@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Search, Calendar, Users, MapPin, Sparkles, ArrowRight, Star, ShieldCheck, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TourPackage } from '../../types';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 
 interface HeroSectionProps {
   onSearchSubmit: (params: { destination: string; date: string; travelers: number }) => void;
@@ -25,15 +26,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
   );
 
   const heroSlides = activePackagesWithImages.length > 0
-    ? activePackagesWithImages.map(pkg => ({
-        id: pkg.id,
-        image: pkg.images[0],
-        title: pkg.title,
-        destination: pkg.destination,
-        country: pkg.country,
-        price: pkg.discountPriceUSD || pkg.priceUSD,
-        pkg: pkg
-      }))
+    ? activePackagesWithImages.map(pkg => {
+        const loc = getLocalizedPackage(pkg, language);
+        return {
+          id: loc.id,
+          image: loc.images[0],
+          title: loc.title,
+          destination: loc.destination,
+          country: loc.country,
+          price: loc.discountPriceUSD || loc.priceUSD,
+          pkg: pkg
+        };
+      })
     : [
         {
           id: 'default_1',
