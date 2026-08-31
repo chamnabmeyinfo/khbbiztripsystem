@@ -674,8 +674,9 @@ export const AdminDashboard: React.FC = () => {
             {/* Quick Actions Button */}
             <div className="relative">
               <button
+                id="admin-quick-actions-btn"
                 onClick={() => setShowQuickActions(!showQuickActions)}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>⚡ {t('quickActions')}</span>
