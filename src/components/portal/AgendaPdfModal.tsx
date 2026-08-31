@@ -137,45 +137,8 @@ export const AgendaPdfModal: React.FC = () => {
     if (pkg?.optionalPrograms && pkg.optionalPrograms.length > 0) {
       return pkg.optionalPrograms;
     }
-    return [
-      {
-        id: 'opt_vip_matchmaking',
-        title: exportLanguage === 'km' ? 'កម្មវិធី B2B VIP Matchmaking & ជំនួបពាណិជ្ជកម្មទល់មុខ' : 'VIP 1-on-1 B2B Matchmaking & Private Dinner',
-        description: exportLanguage === 'km' ? 'ការរៀបចំជំនួបផ្ទាល់ជាមួយម្ចាស់សហគ្រាសក្នុងស្រុក 3-5 ក្រុមហ៊ុន និងអាហារពេលល្ងាចបណ្តាញពាណិជ្ជកម្ម VIP' : 'Pre-arranged 1-on-1 bilateral meetings with 3-5 verified enterprise owners and executive networking banquet.',
-        additionalCostUSD: 120,
-        durationHours: 3.5,
-        recommendedAudience: 'Business Owners & Investors',
-        highlights: ['Dedicated bilingual translator', 'Private conference lounge', 'Curated buyer directory'],
-        includesGuide: true,
-        includedMeals: ['VIP Executive Dinner'],
-        meetingPoint: 'Hotel Executive Conference Lounge (5:30 PM)'
-      },
-      {
-        id: 'opt_night_market_foodie',
-        title: exportLanguage === 'km' ? 'ដំណើរកម្សាន្តពេលរាត្រី & ភ្លក់រសជាតិម្ហូបតំបន់ល្បីៗ' : 'Cultural Night Explorer & Gourmet Street Tasting',
-        description: exportLanguage === 'km' ? 'ដំណើរទស្សនកិច្ចពេលល្ងាចជាមួយមគ្គុទ្ទេសក៍ទេសចរណ៍ទៅកាន់ផ្សាររាត្រី និងតំបន់ទេសចរណ៍វប្បធម៌ល្បីៗ' : 'Guided evening expedition into iconic cultural landmarks, night markets, and authentic culinary hotspots.',
-        additionalCostUSD: 45,
-        durationHours: 3,
-        recommendedAudience: 'All Travelers & Delegates',
-        highlights: ['Safe chauffeured transport', 'Certified bilingual escort', 'Authentic tasting menu'],
-        includesGuide: true,
-        includedMeals: ['Tasting samples & specialty drinks'],
-        meetingPoint: 'Hotel Main Lobby (6:45 PM)'
-      },
-      {
-        id: 'opt_factory_visit',
-        title: exportLanguage === 'km' ? 'ដំណើរចុះពិនិត្យរោងចក្រ & មជ្ឈមណ្ឌលភស្តុភារ Logistics' : 'Industrial Park & Logistics Hub Site Inspection',
-        description: exportLanguage === 'km' ? 'ដំណើរទស្សនកិច្ចផ្ទាល់ទៅកាន់តំបន់សេដ្ឋកិច្ចពិសេស និងរោងចក្រផលិតស្វ័យប្រវត្តិកម្មទំនើប' : 'Exclusive site walkthrough of specialized industrial export zones and automated supply chain logistics hubs.',
-        additionalCostUSD: 85,
-        durationHours: 4,
-        recommendedAudience: 'Importers, Exporters & Manufacturers',
-        highlights: ['Factory floor briefing by Plant Manager', 'Logistics tariff & customs guide', 'Round-trip VIP bus transport'],
-        includesGuide: true,
-        includedMeals: ['Networking Coffee & Refreshments'],
-        meetingPoint: 'Hotel Front Driveway (1:30 PM)'
-      }
-    ];
-  }, [pkg, exportLanguage]);
+    return [];
+  }, [pkg]);
 
   const watermarkConfig: WatermarkOptions | undefined = useMemo(() => {
     if (!watermarkEnabled || !watermarkText.trim()) return undefined;
@@ -189,9 +152,9 @@ export const AgendaPdfModal: React.FC = () => {
   }, [watermarkEnabled, watermarkText, watermarkOpacity, watermarkColor, watermarkLayout]);
 
   const livePreviewHtml = useMemo(() => {
-    if (!pkg) return '';
+    if (!selectedPackage) return '';
     return getAgendaPreviewHtml({
-      packageData: pkg,
+      packageData: selectedPackage,
       selectedDate: currentDepartureDate,
       travelerName,
       numberOfAdults: 1,
@@ -201,12 +164,12 @@ export const AgendaPdfModal: React.FC = () => {
       watermark: watermarkConfig,
       systemSettings,
     });
-  }, [pkg, currentDepartureDate, travelerName, selectedOptions, exportLanguage, exportFormat, watermarkConfig, systemSettings]);
+  }, [selectedPackage, currentDepartureDate, travelerName, selectedOptions, exportLanguage, exportFormat, watermarkConfig, systemSettings]);
 
   const agendaBodyHtml = useMemo(() => {
-    if (!pkg) return '';
+    if (!selectedPackage) return '';
     return getAgendaBodyHtml({
-      packageData: pkg,
+      packageData: selectedPackage,
       selectedDate: currentDepartureDate,
       travelerName,
       numberOfAdults: 1,
@@ -215,7 +178,7 @@ export const AgendaPdfModal: React.FC = () => {
       watermark: watermarkConfig,
       systemSettings,
     });
-  }, [pkg, currentDepartureDate, travelerName, selectedOptions, exportLanguage, watermarkConfig, systemSettings]);
+  }, [selectedPackage, currentDepartureDate, travelerName, selectedOptions, exportLanguage, watermarkConfig, systemSettings]);
 
   if (activeModal !== 'agenda_pdf' || !selectedPackage) return null;
 
