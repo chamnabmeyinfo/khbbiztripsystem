@@ -33,11 +33,14 @@ import {
   Compass,
   Briefcase,
   Gift,
-  Edit3
+  Edit3,
+  Plus
 } from 'lucide-react';
 import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
 import { getLocalizedPackage } from '../../utils/packageLocalization';
+import { LiveInlineText, LiveInlineList, LiveEditControlBar } from '../common/LiveInlineEditable';
+import { TourPackage, LanguageCode } from '../../types';
 
 export const PackageSalesLandingPage: React.FC = () => {
   const {
@@ -47,6 +50,8 @@ export const PackageSalesLandingPage: React.FC = () => {
     setActiveView,
     setActiveModal,
     openPackageEditor,
+    updatePackage,
+    setLanguage,
     currency,
     language,
     t
@@ -56,6 +61,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   const rawPkg = selectedPackage || packages[0];
   const pkg = useMemo(() => getLocalizedPackage(rawPkg, language), [rawPkg, language]);
 
+  const [isLiveEditing, setIsLiveEditing] = useState<boolean>(false);
   const [activeImageIdx, setActiveImageIdx] = useState<number>(0);
   const [selectedDepartureDate, setSelectedDepartureDate] = useState<string>(
     pkg?.availableDates?.[0] || '2026-10-29'
@@ -66,6 +72,150 @@ export const PackageSalesLandingPage: React.FC = () => {
   const [showAllTimelineSlots, setShowAllTimelineSlots] = useState<boolean>(false);
   const [showPoliciesAccordion, setShowPoliciesAccordion] = useState<boolean>(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState<boolean>(false);
+
+  // Live in-place field updates
+  const handleUpdateField = (field: string, value: any) => {
+    if (!rawPkg) return;
+    const updated: TourPackage = { ...rawPkg };
+
+    if (language === 'km') {
+      if (field === 'title') updated.titleKm = value;
+      else if (field === 'description') updated.descriptionKm = value;
+      else if (field === 'destination') updated.destinationKm = value;
+      else if (field === 'country') updated.countryKm = value;
+      else if (field === 'category') updated.categoryKm = value;
+      else if (field === 'highlights') updated.highlightsKm = value;
+      else if (field === 'whoShouldJoin') updated.whoShouldJoinKm = value;
+      else if (field === 'whyShouldJoin') updated.whyShouldJoinKm = value;
+      else if (field === 'inclusions') updated.inclusionsKm = value;
+      else if (field === 'exclusions') updated.exclusionsKm = value;
+      else if (field === 'termsAndConditions') updated.termsAndConditionsKm = value;
+      else (updated as any)[field] = value;
+    } else {
+      if (field === 'title') { updated.title = value; updated.titleEn = value; }
+      else if (field === 'description') { updated.description = value; updated.descriptionEn = value; }
+      else if (field === 'destination') { updated.destination = value; updated.destinationEn = value; }
+      else if (field === 'country') { updated.country = value; updated.countryEn = value; }
+      else if (field === 'category') { updated.category = value; updated.categoryEn = value; }
+      else if (field === 'highlights') { updated.highlights = value; updated.highlightsEn = value; }
+      else if (field === 'whoShouldJoin') { updated.whoShouldJoin = value; updated.whoShouldJoinEn = value; }
+      else if (field === 'whyShouldJoin') { updated.whyShouldJoin = value; updated.whyShouldJoinEn = value; }
+      else if (field === 'inclusions') { updated.inclusions = value; updated.inclusionsEn = value; }
+      else if (field === 'exclusions') { updated.exclusions = value; updated.exclusionsEn = value; }
+      else if (field === 'termsAndConditions') { updated.termsAndConditions = value; updated.termsAndConditionsEn = value; }
+      else (updated as any)[field] = value;
+    }
+
+    updatePackage(updated);
+  };
+
+  const handleUpdateDayField = (dayIndex: number, field: string, value: any) => {
+    if (!rawPkg) return;
+    const nextItinerary = [...(rawPkg.itinerary || [])];
+    if (!nextItinerary[dayIndex]) return;
+
+    const targetDay = { ...nextItinerary[dayIndex] };
+    if (language === 'km') {
+      if (field === 'title') targetDay.titleKm = value;
+      else if (field === 'description') targetDay.descriptionKm = value;
+      else if (field === 'hotelName') targetDay.hotelNameKm = value;
+      else if (field === 'assemblyPoint') targetDay.assemblyPointKm = value;
+      else if (field === 'assemblyTime') targetDay.assemblyTime = value;
+      else (targetDay as any)[field] = value;
+    } else {
+      if (field === 'title') { targetDay.title = value; targetDay.titleEn = value; }
+      else if (field === 'description') { targetDay.description = value; targetDay.descriptionEn = value; }
+      else if (field === 'hotelName') { targetDay.hotelName = value; targetDay.hotelNameEn = value; }
+      else if (field === 'assemblyPoint') { targetDay.assemblyPoint = value; targetDay.assemblyPointEn = value; }
+      else if (field === 'assemblyTime') targetDay.assemblyTime = value;
+      else (targetDay as any)[field] = value;
+    }
+
+    nextItinerary[dayIndex] = targetDay;
+    updatePackage({ ...rawPkg, itinerary: nextItinerary });
+  };
+
+  const handleUpdateAgendaSlot = (dayIndex: number, slotIndex: number, field: string, value: any) => {
+    if (!rawPkg) return;
+    const nextItinerary = [...(rawPkg.itinerary || [])];
+    if (!nextItinerary[dayIndex]) return;
+
+    const nextSlots = [...(nextItinerary[dayIndex].guideAgenda || [])];
+    if (!nextSlots[slotIndex]) return;
+
+    const targetSlot = { ...nextSlots[slotIndex] };
+    if (language === 'km') {
+      if (field === 'activity') targetSlot.activityKm = value;
+      else if (field === 'location') targetSlot.locationKm = value;
+      else if (field === 'notes') targetSlot.notesKm = value;
+      else if (field === 'time') targetSlot.time = value;
+      else (targetSlot as any)[field] = value;
+    } else {
+      if (field === 'activity') { targetSlot.activity = value; targetSlot.activityEn = value; }
+      else if (field === 'location') { targetSlot.location = value; targetSlot.locationEn = value; }
+      else if (field === 'notes') { targetSlot.notes = value; targetSlot.notesEn = value; }
+      else if (field === 'time') targetSlot.time = value;
+      else (targetSlot as any)[field] = value;
+    }
+
+    nextSlots[slotIndex] = targetSlot;
+    nextItinerary[dayIndex] = { ...nextItinerary[dayIndex], guideAgenda: nextSlots };
+    updatePackage({ ...rawPkg, itinerary: nextItinerary });
+  };
+
+  const handleAddAgendaSlot = (dayIndex: number) => {
+    if (!rawPkg) return;
+    const nextItinerary = [...(rawPkg.itinerary || [])];
+    if (!nextItinerary[dayIndex]) return;
+
+    const newSlot = {
+      time: '14:00',
+      activity: language === 'km' ? 'កម្មវិធីទស្សនកិច្ច ឬកិច្ចប្រជុំ B2B' : 'Business Meeting & Trade Session',
+      activityEn: 'Business Meeting & Trade Session',
+      activityKm: 'កម្មវិធីទស្សនកិច្ច ឬកិច្ចប្រជុំ B2B',
+      location: 'Convention Center',
+      locationEn: 'Convention Center',
+      locationKm: 'មជ្ឈមណ្ឌលពិព័រណ៍',
+      notes: '',
+      notesEn: '',
+      notesKm: ''
+    };
+
+    const nextSlots = [...(nextItinerary[dayIndex].guideAgenda || []), newSlot];
+    nextItinerary[dayIndex] = { ...nextItinerary[dayIndex], guideAgenda: nextSlots };
+    updatePackage({ ...rawPkg, itinerary: nextItinerary });
+  };
+
+  const handleRemoveAgendaSlot = (dayIndex: number, slotIndex: number) => {
+    if (!rawPkg) return;
+    const nextItinerary = [...(rawPkg.itinerary || [])];
+    if (!nextItinerary[dayIndex]) return;
+
+    const nextSlots = (nextItinerary[dayIndex].guideAgenda || []).filter((_, i) => i !== slotIndex);
+    nextItinerary[dayIndex] = { ...nextItinerary[dayIndex], guideAgenda: nextSlots };
+    updatePackage({ ...rawPkg, itinerary: nextItinerary });
+  };
+
+  const handleUpdateTourGuide = (field: string, value: any) => {
+    if (!rawPkg) return;
+    const guide = { ...(rawPkg.tourGuide || { name: 'Operations Guide', title: 'Tour Director' }) };
+
+    if (language === 'km') {
+      if (field === 'name') guide.nameKm = value;
+      else if (field === 'title') guide.titleKm = value;
+      else if (field === 'bio') guide.bioKm = value;
+      else if (field === 'briefingMeetingPoint') guide.briefingMeetingPointKm = value;
+      else (guide as any)[field] = value;
+    } else {
+      if (field === 'name') { guide.name = value; guide.nameEn = value; }
+      else if (field === 'title') { guide.title = value; guide.titleEn = value; }
+      else if (field === 'bio') { guide.bio = value; guide.bioEn = value; }
+      else if (field === 'briefingMeetingPoint') { guide.briefingMeetingPoint = value; guide.briefingMeetingPointEn = value; }
+      else (guide as any)[field] = value;
+    }
+
+    updatePackage({ ...rawPkg, tourGuide: guide });
+  };
 
   if (!pkg) {
     return (
@@ -172,6 +322,16 @@ export const PackageSalesLandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-28">
+      {/* Live In-Place WYSIWYG Editing Control & Language Switcher Bar */}
+      <LiveEditControlBar
+        isLiveEditing={isLiveEditing}
+        onToggleLiveEditing={() => setIsLiveEditing(!isLiveEditing)}
+        language={language}
+        onSelectLanguage={(langCode) => setLanguage(langCode)}
+        onOpenFullEditor={() => openPackageEditor(rawPkg || pkg)}
+        packageTitle={displayTitle}
+      />
+
       {/* Dynamic SEO Meta Tags */}
       <DynamicHead customPackage={pkg} />
 
@@ -188,17 +348,31 @@ export const PackageSalesLandingPage: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Live Inline Editing Toggle Switch */}
+            <button
+              type="button"
+              onClick={() => setIsLiveEditing(!isLiveEditing)}
+              className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all ${
+                isLiveEditing
+                  ? 'border-amber-400 bg-amber-500 text-white ring-2 ring-amber-400/50'
+                  : 'border-amber-300 dark:border-amber-700/80 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
+              }`}
+              title="Toggle Live In-Place Editing Mode"
+            >
+              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span className="hidden sm:inline">{isLiveEditing ? '⚡ Live Edit ON' : '✏️ Live Edit'}</span>
+              <span className="sm:hidden">{isLiveEditing ? 'Live ON' : 'Edit'}</span>
+            </button>
+
             {/* Direct Quick Edit Tour Package Button */}
             <button
               onClick={() => {
                 openPackageEditor(rawPkg || pkg);
               }}
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 transition-all"
-              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះភ្លាមៗ' : 'Quickly edit this tour package in Package Editor'}
+              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+              title={language === 'km' ? 'បើកផ្ទាំងកែសម្រួលពេញលេញ' : 'Open full studio editor modal'}
             >
-              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden sm:inline">{language === 'km' ? '✏️ កែប្រែកញ្ចប់' : '✏️ Edit Package'}</span>
-              <span className="sm:hidden">Edit</span>
+              <span>🎛️ Studio</span>
             </button>
 
             <button
@@ -259,22 +433,44 @@ export const PackageSalesLandingPage: React.FC = () => {
       <div className="lg:hidden px-3 sm:px-4 pt-4 pb-2 space-y-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold">
-            <Compass className="w-3 h-3" />
-            <span>{pkg.category || 'B2B Business Expedition'}</span>
+            <Compass className="w-3.5 h-3.5" />
+            <LiveInlineText
+              as="span"
+              value={pkg.category || 'B2B Business Expedition'}
+              isLiveEditing={isLiveEditing}
+              onSave={(val) => handleUpdateField('category', val)}
+              language={language}
+              placeholder="Category..."
+            />
           </span>
           {pkg.isCantonFair && pkg.cantonFairPhase && (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
               <span>🇨🇳 Canton Fair {pkg.cantonFairPhase}</span>
             </span>
           )}
-          <span className="text-[11px] text-slate-500 font-medium ml-auto">
-            📍 {displayDestination}
+          <span className="text-[11px] text-slate-500 font-medium ml-auto flex items-center gap-1">
+            <span>📍</span>
+            <LiveInlineText
+              as="span"
+              value={displayDestination}
+              isLiveEditing={isLiveEditing}
+              onSave={(val) => handleUpdateField('destination', val)}
+              language={language}
+              placeholder="Destination..."
+            />
           </span>
         </div>
 
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-          {displayTitle}
-        </h1>
+        <LiveInlineText
+          as="h1"
+          value={displayTitle}
+          isLiveEditing={isLiveEditing}
+          onSave={(val) => handleUpdateField('title', val)}
+          language={language}
+          sourceTextForTranslation={rawPkg?.title || rawPkg?.titleEn}
+          placeholder="Enter package title..."
+          className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug"
+        />
 
         <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
           <span className="flex items-center gap-1">
@@ -550,18 +746,43 @@ export const PackageSalesLandingPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold">
                   <Compass className="w-3.5 h-3.5" />
-                  <span>{pkg.category || 'B2B Business Expedition'}</span>
+                  <LiveInlineText
+                    as="span"
+                    value={pkg.category || 'B2B Business Expedition'}
+                    isLiveEditing={isLiveEditing}
+                    onSave={(val) => handleUpdateField('category', val)}
+                    language={language}
+                    placeholder="Category..."
+                  />
                 </div>
                 {pkg.isCantonFair && pkg.cantonFairPhase && (
                   <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-wider shadow-sm">
                     <span>🇨🇳 Canton Fair {pkg.cantonFairPhase}</span>
                   </div>
                 )}
+                <span className="text-xs text-slate-500 font-medium ml-auto flex items-center gap-1">
+                  <span>📍</span>
+                  <LiveInlineText
+                    as="span"
+                    value={displayDestination}
+                    isLiveEditing={isLiveEditing}
+                    onSave={(val) => handleUpdateField('destination', val)}
+                    language={language}
+                    placeholder="Destination..."
+                  />
+                </span>
               </div>
 
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-                {displayTitle}
-              </h1>
+              <LiveInlineText
+                as="h1"
+                value={displayTitle}
+                isLiveEditing={isLiveEditing}
+                onSave={(val) => handleUpdateField('title', val)}
+                language={language}
+                sourceTextForTranslation={rawPkg?.title || rawPkg?.titleEn}
+                placeholder="Enter package title..."
+                className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-snug"
+              />
 
               {/* Canton Fair Phase 1, 2, 3 Switcher if Canton Fair Package */}
               {pkg.isCantonFair && (
@@ -612,9 +833,18 @@ export const PackageSalesLandingPage: React.FC = () => {
                 </div>
               )}
 
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                {displayDescription}
-              </p>
+              <LiveInlineText
+                as="p"
+                value={displayDescription}
+                isLiveEditing={isLiveEditing}
+                onSave={(val) => handleUpdateField('description', val)}
+                language={language}
+                multiline={true}
+                rows={4}
+                sourceTextForTranslation={rawPkg?.description || rawPkg?.descriptionEn}
+                placeholder="Enter detailed tour description..."
+                className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
+              />
             </div>
 
             {/* Value Highlights Pill Grid */}
@@ -726,114 +956,123 @@ export const PackageSalesLandingPage: React.FC = () => {
       </section>
 
       {/* ── Key Sourcing & Trade Mission Highlights ─────────────────────────── */}
-      {highlightsList.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                {language === 'km' ? 'គោលបំណងសំខាន់នៃបេសកកម្មពាណិជ្ជកម្ម' : 'Key Sourcing & Mission Objectives'}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Direct commercial matchmaking, wholesale procurement, and business growth benefits.
+              </p>
+            </div>
+          </div>
+
+          <LiveInlineList
+            items={highlightsList}
+            isLiveEditing={isLiveEditing}
+            onUpdateItems={(items) => handleUpdateField('highlights', items)}
+            language={language}
+            addButtonLabel={language === 'km' ? 'បន្ថែមគោលបំណង' : 'Add Mission Objective'}
+            renderItem={(hl, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 flex items-start gap-3 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+              >
+                <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                  {hl}
+                </p>
+              </div>
+            )}
+          />
+        </div>
+      </section>
+
+      {/* ── Who Should Join & Why You Should Join Sections ─────────────────────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Who Should Join */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                  {language === 'km' ? 'អ្នកណាខ្លះគួរចូលរួម? (Who Should Join?)' : 'Who Should Join This Mission?'}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Target delegate profiles and executive enterprise participants.
+                </p>
+              </div>
+            </div>
+            <LiveInlineList
+              items={whoShouldJoinList}
+              isLiveEditing={isLiveEditing}
+              onUpdateItems={(items) => handleUpdateField('whoShouldJoin', items)}
+              language={language}
+              addButtonLabel={language === 'km' ? 'បន្ថែមអ្នកចូលរួម' : 'Add Target Profile'}
+              renderItem={(item, idx) => (
+                <div
+                  key={idx}
+                  className="p-3.5 rounded-2xl bg-indigo-50/40 dark:bg-slate-800/50 border border-indigo-100/60 dark:border-slate-700/60 flex items-start gap-3 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                >
+                  <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                    {item}
+                  </p>
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Why You Should Join */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                  {language === 'km' ? 'គោលបំណងសំខាន់នៃបេសកកម្មពាណិជ្ជកម្ម' : 'Key Sourcing & Mission Objectives'}
+                  {language === 'km' ? 'ហេតុអ្វីអ្នកគួរចូលរួម? (Why You Should Join)' : 'Why You Should Join'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Direct commercial matchmaking, wholesale procurement, and business growth benefits.
+                  Direct factory pricing, exclusive networking, and measurable ROI.
                 </p>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {highlightsList.map((hl, i) => (
+            <LiveInlineList
+              items={whyShouldJoinList}
+              isLiveEditing={isLiveEditing}
+              onUpdateItems={(items) => handleUpdateField('whyShouldJoin', items)}
+              language={language}
+              addButtonLabel={language === 'km' ? 'បន្ថែមហេតុផល' : 'Add Reason'}
+              renderItem={(item, idx) => (
                 <div
-                  key={i}
-                  className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 flex items-start gap-3 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                  key={idx}
+                  className="p-3.5 rounded-2xl bg-emerald-50/40 dark:bg-slate-800/50 border border-emerald-100/60 dark:border-slate-700/60 flex items-start gap-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
                 >
-                  <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                    {i + 1}
+                  <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                    ✓
                   </span>
                   <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-                    {hl}
+                    {item}
                   </p>
                 </div>
-              ))}
-            </div>
+              )}
+            />
           </div>
-        </section>
-      )}
-
-      {/* ── Who Should Join & Why You Should Join Sections ─────────────────────── */}
-      {(whoShouldJoinList.length > 0 || whyShouldJoinList.length > 0) && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Who Should Join */}
-            {whoShouldJoinList.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                      {language === 'km' ? 'អ្នកណាខ្លះគួរចូលរួម? (Who Should Join?)' : 'Who Should Join This Mission?'}
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Target delegate profiles and executive enterprise participants.
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {whoShouldJoinList.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-2xl bg-indigo-50/40 dark:bg-slate-800/50 border border-indigo-100/60 dark:border-slate-700/60 flex items-start gap-3 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
-                    >
-                      <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                        {idx + 1}
-                      </span>
-                      <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-                        {item}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Why You Should Join */}
-            {whyShouldJoinList.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                      {language === 'km' ? 'ហេតុអ្វីអ្នកគួរចូលរួម? (Why You Should Join)' : 'Why You Should Join'}
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Direct factory pricing, exclusive networking, and measurable ROI.
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {whyShouldJoinList.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-2xl bg-emerald-50/40 dark:bg-slate-800/50 border border-emerald-100/60 dark:border-slate-700/60 flex items-start gap-3 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-                        {item}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ── Day-by-Day Agenda & Timeline ──────────────────────────────────── */}
       {pkg.itinerary && pkg.itinerary.length > 0 && (
@@ -875,6 +1114,7 @@ export const PackageSalesLandingPage: React.FC = () => {
             {/* Active Day Detail Card */}
             {pkg.itinerary[activeDayTab] && (() => {
               const currentDay = pkg.itinerary[activeDayTab];
+              const rawDay = rawPkg?.itinerary?.[activeDayTab];
               return (
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -882,22 +1122,45 @@ export const PackageSalesLandingPage: React.FC = () => {
                       <span className="w-10 h-10 rounded-2xl bg-indigo-600 text-white font-mono font-black text-sm flex items-center justify-center shadow-md">
                         D{currentDay.day}
                       </span>
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                          {currentDay.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          {currentDay.description}
-                        </p>
+                      <div className="flex-1">
+                        <LiveInlineText
+                          as="h3"
+                          value={currentDay.title}
+                          isLiveEditing={isLiveEditing}
+                          onSave={(val) => handleUpdateDayField(activeDayTab, 'title', val)}
+                          language={language}
+                          sourceTextForTranslation={rawDay?.title || rawDay?.titleEn}
+                          placeholder={`Day ${currentDay.day} title...`}
+                          className="text-base sm:text-lg font-black text-slate-900 dark:text-white"
+                        />
+                        <LiveInlineText
+                          as="p"
+                          value={currentDay.description}
+                          isLiveEditing={isLiveEditing}
+                          onSave={(val) => handleUpdateDayField(activeDayTab, 'description', val)}
+                          language={language}
+                          multiline={true}
+                          rows={2}
+                          sourceTextForTranslation={rawDay?.description || rawDay?.descriptionEn}
+                          placeholder={`Day ${currentDay.day} overview description...`}
+                          className="text-xs text-slate-500 dark:text-slate-400 mt-0.5"
+                        />
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-xs">
-                      {currentDay.hotelName && (
-                        <span className="px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold border border-amber-200/60 dark:border-amber-900/40 flex items-center gap-1.5">
-                          🏨 {currentDay.hotelName}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1">
+                        <span>🏨</span>
+                        <LiveInlineText
+                          as="span"
+                          value={currentDay.hotelName || ''}
+                          isLiveEditing={isLiveEditing}
+                          onSave={(val) => handleUpdateDayField(activeDayTab, 'hotelName', val)}
+                          language={language}
+                          placeholder="Hotel Name..."
+                          className="px-3 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold border border-amber-200/60 dark:border-amber-900/40"
+                        />
+                      </div>
                       {currentDay.mealsIncluded && currentDay.mealsIncluded.length > 0 && (
                         <span className="px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-200/60 dark:border-emerald-900/40 flex items-center gap-1.5">
                           🍽️ {currentDay.mealsIncluded.join(', ')}
@@ -907,28 +1170,53 @@ export const PackageSalesLandingPage: React.FC = () => {
                   </div>
 
                   {/* Assembly Point & Time Strip */}
-                  {(currentDay.assemblyPoint || currentDay.assemblyTime) && (
-                    <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold">
-                        <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
-                        <span>{language === 'km' ? 'ទីតាំងប្រមូលផ្តុំ' : 'Assembly Point'}: {currentDay.assemblyPoint || (language === 'km' ? 'មុខសណ្ឋាគារ' : 'Designated Hotel Portico')}</span>
-                      </div>
-                      {currentDay.assemblyTime && (
-                        <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono font-bold text-[11px] self-start sm:self-auto">
-                          🕒 {language === 'km' ? 'ម៉ោងជួបជុំ' : 'Assembly Time'}: {currentDay.assemblyTime}
-                        </span>
-                      )}
+                  <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold flex-1">
+                      <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>{language === 'km' ? 'ទីតាំងប្រមូលផ្តុំ' : 'Assembly Point'}:</span>
+                      <LiveInlineText
+                        as="span"
+                        value={currentDay.assemblyPoint || (language === 'km' ? 'មុខសណ្ឋាគារ' : 'Designated Hotel Portico')}
+                        isLiveEditing={isLiveEditing}
+                        onSave={(val) => handleUpdateDayField(activeDayTab, 'assemblyPoint', val)}
+                        language={language}
+                        placeholder="Assembly checkpoint..."
+                        className="font-medium"
+                      />
                     </div>
-                  )}
+                    <div className="flex items-center gap-1 self-start sm:self-auto">
+                      <span>🕒</span>
+                      <span className="text-[11px] text-slate-500">{language === 'km' ? 'ម៉ោង:' : 'Time:'}</span>
+                      <LiveInlineText
+                        as="span"
+                        value={currentDay.assemblyTime || '08:00 AM'}
+                        isLiveEditing={isLiveEditing}
+                        onSave={(val) => handleUpdateDayField(activeDayTab, 'assemblyTime', val)}
+                        language={language}
+                        placeholder="08:00 AM"
+                        className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono font-bold text-[11px]"
+                      />
+                    </div>
+                  </div>
 
                   {/* Hourly Agenda Slots */}
-                  {currentDay.guideAgenda && currentDay.guideAgenda.length > 0 ? (
-                    <div className="space-y-3 pt-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          {language === 'km' ? 'កាលវិភាគមគ្គុទ្ទេសក៍' : 'Escort Timeline'} ({currentDay.guideAgenda.length} {language === 'km' ? 'កម្មវិធី' : 'Activities'})
-                        </h4>
-                        {currentDay.guideAgenda.length > 3 && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <span>{language === 'km' ? 'កាលវិភាគមគ្គុទ្ទេសក៍' : 'Escort Timeline'} ({(currentDay.guideAgenda || []).length} {language === 'km' ? 'កម្មវិធី' : 'Activities'})</span>
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        {isLiveEditing && (
+                          <button
+                            type="button"
+                            onClick={() => handleAddAgendaSlot(activeDayTab)}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs active:scale-95 transition-all"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>{language === 'km' ? 'បន្ថែមម៉ោង' : 'Add Time Slot'}</span>
+                          </button>
+                        )}
+                        {(currentDay.guideAgenda || []).length > 3 && (
                           <button
                             type="button"
                             onClick={() => setShowAllTimelineSlots(!showAllTimelineSlots)}
@@ -938,42 +1226,85 @@ export const PackageSalesLandingPage: React.FC = () => {
                           </button>
                         )}
                       </div>
-                      <div className="space-y-2 sm:space-y-2.5">
-                        {currentDay.guideAgenda.slice(0, showAllTimelineSlots ? undefined : 4).map((slot, sIdx) => (
+                    </div>
+
+                    <div className="space-y-2 sm:space-y-2.5">
+                      {(currentDay.guideAgenda || []).slice(0, showAllTimelineSlots || isLiveEditing ? undefined : 4).map((slot, sIdx) => {
+                        const rawSlot = rawDay?.guideAgenda?.[sIdx];
+                        return (
                           <div
                             key={sIdx}
                             className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 hover:border-slate-300 dark:hover:border-slate-600 transition-all"
                           >
-                            <div className="flex items-start gap-2.5 sm:gap-3">
+                            <div className="flex items-start gap-2.5 sm:gap-3 flex-1">
                               <span className="w-2 h-2 rounded-full bg-indigo-600 mt-1.5 sm:mt-2 shrink-0" />
-                              <div>
-                                <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                                  {slot.activity}
-                                </span>
-                                {slot.notes && (
-                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                    💡 {slot.notes}
-                                  </p>
-                                )}
+                              <div className="flex-1 space-y-1">
+                                <LiveInlineText
+                                  as="span"
+                                  value={slot.activity}
+                                  isLiveEditing={isLiveEditing}
+                                  onSave={(val) => handleUpdateAgendaSlot(activeDayTab, sIdx, 'activity', val)}
+                                  language={language}
+                                  sourceTextForTranslation={rawSlot?.activity || rawSlot?.activityEn}
+                                  placeholder="Activity description..."
+                                  className="text-xs font-bold text-slate-900 dark:text-white block"
+                                />
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                  <span>💡</span>
+                                  <LiveInlineText
+                                    as="span"
+                                    value={slot.notes || ''}
+                                    isLiveEditing={isLiveEditing}
+                                    onSave={(val) => handleUpdateAgendaSlot(activeDayTab, sIdx, 'notes', val)}
+                                    language={language}
+                                    sourceTextForTranslation={rawSlot?.notes || rawSlot?.notesEn}
+                                    placeholder="Add tips or notes..."
+                                    className="italic"
+                                  />
+                                </div>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-2 sm:gap-3 text-xs shrink-0 self-end sm:self-auto">
-                              {slot.location && (
-                                <span className="text-slate-500 dark:text-slate-400 text-[11px] flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-slate-400" />
-                                  <span>{slot.location}</span>
-                                </span>
+                              <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px]">
+                                <MapPin className="w-3 h-3 text-slate-400" />
+                                <LiveInlineText
+                                  as="span"
+                                  value={slot.location || ''}
+                                  isLiveEditing={isLiveEditing}
+                                  onSave={(val) => handleUpdateAgendaSlot(activeDayTab, sIdx, 'location', val)}
+                                  language={language}
+                                  sourceTextForTranslation={rawSlot?.location || rawSlot?.locationEn}
+                                  placeholder="Location / Booth..."
+                                />
+                              </div>
+
+                              <LiveInlineText
+                                as="span"
+                                value={slot.time || '10:00'}
+                                isLiveEditing={isLiveEditing}
+                                onSave={(val) => handleUpdateAgendaSlot(activeDayTab, sIdx, 'time', val)}
+                                language={language}
+                                placeholder="Time..."
+                                className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[10px] sm:text-[11px]"
+                              />
+
+                              {isLiveEditing && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAgendaSlot(activeDayTab, sIdx)}
+                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+                                  title="Delete timeline slot"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               )}
-                              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono font-bold text-[10px] sm:text-[11px]">
-                                {slot.time}
-                              </span>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
-                  ) : null}
+                  </div>
                 </div>
               );
             })()}
@@ -1001,9 +1332,25 @@ export const PackageSalesLandingPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-base font-black text-white">{pkg.tourGuide.name}</h3>
-                  <p className="text-xs text-indigo-300 font-medium">{pkg.tourGuide.title || 'Lead Trade Mission Director'}</p>
+                <div className="space-y-1">
+                  <LiveInlineText
+                    as="h3"
+                    value={pkg.tourGuide.name}
+                    isLiveEditing={isLiveEditing}
+                    onSave={(val) => handleUpdateTourGuide('name', val)}
+                    language={language}
+                    placeholder="Tour Guide Name..."
+                    className="text-base font-black text-white"
+                  />
+                  <LiveInlineText
+                    as="p"
+                    value={pkg.tourGuide.title || 'Lead Trade Mission Director'}
+                    isLiveEditing={isLiveEditing}
+                    onSave={(val) => handleUpdateTourGuide('title', val)}
+                    language={language}
+                    placeholder="Tour Director Title..."
+                    className="text-xs text-indigo-300 font-medium"
+                  />
                   {pkg.tourGuide.badgeNumber && (
                     <span className="text-[10px] font-mono text-slate-400 mt-1 block">
                       Badge: {pkg.tourGuide.badgeNumber}
@@ -1035,26 +1382,47 @@ export const PackageSalesLandingPage: React.FC = () => {
                   <h4 className="text-lg font-black text-white">
                     Direct Coordinator & Logistics Support
                   </h4>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                    {pkg.tourGuide.bio ||
-                      'Mr. Tim Vutha and our senior operations escort team coordinate direct VIP fast-track border crossing, hotel check-in, language translation, and high-level B2B matchmaking meetings throughout the entire trip.'}
-                  </p>
+                  <LiveInlineText
+                    as="p"
+                    value={pkg.tourGuide.bio || 'Mr. Tim Vutha and our senior operations escort team coordinate direct VIP fast-track border crossing, hotel check-in, language translation, and high-level B2B matchmaking meetings throughout the entire trip.'}
+                    isLiveEditing={isLiveEditing}
+                    onSave={(val) => handleUpdateTourGuide('bio', val)}
+                    language={language}
+                    multiline={true}
+                    rows={3}
+                    placeholder="Tour director bio..."
+                    className="text-xs text-slate-300 mt-1 leading-relaxed"
+                  />
                 </div>
 
                 {/* Briefing Schedule */}
-                {(pkg.tourGuide.briefingMeetingPoint || pkg.tourGuide.briefingTime) && (
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
-                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider block">
-                      Departure Briefing Protocol:
-                    </span>
-                    <p className="text-slate-300 text-xs">
-                      📍 {pkg.tourGuide.briefingMeetingPoint || 'KHB Head Office Departure Bay'}
-                    </p>
-                    <p className="text-slate-400 text-xs font-mono">
-                      🕒 {pkg.tourGuide.briefingTime || '06:00 AM Departure Day'}
-                    </p>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
+                  <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider block">
+                    Departure Briefing Protocol:
+                  </span>
+                  <div className="flex items-center gap-1.5 text-slate-300 text-xs">
+                    <span>📍</span>
+                    <LiveInlineText
+                      as="span"
+                      value={pkg.tourGuide.briefingMeetingPoint || 'KHB Head Office Departure Bay'}
+                      isLiveEditing={isLiveEditing}
+                      onSave={(val) => handleUpdateTourGuide('briefingMeetingPoint', val)}
+                      language={language}
+                      placeholder="Briefing meeting location..."
+                    />
                   </div>
-                )}
+                  <div className="flex items-center gap-1.5 text-slate-400 text-xs font-mono">
+                    <span>🕒</span>
+                    <LiveInlineText
+                      as="span"
+                      value={pkg.tourGuide.briefingTime || '06:00 AM Departure Day'}
+                      isLiveEditing={isLiveEditing}
+                      onSave={(val) => handleUpdateTourGuide('briefingTime', val)}
+                      language={language}
+                      placeholder="Briefing time..."
+                    />
+                  </div>
+                </div>
 
                 {/* Direct Action Contacts */}
                 <div className="flex flex-wrap gap-3 pt-2">
@@ -1172,14 +1540,19 @@ export const PackageSalesLandingPage: React.FC = () => {
               <CheckCircle2 className="w-5 h-5" />
               <h3>{language === 'km' ? 'អត្ថប្រយោជន៍រួមបញ្ចូល (What’s Included)' : 'What’s Included in Mission'}</h3>
             </div>
-            <div className="space-y-2.5">
-              {inclusionsList.map((inc, i) => (
+            <LiveInlineList
+              items={inclusionsList}
+              isLiveEditing={isLiveEditing}
+              onUpdateItems={(items) => handleUpdateField('inclusions', items)}
+              language={language}
+              addButtonLabel={language === 'km' ? 'បន្ថែមអត្ថប្រយោជន៍' : 'Add Inclusion'}
+              renderItem={(inc, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
                   <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span className="leading-relaxed">{inc}</span>
                 </div>
-              ))}
-            </div>
+              )}
+            />
           </div>
 
           {/* Exclusions */}
@@ -1188,65 +1561,64 @@ export const PackageSalesLandingPage: React.FC = () => {
               <AlertCircle className="w-5 h-5" />
               <h3>{language === 'km' ? 'មិនរាប់បញ្ចូល (Exclusions)' : 'Not Included in Package'}</h3>
             </div>
-            <div className="space-y-2.5">
-              {exclusionsList.map((exc, i) => (
+            <LiveInlineList
+              items={exclusionsList}
+              isLiveEditing={isLiveEditing}
+              onUpdateItems={(items) => handleUpdateField('exclusions', items)}
+              language={language}
+              addButtonLabel={language === 'km' ? 'បន្ថែមមិនរាប់បញ្ចូល' : 'Add Exclusion'}
+              renderItem={(exc, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0 mt-1.5" />
                   <span className="leading-relaxed">{exc}</span>
                 </div>
-              ))}
-            </div>
+              )}
+            />
           </div>
         </div>
       </section>
 
       {/* ── Terms, Policies & Conditions ───────────────────────────────────── */}
-      {termsList.length > 0 && (
-        <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-16">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-4 sm:space-y-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
-                    {language === 'km' ? 'លក្ខខណ្ឌ និងគោលការណ៍ចូលរួម' : 'Reservation Policies & Terms'}
-                  </h2>
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-                    Essential passport validity rules, payment milestones, and cancellation terms.
-                  </p>
-                </div>
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-16">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-md space-y-4 sm:space-y-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              {termsList.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => setShowPoliciesAccordion(!showPoliciesAccordion)}
-                  className="sm:hidden text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 cursor-pointer"
-                >
-                  {showPoliciesAccordion ? 'Show less ▴' : `View all (${termsList.length}) ▾`}
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-2 sm:space-y-2.5">
-              {(showPoliciesAccordion ? termsList : termsList.slice(0, 3)).map((term, tIdx) => (
-                <div
-                  key={tIdx}
-                  className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-start gap-2.5 sm:gap-3"
-                >
-                  <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                    {tIdx + 1}
-                  </span>
-                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed">
-                    {term}
-                  </p>
-                </div>
-              ))}
+              <div>
+                <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
+                  {language === 'km' ? 'លក្ខខណ្ឌ និងគោលការណ៍ចូលរួម' : 'Reservation Policies & Terms'}
+                </h2>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                  Essential passport validity rules, payment milestones, and cancellation terms.
+                </p>
+              </div>
             </div>
           </div>
-        </section>
-      )}
+
+          <LiveInlineList
+            items={termsList}
+            isLiveEditing={isLiveEditing}
+            onUpdateItems={(items) => handleUpdateField('termsAndConditions', items)}
+            language={language}
+            addButtonLabel={language === 'km' ? 'បន្ថែមលក្ខខណ្ឌ' : 'Add Term/Policy'}
+            renderItem={(term, tIdx) => (
+              <div
+                key={tIdx}
+                className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/60 flex items-start gap-2.5 sm:gap-3"
+              >
+                <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  {tIdx + 1}
+                </span>
+                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed">
+                  {term}
+                </p>
+              </div>
+            )}
+          />
+        </div>
+      </section>
 
       {/* ── Emergency Contacts & Consular Assurance ────────────────────────── */}
       {pkg.emergencyContact && (

@@ -25,6 +25,11 @@ type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package
 ## 2. Package Sales Landing Page (`PackageSalesLandingPage`)
 **Who:** B2B Trade Delegates, Canton Fair Participants, and Business Mission Attendees  
 **Key Features:**
+- **Live In-Place WYSIWYG Inline Editing Suite (`LiveInlineEditable`)**:
+  - **Live Edit Control Bar (`LiveEditControlBar`)**: Sticky top control bar with 1-click **"⚡ Live Edit Mode [ON/OFF]"** toggle, instant active language switcher (`[🇺🇸 EN | 🇰🇭 KM | 🇯🇵 JA | 🇪🇸 ES | 🇦🇪 AR]`), live sync status, and Studio editor shortcuts.
+  - **Inline Text & Heading Editors (`LiveInlineText`)**: Directly click-to-edit package titles, categories, destinations, full descriptions, day itinerary overviews, hotel accommodations, assembly checkpoints, hourly timeline slots, and tour director credentials with AI auto-translation support.
+  - **Interactive Dynamic List Editors (`LiveInlineList`)**: Real-time bullet-by-bullet inline editing with add/remove actions for Sourcing Objectives, Target Delegate Profiles, Key Reasons to Join, Inclusions, Exclusions, and Terms & Conditions.
+  - **Real-Time Two-Way Sync**: All inline edits trigger `updatePackage(updatedPkg)` saving seamlessly to LocalStorage and Cloud Firestore in real-time.
 - **Direct Quick Edit Actions**: Prominent `✏️ Edit Package` button in the sticky top navigation, action card header, and sticky bottom booking bar allowing direct 1-click transition into `PackageEditorModal`.
 - **Image Feature Gallery**: Large high-res hero image carousel with verified delegate tags.
 - **Delegate Registration Fee & Booking Card**: Directly positioned below image gallery with clear breakdown of flight, hotel, B2B pass, and VAT invoice inclusion.
