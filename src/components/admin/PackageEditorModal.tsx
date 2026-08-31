@@ -332,6 +332,81 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [briefingTimeKm, setBriefingTimeKm] = useState(pkg?.tourGuide?.briefingTimeKm || pkg?.tourGuide?.briefingTime || '06:00 AM (ថ្ងៃទី 29/10/2026)');
   const [briefingTimeEn, setBriefingTimeEn] = useState(pkg?.tourGuide?.briefingTimeEn || '');
 
+  // Itinerary & Hourly Agendas State
+  const [itinerary, setItinerary] = useState<ItineraryStep[]>(pkg?.itinerary || [
+    {
+      day: 1,
+      title: 'ភ្នំពេញ - ឆ្លងដែន VIP - ទីក្រុងហូជីមិញ & ពិធីស្វាគមន៍គណៈប្រតិភូ',
+      description: 'ចេញដំណើរពីរាជធានីភ្នំពេញដោយរថយន្តក្រុង VIP ឆ្លងកាត់ច្រកទ្វារព្រំដែនបាវិត/ម៉ុកបៃ ជាមួយនឹងសេវាសម្រួលបែបបទឆ្លងដែនរហ័ស។',
+      hotelName: 'Grand Saigon Riverside Boutique Hotel (4-Star)',
+      mealsIncluded: ['Breakfast', 'Welcome Dinner'],
+      guideAgenda: [
+        { time: '06:00 AM - 06:30 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅភ្នំពេញ & ចែកកាតសម្គាល់បេសកកម្ម', location: 'KHB Head Office Departure Bay', notes: 'សូមរៀបចំ Passport ឱ្យបានរួចរាល់' },
+        { time: '10:30 AM - 11:30 AM', activity: 'សម្រួលបែបបទឆ្លងដែន VIP Fast-Track & ចូលប្រទេសវៀតណាម', location: 'Bavet - Moc Bai Border Checkpoint' },
+        { time: '05:30 PM - 08:30 PM', activity: 'កម្មវិធីណែនាំគណៈប្រតិភូ Orientation & អាហារពេលល្ងាចស្វាគមន៍', location: 'Hotel Grand Banquet Hall' }
+      ]
+    }
+  ]);
+  const [expandedDayIndex, setExpandedDayIndex] = useState<number | null>(0);
+
+  // Optional Programs State
+  const [optionalPrograms, setOptionalPrograms] = useState<OptionalTourProgram[]>(pkg?.optionalPrograms || [
+    {
+      id: 'opt_vip_matchmaking',
+      title: 'កម្មវិធី B2B VIP Matchmaking & ជំនួបពាណិជ្ជកម្មទល់មុខ',
+      description: 'ការរៀបចំជំនួបផ្ទាល់ជាមួយម្ចាស់សហគ្រាសក្នុងស្រុក 3-5 ក្រុមហ៊ុន និងអាហារពេលល្ងាចបណ្តាញពាណិជ្ជកម្ម VIP',
+      additionalCostUSD: 120,
+      durationHours: 3.5,
+      recommendedAudience: 'Business Owners & Franchise Investors',
+      highlights: ['Dedicated bilingual translator', 'Private conference lounge', 'Buyer directory'],
+      includesGuide: true,
+      includedMeals: ['VIP Executive Banquet'],
+      meetingPoint: 'Hotel Executive Conference Lounge (5:30 PM)'
+    }
+  ]);
+
+  // Emergency Contacts State
+  const [emergencyCountry, setEmergencyCountry] = useState(pkg?.emergencyContact?.country || 'Vietnam (Ho Chi Minh City & Phu Quoc)');
+  const [emergencyPolice, setEmergencyPolice] = useState(pkg?.emergencyContact?.police || '113');
+  const [emergencyAmbulance, setEmergencyAmbulance] = useState(pkg?.emergencyContact?.ambulance || '115');
+  const [emergencyHelpline, setEmergencyHelpline] = useState(pkg?.emergencyContact?.touristHelpline || '060 815 515 (Mr. Tim Vutha)');
+  const [emergencyEmbassy, setEmergencyEmbassy] = useState(pkg?.emergencyContact?.embassySupport || '+84 28 3829 2751 (Royal Embassy of Cambodia in Vietnam)');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const guidePhotoInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingImages, setIsUploadingImages] = useState<boolean>(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
+  const [isVideoDraggingOver, setIsVideoDraggingOver] = useState<boolean>(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState<string | null>(null);
+
+  // Inline Item Editing State
+  const [editingHighlightIdx, setEditingHighlightIdx] = useState<number | null>(null);
+  const [editingHighlightText, setEditingHighlightText] = useState<string>('');
+
+  const [editingWhoShouldJoinIdx, setEditingWhoShouldJoinIdx] = useState<number | null>(null);
+  const [editingWhoShouldJoinText, setEditingWhoShouldJoinText] = useState<string>('');
+
+  const [editingWhyShouldJoinIdx, setEditingWhyShouldJoinIdx] = useState<number | null>(null);
+  const [editingWhyShouldJoinText, setEditingWhyShouldJoinText] = useState<string>('');
+
+  const [editingInclusionIdx, setEditingInclusionIdx] = useState<number | null>(null);
+  const [editingInclusionText, setEditingInclusionText] = useState<string>('');
+
+  const [editingExclusionIdx, setEditingExclusionIdx] = useState<number | null>(null);
+  const [editingExclusionText, setEditingExclusionText] = useState<string>('');
+
+  const [editingTermIdx, setEditingTermIdx] = useState<number | null>(null);
+  const [editingTermText, setEditingTermText] = useState<string>('');
+
+  // Inner Sub-Section Navigation & Controller State
+  const [innerNavStyle, setInnerNavStyle] = useState<'tabs' | 'aside'>('tabs');
+  const [innerViewMode, setInnerViewMode] = useState<'all' | 'focus'>('all');
+  const [activeSubSection, setActiveSubSection] = useState<string>('all');
+  const [subSectionSearch, setSubSectionSearch] = useState<string>('');
+
   // Synchronize state when pkg changes
   useEffect(() => {
     if (pkg) {
@@ -594,75 +669,6 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       setTranslatingDirection(null);
     }
   };
-
-  // Itinerary & Hourly Agendas State
-  const [itinerary, setItinerary] = useState<ItineraryStep[]>(pkg?.itinerary || [
-    {
-      day: 1,
-      title: 'ភ្នំពេញ - ឆ្លងដែន VIP - ទីក្រុងហូជីមិញ & ពិធីស្វាគមន៍គណៈប្រតិភូ',
-      description: 'ចេញដំណើរពីរាជធានីភ្នំពេញដោយរថយន្តក្រុង VIP ឆ្លងកាត់ច្រកទ្វារព្រំដែនបាវិត/ម៉ុកបៃ ជាមួយនឹងសេវាសម្រួលបែបបទឆ្លងដែនរហ័ស។',
-      hotelName: 'Grand Saigon Riverside Boutique Hotel (4-Star)',
-      mealsIncluded: ['Breakfast', 'Welcome Dinner'],
-      guideAgenda: [
-        { time: '06:00 AM - 06:30 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅភ្នំពេញ & ចែកកាតសម្គាល់បេសកកម្ម', location: 'KHB Head Office Departure Bay', notes: 'សូមរៀបចំ Passport ឱ្យបានរួចរាល់' },
-        { time: '10:30 AM - 11:30 AM', activity: 'សម្រួលបែបបទឆ្លងដែន VIP Fast-Track & ចូលប្រទេសវៀតណាម', location: 'Bavet - Moc Bai Border Checkpoint' },
-        { time: '05:30 PM - 08:30 PM', activity: 'កម្មវិធីណែនាំគណៈប្រតិភូ Orientation & អាហារពេលល្ងាចស្វាគមន៍', location: 'Hotel Grand Banquet Hall' }
-      ]
-    }
-  ]);
-  const [expandedDayIndex, setExpandedDayIndex] = useState<number | null>(0);
-
-  // Optional Programs State
-  const [optionalPrograms, setOptionalPrograms] = useState<OptionalTourProgram[]>(pkg?.optionalPrograms || [
-    {
-      id: 'opt_vip_matchmaking',
-      title: 'កម្មវិធី B2B VIP Matchmaking & ជំនួបពាណិជ្ជកម្មទល់មុខ',
-      description: 'ការរៀបចំជំនួបផ្ទាល់ជាមួយម្ចាស់សហគ្រាសក្នុងស្រុក 3-5 ក្រុមហ៊ុន និងអាហារពេលល្ងាចបណ្តាញពាណិជ្ជកម្ម VIP',
-      additionalCostUSD: 120,
-      durationHours: 3.5,
-      recommendedAudience: 'Business Owners & Franchise Investors',
-      highlights: ['Dedicated bilingual translator', 'Private conference lounge', 'Buyer directory'],
-      includesGuide: true,
-      includedMeals: ['VIP Executive Banquet'],
-      meetingPoint: 'Hotel Executive Conference Lounge (5:30 PM)'
-    }
-  ]);
-
-  // Emergency Contacts State
-  const [emergencyCountry, setEmergencyCountry] = useState(pkg?.emergencyContact?.country || 'Vietnam (Ho Chi Minh City & Phu Quoc)');
-  const [emergencyPolice, setEmergencyPolice] = useState(pkg?.emergencyContact?.police || '113');
-  const [emergencyAmbulance, setEmergencyAmbulance] = useState(pkg?.emergencyContact?.ambulance || '115');
-  const [emergencyHelpline, setEmergencyHelpline] = useState(pkg?.emergencyContact?.touristHelpline || '060 815 515 (Mr. Tim Vutha)');
-  const [emergencyEmbassy, setEmergencyEmbassy] = useState(pkg?.emergencyContact?.embassySupport || '+84 28 3829 2751 (Royal Embassy of Cambodia in Vietnam)');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoFileInputRef = useRef<HTMLInputElement>(null);
-  const guidePhotoInputRef = useRef<HTMLInputElement>(null);
-  const [isUploadingImages, setIsUploadingImages] = useState<boolean>(false);
-  const [imageUploadProgress, setImageUploadProgress] = useState<string | null>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false);
-  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
-  const [isVideoDraggingOver, setIsVideoDraggingOver] = useState<boolean>(false);
-  const [videoUploadProgress, setVideoUploadProgress] = useState<string | null>(null);
-
-  // Inline Item Editing State
-  const [editingHighlightIdx, setEditingHighlightIdx] = useState<number | null>(null);
-  const [editingHighlightText, setEditingHighlightText] = useState<string>('');
-
-  const [editingWhoShouldJoinIdx, setEditingWhoShouldJoinIdx] = useState<number | null>(null);
-  const [editingWhoShouldJoinText, setEditingWhoShouldJoinText] = useState<string>('');
-
-  const [editingWhyShouldJoinIdx, setEditingWhyShouldJoinIdx] = useState<number | null>(null);
-  const [editingWhyShouldJoinText, setEditingWhyShouldJoinText] = useState<string>('');
-
-  const [editingInclusionIdx, setEditingInclusionIdx] = useState<number | null>(null);
-  const [editingInclusionText, setEditingInclusionText] = useState<string>('');
-
-  const [editingExclusionIdx, setEditingExclusionIdx] = useState<number | null>(null);
-  const [editingExclusionText, setEditingExclusionText] = useState<string>('');
-
-  const [editingTermIdx, setEditingTermIdx] = useState<number | null>(null);
-  const [editingTermText, setEditingTermText] = useState<string>('');
 
   // Helpers for Lists & Image Uploads
   const handleImageFilesUpload = async (files: FileList | File[] | null) => {
@@ -1523,12 +1529,6 @@ Highlights:
       isFilled: Boolean(emergencyPolice || emergencyAmbulance)
     }
   ];
-
-  // Inner Sub-Section Navigation & Controller State
-  const [innerNavStyle, setInnerNavStyle] = useState<'tabs' | 'aside'>('tabs');
-  const [innerViewMode, setInnerViewMode] = useState<'all' | 'focus'>('all');
-  const [activeSubSection, setActiveSubSection] = useState<string>('all');
-  const [subSectionSearch, setSubSectionSearch] = useState<string>('');
 
   // Sub-sections mapping per active studio tab
   const subSectionsMap: Record<TabType, Array<{ id: string; label: string; icon: React.FC<{ className?: string }>; desc: string; isFilled: boolean }>> = {
