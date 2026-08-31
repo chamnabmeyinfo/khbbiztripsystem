@@ -1460,6 +1460,67 @@ Highlights:
     }
   ];
 
+  // Inner Sub-Section Navigation & Controller State
+  const [innerNavStyle, setInnerNavStyle] = useState<'tabs' | 'aside'>('tabs');
+  const [innerViewMode, setInnerViewMode] = useState<'all' | 'focus'>('all');
+  const [activeSubSection, setActiveSubSection] = useState<string>('all');
+  const [subSectionSearch, setSubSectionSearch] = useState<string>('');
+
+  // Sub-sections mapping per active studio tab
+  const subSectionsMap: Record<TabType, Array<{ id: string; label: string; icon: React.FC<{ className?: string }>; desc: string; isFilled: boolean }>> = {
+    basic: [
+      { id: 'studio-basic-status', label: '1. Status & Visibility', icon: CheckCircle2, desc: 'Active / Draft / Archived selector', isFilled: Boolean(status) },
+      { id: 'studio-basic-titles', label: '2. Naming & Titles', icon: FileText, desc: 'English & Khmer multilingual titles', isFilled: Boolean(titleEn || titleKm || title) },
+      { id: 'studio-basic-destination', label: '3. Destination Geography', icon: MapPin, desc: 'City, province & country localization', isFilled: Boolean(destinationEn || destinationKm || destination) },
+      { id: 'studio-basic-classification', label: '4. Category & Canton Fair', icon: Tag, desc: 'Catalog grouping & Canton Fair phase setup', isFilled: Boolean(category) },
+      { id: 'studio-basic-pricing', label: '5. Pricing & Duration', icon: DollarSign, desc: 'Commercial rates, early bird deals & hotel rating', isFilled: Boolean(priceUSD > 0) },
+      { id: 'studio-basic-dates', label: '6. Departure Dates', icon: Calendar, desc: 'Scheduled departure dates list', isFilled: availableDates.length > 0 },
+      { id: 'studio-basic-marketing', label: '7. Marketing Badges & Rating', icon: Sparkles, desc: 'Preset tags, rating & booking count metrics', isFilled: tags.length > 0 }
+    ],
+    media: [
+      { id: 'studio-media-overview', label: '1. Package Overview', icon: FileText, desc: 'Bilingual detailed mission overview', isFilled: Boolean(descriptionEn || descriptionKm || description) },
+      { id: 'studio-media-video', label: '2. Video Gallery & Default Play', icon: Film, desc: 'Video tours & default auto-player', isFilled: Boolean(featuredVideoUrl || videos.length > 0) },
+      { id: 'studio-media-gallery', label: '3. Image Gallery & Highlights', icon: ImageIcon, desc: 'Hero photo cover, gallery & highlights', isFilled: images.length > 0 }
+    ],
+    guide: [
+      { id: 'studio-guide-director', label: '1. Tour Director Profile', icon: Users, desc: 'Lead coordinator, phone, telegram & photo', isFilled: Boolean(guideName || guideNameEn) },
+      { id: 'studio-guide-briefing', label: '2. Pre-Departure Briefing', icon: Compass, desc: 'Meeting point, departure time & guidelines', isFilled: Boolean(briefingMeetingPoint || briefingMeetingPointEn) }
+    ],
+    itinerary: [
+      { id: 'studio-itinerary-days', label: '1. Day-by-Day Agenda', icon: Calendar, desc: 'Structured day-by-day itinerary schedule', isFilled: itinerary.length > 0 }
+    ],
+    optional: [
+      { id: 'studio-optional-programs', label: '1. Add-on Tours & VIP Excursions', icon: Plus, desc: 'Optional networking dinners & factory visits', isFilled: optionalPrograms.length > 0 }
+    ],
+    terms: [
+      { id: 'studio-terms-policies', label: '1. Terms, Policies & Cancellation', icon: FileText, desc: 'Deposit schedules, passport rules & refund terms', isFilled: termsAndConditionsKm.length > 0 || termsAndConditionsEn.length > 0 }
+    ],
+    emergency: [
+      { id: 'studio-emergency-hotlines', label: '1. Emergency Contacts', icon: Shield, desc: 'Local police, ambulance, coordinator phone & embassy', isFilled: Boolean(emergencyPolice || emergencyAmbulance || emergencyHelpline) },
+      { id: 'studio-emergency-location', label: '2. GPS Coordinates & Map Pin', icon: MapPin, desc: 'Geographic coordinates & visual map coordinates', isFilled: Boolean(lat && lng) }
+    ]
+  };
+
+  const currentSubSections = subSectionsMap[activeTab] || [];
+  const currentSubIdx = currentSubSections.findIndex(s => s.id === activeSubSection);
+  const prevSubSection = currentSubIdx > 0 ? currentSubSections[currentSubIdx - 1] : null;
+  const nextSubSection = currentSubIdx >= 0 && currentSubIdx < currentSubSections.length - 1 ? currentSubSections[currentSubIdx + 1] : null;
+
+  const handleSelectSubSection = (subSectionId: string) => {
+    setActiveSubSection(subSectionId);
+    // Smooth scroll to the target element if in 'all' view mode
+    if (innerViewMode === 'all') {
+      setTimeout(() => {
+        const el = document.getElementById(subSectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2');
+          setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2'), 1800);
+        }
+      }, 50);
+    }
+  };
+
   const currentIdx = studios.findIndex(s => s.id === activeTab);
   const currentStudio = studios[currentIdx] || studios[0];
   const prevStudio = currentIdx > 0 ? studios[currentIdx - 1] : null;
@@ -1939,6 +2000,219 @@ Highlights:
                 </div>
               </div>
           
+          
+              {/* STUDIO SUB-SECTION NAVIGATION CONTROLLER (Controls elements inside active studio) */}
+              {currentSubSections.length > 1 && (
+                <div className="p-3 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 shadow-xs space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                        <LayoutList className="w-3 h-3 text-indigo-500" />
+                        <span>Section Navigator</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 font-mono">
+                        {currentSubSections.length} Elements
+                      </span>
+                      {activeSubSection !== 'all' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                          <span>🎯 Focus Mode Active</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Controller Mode Controls */}
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto flex-wrap">
+                      {/* Toggle between All Sections and Focus Single Section */}
+                      <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 p-0.5 bg-slate-100 dark:bg-slate-800 text-[11px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInnerViewMode('all');
+                            setActiveSubSection('all');
+                          }}
+                          className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                            innerViewMode === 'all' && activeSubSection === 'all'
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <Layers className="w-3 h-3" />
+                          <span>Show All</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInnerViewMode('focus');
+                            if (activeSubSection === 'all' && currentSubSections[0]) {
+                              setActiveSubSection(currentSubSections[0].id);
+                            }
+                          }}
+                          className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                            innerViewMode === 'focus' || activeSubSection !== 'all'
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <Target className="w-3 h-3" />
+                          <span>Focus Mode</span>
+                        </button>
+                      </div>
+
+                      {/* Toggle Sub-Section Navigation Style (Tabs vs Aside) */}
+                      <button
+                        type="button"
+                        onClick={() => setInnerNavStyle(innerNavStyle === 'tabs' ? 'aside' : 'tabs')}
+                        className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                        title={`Switch to ${innerNavStyle === 'tabs' ? 'Sub-Aside Menu Style' : 'Sub-Tabs Style'}`}
+                      >
+                        {innerNavStyle === 'tabs' ? <Columns className="w-3 h-3 text-indigo-500" /> : <LayoutList className="w-3 h-3 text-indigo-500" />}
+                        <span className="hidden sm:inline">{innerNavStyle === 'tabs' ? 'Aside Menu' : 'Top Tabs'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Horizontal Scrolling Pill Tabs for Sub-Sections */}
+                  {innerNavStyle === 'tabs' && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInnerViewMode('all');
+                          setActiveSubSection('all');
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer border ${
+                          activeSubSection === 'all'
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>All Sections ({currentSubSections.length})</span>
+                      </button>
+
+                      {currentSubSections.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const isSubActive = activeSubSection === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => handleSelectSubSection(sub.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer border group ${
+                              isSubActive
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? 'text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-indigo-500'}`} />
+                            <span>{sub.label}</span>
+                            {sub.isFilled && (
+                              <span className={`w-1.5 h-1.5 rounded-full ${isSubActive ? 'bg-emerald-300' : 'bg-emerald-500'} shrink-0`} title="Configured" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sub-Section Aside Layout Container (When innerNavStyle === 'aside') */}
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                {innerNavStyle === 'aside' && currentSubSections.length > 1 && (
+                  <aside className="w-full lg:w-64 xl:w-72 shrink-0 lg:sticky lg:top-0 space-y-2">
+                    <div className="p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          {currentStudio.shortTitle} Sections
+                        </span>
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                          {currentSubSections.length}
+                        </span>
+                      </div>
+
+                      {/* Sub-Section Search Filter */}
+                      <div className="relative">
+                        <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={subSectionSearch}
+                          onChange={(e) => setSubSectionSearch(e.target.value)}
+                          placeholder="Filter sections..."
+                          className="w-full pl-7 pr-6 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        {subSectionSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setSubSectionSearch('')}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* All Sections Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInnerViewMode('all');
+                          setActiveSubSection('all');
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                          activeSubSection === 'all'
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <Layers className="w-3.5 h-3.5 shrink-0" />
+                        <div className="min-w-0 flex-1 truncate">
+                          <span>Show All Sections</span>
+                        </div>
+                      </button>
+
+                      {/* Sub-Sections List */}
+                      <div className="space-y-1 max-h-[50vh] overflow-y-auto pr-0.5">
+                        {currentSubSections
+                          .filter(sub => !subSectionSearch.trim() || sub.label.toLowerCase().includes(subSectionSearch.toLowerCase()) || sub.desc.toLowerCase().includes(subSectionSearch.toLowerCase()))
+                          .map((sub) => {
+                            const SubIcon = sub.icon;
+                            const isSubActive = activeSubSection === sub.id;
+                            return (
+                              <button
+                                key={sub.id}
+                                type="button"
+                                onClick={() => handleSelectSubSection(sub.id)}
+                                className={`w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+                                  isSubActive
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200/60 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                }`}
+                              >
+                                <div className={`p-1.5 rounded-lg shrink-0 ${isSubActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                                  <SubIcon className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="truncate">{sub.label}</span>
+                                    {sub.isFilled && (
+                                      <span className={`w-1.5 h-1.5 rounded-full ${isSubActive ? 'bg-emerald-300' : 'bg-emerald-500'} shrink-0`} />
+                                    )}
+                                  </div>
+                                  <div className={`text-[10px] truncate font-normal ${isSubActive ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                                    {sub.desc}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </aside>
+                )}
+
+                <div className="flex-1 min-w-0 space-y-6 w-full">
+
           {/* TAB 1: BASIC & PRICING */}
           {activeTab === 'basic' && (
             <div className="space-y-6 animate-in fade-in duration-150">
@@ -4768,7 +5042,8 @@ Highlights:
           {activeTab === 'emergency' && (
             <div className="space-y-5 animate-in fade-in duration-150">
               {/* Emergency Contacts Card */}
-              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+              {(innerViewMode === 'all' || activeSubSection === 'all' || activeSubSection === 'studio-emergency-hotlines') && (
+              <div id="studio-emergency-hotlines" className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs transition-all scroll-mt-20">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
                     <Shield className="w-4 h-4" />
@@ -4848,9 +5123,11 @@ Highlights:
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Coordinates & Map Pin Card */}
-              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+              {(innerViewMode === 'all' || activeSubSection === 'all' || activeSubSection === 'studio-emergency-location') && (
+              <div id="studio-emergency-location" className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs transition-all scroll-mt-20">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                     <MapPin className="w-4 h-4" />
@@ -4912,9 +5189,12 @@ Highlights:
                   </div>
                 </div>
               </div>
+              )}
             </div>
           )}
 
+                </div>
+              </div>
             </div>
 
             {/* Sticky Modal Footer Controls */}

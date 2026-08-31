@@ -40,9 +40,11 @@ To close a modal: `setActiveModal(null)`
 
 ### 4. `PackageEditorModal`
 **Trigger:** Click "New Package" or "Edit" inside Admin Package Management  
-**Layout & Navigation Options:** Dual-mode Responsive Workspace with 1-click switcher between:
-- **Aside Menu Style**: Dedicated Left Navigation Aside Sidebar with studio badges, descriptions, quick search filtering, AI language copilot batch translation (`🇺🇸 EN ➔ 🇰🇭 KM`), and Category Management launcher.
-- **Tab Style**: Sleek top horizontal scrolling tab bar with pill indicators, step numbering, category management, and batch AI translation launcher.
+**Layout & Navigation Options:** Multi-tier Responsive Workspace with dual-mode navigation at both top-level and inner sub-section level:
+- **Top-Level Navigation**: 1-click switcher between **Aside Menu Style** (dedicated left sidebar with search, badges, and copilot actions) and **Tab Style** (horizontal scrolling tab bar).
+- **Inner Sub-Section Navigator & Controller**: Allows users to control and navigate elements inside each active studio section-by-section:
+  - **Sub-Tabs Style vs Sub-Aside Menu Style**: Instant toggle between a horizontal scrolling pill tab bar and an inner left aside menu column with live search filtering and element completion dot indicators.
+  - **Show All Mode vs Focus Mode**: Toggle between seeing all studio elements seamlessly stacked with smooth scrolling/pulse highlighting, or isolating and focusing strictly on a single element at a time (e.g. Core & Pricing, Multilingual Titles, Image Gallery, Emergency Hotlines).
 - **Studio Header Banner**: Integrated in both styles featuring Studio step indicators ("Studio X of 7"), previous/next quick navigation, and instant 1-click layout toggle pill.  
 **Purpose:** Multi-section tour creation studio: basic info, pricing & early-bird tiers, itinerary day builder, inclusions/exclusions, tour director assignments, image galleries, and **Video Gallery & File Uploads** (supports uploading MP4/WebM/MOV from local device with automated canvas thumbnail snapshots & duration calculations, or embedding YouTube/Vimeo/CDN video URLs with default auto-play controls). All sub-sections are housed in modern, accessible card-based containers (`rounded-2xl`, `bg-slate-50/60`, `border-slate-200/80`) equipped with inline AI translation tools (`FieldAiTranslator`).  
 **File:** `src/components/admin/PackageEditorModal.tsx`
