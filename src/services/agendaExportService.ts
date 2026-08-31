@@ -318,12 +318,15 @@ function buildBadges(pkg: TourPackage, labels: PdfLabels, selectedDate: string, 
 function buildTourDirector(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
   const C = getExportColors(settings);
   const guide = pkg.tourGuide || buildDefaultGuide(labels);
-  const name = settings?.leadCoordinatorName || guide.name;
-  const title = settings?.leadCoordinatorTitle || guide.title;
-  const phone = settings?.leadCoordinatorPhone || guide.phone;
-  const telegram = settings?.leadCoordinatorTelegram || guide.telegram || '@VuthaTim';
-  const photoUrl = settings?.leadCoordinatorAvatar || guide.photoUrl;
-  const bio = settings?.leadCoordinatorBio || guide.bio;
+  const name = guide.name || settings?.leadCoordinatorName || labels.defaultGuideName;
+  const title = guide.title || settings?.leadCoordinatorTitle || labels.defaultGuideTitle;
+  const phone = guide.phone || settings?.leadCoordinatorPhone || '060 815 515';
+  const telegram = guide.telegram || settings?.leadCoordinatorTelegram || '@VuthaTim';
+  const photoUrl = guide.photoUrl || settings?.leadCoordinatorAvatar;
+  const bio = guide.bio || settings?.leadCoordinatorBio || labels.defaultGuideBio;
+  const badgeNumber = guide.badgeNumber || 'KHB-TG-2026';
+  const briefingMeetingPoint = guide.briefingMeetingPoint || labels.defaultBriefingPoint;
+  const briefingTime = guide.briefingTime || labels.defaultBriefingTime;
 
   const bioHtml = bio ? `<div style="font-size:11px;color:${C.slate600};margin-top:10px;line-height:1.6;font-style:italic;border-top:1px dashed ${C.amber200};padding-top:8px;">"${escapeHtml(bio)}"</div>` : '';
   const langsHtml = guide.languages?.length ? `<div style="font-size:11px;color:${C.slate600};margin-top:5px;line-height:1.4;">${escapeHtml(labels.languages || 'Languages')}: <strong>${guide.languages.map(escapeHtml).join(', ')}</strong></div>` : '';
@@ -343,12 +346,12 @@ function buildTourDirector(pkg: TourPackage, labels: PdfLabels, settings?: Syste
         <div class="guide-contacts-row" style="font-size:11px;color:${C.slate600};margin-top:4px;line-height:1.5;display:flex;flex-wrap:wrap;gap:3px 10px;">
           <span>${escapeHtml(labels.directPhone)}: <strong>${escapeHtml(phone)}</strong></span>
           <span>${escapeHtml(labels.telegram)}: <strong>${escapeHtml(telegram)}</strong></span>
-          <span>${escapeHtml(labels.badgeNumber)}: <strong style="font-family:monospace;color:${C.amber800};">${escapeHtml(guide.badgeNumber || 'KHB-TG-2026')}</strong></span>
+          <span>${escapeHtml(labels.badgeNumber)}: <strong style="font-family:monospace;color:${C.amber800};">${escapeHtml(badgeNumber)}</strong></span>
         </div>
         ${langsHtml}
         <div class="guide-assembly-badge" style="font-size:10.5px;color:${C.slate700};margin-top:6px;background:rgba(245,158,11,0.14);padding:4px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;line-height:1.35;box-sizing:border-box;word-break:break-word;width:100%;">
           <span style="flex-shrink:0;">📍</span>
-          <span><strong>${escapeHtml(labels.assemblyPoint)}:</strong> ${escapeHtml(guide.briefingMeetingPoint)} (${escapeHtml(guide.briefingTime)})</span>
+          <span><strong>${escapeHtml(labels.assemblyPoint)}:</strong> ${escapeHtml(briefingMeetingPoint)} (${escapeHtml(briefingTime)})</span>
         </div>
         ${bioHtml}
       </div>
@@ -447,8 +450,8 @@ function buildOptionalPrograms(pkg: TourPackage, labels: PdfLabels, selectedIds:
 
 function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
   const C = getExportColors(settings);
-  const incs = pkg.inclusions.map(i => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.55;word-break:break-word;"><span style="color:${C.emerald500};font-weight:bold;">&#10003;</span> ${escapeHtml(i)}</div>`).join('');
-  const excs = pkg.exclusions.map(e => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.55;word-break:break-word;"><span style="color:${C.rose600};font-weight:bold;">&#10005;</span> ${escapeHtml(e)}</div>`).join('');
+  const incs = (pkg.inclusions || []).map(i => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.55;word-break:break-word;"><span style="color:${C.emerald500};font-weight:bold;">&#10003;</span> ${escapeHtml(i)}</div>`).join('');
+  const excs = (pkg.exclusions || []).map(e => `<div data-pdf-break="1" style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.55;word-break:break-word;"><span style="color:${C.rose600};font-weight:bold;">&#10005;</span> ${escapeHtml(e)}</div>`).join('');
   return `
   <div class="inc-exc-row" data-pdf-block="1" style="display:flex;gap:12px;margin-top:14px;width:100%;box-sizing:border-box;">
     <div style="flex:1;min-width:0;background:${C.emerald50};border:1px solid ${C.emerald200};border-radius:9px;padding:14px 16px;box-sizing:border-box;">
@@ -464,18 +467,29 @@ function buildInclusionsExclusions(pkg: TourPackage, labels: PdfLabels, settings
 
 function buildEmergency(pkg: TourPackage, labels: PdfLabels, settings?: SystemSettings): string {
   const C = getExportColors(settings);
-  const e = pkg.emergencyContact;
+  const e = pkg.emergencyContact || {
+    country: pkg.country || 'Destination Emergency Hub',
+    police: '113 / 117',
+    ambulance: '115 / 119',
+    touristHelpline: settings?.emergencyHotline || settings?.companyPhone || '060 815 515',
+    embassySupport: '+855 23 884 990 (Embassy / Consular Assistance)'
+  };
+  const countryName = e.country || pkg.country || 'Destination';
+  const police = e.police || '113 / 117';
+  const ambulance = e.ambulance || '115 / 119';
+  const touristHelpline = e.touristHelpline || settings?.emergencyHotline || settings?.companyPhone || '060 815 515';
+  const embassySupport = e.embassySupport || '+855 23 884 990 (Royal Embassy of Cambodia / Consular Desk)';
   const hotline = settings?.emergencyHotline || settings?.companyPhone || '060 815 515';
   return `
   <div data-pdf-block="1" style="background:${C.blue50};border:1px solid ${C.blue200};border-radius:9px;padding:14px 16px;margin-top:14px;width:100%;box-sizing:border-box;">
-    <div style="font-size:12px;font-weight:bold;color:${C.blue900};text-transform:uppercase;letter-spacing:0.5px;">🚨 ${escapeHtml(labels.emergencyAssistance)} (${escapeHtml(e.country)})</div>
+    <div style="font-size:12px;font-weight:bold;color:${C.blue900};text-transform:uppercase;letter-spacing:0.5px;">🚨 ${escapeHtml(labels.emergencyAssistance)} (${escapeHtml(countryName)})</div>
     <div style="font-size:11px;color:${C.slate700};margin-top:6px;line-height:1.65;word-break:break-word;">
-      <div>${escapeHtml(labels.localPolice)}: <strong>${escapeHtml(e.police)}</strong></div>
-      <div style="margin-top:2px;">${escapeHtml(labels.ambulance)}: <strong>${escapeHtml(e.ambulance)}</strong></div>
-      <div style="margin-top:2px;">${escapeHtml(labels.touristSos)}: <strong>${escapeHtml(e.touristHelpline)}</strong></div>
+      <div>${escapeHtml(labels.localPolice)}: <strong>${escapeHtml(police)}</strong></div>
+      <div style="margin-top:2px;">${escapeHtml(labels.ambulance)}: <strong>${escapeHtml(ambulance)}</strong></div>
+      <div style="margin-top:2px;">${escapeHtml(labels.touristSos)}: <strong>${escapeHtml(touristHelpline)}</strong></div>
     </div>
     <div style="font-size:11px;color:${C.slate700};margin-top:5px;line-height:1.5;display:flex;flex-wrap:wrap;gap:4px 10px;word-break:break-word;">
-      <span>${escapeHtml(labels.embassySupport)}: <strong>${escapeHtml(e.embassySupport)}</strong></span>
+      <span>${escapeHtml(labels.embassySupport)}: <strong>${escapeHtml(embassySupport)}</strong></span>
       <span>${escapeHtml(labels.khbDispatch)}: <strong>${escapeHtml(hotline)}</strong></span>
     </div>
   </div>`;
