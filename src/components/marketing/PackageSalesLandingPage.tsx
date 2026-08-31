@@ -34,7 +34,8 @@ import {
   Briefcase,
   Gift,
   Edit3,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
