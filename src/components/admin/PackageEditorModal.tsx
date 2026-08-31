@@ -1035,18 +1035,33 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     const day = itinerary[dayIndex];
     const currentAgenda = day.guideAgenda || [];
     const newSlot: GuideScheduleSlot = {
-      time: '09:00 AM',
-      activity: 'Business Activity / Exhibition Session',
-      location: 'Main Hall',
-      notes: ''
+      time: '09:00 AM - 12:00 PM',
+      activity: 'ទស្សនកិច្ចពាណិជ្ជកម្ម និងពិព័រណ៍',
+      activityKm: 'ទស្សនកិច្ចពាណិជ្ជកម្ម និងពិព័រណ៍',
+      activityEn: 'B2B Trade Session & Exhibition Walkthrough',
+      location: 'Main Exhibition Hall',
+      locationKm: 'សាលពិព័រណ៍ធំ',
+      locationEn: 'Main Exhibition Hall',
+      notes: '',
+      notesKm: '',
+      notesEn: '',
+      type: 'exhibition'
     };
     handleUpdateDayField(dayIndex, 'guideAgenda', [...currentAgenda, newSlot]);
   };
 
-  const handleUpdateAgendaItem = (dayIndex: number, slotIndex: number, field: keyof GuideScheduleSlot, value: string) => {
+  const handleUpdateAgendaItem = (dayIndex: number, slotIndex: number, field: keyof GuideScheduleSlot, value: any) => {
     const day = itinerary[dayIndex];
     const currentAgenda = day.guideAgenda || [];
-    const updatedAgenda = currentAgenda.map((slot, sIdx) => sIdx === slotIndex ? { ...slot, [field]: value } : slot);
+    const updatedAgenda = currentAgenda.map((slot, sIdx) => {
+      if (sIdx !== slotIndex) return slot;
+      const updated = { ...slot, [field]: value };
+      if (field === 'activity' && !updated.activityKm) updated.activityKm = value;
+      if (field === 'activityKm' && !updated.activity) updated.activity = value;
+      if (field === 'location' && !updated.locationKm) updated.locationKm = value;
+      if (field === 'locationKm' && !updated.location) updated.location = value;
+      return updated;
+    });
     handleUpdateDayField(dayIndex, 'guideAgenda', updatedAgenda);
   };
 
@@ -4605,10 +4620,10 @@ Highlights:
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold uppercase text-slate-400">
-                    Day-by-Day Mission Schedule ({itinerary.length} Days)
+                    {language === 'km' ? `កាលវិភាគបេសកកម្មតាមថ្ងៃ (${itinerary.length} ថ្ងៃ)` : `Day-by-Day Mission Schedule (${itinerary.length} Days)`}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Configure day headlines, hotels, meals, and hour-by-hour escort agenda slots.
+                    {language === 'km' ? 'កំណត់ចំណងជើងថ្ងៃ សណ្ឋាគារ អាហារ និងកាលវិភាគម៉ោងជាក់លាក់របស់មគ្គុទ្ទេសក៍' : 'Configure day headlines, hotels, meals, and hour-by-hour escort agenda slots.'}
                   </p>
                 </div>
                 <button
@@ -4617,7 +4632,7 @@ Highlights:
                   className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Day</span>
+                  <span>{language === 'km' ? 'បន្ថែមថ្ងៃ' : 'Add Day'}</span>
                 </button>
               </div>
 
@@ -4640,12 +4655,12 @@ Highlights:
                           </span>
                           <div>
                             <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                              {day.title}
+                              {language === 'km' ? `ថ្ងៃទី ${day.day}:` : `Day ${day.day}:`} {day.title}
                             </h4>
                             <div className="text-[11px] text-slate-400 flex items-center gap-2">
-                              <span>🏨 {day.hotelName || 'No Hotel'}</span>
+                              <span>🏨 {day.hotelName || (language === 'km' ? 'គ្មានសណ្ឋាគារ' : 'No Hotel')}</span>
                               <span>•</span>
-                              <span>{(day.guideAgenda || []).length} Timeline Slots</span>
+                              <span>{language === 'km' ? `កាលវិភាគ ${(day.guideAgenda || []).length} ម៉ោង` : `${(day.guideAgenda || []).length} Timeline Slots`}</span>
                             </div>
                           </div>
                         </div>
@@ -4658,7 +4673,7 @@ Highlights:
                               handleRemoveItineraryDay(dIdx);
                             }}
                             className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-                            title="Delete Day"
+                            title={language === 'km' ? 'លុបថ្ងៃនេះ' : 'Delete Day'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -4673,7 +4688,7 @@ Highlights:
                           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div className="flex items-center justify-between">
                               <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                Day Title (Bilingual)
+                                {language === 'km' ? 'ចំណងជើងថ្ងៃ (ទ្វេភាសា)' : 'Day Title (Bilingual)'}
                               </label>
                               <FieldAiTranslator
                                 kmText={day.titleKm || day.title}
@@ -4752,54 +4767,213 @@ Highlights:
                             </div>
                           </div>
 
+                          {/* Hotel / Accommodation (Bilingual) */}
+                          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                🏨 {language === 'km' ? 'សណ្ឋាគារ & កន្លែងស្នាក់នៅ (ទ្វេភាសា)' : 'Hotel / Accommodation (Bilingual)'}
+                              </label>
+                              <FieldAiTranslator
+                                kmText={day.hotelNameKm || day.hotelName}
+                                enText={day.hotelNameEn}
+                                preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                fieldHint={`Tour Itinerary Day ${day.day} Hotel Lodging`}
+                                onTranslateToKm={(trans) => {
+                                  handleUpdateDayField(dIdx, 'hotelNameKm', trans);
+                                  if (!isEnglishMain) handleUpdateDayField(dIdx, 'hotelName', trans);
+                                }}
+                                onTranslateToEn={(trans) => {
+                                  handleUpdateDayField(dIdx, 'hotelNameEn', trans);
+                                  if (isEnglishMain) handleUpdateDayField(dIdx, 'hotelName', trans);
+                                }}
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                  {isEnglishMain ? '🇺🇸 Hotel Name (Primary)' : '🇰🇭 Hotel Name (Primary)'}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={isEnglishMain ? (day.hotelNameEn || day.hotelName || '') : (day.hotelNameKm || day.hotelName || '')}
+                                  onChange={(e) => {
+                                    if (isEnglishMain) {
+                                      handleUpdateDayField(dIdx, 'hotelNameEn', e.target.value);
+                                      handleUpdateDayField(dIdx, 'hotelName', e.target.value);
+                                    } else {
+                                      handleUpdateDayField(dIdx, 'hotelNameKm', e.target.value);
+                                      handleUpdateDayField(dIdx, 'hotelName', e.target.value);
+                                    }
+                                  }}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                  placeholder={isEnglishMain ? "e.g. Guangzhou Marriott Pazhou (5-Star Luxury)" : "ឧ. សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)"}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                  {isEnglishMain ? '🇰🇭 Hotel Name (Secondary)' : '🇺🇸 Hotel Name (Secondary)'}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={isEnglishMain ? (day.hotelNameKm || '') : (day.hotelNameEn || '')}
+                                  onChange={(e) => {
+                                    if (isEnglishMain) {
+                                      handleUpdateDayField(dIdx, 'hotelNameKm', e.target.value);
+                                    } else {
+                                      handleUpdateDayField(dIdx, 'hotelNameEn', e.target.value);
+                                    }
+                                  }}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                  placeholder={isEnglishMain ? "ឧ. សណ្ឋាគារ Guangzhou Marriott Pazhou (កម្រិត ៥ ផ្កាយ)" : "e.g. Guangzhou Marriott Pazhou (5-Star Luxury)"}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Included Meals & Assembly Checkpoint */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                                Hotel / Accommodation
-                              </label>
-                              <input
-                                type="text"
-                                value={day.hotelName || ''}
-                                onChange={(e) => handleUpdateDayField(dIdx, 'hotelName', e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="e.g. Grand Saigon Riverside Hotel (4-Star)"
-                              />
+                            {/* Meals Included (Bilingual) */}
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  🍽️ {language === 'km' ? 'អាហាររួមបញ្ចូល (ទ្វេភាសា)' : 'Included Meals (Bilingual)'}
+                                </label>
+                                <FieldAiTranslator
+                                  kmText={day.mealsIncludedKm?.join(', ') || day.mealsIncluded?.join(', ')}
+                                  enText={day.mealsIncludedEn?.join(', ')}
+                                  preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                  fieldHint={`Tour Day ${day.day} Included Meals`}
+                                  onTranslateToKm={(trans) => {
+                                    const arr = trans.split(',').map(s => s.trim()).filter(Boolean);
+                                    handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
+                                    if (!isEnglishMain) handleUpdateDayField(dIdx, 'mealsIncluded', arr);
+                                  }}
+                                  onTranslateToEn={(trans) => {
+                                    const arr = trans.split(',').map(s => s.trim()).filter(Boolean);
+                                    handleUpdateDayField(dIdx, 'mealsIncludedEn', arr);
+                                    if (isEnglishMain) handleUpdateDayField(dIdx, 'mealsIncluded', arr);
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                    {isEnglishMain ? '🇺🇸 English Meals' : '🇰🇭 Khmer Meals'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={isEnglishMain ? (day.mealsIncludedEn?.join(', ') || day.mealsIncluded?.join(', ') || '') : (day.mealsIncludedKm?.join(', ') || day.mealsIncluded?.join(', ') || '')}
+                                    onChange={(e) => {
+                                      const arr = e.target.value.split(',').map(m => m.trim());
+                                      if (isEnglishMain) {
+                                        handleUpdateDayField(dIdx, 'mealsIncludedEn', arr);
+                                        handleUpdateDayField(dIdx, 'mealsIncluded', arr);
+                                      } else {
+                                        handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
+                                        handleUpdateDayField(dIdx, 'mealsIncluded', arr);
+                                      }
+                                    }}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                    placeholder={isEnglishMain ? "Hotel Buffet Breakfast, Executive Lunch, Dinner" : "អាហារពេលព្រឹកប៊ូហ្វេ, អាហារថ្ងៃត្រង់, អាហារពេលល្ងាច"}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                    {isEnglishMain ? '🇰🇭 Khmer Meals' : '🇺🇸 English Meals'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={isEnglishMain ? (day.mealsIncludedKm?.join(', ') || '') : (day.mealsIncludedEn?.join(', ') || '')}
+                                    onChange={(e) => {
+                                      const arr = e.target.value.split(',').map(m => m.trim());
+                                      if (isEnglishMain) {
+                                        handleUpdateDayField(dIdx, 'mealsIncludedKm', arr);
+                                      } else {
+                                        handleUpdateDayField(dIdx, 'mealsIncludedEn', arr);
+                                      }
+                                    }}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                    placeholder={isEnglishMain ? "អាហារពេលព្រឹកប៊ូហ្វេ, អាហារថ្ងៃត្រង់, អាហារពេលល្ងាច" : "Hotel Buffet Breakfast, Executive Lunch, Dinner"}
+                                  />
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                                Included Meals (comma separated)
-                              </label>
-                              <input
-                                type="text"
-                                value={day.mealsIncluded?.join(', ') || ''}
-                                onChange={(e) => handleUpdateDayField(dIdx, 'mealsIncluded', e.target.value.split(',').map(m => m.trim()))}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="Breakfast, Welcome Dinner"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                                Assembly Point / Meeting Location
-                              </label>
-                              <input
-                                type="text"
-                                value={day.assemblyPoint || ''}
-                                onChange={(e) => handleUpdateDayField(dIdx, 'assemblyPoint', e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                placeholder="e.g. Hotel Main Lobby Portico"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                                Assembly Time
-                              </label>
-                              <input
-                                type="text"
-                                value={day.assemblyTime || ''}
-                                onChange={(e) => handleUpdateDayField(dIdx, 'assemblyTime', e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
-                                placeholder="e.g. 08:30 AM"
-                              />
+
+                            {/* Assembly Point & Time */}
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  📍 {language === 'km' ? 'ទីតាំង & ម៉ោងប្រមូលផ្តុំ' : 'Assembly Point & Checkpoint'}
+                                </label>
+                                <FieldAiTranslator
+                                  kmText={day.assemblyPointKm || day.assemblyPoint}
+                                  enText={day.assemblyPointEn}
+                                  preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                  fieldHint={`Tour Day ${day.day} Assembly Point`}
+                                  onTranslateToKm={(trans) => {
+                                    handleUpdateDayField(dIdx, 'assemblyPointKm', trans);
+                                    if (!isEnglishMain) handleUpdateDayField(dIdx, 'assemblyPoint', trans);
+                                  }}
+                                  onTranslateToEn={(trans) => {
+                                    handleUpdateDayField(dIdx, 'assemblyPointEn', trans);
+                                    if (isEnglishMain) handleUpdateDayField(dIdx, 'assemblyPoint', trans);
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                      {isEnglishMain ? '🇺🇸 Assembly (EN)' : '🇰🇭 Assembly (KM)'}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={isEnglishMain ? (day.assemblyPointEn || day.assemblyPoint || '') : (day.assemblyPointKm || day.assemblyPoint || '')}
+                                      onChange={(e) => {
+                                        if (isEnglishMain) {
+                                          handleUpdateDayField(dIdx, 'assemblyPointEn', e.target.value);
+                                          handleUpdateDayField(dIdx, 'assemblyPoint', e.target.value);
+                                        } else {
+                                          handleUpdateDayField(dIdx, 'assemblyPointKm', e.target.value);
+                                          handleUpdateDayField(dIdx, 'assemblyPoint', e.target.value);
+                                        }
+                                      }}
+                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                      placeholder={isEnglishMain ? "Hotel Main Lobby Portico" : "មុខឡប់ប៊ីសណ្ឋាគារ"}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                      {isEnglishMain ? '🇰🇭 Assembly (KM)' : '🇺🇸 Assembly (EN)'}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={isEnglishMain ? (day.assemblyPointKm || '') : (day.assemblyPointEn || '')}
+                                      onChange={(e) => {
+                                        if (isEnglishMain) {
+                                          handleUpdateDayField(dIdx, 'assemblyPointKm', e.target.value);
+                                        } else {
+                                          handleUpdateDayField(dIdx, 'assemblyPointEn', e.target.value);
+                                        }
+                                      }}
+                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                                      placeholder={isEnglishMain ? "មុខឡប់ប៊ីសណ្ឋាគារ" : "Hotel Main Lobby Portico"}
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                    🕒 {language === 'km' ? 'ម៉ោងជួបជុំ' : 'Assembly Time'}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={day.assemblyTime || ''}
+                                    onChange={(e) => handleUpdateDayField(dIdx, 'assemblyTime', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
+                                    placeholder="08:30 AM"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           </div>
 
@@ -4807,7 +4981,7 @@ Highlights:
                           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
                             <div className="flex items-center justify-between">
                               <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                Day Overview Description (Bilingual)
+                                {language === 'km' ? 'សេចក្តីសង្ខេប & សកម្មភាពសំខាន់ប្រចាំថ្ងៃ' : 'Day Overview Description (Bilingual)'}
                               </label>
                               <FieldAiTranslator
                                 kmText={day.descriptionKm || day.description}
@@ -4889,77 +5063,155 @@ Highlights:
                           {/* Hourly Agenda Section */}
                           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                             <div className="flex items-center justify-between">
-                              <label className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>Hour-by-Hour Guide & Escort Timeline ({day.guideAgenda?.length || 0} Slots)</span>
-                              </label>
+                              <div>
+                                <label className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>{language === 'km' ? `កាលវិភាគមគ្គុទ្ទេសក៍តាមម៉ោង (${day.guideAgenda?.length || 0} កម្មវិធី)` : `Hour-by-Hour Guide & Escort Timeline (${day.guideAgenda?.length || 0} Slots)`}</span>
+                                </label>
+                                <p className="text-[10px] text-slate-400 mt-0.5">
+                                  {language === 'km' ? 'កំណត់ពេលវេលា សកម្មភាព ទីតាំង និងការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍ជាទ្វេភាសា' : 'Specify exact timings, bilingual activities, locations, and coordinator notes for delegates.'}
+                                </p>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => handleAddAgendaItem(dIdx)}
-                                className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold hover:bg-indigo-100 cursor-pointer"
+                                className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold hover:bg-indigo-100 cursor-pointer flex items-center gap-1"
                               >
-                                + Add Agenda Slot
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>{language === 'km' ? '+ បន្ថែមម៉ោងកម្មវិធី' : '+ Add Agenda Slot'}</span>
                               </button>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {(day.guideAgenda || []).map((slot, sIdx) => (
                                 <div
                                   key={sIdx}
-                                  className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center"
+                                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 shadow-2xs"
                                 >
-                                  <div className="sm:col-span-3">
-                                    <input
-                                      type="text"
-                                      value={slot.time || ''}
-                                      onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'time', e.target.value)}
-                                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                                      placeholder="08:30 AM"
-                                    />
-                                  </div>
-                                  <div className="sm:col-span-5 flex items-center gap-1">
-                                    <input
-                                      type="text"
-                                      value={slot.activity || ''}
-                                      onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value)}
-                                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder="Activity description..."
-                                    />
-                                    {slot.activity && (
-                                      <FieldAiTranslator
-                                        sourceText={slot.activity}
-                                        fieldHint="Tour Itinerary Hourly Activity Slot"
-                                        size="xs"
-                                        onTranslatedText={(trans) => handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans)}
+                                  {/* Slot Header Bar */}
+                                  <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-5 h-5 rounded-md bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-[10px] flex items-center justify-center">
+                                        #{sIdx + 1}
+                                      </span>
+                                      <input
+                                        type="text"
+                                        value={slot.time || ''}
+                                        onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'time', e.target.value)}
+                                        className="w-40 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400"
+                                        placeholder="09:00 AM - 12:00 PM"
                                       />
-                                    )}
-                                  </div>
-                                  <div className="sm:col-span-3 flex items-center gap-1">
-                                    <input
-                                      type="text"
-                                      value={slot.location || ''}
-                                      onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value)}
-                                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                                      placeholder="Location..."
-                                    />
-                                    {slot.location && (
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
                                       <FieldAiTranslator
-                                        sourceText={slot.location}
-                                        fieldHint="Tour Itinerary Activity Location"
+                                        kmText={slot.activityKm || slot.activity}
+                                        enText={slot.activityEn}
+                                        preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                        fieldHint={`Tour Day ${day.day} Slot ${sIdx + 1} Activity`}
                                         size="xs"
-                                        onTranslatedText={(trans) => handleUpdateAgendaItem(dIdx, sIdx, 'location', trans)}
+                                        onTranslateToKm={(trans) => {
+                                          handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', trans);
+                                          if (!isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
+                                        }}
+                                        onTranslateToEn={(trans) => {
+                                          handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', trans);
+                                          if (isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
+                                        }}
                                       />
-                                    )}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveAgendaItem(dIdx, sIdx)}
+                                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                                        title={language === 'km' ? 'លុបម៉ោងកម្មវិធីនេះ' : 'Remove slot'}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="sm:col-span-1 flex justify-end">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveAgendaItem(dIdx, sIdx)}
-                                      className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
-                                      title="Remove slot"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
+
+                                  {/* Activity Description (Bilingual) */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                        {isEnglishMain ? '🇺🇸 Activity (English - Primary)' : '🇰🇭 Activity (Khmer - Primary)'}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={isEnglishMain ? (slot.activityEn || slot.activity || '') : (slot.activityKm || slot.activity || '')}
+                                        onChange={(e) => {
+                                          if (isEnglishMain) {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
+                                          } else {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
+                                          }
+                                        }}
+                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                                        placeholder={isEnglishMain ? "e.g. Pazhou Complex Area A Exhibition Walkthrough" : "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A"}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                        {isEnglishMain ? '🇰🇭 Activity (Khmer - Secondary)' : '🇺🇸 Activity (English - Secondary)'}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={isEnglishMain ? (slot.activityKm || '') : (slot.activityEn || '')}
+                                        onChange={(e) => {
+                                          if (isEnglishMain) {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
+                                          } else {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
+                                          }
+                                        }}
+                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                                        placeholder={isEnglishMain ? "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A" : "e.g. Pazhou Complex Area A Exhibition Walkthrough"}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Location & Notes (Bilingual) */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                        📍 {isEnglishMain ? '🇺🇸 Location (EN)' : '🇰🇭 Location (KM)'}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={isEnglishMain ? (slot.locationEn || slot.location || '') : (slot.locationKm || slot.location || '')}
+                                        onChange={(e) => {
+                                          if (isEnglishMain) {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
+                                          } else {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
+                                          }
+                                        }}
+                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                                        placeholder={isEnglishMain ? "Pazhou Complex Area A" : "សាលពិព័រណ៍ Pazhou តំបន់ A"}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                        📍 {isEnglishMain ? '🇰🇭 Location (KM)' : '🇺🇸 Location (EN)'}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={isEnglishMain ? (slot.locationKm || '') : (slot.locationEn || '')}
+                                        onChange={(e) => {
+                                          if (isEnglishMain) {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
+                                          } else {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
+                                          }
+                                        }}
+                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                                        placeholder={isEnglishMain ? "សាលពិព័រណ៍ Pazhou តំបន់ A" : "Pazhou Complex Area A"}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               ))}

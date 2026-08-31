@@ -725,7 +725,7 @@ export const PackageDetailModal: React.FC = () => {
 
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hidden sm:inline-block">
-                            {agendaSlots.length} Schedule Items
+                            {language === 'km' ? `កាលវិភាគ ${agendaSlots.length} ម៉ោង` : `${agendaSlots.length} Schedule Items`}
                           </span>
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -786,7 +786,7 @@ export const PackageDetailModal: React.FC = () => {
                             <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/40">
                               <Utensils className="w-3.5 h-3.5 shrink-0" />
                               <span className="font-semibold">
-                                Included Catering: {step.mealsIncluded.join(', ')}
+                                {language === 'km' ? 'អាហាររួមបញ្ចូល:' : 'Included Catering:'} {step.mealsIncluded.join(', ')}
                               </span>
                             </div>
                           )}
