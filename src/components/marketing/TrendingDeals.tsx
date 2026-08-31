@@ -14,11 +14,12 @@ import {
   ArrowRight,
   Flame,
   Play,
-  Share2
+  Share2,
+  Edit3
 } from 'lucide-react';
 
 export const TrendingDeals: React.FC = () => {
-  const { packages, setSelectedPackage, setActiveModal, openPackageSalesPage, currency, language, t } = useApp();
+  const { packages, setSelectedPackage, setActiveModal, openPackageSalesPage, openPackageEditor, currency, language, t } = useApp();
   const [selectedTag, setSelectedTag] = useState<string>('all');
 
   const filtered = selectedTag === 'all'
@@ -165,16 +166,31 @@ export const TrendingDeals: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Top Right Social Boost Link Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleOpenSocialShare(pkg, e)}
-                      className="absolute top-3 right-3 p-2 rounded-xl bg-black/60 hover:bg-indigo-600 text-white backdrop-blur-md transition-all shadow-md cursor-pointer hover:scale-110 active:scale-95 z-10 flex items-center gap-1 text-[11px] font-bold"
-                      title="Get post link & boost on social media"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Boost</span>
-                    </button>
+                    {/* Top Right Action Group: Edit & Social Boost */}
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPackageEditor(pkg);
+                        }}
+                        className="p-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white backdrop-blur-md transition-all shadow-md cursor-pointer hover:scale-110 active:scale-95 flex items-center gap-1 text-[11px] font-bold border border-amber-400/30"
+                        title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះភ្លាមៗ' : 'Direct Edit Tour Package'}
+                      >
+                        <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span className="hidden sm:inline">{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleOpenSocialShare(pkg, e)}
+                        className="p-2 rounded-xl bg-black/60 hover:bg-indigo-600 text-white backdrop-blur-md transition-all shadow-md cursor-pointer hover:scale-110 active:scale-95 flex items-center gap-1 text-[11px] font-bold"
+                        title="Get post link & boost on social media"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Boost</span>
+                      </button>
+                    </div>
 
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
                       <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-1 rounded-md">
@@ -222,6 +238,20 @@ export const TrendingDeals: React.FC = () => {
                       </div>
 
                       <div className="flex items-center gap-1.5 sm:gap-2">
+                        {/* Direct Quick Edit Tour Package Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPackageEditor(pkg);
+                          }}
+                          className="px-2.5 sm:px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center gap-1 active:scale-95"
+                          title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 stroke-[2.5]" />
+                          <span className="hidden xl:inline">{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={(e) => handleOpenSocialShare(pkg, e)}

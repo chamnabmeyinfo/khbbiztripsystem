@@ -15,7 +15,7 @@ type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package
 **Who:** Public consumers & prospective corporate delegates (no login required)  
 **Components:**
 - `HeroSection` — Dynamic full-screen hero slideshow auto-cycling through featured images of all active tour packages (`class="absolute inset-0 z-0"`), with smooth crossfade, zoom animations, interactive slide indicators, previous/next controls, quick package navigation pills, and multi-parameter search
-- `TrendingDeals` — Curated trade missions & luxury tour package cards with dynamic pricing and departure indicators (can be dynamically enabled or disabled via Admin ERP Settings `enableExploreCuratedTours`)
+- `TrendingDeals` — Curated trade missions & luxury tour package cards with dynamic pricing and departure indicators, equipped with **Direct Quick Edit (`✏️ Edit`)** buttons on card overlays and footers for instantaneous package editing. (can be dynamically enabled or disabled via Admin ERP Settings `enableExploreCuratedTours`)
 - `InteractiveMap` — Interactive visual coordinate map with clickable mission destinations
 - `Testimonials` — Authentic enterprise traveler and trade delegation feedback reviews
 - `FAQ Accordion` — Automated tax invoicing, luggage policies, refund terms, and offline PWA questions
@@ -25,6 +25,7 @@ type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package
 ## 2. Package Sales Landing Page (`PackageSalesLandingPage`)
 **Who:** B2B Trade Delegates, Canton Fair Participants, and Business Mission Attendees  
 **Key Features:**
+- **Direct Quick Edit Actions**: Prominent `✏️ Edit Package` button in the sticky top navigation, action card header, and sticky bottom booking bar allowing direct 1-click transition into `PackageEditorModal`.
 - **Image Feature Gallery**: Large high-res hero image carousel with verified delegate tags.
 - **Delegate Registration Fee & Booking Card**: Directly positioned below image gallery with clear breakdown of flight, hotel, B2B pass, and VAT invoice inclusion.
 - **Phase & Date Switcher**: Phase 1 / 2 / 3 selector with real-time seat availability indicators.

@@ -507,20 +507,30 @@ export const PackageSalesLandingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleProceedToCheckout}
-                  className="col-span-7 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 via-sky-500 to-teal-400 hover:from-indigo-600 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-indigo-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                  className="col-span-5 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-500 via-sky-500 to-teal-400 hover:from-indigo-600 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-indigo-500/25 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>{language === 'km' ? 'កក់កៅអីឥឡូវនេះ (Book Now)' : 'Reserve Delegate Seat Now'}</span>
+                  <span>{language === 'km' ? 'កក់កៅអី' : 'Book Now'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleOpenPdfAgenda}
-                  className="col-span-5 py-3.5 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                  className="col-span-4 py-3.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]"
                   title="Preview & Download Official Tour Agenda"
                 >
                   <Download className="w-4 h-4 text-sky-300" />
-                  <span>{language === 'km' ? 'មើលគំរូ & ទាញយក PDF' : 'Preview & Download PDF'}</span>
+                  <span>{language === 'km' ? 'មើលគំរូ PDF' : 'Preview PDF'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openPackageEditor(rawPkg || pkg)}
+                  className="col-span-3 py-3.5 px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-500/20 border border-amber-400/30 cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] active:scale-95"
+                  title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
+                >
+                  <Edit3 className="w-4 h-4 stroke-[2.5]" />
+                  <span>{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
                 </button>
               </div>
 
@@ -1285,6 +1295,16 @@ export const PackageSalesLandingPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Direct Quick Edit Tour Package Button */}
+            <button
+              onClick={() => openPackageEditor(rawPkg || pkg)}
+              className="p-2 sm:px-3 sm:py-2.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-xs"
+              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
+            >
+              <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 stroke-[2.5]" />
+              <span className="hidden md:inline">{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
+            </button>
+
             <button
               onClick={() => {
                 setSelectedPackage(pkg);
