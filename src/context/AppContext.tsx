@@ -1065,9 +1065,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const openPackageEditor = (pkgOrId?: TourPackage | string | null, openWithAi: boolean = false) => {
     let target: TourPackage | null = null;
     if (typeof pkgOrId === 'string') {
-      target = rawPackages?.find(p => p.id === pkgOrId) || packages.find(p => p.id === pkgOrId) || null;
+      target = packages.find(p => p.id === pkgOrId) || null;
     } else if (pkgOrId && typeof pkgOrId === 'object') {
-      target = rawPackages?.find(p => p.id === pkgOrId.id) || pkgOrId;
+      target = packages.find(p => p.id === pkgOrId.id) || pkgOrId;
     }
 
     setEditingPackage(target);

@@ -50,7 +50,6 @@ import { ViewContextMenu, ViewContextMenuState } from '../common/ViewContextMenu
 export const PackageManagementSection: React.FC = () => {
   const {
     packages,
-    rawPackages,
     packageCategories,
     deletedItems,
     addPackage,
@@ -140,8 +139,7 @@ export const PackageManagementSection: React.FC = () => {
   };
 
   const handleOpenEdit = (pkg: TourPackage) => {
-    const targetRawPkg = rawPackages?.find(p => p.id === pkg.id) || pkg;
-    openPackageEditor(targetRawPkg, false);
+    openPackageEditor(pkg, false);
   };
 
   const handleCloneAsDraft = (pkg: TourPackage) => {

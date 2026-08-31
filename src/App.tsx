@@ -93,7 +93,7 @@ const MainLayout: React.FC = () => {
     editingPackage,
     openPackageEditorWithAi,
     closePackageEditor,
-    rawPackages,
+    packages,
     updatePackage,
     addPackage
   } = useApp();
@@ -140,7 +140,7 @@ const MainLayout: React.FC = () => {
           initialOpenWithAi={openPackageEditorWithAi}
           onClose={closePackageEditor}
           onSave={(savedPkg) => {
-            const isExisting = rawPackages?.some(p => p.id === savedPkg.id) || (editingPackage && editingPackage.id === savedPkg.id);
+            const isExisting = packages?.some(p => p.id === savedPkg.id) || (editingPackage && editingPackage.id === savedPkg.id);
             if (isExisting) {
               updatePackage(savedPkg);
             } else {
