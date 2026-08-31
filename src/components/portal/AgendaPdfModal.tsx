@@ -80,6 +80,7 @@ export const AgendaPdfModal: React.FC = () => {
     activeModal,
     setActiveModal,
     openPackageEditor,
+    isCorporateEditor,
     language,
     systemSettings,
   } = useApp();
@@ -319,19 +320,21 @@ export const AgendaPdfModal: React.FC = () => {
               </button>
             </div>
 
-            {/* Direct Edit Tour Package Button */}
-            <button
-              onClick={() => {
-                if (selectedPackage) {
-                  openPackageEditor(selectedPackage);
-                }
-              }}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 leading-none"
-              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្ត និងរបៀបវារៈនេះភ្លាមៗ' : 'Quickly edit this tour package and dossier in Package Editor'}
-            >
-              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden md:inline">{language === 'km' ? '✏️ កែប្រែកញ្ចប់' : '✏️ Edit Package'}</span>
-            </button>
+            {/* Direct Edit Tour Package Button (corporate editors only) */}
+            {isCorporateEditor && (
+              <button
+                onClick={() => {
+                  if (selectedPackage) {
+                    openPackageEditor(selectedPackage);
+                  }
+                }}
+                className="p-2 sm:px-3 sm:py-2 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 leading-none"
+                title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្ត និងរបៀបវារៈនេះភ្លាមៗ' : 'Quickly edit this tour package and dossier in Package Editor'}
+              >
+                <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span className="hidden md:inline">{language === 'km' ? '✏️ កែប្រែកញ្ចប់' : '✏️ Edit Package'}</span>
+              </button>
+            )}
 
             {/* View Standalone HTML */}
             <button

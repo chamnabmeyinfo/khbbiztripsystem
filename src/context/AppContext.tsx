@@ -94,6 +94,7 @@ import {
   userHasPermission,
   userCanAccessTab,
   isAllowedGoogleDomain,
+  isAuthorizedCorporateEditor,
   ROLE_CONFIGS,
   getUserEffectivePermissions,
   getUserEffectiveTabs
@@ -145,6 +146,8 @@ interface AppContextType {
   isAdmin: boolean;
   isStaff: boolean;
   isSuperAdmin: boolean;
+  isCorporateEditor: boolean;
+  canEditPackages: boolean;
   users: User[];
   auditLogs: UserAuditLog[];
   language: LanguageCode;
@@ -1238,6 +1241,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [openPackageEditorWithAi, setOpenPackageEditorWithAi] = useState<boolean>(false);
 
   const openPackageEditor = (pkgOrId?: TourPackage | string | null, openWithAi: boolean = false) => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      if (!currentUser) {
+        addNotification(
+          'Corporate Login Required',
+          'Editing packages and missions is strictly restricted to logged-in KHB staff (@khbevents.com & @khbmedia.asia). Please log in to continue.',
+          'warning'
+        );
+        setActiveModal('auth');
+      } else {
+        addNotification(
+          'Access Restricted',
+          'Editing tour packages is strictly restricted to authorized corporate accounts ending in @khbevents.com or @khbmedia.asia.',
+          'security'
+        );
+      }
+      return;
+    }
+
     let target: TourPackage | null = null;
     if (typeof pkgOrId === 'string') {
       target = packages.find(p => p.id === pkgOrId) || null;
@@ -1806,6 +1827,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     currentUser?.email === 'chamnabmey.info@gmail.com' ||
     currentUser?.email === 'vutha.tim@khbmedia.asia' ||
     currentUser?.email === 'vutha.tim@khbevents.com';
+  const isCorporateEditor = isAuthorizedCorporateEditor(currentUser);
+  const canEditPackages = isCorporateEditor;
 
   const hasPermission = (permission: PermissionKey): boolean => {
     return userHasPermission(currentUser, permission);
@@ -3075,6 +3098,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Package Catalog Management
   const addPackage = (pkgData: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'> | TourPackage) => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      addNotification(
+        'Access Denied',
+        'Creating tour packages is strictly restricted to authorized corporate staff (@khbevents.com & @khbmedia.asia).',
+        'security'
+      );
+      return;
+    }
     const pkgObj = pkgData as Partial<TourPackage>;
     const packageStatus: TourPackageStatus = pkgObj.status || 'active';
     const now = new Date().toISOString();
@@ -3165,6 +3196,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updatePackage = (pkg: TourPackage) => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      addNotification(
+        'Access Denied',
+        'Updating tour packages is strictly restricted to authorized corporate staff (@khbevents.com & @khbmedia.asia).',
+        'security'
+      );
+      return;
+    }
     const previous = packages.find(p => p.id === pkg.id);
     const now = new Date().toISOString();
     const updatedPkg: TourPackage = {
@@ -3221,6 +3260,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updatePackageStatus = (packageId: string, status: TourPackageStatus) => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      addNotification(
+        'Access Denied',
+        'Modifying package status is strictly restricted to authorized corporate staff (@khbevents.com & @khbmedia.asia).',
+        'security'
+      );
+      return;
+    }
     const target = packages.find(p => p.id === packageId);
     if (!target) return;
     if (status === 'deleted') {
@@ -3279,6 +3326,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const clonePackageAsDraft = (pkg: TourPackage): TourPackage => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      addNotification(
+        'Access Denied',
+        'Cloning packages is strictly restricted to authorized corporate staff (@khbevents.com & @khbmedia.asia).',
+        'security'
+      );
+      return pkg;
+    }
     const targetRawPkg = packages.find(p => p.id === pkg.id) || pkg;
     const deepClone: TourPackage = JSON.parse(JSON.stringify(targetRawPkg));
     const newId = `pkg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -3315,6 +3370,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const restorePackage = (packageId: string) => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      addNotification(
+        'Access Denied',
+        'Restoring packages is strictly restricted to authorized corporate staff (@khbevents.com & @khbmedia.asia).',
+        'security'
+      );
+      return;
+    }
     const deletedRecord = deletedItems.find(d => d.originalId === packageId && d.entityType === 'package');
     if (deletedRecord) {
       recoverItem(deletedRecord.id);
@@ -3324,6 +3387,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deletePackage = (packageId: string) => {
+    if (!isAuthorizedCorporateEditor(currentUser)) {
+      addNotification(
+        'Access Denied',
+        'Deleting tour packages is strictly restricted to authorized corporate staff (@khbevents.com & @khbmedia.asia).',
+        'security'
+      );
+      return;
+    }
     const pkg = packages.find(p => p.id === packageId);
     setDeletedIds(prev => {
       const next = Array.from(new Set([packageId, ...prev]));
@@ -5589,6 +5660,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isAdmin,
         isStaff,
         isSuperAdmin,
+        isCorporateEditor,
+        canEditPackages,
         users,
         auditLogs,
         hasPermission,

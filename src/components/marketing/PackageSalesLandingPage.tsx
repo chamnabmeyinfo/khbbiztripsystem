@@ -55,6 +55,7 @@ export const PackageSalesLandingPage: React.FC = () => {
     setLanguage,
     currency,
     language,
+    isCorporateEditor,
     t
   } = useApp();
 
@@ -62,7 +63,12 @@ export const PackageSalesLandingPage: React.FC = () => {
   const rawPkg = selectedPackage || packages[0];
   const pkg = useMemo(() => getLocalizedPackage(rawPkg, language), [rawPkg, language]);
 
-  const [isLiveEditing, setIsLiveEditing] = useState<boolean>(false);
+  const [isLiveEditingState, setIsLiveEditingState] = useState<boolean>(false);
+  const isLiveEditing = isCorporateEditor && isLiveEditingState;
+  const setIsLiveEditing = (val: boolean | ((prev: boolean) => boolean)) => {
+    if (!isCorporateEditor) return;
+    setIsLiveEditingState(val);
+  };
   const [activeImageIdx, setActiveImageIdx] = useState<number>(0);
   const [selectedDepartureDate, setSelectedDepartureDate] = useState<string>(
     pkg?.availableDates?.[0] || '2026-10-29'
@@ -74,9 +80,9 @@ export const PackageSalesLandingPage: React.FC = () => {
   const [showPoliciesAccordion, setShowPoliciesAccordion] = useState<boolean>(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState<boolean>(false);
 
-  // Live in-place field updates
+  // Live in-place field updates (restricted to corporate editors only)
   const handleUpdateField = (field: string, value: any) => {
-    if (!rawPkg) return;
+    if (!isCorporateEditor || !rawPkg) return;
     const updated: TourPackage = { ...rawPkg };
 
     if (language === 'km') {
@@ -111,7 +117,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   };
 
   const handleUpdateDayField = (dayIndex: number, field: string, value: any) => {
-    if (!rawPkg) return;
+    if (!isCorporateEditor || !rawPkg) return;
     const nextItinerary = [...(rawPkg.itinerary || [])];
     if (!nextItinerary[dayIndex]) return;
 
@@ -137,7 +143,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   };
 
   const handleUpdateAgendaSlot = (dayIndex: number, slotIndex: number, field: string, value: any) => {
-    if (!rawPkg) return;
+    if (!isCorporateEditor || !rawPkg) return;
     const nextItinerary = [...(rawPkg.itinerary || [])];
     if (!nextItinerary[dayIndex]) return;
 
@@ -165,7 +171,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   };
 
   const handleAddAgendaSlot = (dayIndex: number) => {
-    if (!rawPkg) return;
+    if (!isCorporateEditor || !rawPkg) return;
     const nextItinerary = [...(rawPkg.itinerary || [])];
     if (!nextItinerary[dayIndex]) return;
 
@@ -188,7 +194,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   };
 
   const handleRemoveAgendaSlot = (dayIndex: number, slotIndex: number) => {
-    if (!rawPkg) return;
+    if (!isCorporateEditor || !rawPkg) return;
     const nextItinerary = [...(rawPkg.itinerary || [])];
     if (!nextItinerary[dayIndex]) return;
 
@@ -198,7 +204,7 @@ export const PackageSalesLandingPage: React.FC = () => {
   };
 
   const handleUpdateTourGuide = (field: string, value: any) => {
-    if (!rawPkg) return;
+    if (!isCorporateEditor || !rawPkg) return;
     const guide: any = { 
       phone: '', 
       languages: ['Khmer', 'English'], 
@@ -327,15 +333,17 @@ export const PackageSalesLandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-28">
-      {/* Live In-Place WYSIWYG Editing Control & Language Switcher Bar */}
-      <LiveEditControlBar
-        isLiveEditing={isLiveEditing}
-        onToggleLiveEditing={() => setIsLiveEditing(!isLiveEditing)}
-        language={language}
-        onSelectLanguage={(langCode) => setLanguage(langCode)}
-        onOpenFullEditor={() => openPackageEditor(rawPkg || pkg)}
-        packageTitle={displayTitle}
-      />
+      {/* Live In-Place WYSIWYG Editing Control & Language Switcher Bar - only for authorized corporate editors */}
+      {isCorporateEditor && (
+        <LiveEditControlBar
+          isLiveEditing={isLiveEditing}
+          onToggleLiveEditing={() => setIsLiveEditing(!isLiveEditing)}
+          language={language}
+          onSelectLanguage={(langCode) => setLanguage(langCode)}
+          onOpenFullEditor={() => openPackageEditor(rawPkg || pkg)}
+          packageTitle={displayTitle}
+        />
+      )}
 
       {/* Dynamic SEO Meta Tags */}
       <DynamicHead customPackage={pkg} />
@@ -353,32 +361,36 @@ export const PackageSalesLandingPage: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Live Inline Editing Toggle Switch */}
-            <button
-              type="button"
-              onClick={() => setIsLiveEditing(!isLiveEditing)}
-              className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all ${
-                isLiveEditing
-                  ? 'border-amber-400 bg-amber-500 text-white ring-2 ring-amber-400/50'
-                  : 'border-amber-300 dark:border-amber-700/80 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
-              }`}
-              title="Toggle Live In-Place Editing Mode"
-            >
-              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden sm:inline">{isLiveEditing ? '⚡ Live Edit ON' : '✏️ Live Edit'}</span>
-              <span className="sm:hidden">{isLiveEditing ? 'Live ON' : 'Edit'}</span>
-            </button>
+            {/* Live Inline Editing Toggle Switch & Studio Modal - strictly restricted to logged-in corporate staff */}
+            {isCorporateEditor && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsLiveEditing(!isLiveEditing)}
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all ${
+                    isLiveEditing
+                      ? 'border-amber-400 bg-amber-500 text-white ring-2 ring-amber-400/50'
+                      : 'border-amber-300 dark:border-amber-700/80 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
+                  }`}
+                  title="Toggle Live In-Place Editing Mode"
+                >
+                  <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span className="hidden sm:inline">{isLiveEditing ? '⚡ Live Edit ON' : '✏️ Live Edit'}</span>
+                  <span className="sm:hidden">{isLiveEditing ? 'Live ON' : 'Edit'}</span>
+                </button>
 
-            {/* Direct Quick Edit Tour Package Button */}
-            <button
-              onClick={() => {
-                openPackageEditor(rawPkg || pkg);
-              }}
-              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
-              title={language === 'km' ? 'បើកផ្ទាំងកែសម្រួលពេញលេញ' : 'Open full studio editor modal'}
-            >
-              <span>🎛️ Studio</span>
-            </button>
+                {/* Direct Quick Edit Tour Package Button */}
+                <button
+                  onClick={() => {
+                    openPackageEditor(rawPkg || pkg);
+                  }}
+                  className="px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+                  title={language === 'km' ? 'បើកផ្ទាំងកែសម្រួលពេញលេញ' : 'Open full studio editor modal'}
+                >
+                  <span>🎛️ Studio</span>
+                </button>
+              </>
+            )}
 
             <button
               onClick={() => {
@@ -717,22 +729,24 @@ export const PackageSalesLandingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleOpenPdfAgenda}
-                  className="col-span-4 py-3.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]"
+                  className={`${isCorporateEditor ? 'col-span-4' : 'col-span-7'} py-3.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01]`}
                   title="Preview & Download Official Tour Agenda"
                 >
                   <Download className="w-4 h-4 text-sky-300" />
                   <span>{language === 'km' ? 'មើលគំរូ PDF' : 'Preview PDF'}</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => openPackageEditor(rawPkg || pkg)}
-                  className="col-span-3 py-3.5 px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-500/20 border border-amber-400/30 cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] active:scale-95"
-                  title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
-                >
-                  <Edit3 className="w-4 h-4 stroke-[2.5]" />
-                  <span>{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
-                </button>
+                {isCorporateEditor && (
+                  <button
+                    type="button"
+                    onClick={() => openPackageEditor(rawPkg || pkg)}
+                    className="col-span-3 py-3.5 px-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-lg shadow-amber-500/20 border border-amber-400/30 cursor-pointer flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] active:scale-95"
+                    title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
+                  >
+                    <Edit3 className="w-4 h-4 stroke-[2.5]" />
+                    <span>{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center justify-between gap-2 pt-1 text-[11px] text-slate-400 border-t border-slate-800/80">
@@ -1672,15 +1686,17 @@ export const PackageSalesLandingPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {/* Direct Quick Edit Tour Package Button */}
-            <button
-              onClick={() => openPackageEditor(rawPkg || pkg)}
-              className="p-2 sm:px-3 sm:py-2.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-xs"
-              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
-            >
-              <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 stroke-[2.5]" />
-              <span className="hidden md:inline">{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
-            </button>
+            {/* Direct Quick Edit Tour Package Button (corporate editors only) */}
+            {isCorporateEditor && (
+              <button
+                onClick={() => openPackageEditor(rawPkg || pkg)}
+                className="p-2 sm:px-3 sm:py-2.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-xs"
+                title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
+              >
+                <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 stroke-[2.5]" />
+                <span className="hidden md:inline">{language === 'km' ? 'កែប្រែ' : 'Edit'}</span>
+              </button>
+            )}
 
             <button
               onClick={() => {

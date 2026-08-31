@@ -89,6 +89,7 @@ const MainLayout: React.FC = () => {
   const {
     activeView,
     language,
+    isCorporateEditor,
     isPackageEditorOpen,
     editingPackage,
     openPackageEditorWithAi,
@@ -131,8 +132,8 @@ const MainLayout: React.FC = () => {
       <AgendaPdfModal />
       <SocialShareModal />
 
-      {/* Global Tour Package Editor Modal */}
-      {isPackageEditorOpen && (
+      {/* Global Tour Package Editor Modal (strictly restricted to logged-in corporate staff) */}
+      {isPackageEditorOpen && isCorporateEditor && (
         <PackageEditorModal
           key={editingPackage ? editingPackage.id : (openPackageEditorWithAi ? 'new-ai' : 'new-manual')}
           pkg={editingPackage}

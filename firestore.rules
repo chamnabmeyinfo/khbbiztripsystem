@@ -30,6 +30,15 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
+
+    function isCorporateEditor() {
+      return isSignedIn() && (
+        request.auth.token.email == 'chamnabmey.info@gmail.com' ||
+        request.auth.token.email == 'vutha.tim@khbmedia.asia' ||
+        request.auth.token.email.matches('.*@khbmedia\\.asia$') ||
+        request.auth.token.email.matches('.*@khbevents\\.com$')
+      );
+    }
     
     // Admins Collection
     match /admins/{adminId} {

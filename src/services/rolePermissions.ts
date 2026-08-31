@@ -453,7 +453,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
 };
 
 /**
- * Check if an email domain is authorized for Google SSO
+ * Check if an email domain is authorized for Google SSO or corporate staff access.
  * Restricted to @khbmedia.asia and @khbevents.com (and super admin chamnabmey.info@gmail.com)
  */
 export function isAllowedGoogleDomain(email: string | null | undefined): boolean {
@@ -465,6 +465,35 @@ export function isAllowedGoogleDomain(email: string | null | undefined): boolean
     lower === 'chamnabmey.info@gmail.com' ||
     lower === 'vutha.tim@khbmedia.asia' ||
     lower === 'vutha.tim@khbevents.com'
+  );
+}
+
+/**
+ * Check if a user is an authorized corporate editor.
+ * Editing packages, itineraries, WYSIWYG landing content, or ERP records is STRICTLY allowed
+ * ONLY for logged-in users with verified corporate accounts ending in @khbevents.com or @khbmedia.asia
+ * (plus authorized super admin chamnabmey.info@gmail.com).
+ */
+export function isAuthorizedCorporateEditor(user: User | null | undefined): boolean {
+  if (!user || !user.email) return false;
+  if (user.status === 'suspended' || user.status === 'inactive') return false;
+
+  const emailLower = user.email.toLowerCase().trim();
+  const isCorporateDomain =
+    emailLower.endsWith('@khbevents.com') ||
+    emailLower.endsWith('@khbmedia.asia') ||
+    emailLower === 'chamnabmey.info@gmail.com' ||
+    emailLower === 'vutha.tim@khbmedia.asia' ||
+    emailLower === 'vutha.tim@khbevents.com';
+
+  if (!isCorporateDomain) return false;
+
+  // Must have management/admin permissions or role
+  return (
+    user.role === 'super_admin' ||
+    user.role === 'admin' ||
+    user.role === 'operations_manager' ||
+    userHasPermission(user, 'packages_manage')
   );
 }
 

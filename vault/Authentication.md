@@ -49,6 +49,7 @@
 1. **Super Admin**: Email is `chamnabmey.info@gmail.com` OR UID in Firestore `/admins` collection.
 2. **Authorized Admin**: Email is `vutha.tim@khbmedia.asia`.
 3. **Staff Clearance**: Email ends with `@khbmedia.asia` or `@khbevents.com`, or role is one of `['super_admin', 'admin', 'operations_manager', 'procurement_officer', 'finance_officer', 'support_agent']`.
+4. **Corporate Editor Restriction (`isAuthorizedCorporateEditor`)**: All package editing, live inline text/itinerary editing, cloning, status modifications, and deletions are strictly restricted to logged-in users with email addresses ending in `@khbevents.com` or `@khbmedia.asia` (or super admin `chamnabmey.info@gmail.com`). All edit buttons across Landing Page, Trending Deals, Package Detail Modal, and PDF Agenda are hidden for non-corporate users.
 
 ---
 
