@@ -48,6 +48,7 @@ import {
   Star
 } from 'lucide-react';
 import { ViewContextMenu, ViewContextMenuState } from '../common/ViewContextMenu';
+import { AutoSaveStatusPill } from '../common/AutoSaveStatusPill';
 import { BookingStatus, TourPackage } from '../../types';
 import { SuppliersSection } from './SuppliersSection';
 import { CostingSection } from './CostingSection';
@@ -555,6 +556,8 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Sidebar Bottom Footer Controls */}
         <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5 shrink-0 bg-white dark:bg-slate-900">
+          <AutoSaveStatusPill variant="sidebar" className="mb-1" />
+
           <button
             type="button"
             onClick={() => {
@@ -642,6 +645,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Visual Real-Time Auto-Save & Cloud Sync Indicator */}
+            <AutoSaveStatusPill />
+
             {/* Quick Actions Button */}
             <div className="relative">
               <button

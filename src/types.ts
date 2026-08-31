@@ -1050,3 +1050,12 @@ export interface InboundWonLead {
   updatedAt: string;
 }
 
+export type AutoSyncStatus = 'saving' | 'synced' | 'offline' | 'error';
+
+export interface AutoSyncState {
+  status: AutoSyncStatus;
+  lastSavedAt: string | null;
+  pendingOperations: number;
+  message?: string;
+}
+

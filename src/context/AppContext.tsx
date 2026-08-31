@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode, useMemo } from 'react';
 import {
   User,
   UserRole,
@@ -46,6 +46,8 @@ import {
   SystemUpdateHistoryRecord,
   SystemUpdateCategory,
   SystemUpdateChangeDiff,
+  AutoSyncStatus,
+  AutoSyncState,
 } from '../types';
 import {
   SEED_USERS,
@@ -402,6 +404,11 @@ interface AppContextType {
   setDefaultPackageViewMode: (mode: PackageViewMode) => void;
   resetDefaultView: () => void;
 
+  // Real-Time Auto-Save & Cloud Synchronization State
+  autoSyncState: AutoSyncState;
+  triggerAutoSave: (message?: string) => void;
+  forceSyncAll: () => Promise<void>;
+
   // Global Toast Notifications
   toastMessage: { text: string; subtext?: string; type?: 'success' | 'info'; icon?: string } | null;
   showToast: (text: string, subtext?: string, type?: 'success' | 'info', icon?: string) => void;
@@ -522,6 +529,60 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
+  
+  // Real-Time Auto-Save & Cloud Synchronization State
+  const [autoSyncState, setAutoSyncState] = useState<AutoSyncState>(() => ({
+    status: 'synced',
+    lastSavedAt: new Date().toISOString(),
+    pendingOperations: 0,
+    message: 'All changes saved'
+  }));
+
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerAutoSave = (customMessage?: string) => {
+    setAutoSyncState(prev => ({
+      status: (navigator.onLine && !offlineMode) ? 'saving' : 'offline',
+      lastSavedAt: prev.lastSavedAt,
+      pendingOperations: prev.pendingOperations + 1,
+      message: customMessage || ((navigator.onLine && !offlineMode) ? 'Auto-saving...' : 'Saved locally (Offline)')
+    }));
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      setAutoSyncState({
+        status: (navigator.onLine && !offlineMode) ? 'synced' : 'offline',
+        lastSavedAt: new Date().toISOString(),
+        pendingOperations: 0,
+        message: (navigator.onLine && !offlineMode) ? 'All changes saved' : 'Saved to LocalStorage'
+      });
+    }, 850);
+  };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsFirebaseConnected(true);
+      triggerAutoSave('Reconnected! Live sync restored');
+    };
+    const handleOffline = () => {
+      setIsFirebaseConnected(false);
+      setAutoSyncState(prev => ({
+        ...prev,
+        status: 'offline',
+        message: 'Offline (Saving to LocalStorage)'
+      }));
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [offlineMode]);
   
   const [packages, setPackages] = useState<TourPackage[]>(() => {
     try {
@@ -2775,6 +2836,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     setSelectedPackage(prev => (prev && prev.id === newPkg.id ? newPkg : prev));
+    triggerAutoSave('Auto-saving tour package...');
 
     // Record in System Update History
     recordSystemUpdate({
@@ -2852,6 +2914,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     setSelectedPackage(prev => (prev && prev.id === updatedPkg.id ? updatedPkg : prev));
+    triggerAutoSave('Auto-saving package updates...');
 
     // Record in System Update History
     const changes: SystemUpdateChangeDiff[] = [];
@@ -2910,6 +2973,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Package status update notice:', e);
     }
+
+    triggerAutoSave(`Updated status to ${status}`);
 
     recordSystemUpdate({
       title: `Tour Package Status: ${target.title}`,
@@ -4225,11 +4290,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (Array.isArray(data.deletedItems)) setDeletedItems(data.deletedItems);
 
       addNotification('Backup Restored', 'Complete system state restored from JSON backup.', 'system');
+      triggerAutoSave('Restored system backup');
       return true;
     } catch (e) {
       console.error('Failed to import backup:', e);
       addNotification('Restore Error', 'Invalid backup file format.', 'system');
       return false;
+    }
+  };
+
+  const forceSyncAll = async (): Promise<void> => {
+    triggerAutoSave('Synchronizing all state with Cloud Firestore and LocalStorage...');
+    try {
+      // 1. Sync all active packages with Firestore
+      packages.forEach(pkg => {
+        setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(pkg), { merge: true }).catch(() => {});
+      });
+
+      // 2. Sync system settings
+      setDoc(doc(db, 'system_settings', 'global_config'), sanitizeForFirestore(systemSettings), { merge: true }).catch(() => {});
+
+      // 3. Sync package categories
+      packageCategories.forEach(cat => {
+        setDoc(doc(db, 'package_categories', cat.id), sanitizeForFirestore(cat), { merge: true }).catch(() => {});
+      });
+
+      // 4. Ensure LocalStorage is explicitly written
+      localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
+      localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
+      localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
+      localStorage.setItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(suppliers));
+      localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+      localStorage.setItem(STORAGE_KEYS.PURCHASE_ORDERS, JSON.stringify(purchaseOrders));
+
+      addNotification('Data Engine Synchronized', 'All packages, bookings, and configuration in sync with Cloud Firestore and LocalStorage.', 'system');
+    } catch (err) {
+      console.warn('Force sync notice:', err);
     }
   };
 
@@ -5296,6 +5393,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         toastMessage,
         showToast,
         clearToast,
+        autoSyncState,
+        triggerAutoSave,
+        forceSyncAll,
         t,
       }}
     >

@@ -12,6 +12,7 @@
 | `CurrencyConverterModal` | `CurrencyConverterModal.tsx` | Real-time interactive multi-currency FX calculator |
 | `AiFloatingCopilot` | `AiFloatingCopilot.tsx` | Ambient AI assistant for instant booking and itinerary advice |
 | `ViewContextMenu` | `ViewContextMenu.tsx` | Context menu triggered by right-clicking navigation tabs or views to set/reset default landing screens |
+| `AutoSaveStatusPill` | `AutoSaveStatusPill.tsx` | Visual real-time auto-save & cloud synchronization indicator with pulsing saving state, diagnostic status popover, manual force-sync trigger, and multi-variant rendering |
 | `GlobalToast` | `GlobalToast.tsx` | Non-blocking toast notification banner for user action feedback across views |
 
 ---

@@ -1,4 +1,4 @@
-﻿# 🔥 Firebase & Firestore
+# 🔥 Firebase & Firestore
 
 ← [[Home]]
 
@@ -9,6 +9,7 @@ File: `src/lib/firebase.ts`
 - Config loaded from `firebase-applet-config.json`
 - Uses a **custom Firestore database ID** (not `(default)`)
 - Exports: `db`, `auth`, `googleAuthProvider`
+- **Firestore Offline Persistence**: Configured with `initializeFirestore` using `persistentLocalCache({ tabManager: persistentMultipleTabManager() })`. This enables IndexedDB-backed cross-session caching and seamless synchronization across multiple browser tabs, ensuring data survives browser restarts, offline states, and eliminates data resets caused by ephemeral storage.
 
 ## Collections
 

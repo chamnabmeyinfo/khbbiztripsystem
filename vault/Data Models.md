@@ -306,6 +306,18 @@ interface MonthlyFinancialSummary {
 }
 ```
 
+## Real-Time Auto-Save & Cloud Synchronization State
+```typescript
+export type AutoSyncStatus = 'saving' | 'synced' | 'offline' | 'error';
+
+export interface AutoSyncState {
+  status: AutoSyncStatus;
+  lastSavedAt: string | null;
+  pendingOperations: number;
+  message?: string;
+}
+```
+
 ## Related Notes
 - [[Firebase and Firestore]]
 - [[Mock Data]]

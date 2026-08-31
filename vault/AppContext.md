@@ -36,6 +36,7 @@ The `AppContext` is the single source of truth for the entire application, handl
 | `defaultView` | `ActiveView` | User-configured default startup view (`'marketing'`, `'customer_portal'`, `'admin_dashboard'`) stored in `localStorage` |
 | `defaultAdminTab` | `string` | User-configured default landing tab in Admin ERP (`'overview'`, `'packages'`, `'bookings'`, etc.) stored in `localStorage` |
 | `defaultPackageViewMode` | `PackageViewMode` | User-configured default view mode for Tour Packages (`'grid'`, `'detailed-list'`, `'table'`, `'kanban'`) stored in `localStorage` |
+| `autoSyncState` | `AutoSyncState` | Real-time visual status indicator state (`'saving' \| 'synced' \| 'offline' \| 'error'`, timestamps, pending counts) |
 | `toastMessage` | `string \| null` | Global toast notification text for user actions |
 
 ---
@@ -52,6 +53,8 @@ setDefaultView(view: ActiveView): void; // Persists default landing view to loca
 setDefaultAdminTab(tab: string): void; // Persists default admin tab to localStorage & shows toast
 setDefaultPackageViewMode(mode: PackageViewMode): void; // Persists default package view layout to localStorage & shows toast
 resetDefaultView(): void; // Clears saved defaults back to initial system standard
+triggerAutoSave(message?: string): void; // Triggers instant visual saving status feedback
+forceSyncAll(): Promise<void>; // Manually synchronizes all local data to Cloud Firestore
 showToast(message: string): void;
 clearToast(): void;
 ```
