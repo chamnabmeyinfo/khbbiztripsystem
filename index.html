@@ -28,6 +28,16 @@
     <script>
       // Global error handler — shows crash reason instead of blank screen
       window.onerror = function(msg, src, line, col, err) {
+        var strMsg = String(msg || '');
+        // Ignore benign browser extension messaging / ResizeObserver issues
+        if (
+          strMsg.indexOf('message channel closed') !== -1 ||
+          strMsg.indexOf('ResizeObserver loop') !== -1 ||
+          strMsg.indexOf('runtime.lastError') !== -1
+        ) {
+          return true;
+        }
+
         var root = document.getElementById('root');
         if (root && !root.hasChildNodes()) {
           root.innerHTML = '<div style="padding:40px;font-family:system-ui;max-width:700px;margin:0 auto;">' +
@@ -43,6 +53,15 @@
       window.onunhandledrejection = function(e) {
         var reason = e.reason;
         var msg = reason instanceof Error ? reason.message + '\n' + reason.stack : String(reason);
+        // Silently ignore benign browser extension communication closures
+        if (
+          msg.indexOf('message channel closed') !== -1 ||
+          msg.indexOf('ResizeObserver loop') !== -1 ||
+          msg.indexOf('runtime.lastError') !== -1
+        ) {
+          e.preventDefault && e.preventDefault();
+          return;
+        }
         window.onerror('Unhandled Promise: ' + msg, '', 0, 0, reason instanceof Error ? reason : null);
       };
     </script>

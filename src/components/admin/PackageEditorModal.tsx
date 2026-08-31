@@ -154,6 +154,17 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [savedAtTimestamp, setSavedAtTimestamp] = useState<string>('');
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [lastAutoSavedTime, setLastAutoSavedTime] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const isMountedRef = useRef<boolean>(true);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
 
   // Basic Info State
   const [status, setStatus] = useState<TourPackageStatus>(pkg?.status || 'active');
@@ -1247,12 +1258,15 @@ Highlights:
   // Final Form Submission
   const handleSubmit = (e?: React.FormEvent, overrideStatus?: TourPackageStatus) => {
     if (e) e.preventDefault();
+    if (isSaving) return;
 
     if (!title.trim() && !titleKm.trim() && !titleEn.trim()) {
       setActiveTab('basic');
       alert('Please enter a tour package title.');
       return;
     }
+
+    setIsSaving(true);
 
     const parsedDates = availableDatesText
       .split(/[\n,]+/)
@@ -1444,10 +1458,14 @@ Highlights:
 
     onSave(updatedPackage);
 
-    setTimeout(() => {
-      setShowSuccessToast(false);
-      onClose();
-    }, 1600);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      if (isMountedRef.current) {
+        setShowSuccessToast(false);
+        setIsSaving(false);
+        onClose();
+      }
+    }, 1400);
   };
 
   const studios: { id: TabType; studioNum: number; label: string; shortTitle: string; icon: any; desc: string; badge: string; badgeColor: string; isFilled: boolean }[] = [
