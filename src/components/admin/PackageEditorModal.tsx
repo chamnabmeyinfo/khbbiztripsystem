@@ -11,6 +11,7 @@ import {
   EmergencyContact
 } from '../../types';
 import { parseTourPackageFromText, translateEntirePackage } from '../../services/geminiService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import { FieldAiTranslator } from './FieldAiTranslator';
 import { BilingualListEditor } from './BilingualListEditor';
 import {
@@ -18,6 +19,9 @@ import {
   Plus,
   Trash2,
   Save,
+  Eye,
+  Smartphone,
+  Monitor,
   Image as ImageIcon,
   Film,
   Video,
@@ -138,6 +142,11 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [isParsingAi, setIsParsingAi] = useState<boolean>(false);
   const [aiSuccessSummary, setAiSuccessSummary] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  // Live Preview State
+  const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
+  const [previewLang, setPreviewLang] = useState<'km' | 'en'>(language === 'en' ? 'en' : 'km');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
   // Basic Info State
   const [status, setStatus] = useState<TourPackageStatus>(pkg?.status || 'active');
@@ -1520,6 +1529,145 @@ Highlights:
         }
       }, 50);
     }
+  };
+
+  const constructPreviewPackage = (): TourPackage => {
+    const parsedDates = availableDatesText
+      .split(/[\n,]+/)
+      .map(d => d.trim())
+      .filter(Boolean);
+    const finalAvailableDates = availableDates.length > 0
+      ? availableDates
+      : (parsedDates.length > 0 ? parsedDates : ['2026-10-29']);
+
+    const primaryTitle = (isEnglishMain ? (titleEn || titleKm || title) : (titleKm || title || titleEn)).trim() || 'Untitled Tour Package';
+    const primaryDest = (isEnglishMain ? (destinationEn || destinationKm || destination) : (destinationKm || destination || destinationEn)).trim() || 'Guangzhou';
+    const primaryCountry = (isEnglishMain ? (countryEn || countryKm || country) : (countryKm || country || countryEn)).trim() || 'China';
+    const primaryCategory = (isEnglishMain ? (categoryEn || categoryKm || category) : (categoryKm || category || categoryEn)).trim() || 'trade_mission';
+    const primaryDesc = (isEnglishMain ? (descriptionEn || descriptionKm || description) : (descriptionKm || description || descriptionEn)).trim() || 'Tour package details...';
+
+    return {
+      ...(pkg || {}),
+      id: pkg?.id || `pkg_preview_${Date.now()}`,
+      status: status || 'active',
+      title: primaryTitle,
+      titleKm: (titleKm || title || titleEn).trim() || primaryTitle,
+      titleEn: titleEn.trim() || undefined,
+      destination: primaryDest,
+      destinationKm: (destinationKm || destination || destinationEn).trim() || primaryDest,
+      destinationEn: destinationEn.trim() || undefined,
+      country: primaryCountry,
+      countryKm: (countryKm || country || countryEn).trim() || primaryCountry,
+      countryEn: countryEn.trim() || undefined,
+      category: primaryCategory,
+      categoryKm: (categoryKm || category || categoryEn).trim() || primaryCategory,
+      categoryEn: categoryEn.trim() || undefined,
+      isCantonFair: isCantonFair || category === 'canton_fair',
+      cantonFairPhase: isCantonFair ? cantonFairPhase : undefined,
+      priceUSD: Number(priceUSD) || 0,
+      discountPriceUSD: discountPriceUSD ? Number(discountPriceUSD) : undefined,
+      durationDays: Number(durationDays) || 1,
+      durationNights: Number(durationNights) || 0,
+      hotelStars: Number(hotelStars) || 4,
+      flightIncluded,
+      description: primaryDesc,
+      descriptionKm: (descriptionKm || description || descriptionEn).trim() || primaryDesc,
+      descriptionEn: descriptionEn.trim() || undefined,
+      images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80'],
+      featuredVideoUrl: featuredVideoUrl.trim() || undefined,
+      videos: (videos || []).filter(v => v.url && v.url.trim()),
+      highlights: isEnglishMain
+        ? (highlightsEn.length > 0 ? highlightsEn : (highlightsKm.length > 0 ? highlightsKm : []))
+        : (highlightsKm.length > 0 ? highlightsKm : (highlightsEn.length > 0 ? highlightsEn : [])),
+      highlightsKm: highlightsKm || [],
+      highlightsEn: highlightsEn || [],
+      whoShouldJoin: isEnglishMain
+        ? (whoShouldJoinEn.length > 0 ? whoShouldJoinEn : (whoShouldJoinKm.length > 0 ? whoShouldJoinKm : []))
+        : (whoShouldJoinKm.length > 0 ? whoShouldJoinKm : (whoShouldJoinEn.length > 0 ? whoShouldJoinEn : [])),
+      whoShouldJoinKm: whoShouldJoinKm || [],
+      whoShouldJoinEn: whoShouldJoinEn || [],
+      whyShouldJoin: isEnglishMain
+        ? (whyShouldJoinEn.length > 0 ? whyShouldJoinEn : (whyShouldJoinKm.length > 0 ? whyShouldJoinKm : []))
+        : (whyShouldJoinKm.length > 0 ? whyShouldJoinKm : (whyShouldJoinEn.length > 0 ? whyShouldJoinEn : [])),
+      whyShouldJoinKm: whyShouldJoinKm || [],
+      whyShouldJoinEn: whyShouldJoinEn || [],
+      inclusions: isEnglishMain
+        ? (inclusionsEn.length > 0 ? inclusionsEn : (inclusionsKm.length > 0 ? inclusionsKm : []))
+        : (inclusionsKm.length > 0 ? inclusionsKm : (inclusionsEn.length > 0 ? inclusionsEn : [])),
+      inclusionsKm: inclusionsKm || [],
+      inclusionsEn: inclusionsEn || [],
+      exclusions: isEnglishMain
+        ? (exclusionsEn.length > 0 ? exclusionsEn : (exclusionsKm.length > 0 ? exclusionsKm : []))
+        : (exclusionsKm.length > 0 ? exclusionsKm : (exclusionsEn.length > 0 ? exclusionsEn : [])),
+      exclusionsKm: exclusionsKm || [],
+      exclusionsEn: exclusionsEn || [],
+      termsAndConditions: isEnglishMain
+        ? (termsAndConditionsEn.length > 0 ? termsAndConditionsEn : (termsAndConditionsKm.length > 0 ? termsAndConditionsKm : []))
+        : (termsAndConditionsKm.length > 0 ? termsAndConditionsKm : (termsAndConditionsEn.length > 0 ? termsAndConditionsEn : [])),
+      termsAndConditionsKm: termsAndConditionsKm || [],
+      termsAndConditionsEn: termsAndConditionsEn || [],
+      availableDates: finalAvailableDates,
+      tags: tags as any,
+      rating: Number(rating) || 5.0,
+      reviewCount: Number(reviewCount) || 1,
+      bookedThisMonth: Number(bookedThisMonth) || 0,
+      coordinates: {
+        lat: Number(lat) || 10.8231,
+        lng: Number(lng) || 106.6297,
+        mapX: Number(mapX) || 74,
+        mapY: Number(mapY) || 62
+      },
+      tourGuide: {
+        name: (isEnglishMain ? (guideNameEn || guideNameKm || guideName) : (guideNameKm || guideName || guideNameEn)).trim() || 'Guide Team',
+        nameKm: (guideNameKm || guideName || guideNameEn).trim(),
+        nameEn: guideNameEn.trim() || undefined,
+        title: (isEnglishMain ? (guideTitleEn || guideTitleKm || guideTitle) : (guideTitleKm || guideTitle || guideTitleEn)).trim() || 'Senior Escort',
+        titleKm: (guideTitleKm || guideTitle || guideTitleEn).trim(),
+        titleEn: guideTitleEn.trim() || undefined,
+        phone: guidePhone.trim() || '+855 12 345 678',
+        telegram: guideTelegram.trim(),
+        languages: guideLanguages,
+        badgeNumber: guideBadge.trim(),
+        photoUrl: guidePhoto.trim(),
+        bio: (isEnglishMain ? (guideBioEn || guideBioKm || guideBio) : (guideBioKm || guideBio || guideBioEn)).trim(),
+        bioKm: (guideBioKm || guideBio || guideBioEn).trim(),
+        bioEn: guideBioEn.trim() || undefined,
+        briefingMeetingPoint: (isEnglishMain ? (briefingMeetingPointEn || briefingMeetingPointKm || briefingMeetingPoint) : (briefingMeetingPointKm || briefingMeetingPoint || briefingMeetingPointEn)).trim(),
+        briefingMeetingPointKm: (briefingMeetingPointKm || briefingMeetingPoint || briefingMeetingPointEn).trim(),
+        briefingMeetingPointEn: briefingMeetingPointEn.trim() || undefined,
+        briefingTime: (briefingTimeKm || briefingTime || briefingTimeEn).trim(),
+        briefingTimeKm: (briefingTimeKm || briefingTime || briefingTimeEn).trim(),
+        briefingTimeEn: briefingTimeEn.trim() || undefined,
+        emergencyContact: guidePhone.trim()
+      },
+      emergencyContact: {
+        country: emergencyCountry.trim(),
+        police: emergencyPolice.trim(),
+        ambulance: emergencyAmbulance.trim(),
+        touristHelpline: emergencyHelpline.trim(),
+        embassySupport: emergencyEmbassy.trim()
+      },
+      itinerary: (itinerary || []).map((step, idx) => ({
+        ...step,
+        day: idx + 1,
+        title: (isEnglishMain ? (step.titleEn || step.title || step.titleKm || `Day ${idx + 1}`) : (step.titleKm || step.title || step.titleEn || `Day ${idx + 1}`)).trim(),
+        titleKm: (step.titleKm || step.title || step.titleEn || `Day ${idx + 1}`).trim(),
+        titleEn: step.titleEn?.trim() || undefined,
+        description: (isEnglishMain ? (step.descriptionEn || step.description || step.descriptionKm || '') : (step.descriptionKm || step.description || step.descriptionEn || '')).trim(),
+        descriptionKm: (step.descriptionKm || step.description || step.descriptionEn || '').trim(),
+        descriptionEn: step.descriptionEn?.trim() || undefined,
+        guideAgenda: (step.guideAgenda || []).map(g => ({
+          ...g,
+          activity: (isEnglishMain ? (g.activityEn || g.activity || g.activityKm || '') : (g.activityKm || g.activity || g.activityEn || '')).trim(),
+          activityKm: (g.activityKm || g.activity || g.activityEn || '').trim(),
+          activityEn: g.activityEn?.trim() || undefined,
+          location: (isEnglishMain ? (g.locationEn || g.location || g.locationKm || '') : (g.locationKm || g.location || g.locationEn || '').trim()),
+          locationKm: (g.locationKm || g.location || g.locationEn || '').trim(),
+          locationEn: g.locationEn?.trim() || undefined
+        }))
+      })),
+      optionalPrograms: optionalPrograms || []
+    };
   };
 
   const currentIdx = studios.findIndex(s => s.id === activeTab);
