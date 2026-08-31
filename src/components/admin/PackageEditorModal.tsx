@@ -26,6 +26,7 @@ import {
   DollarSign,
   MapPin,
   Clock,
+  Compass,
   User,
   Shield,
   Layers,
