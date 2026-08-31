@@ -53,6 +53,10 @@ export interface TranslationDictionary {
   myTrips: string;
   upcomingTrips: string;
   pastTrips: string;
+  profile?: string;
+  language?: string;
+  settings?: string;
+  welcomeGuest?: string;
   modifyDates: string;
   cancelBooking: string;
   offlineMode: string;

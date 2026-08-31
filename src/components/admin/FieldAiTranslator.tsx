@@ -339,7 +339,7 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         dynamicLabel = '⚡ Translate 🇺🇸 EN ➔ 🇰🇭 KM';
         dynamicTooltip = 'English detected! Click to auto-translate into Khmer field';
       } else if (dualDirection === 'both_filled') {
-        dynamicLabel = preferredDirection === 'en_to_km' ? '⚡ Sync 🇺🇸 EN ➔ 🇰🇭 KM' : '⚡ Sync 🇰🇭 KM ➔ 🇺🇸 EN';
+        dynamicLabel = '⚡ Sync 🇰🇭 KM ⇄ 🇺🇸 EN';
         dynamicTooltip = 'Click to re-synchronize translation between fields';
       } else {
         dynamicLabel = '✨ AI Translate (🇰🇭 ⇄ 🇺🇸)';

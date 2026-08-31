@@ -61,6 +61,7 @@ export interface User {
   preferredCurrency: CurrencyCode;
   hasBiometrics?: boolean;
   biometricCredentialId?: string;
+  biometricEnabled?: boolean;
   avatarUrl?: string;
   lastLoginAt?: string;
   createdAt?: string;
@@ -273,7 +274,8 @@ export interface TourPackage {
   rating: number;
   reviewCount: number;
   bookedThisMonth: number;
-  emergencyContact: EmergencyContact;
+  emergencyContact?: EmergencyContact;
+  seatsAvailable?: number;
   flightIncluded: boolean;
   hotelStars: number;
   tourGuide?: TourGuide;
@@ -333,7 +335,7 @@ export interface HotelStatus {
   roomType: string;
   confirmationCode: string;
   status: 'Confirmed' | 'Room Ready' | 'Checked In' | 'Completed';
-  address: string;
+  address?: string;
 }
 
 export interface Booking {
@@ -364,6 +366,7 @@ export interface Booking {
   paymentTransactionId: string;
   flightStatus?: FlightStatus;
   hotelStatus?: HotelStatus;
+  tourPackage?: TourPackage;
   selectedOptionalProgramIds?: string[];
 }
 
@@ -453,7 +456,13 @@ export type NotificationCategory =
   | 'finance'
   | 'supplier'
   | 'expense'
-  | 'task';
+  | 'task'
+  | 'warning'
+  | 'info'
+  | 'success'
+  | 'error'
+  | 'security'
+  | 'payment';
 
 export interface PushNotification {
   id: string;
@@ -582,7 +591,7 @@ export interface PurchaseOrder {
   taxUSD: number;
   totalUSD: number;
   currency: CurrencyCode;
-  totalInCurrency: number;
+  totalInCurrency?: number;
   status: POStatus;
   issuedDate: string;
   dueDate: string;
@@ -601,9 +610,12 @@ export interface CustomerPayment {
   id: string;
   bookingId: string;
   bookingCode: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
   amountUSD: number;
   amountInCurrency: number;
   currency: CurrencyCode;
@@ -621,8 +633,9 @@ export interface CustomerPayment {
 
 export interface SupplierPayment {
   id: string;
-  poId: string;
+  poId?: string;
   poNumber: string;
+  purchaseOrderId?: string;
   supplierId: string;
   supplierName: string;
   bookingId?: string;
@@ -630,6 +643,7 @@ export interface SupplierPayment {
   amountUSD: number;
   amountInCurrency: number;
   currency: CurrencyCode;
+  exchangeRate?: number;
   status: SupplierPaymentStatus;
   dueDate: string;
   paidDate?: string;
@@ -784,6 +798,8 @@ export interface SystemSettings {
 
   // Financial & Costing Defaults
   taxRatePercent: number;
+  defaultTaxRatePercent?: number;
+  defaultExchangeRateKHR?: number;
   defaultAdultMarginPercent: number;
   defaultChildDiscountPercent: number;
   defaultMinGroupSize: number;
@@ -791,6 +807,8 @@ export interface SystemSettings {
 
   // Official Trade Mission & Coordinator Profile
   companyName: string;
+  companyNameEn?: string;
+  companyNameKh?: string;
   companyTagline?: string;
   companyWebsite?: string;
   companyLogoUrl?: string;
@@ -820,6 +838,8 @@ export interface SystemSettings {
   companyPostalCode?: string;
   companyPhone?: string;
   companyEmail?: string;
+  contactPhone?: string;
+  contactEmail?: string;
   emergencyHotline?: string;
   delegationSupportDesk?: string;
 
@@ -828,6 +848,7 @@ export interface SystemSettings {
   bankAccountName?: string;
   bankAccountNumber?: string;
   bankSwiftBic?: string;
+  swiftCode?: string;
   bankBranch?: string;
 
   // Social & Delegation Broadcasts
@@ -979,7 +1000,10 @@ export type HandoverTaskCategory =
   | 'hotel_rooming'
   | 'finance_invoice'
   | 'briefing_materials'
-  | 'crm_feedback';
+  | 'crm_feedback'
+  | 'flight_ticketing'
+  | 'hotel_reservations'
+  | 'invoice_finance';
 
 export interface LeadHandoverTask {
   id: string;
@@ -995,6 +1019,7 @@ export interface LeadHandoverTask {
   completedAt?: string;
   completedBy?: string;
   notes?: string;
+  createdAt?: string;
   isAutomatic?: boolean;
 }
 

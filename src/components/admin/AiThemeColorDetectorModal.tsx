@@ -45,7 +45,7 @@ export const AiThemeColorDetectorModal: React.FC<AiThemeColorDetectorModalProps>
   const [isLoading, setIsLoading] = useState(false);
   const [detectedPalette, setDetectedPalette] = useState<ThemePalette | null>(null);
   const [selectedPresetKey, setSelectedPresetKey] = useState<string>(systemSettings.themePreset || 'navy');
-  const [selectedFontScale, setSelectedFontScale] = useState<'compact' | 'normal' | 'comfortable' | 'large'>(
+  const [selectedFontScale, setSelectedFontScale] = useState<'compact' | 'normal' | 'comfortable' | 'large' | 'extra-large'>(
     systemSettings.fontSizeScale || 'normal'
   );
   const [selectedLatinFont, setSelectedLatinFont] = useState<string>(systemSettings.fontFamilyLatin || 'plus-jakarta');
@@ -54,8 +54,8 @@ export const AiThemeColorDetectorModal: React.FC<AiThemeColorDetectorModalProps>
   const [selectedHeadingWeight, setSelectedHeadingWeight] = useState<'normal' | 'semibold' | 'bold' | 'black'>(
     systemSettings.headingFontWeight || 'bold'
   );
-  const [selectedLineHeight, setSelectedLineHeight] = useState<'snug' | 'normal' | 'relaxed'>(
-    systemSettings.fontLineHeight || 'normal'
+  const [selectedLineHeight, setSelectedLineHeight] = useState<'snug' | 'normal' | 'relaxed' | 'loose'>(
+    (systemSettings.fontLineHeight as any) || 'normal'
   );
   const [selectedLetterSpacing, setSelectedLetterSpacing] = useState<'tight' | 'normal' | 'wide' | 'widest'>(
     systemSettings.fontLetterSpacing || 'normal'
@@ -86,11 +86,11 @@ export const AiThemeColorDetectorModal: React.FC<AiThemeColorDetectorModalProps>
       if (result.fontScaleRecommendation) {
         setSelectedFontScale(result.fontScaleRecommendation);
       }
-      addNotification({
-        title: 'AI Color Theme Detected',
-        message: `Generated "${result.themeName}" with WCAG AA compliance.`,
-        type: 'success',
-      });
+      addNotification(
+        'AI Color Theme Detected',
+        `Generated "${result.themeName}" with WCAG AA compliance.`,
+        'success'
+      );
     } catch (e) {
       console.error(e);
     } finally {
@@ -134,11 +134,11 @@ export const AiThemeColorDetectorModal: React.FC<AiThemeColorDetectorModalProps>
     });
 
     setAppliedSuccess(true);
-    addNotification({
-      title: 'Theme & Font Settings Applied',
-      message: `System updated with ${palette.themeName} and customized typography appearance.`,
-      type: 'success',
-    });
+    addNotification(
+      'Theme & Font Settings Applied',
+      `System updated with ${palette.themeName} and customized typography appearance.`,
+      'success'
+    );
 
     setTimeout(() => {
       setAppliedSuccess(false);

@@ -199,20 +199,24 @@ export const PackageSalesLandingPage: React.FC = () => {
 
   const handleUpdateTourGuide = (field: string, value: any) => {
     if (!rawPkg) return;
-    const guide = { ...(rawPkg.tourGuide || { name: 'Operations Guide', title: 'Tour Director' }) };
+    const guide: any = { 
+      phone: '', 
+      languages: ['Khmer', 'English'], 
+      ...(rawPkg.tourGuide || { name: 'Operations Guide', title: 'Tour Director' }) 
+    };
 
     if (language === 'km') {
       if (field === 'name') guide.nameKm = value;
       else if (field === 'title') guide.titleKm = value;
       else if (field === 'bio') guide.bioKm = value;
       else if (field === 'briefingMeetingPoint') guide.briefingMeetingPointKm = value;
-      else (guide as any)[field] = value;
+      else guide[field] = value;
     } else {
       if (field === 'name') { guide.name = value; guide.nameEn = value; }
       else if (field === 'title') { guide.title = value; guide.titleEn = value; }
       else if (field === 'bio') { guide.bio = value; guide.bioEn = value; }
       else if (field === 'briefingMeetingPoint') { guide.briefingMeetingPoint = value; guide.briefingMeetingPointEn = value; }
-      else (guide as any)[field] = value;
+      else guide[field] = value;
     }
 
     updatePackage({ ...rawPkg, tourGuide: guide });

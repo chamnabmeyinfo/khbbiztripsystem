@@ -466,7 +466,7 @@ export const PackageManagementSection: React.FC = () => {
                   <Icon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{label}</span>
                   {isDefault && (
-                    <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0 animate-in fade-in" title="Active Default View" />
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-500 shrink-0 animate-in fade-in" />
                   )}
                 </button>
               );

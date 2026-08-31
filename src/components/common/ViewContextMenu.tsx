@@ -21,9 +21,11 @@ interface ViewContextMenuProps {
   onClose: () => void;
   onSetDefaultView: (view: ActiveView, tab?: string) => void;
   onSetDefaultTab?: (tab: string) => void;
+  onSetDefaultAdminTab?: (tab: string) => void;
   onSetDefaultPackageViewMode?: (mode: PackageViewMode) => void;
   onResetDefault: () => void;
   onOpenView?: (view: ActiveView, tab?: string) => void;
+  onOpenTab?: (tab: string) => void;
   onSelectPackageViewMode?: (mode: PackageViewMode) => void;
 }
 
@@ -32,11 +34,15 @@ export const ViewContextMenu: React.FC<ViewContextMenuProps> = ({
   onClose,
   onSetDefaultView,
   onSetDefaultTab,
+  onSetDefaultAdminTab,
   onSetDefaultPackageViewMode,
   onResetDefault,
   onOpenView,
+  onOpenTab,
   onSelectPackageViewMode
 }) => {
+  const effectiveSetDefaultTab = onSetDefaultTab || onSetDefaultAdminTab;
+  const effectiveOpenViewOrTab = onOpenView || (onOpenTab ? ((_v: ActiveView, t?: string) => onOpenTab(t || '')) : undefined);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -198,10 +204,10 @@ export const ViewContextMenu: React.FC<ViewContextMenuProps> = ({
         )}
 
         {/* Set as Default Tab (if targetTab is provided) */}
-        {menu.targetTab && onSetDefaultTab && (
+        {menu.targetTab && effectiveSetDefaultTab && (
           <button
             onClick={() => {
-              onSetDefaultTab(menu.targetTab!);
+              effectiveSetDefaultTab(menu.targetTab!);
               onClose();
             }}
             className={`w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left font-bold transition-colors cursor-pointer ${
@@ -226,10 +232,10 @@ export const ViewContextMenu: React.FC<ViewContextMenuProps> = ({
         )}
 
         {/* Open View */}
-        {onOpenView && (
+        {effectiveOpenViewOrTab && (
           <button
             onClick={() => {
-              onOpenView(menu.targetView, menu.targetTab);
+              effectiveOpenViewOrTab(menu.targetView, menu.targetTab);
               onClose();
             }}
             className="w-full px-3 py-2 rounded-xl flex items-center gap-2.5 text-left font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"

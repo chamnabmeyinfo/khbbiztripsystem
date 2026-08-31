@@ -1033,7 +1033,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
         return { ...day, ...fieldOrUpdates };
       }
-      return { ...day, [fieldOrUpdates]: value };
+      return { ...day, [fieldOrUpdates as string]: value };
     }));
   };
 
@@ -1073,7 +1073,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
         if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
           return { ...slot, ...fieldOrUpdates };
         }
-        const updated = { ...slot, [fieldOrUpdates]: value };
+        const updated = { ...slot, [fieldOrUpdates as string]: value };
         if (fieldOrUpdates === 'activityEn') {
           updated.activity = value;
         } else if (fieldOrUpdates === 'locationEn') {
@@ -1169,7 +1169,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (typeof fieldOrUpdates === 'object' && fieldOrUpdates !== null) {
         return { ...prog, ...fieldOrUpdates };
       }
-      const updated = { ...prog, [fieldOrUpdates]: value };
+      const updated = { ...prog, [fieldOrUpdates as string]: value };
       if (fieldOrUpdates === 'titleEn') {
         updated.title = value;
       } else if (fieldOrUpdates === 'descriptionEn') {

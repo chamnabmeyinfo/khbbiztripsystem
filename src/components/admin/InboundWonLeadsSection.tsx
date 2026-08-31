@@ -1571,6 +1571,9 @@ export const InboundWonLeadsSection: React.FC = () => {
                         finance_invoice: '6. Finance & Payments',
                         briefing_materials: '7. Briefing & Vouchers',
                         crm_feedback: '8. CRM Sync & Feedback',
+                        flight_ticketing: '4. Flights & Logistics',
+                        hotel_reservations: '5. Hotel & Rooming',
+                        invoice_finance: '6. Finance & Payments',
                       };
 
                       return filteredTasks.map((task, idx) => {

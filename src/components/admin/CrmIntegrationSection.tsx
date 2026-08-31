@@ -210,7 +210,7 @@ export const CrmIntegrationSection: React.FC = () => {
   // Preset generator for the simulator
   const loadPreset = (presetType: 'deal_won' | 'confirm_booking' | 'cancel_booking' | 'flight_delay' | 'vip_upgrade' | 'broadcast') => {
     const sampleBooking = bookings[0] || { bookingCode: 'KHB-TRIP-2026-8912', id: 'b_sample_1' };
-    const sampleUser = users[0] || { name: 'Ouk Seyha', email: 'seyha@pplogistics.com.kh' };
+    const sampleUser = users[0] || { id: 'usr_sample_1', name: 'Ouk Seyha', email: 'seyha@pplogistics.com.kh' };
 
     switch (presetType) {
       case 'deal_won':

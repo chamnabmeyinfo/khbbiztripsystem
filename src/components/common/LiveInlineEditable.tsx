@@ -76,9 +76,9 @@ export const LiveInlineText: React.FC<LiveInlineTextProps> = ({
       const targetLang = language === 'km' ? 'km' : 'en';
       const sourceLang = targetLang === 'km' ? 'en' : 'km';
       const translated = await translateTextField(source, sourceLang, targetLang);
-      if (translated && translated.trim()) {
-        setCurrentDraft(translated.trim());
-        onSave(translated.trim());
+      if (translated && translated.translatedText && translated.translatedText.trim()) {
+        setCurrentDraft(translated.translatedText.trim());
+        onSave(translated.translatedText.trim());
       }
     } catch (err) {
       console.warn('Inline AI translate notice:', err);

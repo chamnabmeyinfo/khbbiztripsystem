@@ -150,7 +150,9 @@ interface AppContextType {
   language: LanguageCode;
   currency: CurrencyCode;
   darkMode: boolean;
+  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
   offlineMode: boolean;
+  setOfflineMode: React.Dispatch<React.SetStateAction<boolean>>;
   isFirebaseConnected: boolean;
   packages: TourPackage[];
   rawPackages: TourPackage[];
@@ -220,8 +222,8 @@ interface AppContextType {
   // Actions - Expenses
   addExpense: (expense: Omit<Expense, 'id' | 'createdAt'>) => void;
   updateExpense: (expense: Expense) => void;
-  approveExpense: (expenseId: string, approvedBy: string, approvedByName: string) => void;
-  rejectExpense: (expenseId: string) => void;
+  approveExpense: (expenseId: string, approvedBy?: string, approvedByName?: string) => void;
+  rejectExpense: (expenseId: string, approvedBy?: string, approvedByName?: string) => void;
 
   // Computed Reports
   getTripProfitReport: (bookingId: string) => TripProfitReport | null;
@@ -4055,20 +4057,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try { deleteDoc(doc(db, 'expenses', expenseId)); } catch (e) { console.warn(e); }
     addNotification('Expense Moved to Recycle Bin', `Expense "${exp?.description || expenseId}" moved to Recycle Bin.`, 'system');
   };
-  const approveExpense = (expenseId: string, approvedBy: string, approvedByName: string) => {
+  const approveExpense = (expenseId: string, approvedBy?: string, approvedByName?: string) => {
     setExpenses(prev => prev.map(e => {
       if (e.id === expenseId) {
-        const updated = { ...e, status: 'approved' as const, approvedBy, approvedByName };
+        const updated = { ...e, status: 'approved' as const, approvedBy: approvedBy || 'Admin', approvedByName: approvedByName || 'System Administrator' };
         try { setDoc(doc(db, 'expenses', e.id), sanitizeForFirestore(updated), { merge: true }); } catch (err) { console.warn(err); }
         return updated;
       }
       return e;
     }));
   };
-  const rejectExpense = (expenseId: string, approvedBy: string, approvedByName: string) => {
+  const rejectExpense = (expenseId: string, approvedBy?: string, approvedByName?: string) => {
     setExpenses(prev => prev.map(e => {
       if (e.id === expenseId) {
-        const updated = { ...e, status: 'rejected' as const, approvedBy, approvedByName };
+        const updated = { ...e, status: 'rejected' as const, approvedBy: approvedBy || 'Admin', approvedByName: approvedByName || 'System Administrator' };
         try { setDoc(doc(db, 'expenses', e.id), sanitizeForFirestore(updated), { merge: true }); } catch (err) { console.warn(err); }
         return updated;
       }
@@ -4375,7 +4377,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   ): SystemUpdateHistoryRecord => {
     const authorName = record.updatedBy || currentUser?.name || currentUser?.email || 'System Admin';
-    const authorRole = record.updatedByRole || (currentUser?.role ? ROLE_CONFIGS[currentUser.role]?.name : 'Administrator');
+    const authorRole = record.updatedByRole || (currentUser?.role ? (ROLE_CONFIGS[currentUser.role]?.displayName || currentUser.role) : 'Administrator');
     const id = record.id || `upd_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const timestamp = record.timestamp || new Date().toISOString();
 
@@ -5516,7 +5518,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         language,
         currency,
         darkMode,
+        setDarkMode,
         offlineMode,
+        setOfflineMode,
         isFirebaseConnected,
         packages: localizedPackages,
         rawPackages: packages,

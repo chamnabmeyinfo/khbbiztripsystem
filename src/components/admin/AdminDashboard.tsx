@@ -1194,7 +1194,7 @@ export const AdminDashboard: React.FC = () => {
           setContextMenu(null);
         }}
         onOpenTab={(tab) => {
-          setActiveTab(tab);
+          setActiveTab(tab as AdminTab);
           setContextMenu(null);
         }}
       />
