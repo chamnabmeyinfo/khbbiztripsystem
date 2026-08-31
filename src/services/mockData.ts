@@ -131,6 +131,10 @@ export const SEED_USERS: User[] = [
 
 export const OFFICIAL_BIZTRIP_PACKAGE: TourPackage = {
   id: 'pkg_vietnam_biztrip_2026',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  version: 1,
   title: 'ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise (Ho Chi Minh + Phu Quoc)',
   titleKm: 'ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise (Ho Chi Minh + Phu Quoc)',
   titleEn: 'Special Trade Mission: Coffee, Tea, Bakery, Retail & Franchise Expo (Ho Chi Minh + Phu Quoc)',
@@ -776,6 +780,10 @@ export const OFFICIAL_BIZTRIP_PACKAGE: TourPackage = {
 
 export const CANTON_FAIR_PHASE_1_PACKAGE: TourPackage = {
   id: 'pkg_canton_fair_phase_1_2026',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  version: 1,
   isCantonFair: true,
   cantonFairPhase: 'Phase 1',
   title: 'បេសកកម្មពាណិជ្ជកម្មក្វាងចូវ Canton Fair 2026 (Phase 1): អេឡិចត្រូនិក គ្រឿងម៉ាស៊ីន ឧបករណ៍ជាង សម្ភារៈសំណង់ & ថាមពលបៃតង',
@@ -1026,6 +1034,10 @@ export const CANTON_FAIR_PHASE_1_PACKAGE: TourPackage = {
 
 export const CANTON_FAIR_PHASE_2_PACKAGE: TourPackage = {
   id: 'pkg_canton_fair_phase_2_2026',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  version: 1,
   isCantonFair: true,
   cantonFairPhase: 'Phase 2',
   title: 'បេសកកម្មពាណិជ្ជកម្មក្វាងចូវ Canton Fair 2026 (Phase 2): ទំនិញប្រើប្រាស់ គ្រឿងតុបតែងផ្ទះ គ្រឿងសង្ហារិម សេរ៉ាមិច & របស់របរផ្ទះបាយ',
@@ -1228,6 +1240,10 @@ export const CANTON_FAIR_PHASE_2_PACKAGE: TourPackage = {
 
 export const CANTON_FAIR_PHASE_3_PACKAGE: TourPackage = {
   id: 'pkg_canton_fair_phase_3_2026',
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  version: 1,
   isCantonFair: true,
   cantonFairPhase: 'Phase 3',
   title: 'បេសកកម្មពាណិជ្ជកម្មក្វាងចូវ Canton Fair 2026 (Phase 3): វាយនភណ្ឌ កាត់ដេរ សម្លៀកបំពាក់ ស្បែកជើង ឧបករណ៍វេជ្ជសាស្ត្រ & ម្ហូបអាហារ',

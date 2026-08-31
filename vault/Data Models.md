@@ -118,6 +118,10 @@ export interface TourPackage {
   cantonFairPhase?: 'Phase 1' | 'Phase 2' | 'Phase 3' | 'All Phases' | 'Multi-Phase';
   featuredVideoUrl?: string;
   videos?: TourVideo[];
+  // Persistence & Data Integrity Metadata
+  createdAt?: string; // ISO 8601 creation timestamp
+  updatedAt?: string; // ISO 8601 last update timestamp
+  version?: number; // Monotonically increasing version counter for smart conflict resolution
 }
 
 export interface TourVideo {

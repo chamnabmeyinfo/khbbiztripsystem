@@ -220,6 +220,9 @@ export type PackageViewMode = 'grid' | 'detailed-list' | 'table' | 'kanban';
 export interface TourPackage {
   id: string;
   status?: TourPackageStatus; // 'active' | 'draft' | 'archived' | 'deleted' (defaults to 'active')
+  createdAt?: string;
+  updatedAt?: string;
+  version?: number;
   title: string;
   titleKm?: string;
   titleEn?: string;

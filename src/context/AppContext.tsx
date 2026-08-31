@@ -100,6 +100,7 @@ import { CURRENCY_CONFIGS, convertFromUSD } from '../services/currencyService';
 import { isRTL, translations } from '../i18n/translations';
 import { getLocalizedPackage } from '../utils/packageLocalization';
 import { sanitizeForFirestore } from '../utils/firestoreSanitizer';
+import { reconcileTourPackages } from '../utils/packageReconciler';
 import { applyThemeToDOM } from '../services/aiThemeService';
 import {
   db,
@@ -524,10 +525,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const [packages, setPackages] = useState<TourPackage[]>(() => {
     try {
+      let delSet = new Set<string>();
+      try {
+        const savedDel = localStorage.getItem(STORAGE_KEYS.DELETED_IDS);
+        if (savedDel) delSet = new Set(JSON.parse(savedDel));
+      } catch {}
+
       const saved = localStorage.getItem(STORAGE_KEYS.PACKAGES);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const valid = parsed.filter((p: TourPackage) => p && p.id && !delSet.has(p.id));
+          if (valid.length > 0) return valid;
+        }
       }
     } catch {}
     return INITIAL_PACKAGES;
@@ -1090,12 +1100,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => unsubscribe();
   }, [language, currency, users]);
 
-  // Firestore Real-Time Packages Sync (with Deleted IDs Guard)
+  // Firestore Real-Time Packages Sync (with Smart Conflict-Resolved Merge & Deleted IDs Guard)
   useEffect(() => {
     try {
       const q = query(collection(db, 'packages'));
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const deletedSet = new Set(deletedIds);
+        const deletedSet = new Set<string>(deletedIds);
         const remotePackages: TourPackage[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data() as TourPackage;
@@ -1106,20 +1116,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
           }
         });
-        if (remotePackages.length > 0) {
-          setPackages(remotePackages);
-          try {
-            localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(remotePackages));
-          } catch (e) {}
-        } else if (snapshot.empty && INITIAL_PACKAGES.length > 0) {
-          // Initialize Firestore with official packages if collection is currently empty
-          const nonDeletedSeeds = INITIAL_PACKAGES.filter(p => !deletedSet.has(p.id));
-          setPackages(nonDeletedSeeds);
-          nonDeletedSeeds.forEach(pkg => {
-            setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(pkg)).catch(() => {});
+
+        // Read current local state/storage for safe comparison
+        let currentLocal: TourPackage[] = [];
+        try {
+          const saved = localStorage.getItem(STORAGE_KEYS.PACKAGES);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) currentLocal = parsed;
+          }
+        } catch (e) {}
+
+        const { merged, packagesToPushToCloud } = reconcileTourPackages(
+          currentLocal,
+          remotePackages,
+          deletedSet,
+          INITIAL_PACKAGES
+        );
+
+        setPackages(merged);
+        try {
+          localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(merged));
+        } catch (e) {}
+
+        // Push any local packages that are newer than cloud or newly created
+        if (packagesToPushToCloud.length > 0) {
+          packagesToPushToCloud.forEach(pkg => {
+            try {
+              setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(pkg), { merge: true }).catch(err => {
+                if (err?.code !== 'permission-denied') {
+                  console.warn('Auto-sync package to Firestore notice:', err);
+                }
+              });
+            } catch (err) {}
           });
-        } else {
-          setPackages(remotePackages);
         }
       }, (error) => {
         console.warn('Packages snapshot notice:', error.message);
@@ -2708,27 +2738,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addPackage = (pkgData: Omit<TourPackage, 'id' | 'rating' | 'reviewCount' | 'bookedThisMonth'> | TourPackage) => {
     const pkgObj = pkgData as Partial<TourPackage>;
     const packageStatus: TourPackageStatus = pkgObj.status || 'active';
+    const now = new Date().toISOString();
     const newPkg: TourPackage = {
       ...pkgData,
-      id: pkgObj.id || `pkg_${Date.now()}`,
+      id: pkgObj.id || `pkg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       status: packageStatus,
+      createdAt: pkgObj.createdAt || now,
+      updatedAt: now,
+      version: (pkgObj.version || 0) + 1,
       rating: pkgObj.rating ?? 5.0,
       reviewCount: pkgObj.reviewCount ?? 1,
       bookedThisMonth: pkgObj.bookedThisMonth ?? 0
     };
+
+    // Remove from deletedIds in case ID was previously recycled
+    setDeletedIds(prev => {
+      const next = prev.filter(did => did !== newPkg.id);
+      try { localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+
     setPackages(prev => {
       const next = [newPkg, ...prev.filter(p => p.id !== newPkg.id)];
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
     try {
-      setDoc(doc(db, 'packages', newPkg.id), sanitizeForFirestore(newPkg)).catch(e => {
-        console.warn('Package Firestore save notice:', e);
+      setDoc(doc(db, 'packages', newPkg.id), sanitizeForFirestore(newPkg), { merge: true }).catch(e => {
+        if (e?.code !== 'permission-denied') {
+          console.warn('Package Firestore save notice:', e);
+        }
       });
     } catch (e) {
       console.warn('Package Firestore save notice:', e);
     }
+
     setSelectedPackage(prev => (prev && prev.id === newPkg.id ? newPkg : prev));
+
     // Record in System Update History
     recordSystemUpdate({
       title: `Tour Package Created: ${newPkg.title}`,
@@ -2767,6 +2814,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       ]
     });
+
     addNotification(
       packageStatus === 'draft' ? 'Package Draft Saved' : 'Package Published',
       packageStatus === 'draft'
@@ -2778,23 +2826,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updatePackage = (pkg: TourPackage) => {
     const previous = packages.find(p => p.id === pkg.id);
+    const now = new Date().toISOString();
     const updatedPkg: TourPackage = {
       ...pkg,
-      status: pkg.status || 'active'
+      status: pkg.status || 'active',
+      createdAt: pkg.createdAt || previous?.createdAt || now,
+      updatedAt: now,
+      version: (previous?.version || pkg.version || 1) + 1
     };
+
     setPackages(prev => {
       const next = prev.map(p => p.id === pkg.id ? updatedPkg : p);
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
     try {
-      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg)).catch(e => {
-        console.warn('Package Firestore update notice:', e);
+      setDoc(doc(db, 'packages', pkg.id), sanitizeForFirestore(updatedPkg), { merge: true }).catch(e => {
+        if (e?.code !== 'permission-denied') {
+          console.warn('Package Firestore update notice:', e);
+        }
       });
     } catch (e) {
       console.warn('Package Firestore update notice:', e);
     }
+
     setSelectedPackage(prev => (prev && prev.id === updatedPkg.id ? updatedPkg : prev));
+
     // Record in System Update History
     const changes: SystemUpdateChangeDiff[] = [];
     if (previous) {
@@ -2808,6 +2866,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (changes.length === 0) {
       changes.push({ field: 'PackageContent', fieldLabel: 'Package Content', oldValue: 'Existing version', newValue: 'Saved version', type: 'modified' });
     }
+
     recordSystemUpdate({
       title: `Tour Package Updated: ${updatedPkg.title}`,
       description: `Saved updates for package "${updatedPkg.title}" (${updatedPkg.destination}) at $${updatedPkg.priceUSD} USD. Status: ${(updatedPkg.status || 'active').toUpperCase()}.`,
@@ -2816,6 +2875,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updatedByRole: currentUser?.role || 'admin',
       changes
     });
+
     addNotification('Package Updated', `Changes to "${updatedPkg.title}" have been saved (${updatedPkg.status || 'active'}).`, 'system');
   };
 
@@ -2827,22 +2887,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
     const previousStatus = target.status || 'active';
+    const now = new Date().toISOString();
     const updatedPkg: TourPackage = {
       ...target,
-      status
+      status,
+      updatedAt: now,
+      version: (target.version || 1) + 1
     };
+
     setPackages(prev => {
       const next = prev.map(p => p.id === packageId ? updatedPkg : p);
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
     try {
       setDoc(doc(db, 'packages', packageId), sanitizeForFirestore(updatedPkg), { merge: true }).catch(e => {
-        console.warn('Package status update notice:', e);
+        if (e?.code !== 'permission-denied') {
+          console.warn('Package status update notice:', e);
+        }
       });
     } catch (e) {
       console.warn('Package status update notice:', e);
     }
+
     recordSystemUpdate({
       title: `Tour Package Status: ${target.title}`,
       description: `Switched status of "${target.title}" from ${previousStatus.toUpperCase()} to ${status.toUpperCase()}.`,
@@ -2859,6 +2927,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       ]
     });
+
     addNotification(
       'Package Status Changed',
       `"${target.title}" is now set to ${status === 'active' ? 'Active (Live)' : status === 'draft' ? 'Draft' : status === 'archived' ? 'Archived' : 'Deleted'}.`,
@@ -2869,14 +2938,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const clonePackageAsDraft = (pkg: TourPackage): TourPackage => {
     const targetRawPkg = packages.find(p => p.id === pkg.id) || pkg;
     const deepClone: TourPackage = JSON.parse(JSON.stringify(targetRawPkg));
-    const newId = `pkg_${Date.now()}`;
+    const newId = `pkg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const copySuffix = ' (Draft)';
     const copySuffixKm = ' (ព្រាង)';
+    const now = new Date().toISOString();
 
     const clonedDraft: TourPackage = {
       ...deepClone,
       id: newId,
       status: 'draft',
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
       title: `${deepClone.title}${copySuffix}`,
       titleKm: deepClone.titleKm ? `${deepClone.titleKm}${copySuffixKm}` : `${deepClone.title}${copySuffixKm}`,
       titleEn: deepClone.titleEn ? `${deepClone.titleEn}${copySuffix}` : `${deepClone.title}${copySuffix}`,
@@ -2914,6 +2987,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try { localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
     if (pkg) {
       const record: DeletedItemRecord = {
         id: 'del_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -2923,20 +2997,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         subtitle: `${pkg.destination} • $${pkg.priceUSD} USD • ${pkg.durationDays} Days`,
         deletedAt: new Date().toISOString(),
         deletedBy: currentUser?.email || 'admin@khbevents.com',
-        data: { ...pkg, status: 'deleted' }
+        data: { ...pkg, status: 'deleted', updatedAt: new Date().toISOString() }
       };
-      setDeletedItems(prev => [record, ...prev]);
+      setDeletedItems(prev => {
+        const next = [record, ...prev];
+        try { localStorage.setItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+      try {
+        setDoc(doc(db, 'deleted_items', record.id), sanitizeForFirestore(record), { merge: true }).catch(err => {});
+      } catch (e) {}
     }
+
     setPackages(prev => {
       const next = prev.filter(p => p.id !== packageId);
       try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
     try {
-      deleteDoc(doc(db, 'packages', packageId));
+      deleteDoc(doc(db, 'packages', packageId)).catch(e => {
+        if (e?.code !== 'permission-denied') {
+          console.warn('Package Firestore delete notice:', e);
+        }
+      });
     } catch (e) {
       console.warn('Package Firestore delete notice:', e);
     }
+
     // Record in System Update History
     recordSystemUpdate({
       title: `Tour Package Deleted: ${pkg?.title || packageId}`,
@@ -3720,10 +3808,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try { setDoc(doc(db, 'suppliers', data.id), sanitizeForFirestore(data)); } catch (e) { console.warn(e); }
         break;
 
-      case 'package':
-        setPackages(prev => [data, ...prev.filter(p => p.id !== data.id)]);
-        try { setDoc(doc(db, 'packages', data.id), sanitizeForFirestore(data)); } catch (e) { console.warn(e); }
+      case 'package': {
+        const restoredPkg = {
+          ...data,
+          status: 'active' as const,
+          updatedAt: new Date().toISOString(),
+          version: (data.version || 1) + 1
+        };
+        setPackages(prev => {
+          const next = [restoredPkg, ...prev.filter(p => p.id !== data.id)];
+          try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
+        try { setDoc(doc(db, 'packages', data.id), sanitizeForFirestore(restoredPkg), { merge: true }); } catch (e) { console.warn(e); }
         break;
+      }
 
       case 'booking':
         setBookings(prev => [data, ...prev.filter(b => b.id !== data.id)]);
@@ -3782,8 +3881,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setSuppliers(prev => [data, ...prev.filter(s => s.id !== data.id)]);
         try { setDoc(doc(db, 'suppliers', data.id), sanitizeForFirestore(data)); } catch (e) { console.warn(e); }
       } else if (record.entityType === 'package') {
-        setPackages(prev => [data, ...prev.filter(p => p.id !== data.id)]);
-        try { setDoc(doc(db, 'packages', data.id), sanitizeForFirestore(data)); } catch (e) { console.warn(e); }
+        const restoredPkg = {
+          ...data,
+          status: 'active' as const,
+          updatedAt: new Date().toISOString(),
+          version: (data.version || 1) + 1
+        };
+        setPackages(prev => {
+          const next = [restoredPkg, ...prev.filter(p => p.id !== data.id)];
+          try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
+        try { setDoc(doc(db, 'packages', data.id), sanitizeForFirestore(restoredPkg), { merge: true }); } catch (e) { console.warn(e); }
       } else if (record.entityType === 'booking') {
         setBookings(prev => [data, ...prev.filter(b => b.id !== data.id)]);
         try { setDoc(doc(db, 'bookings', data.id), sanitizeForFirestore(data)); } catch (e) { console.warn(e); }

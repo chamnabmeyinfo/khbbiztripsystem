@@ -83,6 +83,11 @@ clonePackageAsDraft(pkg: TourPackage): TourPackage;
 deletePackage(id);
 restorePackage(packageId: string);
 
+// Package Reconciliation & Zero-Data-Loss Architecture
+// - packageReconciler (reconcileTourPackages): Safe dual-layer conflict resolution comparing createdAt, updatedAt, and version counters
+// - Firestore snapshot synchronization: Reconciles local and remote packages, preserving local updates and safely pushing them to the cloud
+// - Deleted item tracking (deletedIds): Prevents remote snapshots or initial fallback seeds from resurrecting deleted packages
+
 // Package Categories
 addPackageCategory(cat);
 updatePackageCategory(cat);
