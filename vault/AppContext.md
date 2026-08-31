@@ -91,6 +91,7 @@ updatePackageStatus(packageId: string, status: TourPackageStatus);
 clonePackageAsDraft(pkg: TourPackage): TourPackage;
 deletePackage(id);
 restorePackage(packageId: string);
+refreshTourPackagesFromDatabase(): Promise<TourPackage[]>; // Fetches authoritative package collection from Cloud Firestore, reconciles local state, and returns active packages
 
 // Package Reconciliation & Zero-Data-Loss Architecture
 // - packageReconciler (reconcileTourPackages): Safe dual-layer conflict resolution comparing createdAt, updatedAt, and version counters

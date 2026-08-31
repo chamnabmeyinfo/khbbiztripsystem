@@ -88,6 +88,8 @@ export const AdminDashboard: React.FC = () => {
     updateBookingStatusByAdmin,
     addPackage,
     deletePackage,
+    restorePackage,
+    refreshTourPackagesFromDatabase,
     deleteBooking,
     deleteInvoice,
     setSelectedBooking,
@@ -212,6 +214,16 @@ export const AdminDashboard: React.FC = () => {
     items: NavItem[];
   }
 
+  const [isSyncingPackages, setIsSyncingPackages] = useState(false);
+  const handleSyncPackages = async () => {
+    setIsSyncingPackages(true);
+    try {
+      await refreshTourPackagesFromDatabase();
+    } finally {
+      setIsSyncingPackages(false);
+    }
+  };
+
   // Sidebar navigation menu grouping with RBAC permission filtering
   const RAW_NAV_GROUPS: NavGroup[] = [
     {
@@ -234,7 +246,7 @@ export const AdminDashboard: React.FC = () => {
           highlight: inboundLeads.length > 0,
           badgeColor: 'bg-emerald-500 text-white animate-pulse'
         },
-        { id: 'packages' as AdminTab, label: t('navPackages'), icon: Plane, count: packages.length },
+        { id: 'packages' as AdminTab, label: t('navPackages'), icon: Plane, count: packages.filter(p => !p.status || p.status === 'active').length },
         { id: 'bookings' as AdminTab, label: t('navBookings'), icon: Briefcase, count: bookings.length },
         { id: 'costing' as AdminTab, label: t('navCosting'), icon: Calculator }
       ]
@@ -648,6 +660,17 @@ export const AdminDashboard: React.FC = () => {
             {/* Visual Real-Time Auto-Save & Cloud Sync Indicator */}
             <AutoSaveStatusPill />
 
+            {/* Fetch & Sync Tour Packages Button */}
+            <button
+              onClick={handleSyncPackages}
+              disabled={isSyncingPackages}
+              title="Fetch latest active tour packages from Cloud Firestore database"
+              className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 ${isSyncingPackages ? 'animate-spin' : ''}`} />
+              <span>{isSyncingPackages ? 'Syncing...' : 'Sync Packages'}</span>
+            </button>
+
             {/* Quick Actions Button */}
             <div className="relative">
               <button
@@ -672,6 +695,16 @@ export const AdminDashboard: React.FC = () => {
                   >
                     <Sparkles className="w-4 h-4 text-indigo-500" />
                     <span>✨ Ask AI Copilot (Auto-CRUD)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowQuickActions(false);
+                      handleSyncPackages();
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2.5 cursor-pointer font-bold"
+                  >
+                    <RefreshCw className="w-4 h-4 text-emerald-500" />
+                    <span>🔄 Refresh Active Packages</span>
                   </button>
                   <button
                     onClick={() => {

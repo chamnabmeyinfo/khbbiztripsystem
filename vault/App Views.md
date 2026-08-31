@@ -58,7 +58,7 @@ type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package
 2. **Profit & Loss (`ProfitLossSection`)**: Gross margin %, net profit, per-package P&L breakdown, and expense deductions.
 3. **Cash Flow (`CashFlowSection`)**: Real-time inflows vs outflows ledger, burn rate, and running liquidity balances.
 4. **Invoices (`InvoicesSection`)**: Full statutory VAT invoices, settlement status, and tax reporting.
-5. **Packages (`PackageManagementSection`)**: Tour package catalogue with 4 Interactive View Modes (Card Grid, Detailed List, Compact Table, Kanban Pipeline Board), package status lifecycle (`active`, `draft`, `archived`, `deleted`), Clone-as-Draft, and full multi-day itinerary designer.
+5. **Packages (`PackageManagementSection`)**: Tour package catalogue with 4 Interactive View Modes (Card Grid, Detailed List, Compact Table, Kanban Pipeline Board), real-time Firestore database synchronization button (`Sync DB` / `Sync Packages`), package status lifecycle (`active`, `draft`, `archived`, `deleted`), Clone-as-Draft, and full multi-day itinerary designer.
 6. **Bookings (`BookingsSection`)**: Global bookings table, status updates, traveler details, and flight/hotel assignments.
 7. **Costing & Pricing (`CostingSection`)**: Unit economics engine, supplier rate cards, pax tier calculations, and margin safety margins.
 8. **Suppliers (`SuppliersSection`)**: Directory of airlines, hotels, transport operators, interpreters, and contracts.

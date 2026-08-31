@@ -33,6 +33,7 @@ import {
   Archive,
   AlertTriangle,
   FolderSync,
+  RefreshCw,
   LayoutGrid,
   List,
   Table,
@@ -58,6 +59,7 @@ export const PackageManagementSection: React.FC = () => {
     updatePackageStatus,
     clonePackageAsDraft,
     restorePackage,
+    refreshTourPackagesFromDatabase,
     recoverItem,
     permanentDeleteItem,
     setSelectedPackage,
@@ -80,6 +82,16 @@ export const PackageManagementSection: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDefaultDropdownOpen, setIsDefaultDropdownOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ViewContextMenuState | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncFromDatabase = async () => {
+    setIsSyncing(true);
+    try {
+      await refreshTourPackagesFromDatabase();
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Deleted packages from Recycle Bin
   const recycleBinPackages = useMemo(() => {
@@ -310,6 +322,15 @@ export const PackageManagementSection: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleSyncFromDatabase}
+              disabled={isSyncing}
+              className="px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+              title="Fetch fresh list of packages from Firestore cloud database"
+            >
+              <RefreshCw className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync DB'}</span>
+            </button>
             <button
               onClick={() => setIsCategoryManagerOpen(true)}
               className="px-3.5 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"

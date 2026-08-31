@@ -291,6 +291,7 @@ interface AppContextType {
   clonePackageAsDraft: (pkg: TourPackage) => TourPackage;
   deletePackage: (packageId: string) => void;
   restorePackage: (packageId: string) => void;
+  refreshTourPackagesFromDatabase: () => Promise<TourPackage[]>;
   
   // Tour Package Categories CRUD
   packageCategories: PackageCategory[];
@@ -3387,6 +3388,70 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addNotification('Tour Package Moved to Recycle Bin', `"${pkg?.title || packageId}" was moved to trash. You can restore it anytime.`, 'system');
   };
 
+  const refreshTourPackagesFromDatabase = async (): Promise<TourPackage[]> => {
+    try {
+      const q = query(collection(db, 'packages'));
+      const snapshot = await getDocs(q);
+      const deletedSet = new Set<string>(deletedIds);
+      const remotePackages: TourPackage[] = [];
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data() as TourPackage;
+        if (data) {
+          const pkgId = data.id || docSnap.id;
+          if (pkgId && !deletedSet.has(pkgId) && data.status !== 'deleted') {
+            remotePackages.push({ ...data, id: pkgId });
+          }
+        }
+      });
+
+      // Read current local storage
+      let currentLocal: TourPackage[] = [];
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.PACKAGES);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) currentLocal = parsed;
+        }
+      } catch (e) {}
+
+      const { merged } = reconcileTourPackages(
+        currentLocal,
+        remotePackages,
+        deletedSet,
+        INITIAL_PACKAGES
+      );
+
+      setPackages(merged);
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(merged));
+      } catch (e) {}
+
+      addNotification(
+        'Database Synchronized',
+        `Retrieved ${remotePackages.length} package(s) directly from Firestore (${merged.filter(p => !p.status || p.status === 'active').length} active).`,
+        'system'
+      );
+
+      return merged;
+    } catch (err: any) {
+      console.warn('Manual packages sync fallback:', err?.message);
+      // Fallback: clean current local state against deletedIds
+      const deletedSet = new Set<string>(deletedIds);
+      const cleaned = packages.filter(p => !deletedSet.has(p.id) && p.status !== 'deleted');
+      setPackages(cleaned);
+      try {
+        localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(cleaned));
+      } catch (e) {}
+      addNotification(
+        'Catalog Refreshed',
+        `Refreshed active catalog (${cleaned.filter(p => !p.status || p.status === 'active').length} active).`,
+        'system'
+      );
+      return cleaned;
+    }
+  };
+
   // Package Categories CRUD
   const addPackageCategory = (catData: Omit<PackageCategory, 'createdAt' | 'updatedAt'> | PackageCategory): PackageCategory => {
     const slugId = catData.id?.trim() || catData.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -5625,6 +5690,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         clonePackageAsDraft,
         deletePackage,
         restorePackage,
+        refreshTourPackagesFromDatabase,
         packageCategories,
         addPackageCategory,
         updatePackageCategory,
