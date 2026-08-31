@@ -57,7 +57,16 @@ import {
   HelpCircle,
   Languages,
   RefreshCw,
-  Tag
+  Tag,
+  Search,
+  Plane,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  LayoutList,
+  Columns,
+  SlidersHorizontal,
+  LayoutGrid
 } from 'lucide-react';
 import { PackageCategoryModal } from './PackageCategoryModal';
 import { uploadImage } from '../../services/imageUploadService';
@@ -118,6 +127,8 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const isEnglishMain = language === 'en';
 
   const [activeTab, setActiveTab] = useState<TabType>('basic');
+  const [navLayoutStyle, setNavLayoutStyle] = useState<'aside' | 'tabs'>('aside');
+  const [asideTabSearch, setAsideTabSearch] = useState<string>('');
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState<boolean>(false);
 
   // AI Auto-Fill / Text Importer State
@@ -1369,9 +1380,95 @@ Highlights:
     onClose();
   };
 
+  const studios: { id: TabType; studioNum: number; label: string; shortTitle: string; icon: any; desc: string; badge: string; badgeColor: string; isFilled: boolean }[] = [
+    {
+      id: 'basic',
+      studioNum: 1,
+      label: '1. Core & Pricing',
+      shortTitle: 'Core & Pricing',
+      icon: DollarSign,
+      desc: 'Title, code, pricing, seats',
+      badge: `${durationDays || 1}D/${durationNights || 0}N • $${priceUSD || 0}`,
+      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      isFilled: Boolean((titleEn || titleKm || title) && priceUSD > 0)
+    },
+    {
+      id: 'media',
+      studioNum: 2,
+      label: '2. Media & Highlights',
+      shortTitle: 'Media & Highlights',
+      icon: ImageIcon,
+      desc: 'Cover, gallery, inclusions',
+      badge: `${images?.length || 0} 📸 • ${inclusionsKm?.length || inclusionsEn?.length || 0} Incls`,
+      badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      isFilled: Boolean((images?.length || 0) > 0)
+    },
+    {
+      id: 'guide',
+      studioNum: 3,
+      label: '3. Tour Director & Escort',
+      shortTitle: 'Director & Escort',
+      icon: User,
+      desc: 'Guide bio, phone & badge',
+      badge: guideName ? 'Assigned' : 'Optional',
+      badgeColor: guideName ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' : 'bg-slate-500/10 text-slate-500 border-slate-500/20',
+      isFilled: Boolean(guideName)
+    },
+    {
+      id: 'itinerary',
+      studioNum: 4,
+      label: '4. Itinerary & Schedule',
+      shortTitle: 'Itinerary & Schedule',
+      icon: Clock,
+      desc: 'Day-by-day & hourly agenda',
+      badge: `${itinerary?.length || 0} Days Plan`,
+      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      isFilled: Boolean((itinerary?.length || 0) > 0)
+    },
+    {
+      id: 'optional',
+      studioNum: 5,
+      label: '5. Optional Programs',
+      shortTitle: 'Optional Programs',
+      icon: Sparkles,
+      desc: 'Add-ons & excursions',
+      badge: `${optionalPrograms?.length || 0} Programs`,
+      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      isFilled: Boolean((optionalPrograms?.length || 0) > 0)
+    },
+    {
+      id: 'terms',
+      studioNum: 6,
+      label: '6. Terms & Conditions',
+      shortTitle: 'Terms & Policies',
+      icon: FileText,
+      desc: 'Policies, refund & rules',
+      badge: `${termsAndConditionsKm?.length || termsAndConditionsEn?.length || 0} Policies`,
+      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+      isFilled: Boolean((termsAndConditionsKm?.length || 0) > 0 || (termsAndConditionsEn?.length || 0) > 0)
+    },
+    {
+      id: 'emergency',
+      studioNum: 7,
+      label: '7. Emergency & Map',
+      shortTitle: 'Emergency & GPS',
+      icon: Shield,
+      desc: 'Hotlines & GPS pin location',
+      badge: emergencyPolice || emergencyAmbulance ? 'Configured' : 'Optional',
+      badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+      isFilled: Boolean(emergencyPolice || emergencyAmbulance)
+    }
+  ];
+
+  const currentIdx = studios.findIndex(s => s.id === activeTab);
+  const currentStudio = studios[currentIdx] || studios[0];
+  const prevStudio = currentIdx > 0 ? studios[currentIdx - 1] : null;
+  const nextStudio = currentIdx < studios.length - 1 ? studios[currentIdx + 1] : null;
+  const CurrentIcon = currentStudio.icon;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden my-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-7xl max-h-[94vh] flex flex-col overflow-hidden my-auto">
         
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
@@ -1551,139 +1648,296 @@ Highlights:
           </div>
         )}
 
-        {/* Tab Navigation & Master Translation Quick Bar */}
-        <div className="border-b border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-6 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/30">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Languages className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span>Bilingual Translation Copilot:</span>
-              </span>
-              <span className="text-[11px] text-slate-500">Manual input supported on all fields, or translate whole package at once</span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {isEnglishMain ? (
-                <>
+        {/* Modal Main Body Layout: Left Aside Navigation Menu & Right Content Area */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          {/* 1. ASIDE MENU STYLE (When navLayoutStyle === 'aside') */}
+          {navLayoutStyle === 'aside' && (
+            <aside className="w-full md:w-64 lg:w-72 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shrink-0 flex flex-col justify-between overflow-y-auto">
+              {/* Aside Navigation Items */}
+              <div className="p-3 sm:p-4 space-y-2.5">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      Aside Menu
+                    </span>
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 font-mono">
+                      7 Studios
+                    </span>
+                  </div>
+                  {/* Quick Style Switcher */}
                   <button
                     type="button"
-                    onClick={() => handleTranslateEntirePackage('en', 'km')}
-                    disabled={isTranslatingAll}
-                    className="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    title="Auto-translate all English fields to Khmer across all tabs"
+                    onClick={() => setNavLayoutStyle('tabs')}
+                    className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                    title="Switch to Top Tab Bar Style"
                   >
-                    {isTranslatingAll && translatingDirection === 'en-km' ? (
+                    <LayoutList className="w-3 h-3 text-indigo-500" />
+                    <span>Tab Style</span>
+                  </button>
+                </div>
+
+                {/* Aside Search Filter */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={asideTabSearch}
+                    onChange={(e) => setAsideTabSearch(e.target.value)}
+                    placeholder="Search studios..."
+                    className="w-full pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  {asideTabSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setAsideTabSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Aside Navigation List */}
+                <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
+                  {studios
+                    .filter(tab => !asideTabSearch.trim() || tab.label.toLowerCase().includes(asideTabSearch.toLowerCase()) || tab.desc.toLowerCase().includes(asideTabSearch.toLowerCase()))
+                    .map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`w-full text-left px-3 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer shrink-0 md:shrink border group relative ${
+                          isActive
+                            ? 'border-indigo-500/80 bg-indigo-600 text-white shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20'
+                            : 'border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 hover:text-slate-950 dark:hover:text-white'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded-xl shrink-0 transition-transform group-hover:scale-105 ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs'
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="truncate font-black text-xs">{tab.label}</span>
+                            {tab.isFilled && (
+                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-300' : 'bg-emerald-500'} shrink-0`} title="Studio configured" />
+                            )}
+                          </div>
+                          <div className={`text-[10px] truncate font-normal hidden md:block ${isActive ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {tab.desc}
+                          </div>
+                          <div className="mt-1 hidden md:block">
+                            <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded-md border ${
+                              isActive ? 'bg-white/20 text-white border-white/30' : tab.badgeColor
+                            }`}>
+                              {tab.badge}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Aside Footer Quick Actions & AI Translator */}
+              <div className="p-3 sm:p-4 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/60 space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>AI Language Copilot</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleTranslateEntirePackage(isEnglishMain ? 'en' : 'km', isEnglishMain ? 'km' : 'en')}
+                    disabled={isTranslatingAll}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    title="Translate entire package between EN and KM"
+                  >
+                    {isTranslatingAll ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Auto-Translating EN ➔ KM...</span>
+                        <span className="text-[11px]">Translating package...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>✨ AI Auto-Translate All: 🇺🇸 EN ➔ 🇰🇭 KM</span>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <span className="text-[11px] truncate">
+                          {isEnglishMain ? '✨ AI All: 🇺🇸 EN ➔ 🇰🇭 KM' : '✨ AI All: 🇰🇭 KM ➔ 🇺🇸 EN'}
+                        </span>
                       </>
                     )}
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => handleTranslateEntirePackage('km', 'en')}
-                    disabled={isTranslatingAll}
-                    className="px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    title="Translate all Khmer text to English across all tabs"
+                    onClick={() => setIsCategoryManagerOpen(true)}
+                    className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    {isTranslatingAll && translatingDirection === 'km-en' ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Translating KM ➔ EN...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>✨ AI Translate KM ➔ EN</span>
-                      </>
-                    )}
+                    <Tag className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-[11px] truncate">Manage Categories</span>
                   </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleTranslateEntirePackage('km', 'en')}
-                    disabled={isTranslatingAll}
-                    className="px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    title="Translate all Khmer text to English across all tabs"
-                  >
-                    {isTranslatingAll && translatingDirection === 'km-en' ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Auto-Translating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>✨ AI Translate All: 🇰🇭 ➔ 🇺🇸 English</span>
-                      </>
-                    )}
-                  </button>
+                </div>
+              </div>
+            </aside>
+          )}
 
-                  <button
-                    type="button"
-                    onClick={() => handleTranslateEntirePackage('en', 'km')}
-                    disabled={isTranslatingAll}
-                    className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    title="Translate all English text to Khmer across all tabs"
-                  >
-                    {isTranslatingAll && translatingDirection === 'en-km' ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>កំពុងបកប្រែ...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>✨ AI បកប្រែទាំងអស់: 🇺🇸 ➔ 🇰🇭 ភាសាខ្មែរ</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+          {/* 2. MAIN CONTENT AREA (Supports both Tab Style and Aside Menu Style) */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white dark:bg-slate-900">
+            {/* TAB STYLE TOP NAVIGATION BAR (When navLayoutStyle === 'tabs') */}
+            {navLayoutStyle === 'tabs' && (
+              <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95 shrink-0 px-4 py-2.5">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                      <LayoutList className="w-3 h-3 text-indigo-500" />
+                      Studio Tabs
+                    </span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 font-mono">
+                      7 Sections
+                    </span>
+                  </div>
 
-          <div className="flex items-center gap-1.5 px-6 pt-1 overflow-x-auto">
-            {[
-              { id: 'basic', label: '1. Core & Pricing', icon: DollarSign },
-              { id: 'media', label: '2. Media & Inclusions', icon: ImageIcon },
-              { id: 'guide', label: '3. Tour Director & Escort', icon: User },
-              { id: 'itinerary', label: '4. Itinerary & Hourly Agenda', icon: Clock },
-              { id: 'optional', label: '5. Optional Programs', icon: Sparkles },
-              { id: 'terms', label: '6. Terms & Conditions', icon: FileText },
-              { id: 'emergency', label: '7. Emergency & Location', icon: Shield }
-            ].map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`px-3.5 py-2.5 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer border-b-2 ${
-                    isActive
-                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/30'
-                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  {/* Top Controls: Switch to Aside Menu & Quick Actions */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateEntirePackage(isEnglishMain ? 'en' : 'km', isEnglishMain ? 'km' : 'en')}
+                      disabled={isTranslatingAll}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
+                      title="Translate entire package between EN and KM"
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <span>{isEnglishMain ? 'AI: EN ➔ KM' : 'AI: KM ➔ EN'}</span>
+                    </button>
 
-        {/* Modal Scrollable Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryManagerOpen(true)}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Tag className="w-3 h-3 text-slate-500" />
+                      <span>Categories</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setNavLayoutStyle('aside')}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                      title="Switch to Left Aside Menu Style"
+                    >
+                      <Columns className="w-3 h-3" />
+                      <span>Aside Menu Style</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Horizontal Scrolling Tab Pills */}
+                <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                  {studios.map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 border group relative ${
+                          isActive
+                            ? 'border-indigo-500/80 bg-indigo-600 text-white shadow-md shadow-indigo-500/25 ring-2 ring-indigo-500/20'
+                            : 'border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/70 hover:text-slate-950 dark:hover:text-white shadow-2xs'
+                        }`}
+                      >
+                        <div className={`p-1 rounded-lg shrink-0 ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="truncate">{tab.shortTitle}</span>
+                        {tab.isFilled && (
+                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-300' : 'bg-emerald-500'} shrink-0`} />
+                        )}
+                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          #{tab.studioNum}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+            )}
+
+            {/* Scrollable Tab Form Content */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6">
+              {/* Studio Header Banner & Step Navigation */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/30 to-slate-50 dark:from-slate-800/80 dark:via-indigo-950/20 dark:to-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`p-2.5 rounded-xl shrink-0 ${currentStudio.badgeColor} border shadow-2xs`}>
+                    <CurrentIcon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/80 font-mono">
+                        Studio {currentStudio.studioNum} of 7
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${currentStudio.badgeColor}`}>
+                        {currentStudio.badge}
+                      </span>
+                      {/* Layout Toggle Pill inside Studio Banner */}
+                      <button
+                        type="button"
+                        onClick={() => setNavLayoutStyle(navLayoutStyle === 'aside' ? 'tabs' : 'aside')}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+                        title={`Switch to ${navLayoutStyle === 'aside' ? 'Top Tab Style' : 'Left Aside Menu Style'}`}
+                      >
+                        {navLayoutStyle === 'aside' ? <LayoutList className="w-2.5 h-2.5 text-indigo-500" /> : <Columns className="w-2.5 h-2.5 text-indigo-500" />}
+                        <span>{navLayoutStyle === 'aside' ? 'Switch to Tab Style' : 'Switch to Aside Menu'}</span>
+                      </button>
+                    </div>
+                    <h2 className="text-sm font-black text-slate-900 dark:text-white truncate mt-1">
+                      {currentStudio.label}
+                    </h2>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      {currentStudio.desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step Navigation Controls */}
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  {prevStudio && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab(prevStudio.id)}
+                      className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                      title={`Previous Studio: ${prevStudio.shortTitle}`}
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Prev:</span>
+                      <span>{prevStudio.shortTitle}</span>
+                    </button>
+                  )}
+                  {nextStudio && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab(nextStudio.id)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1 cursor-pointer shadow-xs shadow-indigo-500/20"
+                      title={`Next Studio: ${nextStudio.shortTitle}`}
+                    >
+                      <span className="hidden sm:inline">Next:</span>
+                      <span>{nextStudio.shortTitle}</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
           
           {/* TAB 1: BASIC & PRICING */}
           {activeTab === 'basic' && (
@@ -1793,582 +2047,756 @@ Highlights:
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Titles: Conditional Order Based on Platform Language */}
-                {isEnglishMain ? (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Tour Title (English / Primary) *
-                        </label>
-                        <FieldAiTranslator
-                          kmText={titleKm || title}
-                          enText={titleEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Tour Package Title"
-                          onTranslateToKm={(trans) => {
-                            setTitleKm(trans);
-                            setTitle(trans);
-                          }}
-                          onTranslateToEn={(trans) => setTitleEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={titleEn}
-                        onChange={(e) => setTitleEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium"
-                        placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
-                      />
+              {/* Section 2: Titles & Nomenclature */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                      <FileText className="w-4 h-4" />
                     </div>
-
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Tour Title (ខ្មែរ / Khmer Secondary)
-                        </label>
-                        <FieldAiTranslator
-                          kmText={titleKm || title}
-                          enText={titleEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Tour Package Title"
-                          onTranslateToKm={(trans) => {
-                            setTitleKm(trans);
-                            setTitle(trans);
-                          }}
-                          onTranslateToEn={(trans) => setTitleEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={titleKm || title}
-                        onChange={(e) => {
-                          setTitle(e.target.value);
-                          setTitleKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium"
-                        placeholder="e.g. ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
-                      />
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Tour Naming & Multilingual Titles
+                      </h3>
+                      <p className="text-[11px] text-slate-500">Official package title in English and Khmer with AI auto-translation</p>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Tour Title (ខ្មែរ / Khmer Primary) *
-                        </label>
-                        <FieldAiTranslator
-                          kmText={titleKm || title}
-                          enText={titleEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Tour Package Title"
-                          onTranslateToKm={(trans) => {
-                            setTitleKm(trans);
-                            setTitle(trans);
-                          }}
-                          onTranslateToEn={(trans) => setTitleEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={titleKm || title}
-                        onChange={(e) => {
-                          setTitle(e.target.value);
-                          setTitleKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium"
-                        placeholder="e.g. ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Tour Title (English Title)
-                        </label>
-                        <FieldAiTranslator
-                          kmText={titleKm || title}
-                          enText={titleEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Tour Package Title"
-                          onTranslateToKm={(trans) => {
-                            setTitleKm(trans);
-                            setTitle(trans);
-                          }}
-                          onTranslateToEn={(trans) => setTitleEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={titleEn}
-                        onChange={(e) => setTitleEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium"
-                        placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Destinations: Conditional Order Based on Platform Language */}
-                {isEnglishMain ? (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Destination City / Province (English / Primary) *
-                        </label>
-                        <FieldAiTranslator
-                          kmText={destinationKm || destination}
-                          enText={destinationEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Destination City or Province"
-                          onTranslateToKm={(trans) => {
-                            setDestinationKm(trans);
-                            setDestination(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDestinationEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={destinationEn}
-                        onChange={(e) => setDestinationEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Destination (ខ្មែរ / Khmer Secondary)
-                        </label>
-                        <FieldAiTranslator
-                          kmText={destinationKm || destination}
-                          enText={destinationEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Destination City or Province"
-                          onTranslateToKm={(trans) => {
-                            setDestinationKm(trans);
-                            setDestination(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDestinationEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={destinationKm || destination}
-                        onChange={(e) => {
-                          setDestination(e.target.value);
-                          setDestinationKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. ហូជីមិញ + កោះត្រល់"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Destination City / Province (ខ្មែរ / Primary) *
-                        </label>
-                        <FieldAiTranslator
-                          kmText={destinationKm || destination}
-                          enText={destinationEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Destination City or Province"
-                          onTranslateToKm={(trans) => {
-                            setDestinationKm(trans);
-                            setDestination(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDestinationEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={destinationKm || destination}
-                        onChange={(e) => {
-                          setDestination(e.target.value);
-                          setDestinationKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. ហូជីមិញ + កោះត្រល់"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Destination (English)
-                        </label>
-                        <FieldAiTranslator
-                          kmText={destinationKm || destination}
-                          enText={destinationEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Destination City or Province"
-                          onTranslateToKm={(trans) => {
-                            setDestinationKm(trans);
-                            setDestination(trans);
-                          }}
-                          onTranslateToEn={(trans) => setDestinationEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={destinationEn}
-                        onChange={(e) => setDestinationEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Country: Conditional Order Based on Platform Language */}
-                {isEnglishMain ? (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Country (English / Primary) *
-                        </label>
-                        <FieldAiTranslator
-                          kmText={countryKm || country}
-                          enText={countryEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Country Name"
-                          onTranslateToKm={(trans) => {
-                            setCountryKm(trans);
-                            setCountry(trans);
-                          }}
-                          onTranslateToEn={(trans) => setCountryEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={countryEn}
-                        onChange={(e) => setCountryEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. Vietnam, Thailand, China, Japan"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Country (ប្រទេស / Khmer Secondary)
-                        </label>
-                        <FieldAiTranslator
-                          kmText={countryKm || country}
-                          enText={countryEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Country Name"
-                          onTranslateToKm={(trans) => {
-                            setCountryKm(trans);
-                            setCountry(trans);
-                          }}
-                          onTranslateToEn={(trans) => setCountryEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={countryKm || country}
-                        onChange={(e) => {
-                          setCountry(e.target.value);
-                          setCountryKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. វៀតណាម, ប្រទេសថៃ, ចិន"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Country (ប្រទេស / Primary) *
-                        </label>
-                        <FieldAiTranslator
-                          kmText={countryKm || country}
-                          enText={countryEn}
-                          preferredDirection="km_to_en"
-                          fieldHint="Country Name"
-                          onTranslateToKm={(trans) => {
-                            setCountryKm(trans);
-                            setCountry(trans);
-                          }}
-                          onTranslateToEn={(trans) => setCountryEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        value={countryKm || country}
-                        onChange={(e) => {
-                          setCountry(e.target.value);
-                          setCountryKm(e.target.value);
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. Vietnam, វៀតណាម, ប្រទេសថៃ"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Country (English)
-                        </label>
-                        <FieldAiTranslator
-                          kmText={countryKm || country}
-                          enText={countryEn}
-                          preferredDirection="en_to_km"
-                          fieldHint="Country Name"
-                          onTranslateToKm={(trans) => {
-                            setCountryKm(trans);
-                            setCountry(trans);
-                          }}
-                          onTranslateToEn={(trans) => setCountryEn(trans)}
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={countryEn}
-                        onChange={(e) => setCountryEn(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-                        placeholder="e.g. Vietnam, Thailand, China, Japan"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Category *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsCategoryManagerOpen(true)}
-                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors cursor-pointer"
-                    >
-                      <Tag className="w-3 h-3" />
-                      <span>+ Manage Categories</span>
-                    </button>
                   </div>
-                  <select
-                    value={category}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === '__manage_new__') {
-                        setIsCategoryManagerOpen(true);
-                        return;
-                      }
-                      setCategory(val);
-                      const selectedCat = packageCategories.find(c => c.id === val);
-                      if (selectedCat) {
-                        if (selectedCat.nameKm) setCategoryKm(selectedCat.nameKm);
-                        if (selectedCat.nameEn) setCategoryEn(selectedCat.nameEn);
-                      }
-                      if (val === 'canton_fair') {
-                        setIsCantonFair(true);
-                        if (!cantonFairPhase) setCantonFairPhase('Phase 1');
-                      }
-                    }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white cursor-pointer"
-                  >
-                    {packageCategories.map(cat => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.icon ? `${cat.icon} ` : ''}{cat.name} {cat.nameKm ? `(${cat.nameKm})` : ''}
-                      </option>
-                    ))}
-                    {/* Fallback for legacy custom category */}
-                    {category && !packageCategories.some(c => c.id === category) && (
-                      <option value={category}>
-                        🏷️ {category} (Custom Legacy)
-                      </option>
-                    )}
-                    <option value="__manage_new__" className="text-indigo-600 font-bold">
-                      ➕ Create / Manage Categories...
-                    </option>
-                  </select>
                 </div>
 
-                {/* Canton Fair Special Configuration */}
-                <div className="md:col-span-2 p-4 rounded-2xl bg-red-50/80 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">🇨🇳</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Titles: Conditional Order Based on Platform Language */}
+                  {isEnglishMain ? (
+                    <>
                       <div>
-                        <span className="text-xs font-bold text-red-950 dark:text-red-200 block">
-                          Canton Fair 2026 Phase Assignment
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                              🇺🇸 EN
+                            </span>
+                            <span>Tour Title (English / Primary) *</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={titleKm || title}
+                            enText={titleEn}
+                            preferredDirection="en_to_km"
+                            fieldHint="Tour Package Title"
+                            onTranslateToKm={(trans) => {
+                              setTitleKm(trans);
+                              setTitle(trans);
+                            }}
+                            onTranslateToEn={(trans) => setTitleEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={titleEn}
+                          onChange={(e) => setTitleEn(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou Canton Fair 2026 Phase 1 VIP Mission"</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                              🇰🇭 KM
+                            </span>
+                            <span className="font-khmer">ចំណងជើងដំណើរទស្សនកិច្ច (ខ្មែរ / Khmer Secondary)</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={titleKm || title}
+                            enText={titleEn}
+                            preferredDirection="km_to_en"
+                            fieldHint="Tour Package Title"
+                            onTranslateToKm={(trans) => {
+                              setTitleKm(trans);
+                              setTitle(trans);
+                            }}
+                            onTranslateToEn={(trans) => setTitleEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={titleKm || title}
+                          onChange={(e) => {
+                            setTitle(e.target.value);
+                            setTitleKm(e.target.value);
+                          }}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="ឧទាហរណ៍៖ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"បេសកកម្មពាណិជ្ជកម្មពិព័រណ៍ក្វាងចូវ Canton Fair 2026"</span>
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                              🇰🇭 KM
+                            </span>
+                            <span className="font-khmer">ចំណងជើងដំណើរទស្សនកិច្ច (ខ្មែរ / Khmer Primary) *</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={titleKm || title}
+                            enText={titleEn}
+                            preferredDirection="km_to_en"
+                            fieldHint="Tour Package Title"
+                            onTranslateToKm={(trans) => {
+                              setTitleKm(trans);
+                              setTitle(trans);
+                            }}
+                            onTranslateToEn={(trans) => setTitleEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={titleKm || title}
+                          onChange={(e) => {
+                            setTitle(e.target.value);
+                            setTitleKm(e.target.value);
+                          }}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="ឧទាហរណ៍៖ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"បេសកកម្មពាណិជ្ជកម្មពិព័រណ៍ក្វាងចូវ Canton Fair 2026"</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                              🇺🇸 EN
+                            </span>
+                            <span>Tour Title (English Title)</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={titleKm || title}
+                            enText={titleEn}
+                            preferredDirection="en_to_km"
+                            fieldHint="Tour Package Title"
+                            onTranslateToKm={(trans) => {
+                              setTitleKm(trans);
+                              setTitle(trans);
+                            }}
+                            onTranslateToEn={(trans) => setTitleEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={titleEn}
+                          onChange={(e) => setTitleEn(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="e.g. Vietnam Coffee, Tea, Bakery & Franchise B2B Mission"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou Canton Fair 2026 Phase 1 VIP Mission"</span>
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 3: Geographic Destination & Country */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Destination Geography & Country
+                      </h3>
+                      <p className="text-[11px] text-slate-500">City, province, and country localization for filtering and maps</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Destinations: Conditional Order Based on Platform Language */}
+                  {isEnglishMain ? (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                              🇺🇸 EN
+                            </span>
+                            <span>Destination City / Province (English / Primary) *</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={destinationKm || destination}
+                            enText={destinationEn}
+                            preferredDirection="en_to_km"
+                            fieldHint="Destination City or Province"
+                            onTranslateToKm={(trans) => {
+                              setDestinationKm(trans);
+                              setDestination(trans);
+                            }}
+                            onTranslateToEn={(trans) => setDestinationEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={destinationEn}
+                          onChange={(e) => setDestinationEn(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou & Shenzhen"</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                              🇰🇭 KM
+                            </span>
+                            <span className="font-khmer">គោលដៅទីក្រុង/ខេត្ត (ខ្មែរ / Khmer Secondary)</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={destinationKm || destination}
+                            enText={destinationEn}
+                            preferredDirection="km_to_en"
+                            fieldHint="Destination City or Province"
+                            onTranslateToKm={(trans) => {
+                              setDestinationKm(trans);
+                              setDestination(trans);
+                            }}
+                            onTranslateToEn={(trans) => setDestinationEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={destinationKm || destination}
+                          onChange={(e) => {
+                            setDestination(e.target.value);
+                            setDestinationKm(e.target.value);
+                          }}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="ឧទាហរណ៍៖ ហូជីមិញ + កោះត្រល់"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ក្វាងចូវ & សិនជិន"</span>
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                              🇰🇭 KM
+                            </span>
+                            <span className="font-khmer">គោលដៅទីក្រុង/ខេត្ត (ខ្មែរ / Primary) *</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={destinationKm || destination}
+                            enText={destinationEn}
+                            preferredDirection="km_to_en"
+                            fieldHint="Destination City or Province"
+                            onTranslateToKm={(trans) => {
+                              setDestinationKm(trans);
+                              setDestination(trans);
+                            }}
+                            onTranslateToEn={(trans) => setDestinationEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={destinationKm || destination}
+                          onChange={(e) => {
+                            setDestination(e.target.value);
+                            setDestinationKm(e.target.value);
+                          }}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="ឧទាហរណ៍៖ ហូជីមិញ + កោះត្រល់"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ក្វាងចូវ & សិនជិន"</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                              🇺🇸 EN
+                            </span>
+                            <span>Destination City (English)</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={destinationKm || destination}
+                            enText={destinationEn}
+                            preferredDirection="en_to_km"
+                            fieldHint="Destination City or Province"
+                            onTranslateToKm={(trans) => {
+                              setDestinationKm(trans);
+                              setDestination(trans);
+                            }}
+                            onTranslateToEn={(trans) => setDestinationEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={destinationEn}
+                          onChange={(e) => setDestinationEn(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="e.g. Ho Chi Minh City & Phu Quoc Island"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Guangzhou & Shenzhen"</span>
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Country: Conditional Order Based on Platform Language */}
+                  {isEnglishMain ? (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                              🇺🇸 EN
+                            </span>
+                            <span>Country (English / Primary) *</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={countryKm || country}
+                            enText={countryEn}
+                            preferredDirection="en_to_km"
+                            fieldHint="Country Name"
+                            onTranslateToKm={(trans) => {
+                              setCountryKm(trans);
+                              setCountry(trans);
+                            }}
+                            onTranslateToEn={(trans) => setCountryEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={countryEn}
+                          onChange={(e) => setCountryEn(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="e.g. Vietnam, Thailand, China, Japan"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"China", "Vietnam", "Thailand"</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                              🇰🇭 KM
+                            </span>
+                            <span className="font-khmer">ប្រទេស (ខ្មែរ / Khmer Secondary)</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={countryKm || country}
+                            enText={countryEn}
+                            preferredDirection="km_to_en"
+                            fieldHint="Country Name"
+                            onTranslateToKm={(trans) => {
+                              setCountryKm(trans);
+                              setCountry(trans);
+                            }}
+                            onTranslateToEn={(trans) => setCountryEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={countryKm || country}
+                          onChange={(e) => {
+                            setCountry(e.target.value);
+                            setCountryKm(e.target.value);
+                          }}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="ឧទាហរណ៍៖ វៀតណាម, ប្រទេសថៃ, ចិន"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ប្រទេសចិន", "ប្រទេសវៀតណាម", "ប្រទេសថៃ"</span>
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                              🇰🇭 KM
+                            </span>
+                            <span className="font-khmer">ប្រទេស (ខ្មែរ / Primary) *</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={countryKm || country}
+                            enText={countryEn}
+                            preferredDirection="km_to_en"
+                            fieldHint="Country Name"
+                            onTranslateToKm={(trans) => {
+                              setCountryKm(trans);
+                              setCountry(trans);
+                            }}
+                            onTranslateToEn={(trans) => setCountryEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={countryKm || country}
+                          onChange={(e) => {
+                            setCountry(e.target.value);
+                            setCountryKm(e.target.value);
+                          }}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="ឧទាហរណ៍៖ វៀតណាម, ប្រទេសថៃ, ប្រទេសចិន"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                          ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ប្រទេសចិន", "ប្រទេសវៀតណាម", "ប្រទេសថៃ"</span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                              🇺🇸 EN
+                            </span>
+                            <span>Country (English)</span>
+                          </label>
+                          <FieldAiTranslator
+                            kmText={countryKm || country}
+                            enText={countryEn}
+                            preferredDirection="en_to_km"
+                            fieldHint="Country Name"
+                            onTranslateToKm={(trans) => {
+                              setCountryKm(trans);
+                              setCountry(trans);
+                            }}
+                            onTranslateToEn={(trans) => setCountryEn(trans)}
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={countryEn}
+                          onChange={(e) => setCountryEn(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                          placeholder="e.g. Vietnam, Thailand, China, Japan"
+                        />
+                        <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                          Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"China", "Vietnam", "Thailand"</span>
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 4: Classification & Canton Fair Configuration */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                      <Tag className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Category Classification & Canton Fair Phase
+                      </h3>
+                      <p className="text-[11px] text-slate-500">Catalog grouping, Canton Fair VIP delegation phase setup</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Primary Package Category *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryManagerOpen(true)}
+                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <Tag className="w-3 h-3" />
+                        <span>+ Manage Categories</span>
+                      </button>
+                    </div>
+                    <select
+                      value={category}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '__manage_new__') {
+                          setIsCategoryManagerOpen(true);
+                          return;
+                        }
+                        setCategory(val);
+                        const selectedCat = packageCategories.find(c => c.id === val);
+                        if (selectedCat) {
+                          if (selectedCat.nameKm) setCategoryKm(selectedCat.nameKm);
+                          if (selectedCat.nameEn) setCategoryEn(selectedCat.nameEn);
+                        }
+                        if (val === 'canton_fair') {
+                          setIsCantonFair(true);
+                          if (!cantonFairPhase) setCantonFairPhase('Phase 1');
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white cursor-pointer focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      {packageCategories.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.icon ? `${cat.icon} ` : ''}{cat.name} {cat.nameKm ? `(${cat.nameKm})` : ''}
+                        </option>
+                      ))}
+                      {/* Fallback for legacy custom category */}
+                      {category && !packageCategories.some(c => c.id === category) && (
+                        <option value={category}>
+                          🏷️ {category} (Custom Legacy)
+                        </option>
+                      )}
+                      <option value="__manage_new__" className="text-indigo-600 font-bold">
+                        ➕ Create / Manage Categories...
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Canton Fair Special Configuration */}
+                  <div className="p-4 rounded-2xl bg-red-50/80 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🇨🇳</span>
+                        <div>
+                          <span className="text-xs font-bold text-red-950 dark:text-red-200 block">
+                            Canton Fair 2026 Phase Assignment
+                          </span>
+                          <span className="text-[11px] text-red-700/80 dark:text-red-300/80">
+                            Enable Phase 1, Phase 2, or Phase 3 specific filters and Pazhou Complex VIP badge flow.
+                          </span>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isCantonFair}
+                          onChange={(e) => {
+                            setIsCantonFair(e.target.checked);
+                            if (e.target.checked && !cantonFairPhase) setCantonFairPhase('Phase 1');
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                      </label>
+                    </div>
+
+                    {isCantonFair && (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-red-200 dark:border-red-900/30">
+                        {[
+                          { val: 'Phase 1' as const, title: 'Phase 1', desc: 'Electronics, Machinery, Hardware & Clean Energy' },
+                          { val: 'Phase 2' as const, title: 'Phase 2', desc: 'Houseware, Home Decor, Ceramics, Gifts & Furniture' },
+                          { val: 'Phase 3' as const, title: 'Phase 3', desc: 'Textiles, Garments, Shoes, Medical & Food Sourcing' }
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => setCantonFairPhase(item.val)}
+                            className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
+                              cantonFairPhase === item.val
+                                ? 'bg-red-600 text-white border-red-600 shadow-sm'
+                                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-red-300'
+                            }`}
+                          >
+                            <div className="text-xs font-black flex items-center justify-between">
+                              <span>{item.title}</span>
+                              {cantonFairPhase === item.val && <Check className="w-3.5 h-3.5" />}
+                            </div>
+                            <div className={`text-[10px] mt-1 line-clamp-2 ${cantonFairPhase === item.val ? 'text-red-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                              {item.desc}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 5: Commercial Pricing, Duration & Hotel Accommodation */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Commercial Pricing, Duration & Inclusions
+                      </h3>
+                      <p className="text-[11px] text-slate-500">Retail rates, early bird deals, duration calculations, hotel star rating</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Pricing Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Standard Price ($ USD) *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                        <input
+                          type="number"
+                          required
+                          min={0}
+                          value={priceUSD}
+                          onChange={(e) => setPriceUSD(Number(e.target.value))}
+                          className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Early Bird Discount Price ($ USD)
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={discountPriceUSD || ''}
+                          onChange={(e) => setDiscountPriceUSD(e.target.value ? Number(e.target.value) : undefined)}
+                          placeholder="e.g. 299"
+                          className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Duration & Accommodation */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Duration (Days)
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={durationDays}
+                        onChange={(e) => setDurationDays(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Duration (Nights)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={durationNights}
+                        onChange={(e) => setDurationNights(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Hotel Rating
+                      </label>
+                      <select
+                        value={hotelStars}
+                        onChange={(e) => setHotelStars(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold cursor-pointer focus:ring-2 focus:ring-indigo-500/20"
+                      >
+                        <option value={3}>⭐ 3 ផ្កាយ (3-Star Hotel)</option>
+                        <option value={4}>⭐⭐ 4 ផ្កាយ (4-Star Premium)</option>
+                        <option value={5}>⭐⭐⭐ 5 ផ្កាយ (5-Star Luxury)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Flight Included Switch */}
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                        <Plane className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                          Flight Tickets Included
                         </span>
-                        <span className="text-[11px] text-red-700/80 dark:text-red-300/80">
-                          Enable Phase 1, Phase 2, or Phase 3 specific filters and Pazhou Complex VIP badge flow.
+                        <span className="text-[11px] text-slate-500">
+                          Package covers round-trip international or domestic economy airfare
                         </span>
                       </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={isCantonFair}
-                        onChange={(e) => {
-                          setIsCantonFair(e.target.checked);
-                          if (e.target.checked && !cantonFairPhase) setCantonFairPhase('Phase 1');
-                        }}
+                        checked={flightIncluded}
+                        onChange={(e) => setFlightIncluded(e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
                     </label>
                   </div>
+                </div>
+              </div>
 
-                  {isCantonFair && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-red-200 dark:border-red-900/30">
-                      {[
-                        { val: 'Phase 1' as const, title: 'Phase 1', desc: 'Electronics, Machinery, Hardware & Clean Energy' },
-                        { val: 'Phase 2' as const, title: 'Phase 2', desc: 'Houseware, Home Decor, Ceramics, Gifts & Furniture' },
-                        { val: 'Phase 3' as const, title: 'Phase 3', desc: 'Textiles, Garments, Shoes, Medical & Food Sourcing' }
-                      ].map((item) => (
-                        <button
-                          key={item.val}
-                          type="button"
-                          onClick={() => setCantonFairPhase(item.val)}
-                          className={`p-3 rounded-xl text-left border transition-all cursor-pointer ${
-                            cantonFairPhase === item.val
-                              ? 'bg-red-600 text-white border-red-600 shadow-sm'
-                              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-red-300'
-                          }`}
-                        >
-                          <div className="text-xs font-black flex items-center justify-between">
-                            <span>{item.title}</span>
-                            {cantonFairPhase === item.val && <Check className="w-3.5 h-3.5" />}
-                          </div>
-                          <div className={`text-[10px] mt-1 line-clamp-2 ${cantonFairPhase === item.val ? 'text-red-100' : 'text-slate-500 dark:text-slate-400'}`}>
-                            {item.desc}
-                          </div>
-                        </button>
-                      ))}
+              {/* Section 6: Available Departure Dates & Schedule */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                      <Calendar className="w-4 h-4" />
                     </div>
-                  )}
-                </div>
-
-                {/* Pricing */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Standard Price ($ USD) *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min={0}
-                      value={priceUSD}
-                      onChange={(e) => setPriceUSD(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-slate-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Early Bird Price ($ USD)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={discountPriceUSD || ''}
-                      onChange={(e) => setDiscountPriceUSD(e.target.value ? Number(e.target.value) : undefined)}
-                      placeholder="e.g. 299"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                    />
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Available Departure Dates ({availableDates.length} Dates Configured)
+                      </h3>
+                      <p className="text-[11px] text-slate-500">Select dates when delegations and groups will depart</p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Duration & Accommodation */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Days
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={durationDays}
-                      onChange={(e) => setDurationDays(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Nights
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={durationNights}
-                      onChange={(e) => setDurationNights(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Hotel Stars
-                    </label>
-                    <select
-                      value={hotelStars}
-                      onChange={(e) => setHotelStars(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold cursor-pointer"
-                    >
-                      <option value={3}>3 ផ្កាយ (3-Star)</option>
-                      <option value={4}>4 ផ្កាយ (4-Star)</option>
-                      <option value={5}>5 ផ្កាយ (5-Star Luxury)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Flight Option */}
-                <div className="flex items-center gap-4 pt-2 md:col-span-2">
-                  <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
-                    <input
-                      type="checkbox"
-                      checked={flightIncluded}
-                      onChange={(e) => setFlightIncluded(e.target.checked)}
-                      className="w-4 h-4 rounded text-indigo-600 cursor-pointer"
-                    />
-                    <span>Includes Flight / Domestic Air Tickets</span>
-                  </label>
-                </div>
-
-                {/* Departure Dates Interactive Manager */}
-                <div className="md:col-span-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      <span>Available Departure Dates ({availableDates.length} Dates)</span>
-                    </label>
-                    <span className="text-[11px] text-slate-500">Pick date or type ISO format</span>
-                  </div>
-
-                  <div className="flex gap-2">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2">
                     <input
                       type="date"
                       value={newDateInput}
                       onChange={(e) => setNewDateInput(e.target.value)}
-                      className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono"
+                      className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono focus:ring-2 focus:ring-indigo-500/20"
                     />
                     <button
                       type="button"
                       onClick={handleAddDepartureDate}
-                      className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
                     >
-                      + Add Date
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>+ Add Departure Date</span>
                     </button>
                   </div>
 
@@ -2384,102 +2812,126 @@ Highlights:
                         <button
                           type="button"
                           onClick={() => handleRemoveDepartureDate(dateStr)}
-                          className="text-slate-400 hover:text-rose-500 cursor-pointer text-xs"
+                          className="text-slate-400 hover:text-rose-500 cursor-pointer text-xs p-0.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           title="Remove Date"
                         >
                           ✕
                         </button>
                       </span>
                     ))}
+                    {availableDates.length === 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 italic">
+                        ⚠️ No departure dates added. Add at least one date for travelers to book.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 7: Marketing Tags & Social Proof Rating Metrics */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Marketing Badges & Social Proof
+                      </h3>
+                      <p className="text-[11px] text-slate-500">Preset tags, custom search tags, rating and booking counts</p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Tags Interactive Manager */}
-                <div className="md:col-span-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-                  <label className="block text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    Package Tags & Badges
-                  </label>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {['trending', 'popular', 'luxury', 'adventure', 'cultural', 'eco'].map((presetTag) => {
-                      const isSelected = tags.includes(presetTag);
-                      return (
-                        <button
-                          key={presetTag}
-                          type="button"
-                          onClick={() => handleToggleTag(presetTag)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                            isSelected
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
-                          }`}
-                        >
-                          #{presetTag} {isSelected ? '✓' : '+'}
-                        </button>
-                      );
-                    })}
+                <div className="space-y-4">
+                  {/* Preset Tags */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                      Preset Promotional Tags
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['trending', 'popular', 'luxury', 'adventure', 'cultural', 'eco'].map((presetTag) => {
+                        const isSelected = tags.includes(presetTag);
+                        return (
+                          <button
+                            key={presetTag}
+                            type="button"
+                            onClick={() => handleToggleTag(presetTag)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                              isSelected
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            #{presetTag} {isSelected ? '✓' : '+'}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  <div className="flex gap-2 pt-1">
+                  {/* Custom Tag Input */}
+                  <div className="flex gap-2">
                     <input
                       type="text"
                       value={newTagInput}
                       onChange={(e) => setNewTagInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
-                      placeholder="Add custom tag (e.g. b2b-expo, trade-mission)"
-                      className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+                      placeholder="Add custom tag (e.g. b2b-expo, trade-mission)..."
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs focus:ring-2 focus:ring-indigo-500/20"
                     />
                     <button
                       type="button"
                       onClick={handleAddCustomTag}
-                      className="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                     >
                       + Add Tag
                     </button>
                   </div>
-                </div>
 
-                {/* Ratings & Performance Stats */}
-                <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Customer Rating (0-5.0)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="1"
-                      max="5"
-                      value={rating}
-                      onChange={(e) => setRating(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                    />
-                  </div>
+                  {/* Rating & Performance Metrics */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-200/80 dark:border-slate-700/80">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Customer Rating (0-5.0)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="1"
+                        max="5"
+                        value={rating}
+                        onChange={(e) => setRating(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Verified Review Count
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={reviewCount}
-                      onChange={(e) => setReviewCount(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Verified Review Count
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={reviewCount}
+                        onChange={(e) => setReviewCount(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Booked This Month
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={bookedThisMonth}
-                      onChange={(e) => setBookedThisMonth(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                    />
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Booked This Month
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={bookedThisMonth}
+                        onChange={(e) => setBookedThisMonth(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2494,8 +2946,11 @@ Highlights:
                   <>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Full Package Overview (English / Primary) *
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                            🇺🇸 EN
+                          </span>
+                          <span>Full Package Overview (English / Primary) *</span>
                         </label>
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
@@ -2515,14 +2970,20 @@ Highlights:
                         value={descriptionEn}
                         onChange={(e) => setDescriptionEn(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
-                        placeholder="Describe the trade mission in English..."
+                        placeholder="e.g. Join our exclusive B2B trade mission connecting Cambodian entrepreneurs directly with high-level manufacturers and suppliers..."
                       />
+                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                        Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Join our exclusive delegation with VIP factory tours and networking events."</span>
+                      </p>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Full Package Overview (ខ្មែរ / Khmer Secondary)
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                            🇰🇭 KM
+                          </span>
+                          <span className="font-khmer">សេចក្តីសង្ខេបកញ្ចប់ទស្សនកិច្ច (ខ្មែរ / Khmer Secondary)</span>
                         </label>
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
@@ -2543,17 +3004,23 @@ Highlights:
                           setDescription(e.target.value);
                           setDescriptionKm(e.target.value);
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
-                        placeholder="Describe the trade mission in Khmer..."
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed font-khmer"
+                        placeholder="ឧទាហរណ៍៖ ចូលរួមដំណើរទស្សនកិច្ចពាណិជ្ជកម្មលំដាប់ខ្ពស់ ដែលភ្ជាប់ទំនាក់ទំនងដោយផ្ទាល់ជាមួយរោងចក្រផលិត..."
                       />
+                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                        ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ចូលរួមគណៈប្រតិភូអាជីវកម្មពិសេសជាមួយការទស្សនកិច្ចរោងចក្រ និងកម្មវិធីជំនួបពាណិជ្ជកម្ម B2B។"</span>
+                      </p>
                     </div>
                   </>
                 ) : (
                   <>
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Full Package Overview (ខ្មែរ / Primary) *
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                            🇰🇭 KM
+                          </span>
+                          <span className="font-khmer">សេចក្តីសង្ខេបកញ្ចប់ទស្សនកិច្ច (ខ្មែរ / Primary) *</span>
                         </label>
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
@@ -2575,15 +3042,21 @@ Highlights:
                           setDescription(e.target.value);
                           setDescriptionKm(e.target.value);
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
-                        placeholder="Describe the trade mission in Khmer..."
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed font-khmer"
+                        placeholder="ឧទាហរណ៍៖ ចូលរួមដំណើរទស្សនកិច្ចពាណិជ្ជកម្មលំដាប់ខ្ពស់ ដែលភ្ជាប់ទំនាក់ទំនងដោយផ្ទាល់ជាមួយរោងចក្រផលិត..."
                       />
+                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                        ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ចូលរួមគណៈប្រតិភូអាជីវកម្មពិសេសជាមួយការទស្សនកិច្ចរោងចក្រ និងកម្មវិធីជំនួបពាណិជ្ជកម្ម B2B។"</span>
+                      </p>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                          Full Package Overview (English Description)
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                            🇺🇸 EN
+                          </span>
+                          <span>Full Package Overview (English Description)</span>
                         </label>
                         <FieldAiTranslator
                           kmText={descriptionKm || description}
@@ -2602,8 +3075,11 @@ Highlights:
                         value={descriptionEn}
                         onChange={(e) => setDescriptionEn(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white leading-relaxed"
-                        placeholder="Describe the trade mission in English..."
+                        placeholder="e.g. Join our exclusive B2B trade mission connecting Cambodian entrepreneurs directly with high-level manufacturers and suppliers..."
                       />
+                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                        Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Join our exclusive delegation with VIP factory tours and networking events."</span>
+                      </p>
                     </div>
                   </>
                 )}
@@ -4290,76 +4766,104 @@ Highlights:
 
           {/* TAB 7: EMERGENCY & LOCATION */}
           {activeTab === 'emergency' && (
-            <div className="space-y-6 animate-in fade-in duration-150">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    Official Emergency Contacts & Consular Support
-                  </h4>
+            <div className="space-y-5 animate-in fade-in duration-150">
+              {/* Emergency Contacts Card */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      Official Emergency Hotlines & Consular Support
+                    </h3>
+                    <p className="text-[11px] text-slate-500">24/7 security lines, emergency dispatch, and diplomatic support for delegates</p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Emergency Jurisdiction
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyCountry || ''}
-                    onChange={(e) => setEmergencyCountry(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Emergency Jurisdiction / Country / City
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyCountry || ''}
+                      onChange={(e) => setEmergencyCountry(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs focus:ring-2 focus:ring-teal-500/20"
+                      placeholder="e.g. Vietnam (Ho Chi Minh City & Phu Quoc)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Local Police Hotline
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyPolice || ''}
+                      onChange={(e) => setEmergencyPolice(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-500/20"
+                      placeholder="e.g. 113"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Ambulance / Medical Emergency
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyAmbulance || ''}
+                      onChange={(e) => setEmergencyAmbulance(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-500/20"
+                      placeholder="e.g. 115"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Mission Tourist Helpline / Coordinator Phone
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyHelpline || ''}
+                      onChange={(e) => setEmergencyHelpline(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 focus:ring-2 focus:ring-teal-500/20"
+                      placeholder="e.g. 060 815 515 (Mr. Tim Vutha)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Royal Embassy / Consulate Support
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyEmbassy || ''}
+                      onChange={(e) => setEmergencyEmbassy(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold focus:ring-2 focus:ring-teal-500/20"
+                      placeholder="e.g. +84 28 3829 2751 (Royal Embassy of Cambodia)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Coordinates & Map Pin Card */}
+              <div className="p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      GPS Coordinates & Destination Pinning
+                    </h3>
+                    <p className="text-[11px] text-slate-500">Geographic coordinates and visual map coordinates for tour location display</p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Local Police Hotline
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyPolice || ''}
-                    onChange={(e) => setEmergencyPolice(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Ambulance / Medical Hotline
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyAmbulance || ''}
-                    onChange={(e) => setEmergencyAmbulance(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Mission Tourist Helpline / Coordinator Phone
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyHelpline || ''}
-                    onChange={(e) => setEmergencyHelpline(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Royal Embassy / Consulate General Contact
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyEmbassy || ''}
-                    onChange={(e) => setEmergencyEmbassy(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
-                  />
-                </div>
-
-                {/* Coordinates */}
-                <div className="md:col-span-2 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                       Latitude
@@ -4411,43 +4915,46 @@ Highlights:
             </div>
           )}
 
-          {/* Sticky Modal Footer Controls */}
-          <div className="sticky bottom-0 -mx-6 -mb-6 px-6 py-3.5 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.5)]">
-            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span className="hidden sm:inline">Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
-              <span className="sm:hidden">Auto-syncs to Cloud & Storage</span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
+            {/* Sticky Modal Footer Controls */}
+            <div className="sticky bottom-0 px-6 py-3.5 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.5)]">
+              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span className="hidden sm:inline">Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
+                <span className="sm:hidden">Auto-syncs to Cloud & Storage</span>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => handleSubmit(undefined, 'draft')}
-                className="px-4 py-2.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                title="Save package as draft without publishing to public catalog"
-              >
-                <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>Save as Draft</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
 
-              <button
-                type="submit"
-                onClick={() => {
-                  if (status === 'draft') setStatus('active');
-                }}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-              >
-                <Save className="w-4 h-4" />
-                <span>{status === 'draft' ? '🚀 Publish Live (Active)' : isEditing ? 'Save All Package Updates' : 'Publish Tour Package'}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleSubmit(undefined, 'draft')}
+                  className="px-4 py-2.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Save package as draft without publishing to public catalog"
+                >
+                  <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span>Save as Draft</span>
+                </button>
+
+                <button
+                  type="submit"
+                  onClick={() => {
+                    if (status === 'draft') setStatus('active');
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{status === 'draft' ? '🚀 Publish Live (Active)' : isEditing ? 'Save All Package Updates' : 'Publish Tour Package'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </form>

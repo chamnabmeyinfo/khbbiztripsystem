@@ -318,6 +318,36 @@ export interface AutoSyncState {
 }
 ```
 
+## SystemSettings & Feature Flags
+```typescript
+export interface SystemSettings {
+  enableExploreCuratedTours?: boolean; // Controls front-end Home Page "Explore Curated Tours" section visibility
+  enableAiCopilot: boolean;
+  enableCustomerBooking: boolean;
+  enableEarlyBirdDiscount: boolean;
+  enableTaxInvoicing: boolean;
+  enableSupportChat: boolean;
+  enableDataRecovery: boolean;
+  enableOfflineCache: boolean;
+  enablePushNotifications: boolean;
+  paymentGateways: {
+    cards: boolean;
+    abaPayWay: boolean;
+    acledaXPay: boolean;
+    wingBank: boolean;
+    applePay: boolean;
+    googlePay: boolean;
+    biometricWallet: boolean;
+  };
+  taxRatePercent: number;
+  companyName: string;
+  taxVatNumber: string;
+  leadCoordinatorName: string;
+  companyAddress: string;
+  // ... Theme presets, typography, and CRM configs
+}
+```
+
 ## Related Notes
 - [[Firebase and Firestore]]
 - [[Mock Data]]

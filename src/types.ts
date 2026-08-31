@@ -761,6 +761,7 @@ export interface DeletedItemRecord {
 
 export interface SystemSettings {
   // Feature Toggles
+  enableExploreCuratedTours?: boolean; // Controls front-end visibility of the Explore Curated Tours section on Home Page
   enableAiCopilot: boolean;
   enableCustomerBooking: boolean;
   enableEarlyBirdDiscount: boolean;

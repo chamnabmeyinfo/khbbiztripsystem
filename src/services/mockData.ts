@@ -1467,6 +1467,7 @@ export const SEED_INVOICES: Invoice[] = INITIAL_INVOICES;
 export const SEED_SUPPORT_CHATS: SupportChat[] = INITIAL_CHATS;
 
 export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
+  enableExploreCuratedTours: true,
   enableAiCopilot: true,
   enableCustomerBooking: true,
   enableEarlyBirdDiscount: true,

@@ -20,7 +20,7 @@ import { TourPackage } from '../../types';
 import { formatMoney } from '../../services/currencyService';
 
 export const LandingPage: React.FC = () => {
-  const { packages, setSelectedPackage, setActiveModal, currency, language, t } = useApp();
+  const { packages, setSelectedPackage, setActiveModal, currency, language, systemSettings, t } = useApp();
   
   const [searchResults, setSearchResults] = useState<{
     query: string;
@@ -248,8 +248,10 @@ export const LandingPage: React.FC = () => {
       {/* Interactive Expedition Atlas (Map) */}
       <InteractiveMap />
 
-      {/* Trending Deals Grid */}
-      <TrendingDeals />
+      {/* Explore Curated Tours & Trending Deals Grid (Controlled by Admin Feature Flag) */}
+      {systemSettings?.enableExploreCuratedTours !== false && (
+        <TrendingDeals />
+      )}
 
       {/* Testimonials */}
       <Testimonials />

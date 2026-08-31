@@ -389,7 +389,16 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navSettings: "⚙️ الإعدادات والتحكم",
     viewPublicSite: "عرض الموقع للجمهور",
     quickActions: "إجراءات سريعة",
-    backOfficeManagement: "إدارة المكتب الخلفي"
+    backOfficeManagement: "إدارة المكتب الخلفي",
+    startingFrom: "ابتداءً من",
+    selectCurrency: "اختر العملة",
+    reconnect: "إعادة الاتصال",
+    saveAmount: "وفّر",
+    pdfDossier: "ملف الرحلة PDF",
+    salesPage: "صفحة العرض",
+    allMissions: "جميع الوفود التجارية",
+    verifiedBadge: "موثق",
+    navInboundLeads: "العملاء المحتملون (CRM)"
   },
   he: {
     appName: "KHB Trip",
@@ -512,7 +521,16 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navSettings: "⚙️ הגדרות ובקרה",
     viewPublicSite: "צפה באתר הציבורי",
     quickActions: "פעולות מהירות",
-    backOfficeManagement: "ניהול משרד אחורי"
+    backOfficeManagement: "ניהול משרד אחורי",
+    startingFrom: "החל מ-",
+    selectCurrency: "בחר מטבע",
+    reconnect: "התחבר מחדש",
+    saveAmount: "חיסכון של",
+    pdfDossier: "מסמך תוכנית PDF",
+    salesPage: "דף מידע",
+    allMissions: "כל המשלחות העסקיות",
+    verifiedBadge: "מאומת",
+    navInboundLeads: "לידים נכנסים (CRM)"
   },
   es: {
     appName: "KHB Trip",
@@ -635,7 +653,16 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navSettings: "⚙️ Configuración y Controles",
     viewPublicSite: "Ver Sitio Público",
     quickActions: "Acciones Rápidas",
-    backOfficeManagement: "Gestión de Back-Office"
+    backOfficeManagement: "Gestión de Back-Office",
+    startingFrom: "Desde",
+    selectCurrency: "Seleccionar Moneda",
+    reconnect: "Reconectar",
+    saveAmount: "Ahorra",
+    pdfDossier: "Dossier PDF",
+    salesPage: "Página de Ventas",
+    allMissions: "Todas las Delegaciones",
+    verifiedBadge: "Verificado",
+    navInboundLeads: "Leads Entrantes (CRM)"
   },
   ja: {
     appName: "KHB Trip",
@@ -758,7 +785,16 @@ export const translations: Record<LanguageCode, TranslationDictionary> = {
     navSettings: "⚙️ システム設定・管理",
     viewPublicSite: "公開サイトを表示",
     quickActions: "クイックアクション",
-    backOfficeManagement: "バックオフィス管理業務"
+    backOfficeManagement: "バックオフィス管理業務",
+    startingFrom: "開始価格",
+    selectCurrency: "通貨を選択",
+    reconnect: "再接続",
+    saveAmount: "割引",
+    pdfDossier: "行程資料 PDF",
+    salesPage: "詳細ページ",
+    allMissions: "すべての視察団",
+    verifiedBadge: "認証済み",
+    navInboundLeads: "CRM 獲得リード"
   },
   km: {
     appName: "KHB Trip",

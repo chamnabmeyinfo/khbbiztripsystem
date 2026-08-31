@@ -1,9 +1,13 @@
-﻿# 🤖 Gemini AI Concierge
+# 🤖 Gemini AI Concierge
 
 ← [[Home]] | File: `src/components/portal/SupportChatWidget.tsx`
 
 ## Overview
-A 24/7 AI-powered support chat widget powered by **Google Gemini API** (`@google/genai` v2.4.0).
+A comprehensive AI intelligence suite powered by **Google Gemini API** (`@google/genai` v2.4.0) with support for:
+- 24/7 AI Concierge & Support Chat widget (`SupportChatWidget.tsx`)
+- Server-Side Gemini API Proxy & Fallback Cascade (`/api/ai-copilot`, `/api/ai-translate`, `/api/ai-parse-package`, `/api/ai-detect-theme` in `app.ts`)
+- Multi-tier model fallback: `gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-flash-latest`, `gemini-2.5-flash`
+- High-precision Field Translation & Package Translation with bilingual resolution (Khmer 🇰🇭 ⇄ English 🇺🇸)
 
 ## How It Works
 1. User clicks the chat bubble (bottom-right corner)

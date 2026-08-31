@@ -182,9 +182,12 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
     <div className="space-y-2.5 bg-white/80 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <span>🇰🇭 Khmer Version / ភាសាខ្មែរ {isEnglishMain ? '(Secondary)' : '(Primary)'} ({kmItems.length})</span>
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+            🇰🇭 KM
+          </span>
+          <span>ភាសាខ្មែរ {isEnglishMain ? '(Khmer Secondary)' : '(Khmer Primary)'} ({kmItems.length})</span>
         </label>
-        <span className="text-[10px] text-slate-400">Smart Bi-directional Detection</span>
+        <span className="text-[10px] text-slate-400 font-khmer">ឧទាហរណ៍៖ សេវាទទួលនៅព្រលានយន្តហោះ</span>
       </div>
 
       {/* Add Input */}
@@ -199,8 +202,8 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
               handleAddKm();
             }
           }}
-          placeholder="បន្ថែមចំណុចជាភាសាខ្មែរ..."
-          className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
+          placeholder="ឧទាហរណ៍៖ ការស្នាក់នៅសណ្ឋាគារផ្កាយ ៤, អាហារ ៣ ពេល..."
+          className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-khmer"
         />
         <button
           type="button"
@@ -220,7 +223,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
             className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95 disabled:opacity-50"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>+ ➔ EN</span>
+            <span>+ ➔ 🇺🇸 EN</span>
           </button>
         )}
       </div>
@@ -228,8 +231,8 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
       {/* List */}
       <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
         {kmItems.length === 0 ? (
-          <p className="text-[11px] text-slate-400 italic text-center py-3">
-            {isEnglishMain ? 'No Khmer items yet. Click "⚡ Auto-Translate All EN ➔ KM" above.' : 'មិនទាន់មានទិន្នន័យជាភាសាខ្មែរនៅឡើយទេ។'}
+          <p className="text-[11px] text-slate-400 italic text-center py-3 font-khmer">
+            {isEnglishMain ? 'មិនទាន់មានទិន្នន័យជាភាសាខ្មែរនៅឡើយទេ។ ចុច "⚡ Translate All 🇺🇸 EN ➔ 🇰🇭 KM" ខាងលើ។' : 'មិនទាន់មានទិន្នន័យជាភាសាខ្មែរនៅឡើយទេ។ បញ្ចូលចំណុចថ្មីខាងលើ។'}
           </p>
         ) : (
           kmItems.map((item, i) => (
@@ -252,7 +255,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
                       }
                     }}
                     autoFocus
-                    className="flex-1 px-2 py-0.5 rounded border border-indigo-500 bg-white dark:bg-slate-900 text-xs"
+                    className="flex-1 px-2 py-0.5 rounded border border-indigo-500 bg-white dark:bg-slate-900 text-xs font-khmer"
                   />
                   <button
                     type="button"
@@ -272,10 +275,10 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
               ) : (
                 <>
                   <div className="flex items-start gap-1.5 flex-1 min-w-0">
-                    <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       {i + 1}
                     </span>
-                    <span className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed flex-1">
+                    <span className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed flex-1 font-khmer">
                       {item}
                     </span>
                   </div>
@@ -332,9 +335,12 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
     <div className="space-y-2.5 bg-white/80 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/60">
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-          <span>🇺🇸 English Version {isEnglishMain ? '(Primary)' : '(Secondary)'} ({enItems.length})</span>
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+            🇺🇸 EN
+          </span>
+          <span>English Version {isEnglishMain ? '(English Primary)' : '(English Secondary)'} ({enItems.length})</span>
         </label>
-        <span className="text-[10px] text-slate-400">Smart Bi-directional Detection</span>
+        <span className="text-[10px] text-slate-400">Example: VIP Airport Meet & Greet</span>
       </div>
 
       {/* Add Input */}
@@ -349,7 +355,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
               handleAddEn();
             }
           }}
-          placeholder={isEnglishMain ? "Add item in English (Primary)..." : "Add English point..."}
+          placeholder={isEnglishMain ? "e.g. 4-Star Hotel Accommodation, B2B Matchmaking..." : "e.g. VIP Airport transfer, 4-Star Hotel..."}
           className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs"
         />
         <button
@@ -370,7 +376,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
             className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95 disabled:opacity-50"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>+ ➔ KM</span>
+            <span>+ ➔ 🇰🇭 KM</span>
           </button>
         )}
       </div>
@@ -381,7 +387,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
           <p className="text-[11px] text-slate-400 italic text-center py-3">
             {isEnglishMain
               ? 'No English items yet. Type above to add your first item.'
-              : 'No English items yet. Click "⚡ Auto-Translate All KM ➔ EN" above or type manually.'}
+              : 'No English items yet. Click "⚡ Translate All 🇰🇭 KM ➔ 🇺🇸 EN" above or type manually.'}
           </p>
         ) : (
           enItems.map((item, i) => (
@@ -424,7 +430,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
               ) : (
                 <>
                   <div className="flex items-start gap-1.5 flex-1 min-w-0">
-                    <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       {i + 1}
                     </span>
                     <span className="text-slate-800 dark:text-slate-200 text-xs leading-relaxed flex-1">

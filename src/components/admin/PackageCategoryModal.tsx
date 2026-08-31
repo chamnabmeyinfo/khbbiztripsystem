@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { PackageCategory } from '../../types';
+import { FieldAiTranslator } from './FieldAiTranslator';
 import {
   X,
   Plus,
@@ -15,7 +16,8 @@ import {
   CheckCircle2,
   XCircle,
   Hash,
-  Globe
+  Globe,
+  Sparkles
 } from 'lucide-react';
 
 interface PackageCategoryModalProps {
@@ -338,17 +340,33 @@ export const PackageCategoryModal: React.FC<PackageCategoryModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Category Name English */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Category Name (English / Primary) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                        🇺🇸 EN
+                      </span>
+                      <span>Category Name (English / Primary) *</span>
+                    </label>
+                    <FieldAiTranslator
+                      kmText={formNameKm}
+                      enText={formName}
+                      preferredDirection="en_to_km"
+                      fieldHint="Tour Package Category Name"
+                      onTranslateToKm={(trans) => setFormNameKm(trans)}
+                      onTranslateToEn={(trans) => handleAutoDeriveSlug(trans)}
+                    />
+                  </div>
                   <input
                     type="text"
                     required
                     value={formName}
                     onChange={(e) => handleAutoDeriveSlug(e.target.value)}
-                    placeholder="e.g. B2B Trade Mission, Canton Fair"
+                    placeholder="e.g. B2B Trade Mission, Canton Fair, Factory Tour"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
                   />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                    Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"B2B Trade Mission", "Canton Fair"</span>
+                  </p>
                 </div>
 
                 {/* Slug ID */}
@@ -366,35 +384,59 @@ export const PackageCategoryModal: React.FC<PackageCategoryModalProps> = ({
                     placeholder="e.g. trade_mission"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-mono disabled:opacity-60"
                   />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                    Unique key: <span className="text-slate-600 dark:text-slate-300">{formId || 'auto_generated'}</span>
+                  </p>
                 </div>
 
                 {/* Category Name Khmer */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1 font-khmer">
-                    <Globe className="w-3 h-3 text-slate-400" />
-                    <span>ឈ្មោះជាភាសាខ្មែរ (Khmer)</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-khmer">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                        🇰🇭 KM
+                      </span>
+                      <span>ឈ្មោះជាភាសាខ្មែរ (Khmer)</span>
+                    </label>
+                    <FieldAiTranslator
+                      kmText={formNameKm}
+                      enText={formName}
+                      preferredDirection="km_to_en"
+                      fieldHint="Tour Package Category Name"
+                      onTranslateToKm={(trans) => setFormNameKm(trans)}
+                      onTranslateToEn={(trans) => handleAutoDeriveSlug(trans)}
+                    />
+                  </div>
                   <input
                     type="text"
                     value={formNameKm}
                     onChange={(e) => setFormNameKm(e.target.value)}
-                    placeholder="ឧ. ពិព័រណ៍ពាណិជ្ជកម្ម B2B"
+                    placeholder="ឧ. ពិព័រណ៍ពាណិជ្ជកម្ម B2B, ទស្សនកិច្ចរោងចក្រ"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-khmer"
                   />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500 font-khmer">
+                    ភាសា៖ <span className="font-semibold text-amber-600 dark:text-amber-400">ខ្មែរ (Khmer)</span> • ឧទាហរណ៍៖ <span className="text-slate-600 dark:text-slate-300">"ពិព័រណ៍ក្វាងចូវ", "ទស្សនកិច្ចរោងចក្រ"</span>
+                  </p>
                 </div>
 
                 {/* Category Name Chinese */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Chinese Name (中文)
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800">
+                      🇨🇳 ZH
+                    </span>
+                    <span>Chinese Name (中文)</span>
                   </label>
                   <input
                     type="text"
                     value={formNameZh}
                     onChange={(e) => setFormNameZh(e.target.value)}
-                    placeholder="例如: 商务考察与贸易对接"
+                    placeholder="例如: 商务考察与贸易对接, 广交会"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
                   />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                    Language: <span className="font-semibold text-red-600 dark:text-red-400">Chinese (中文)</span> • 示例: <span className="text-slate-600 dark:text-slate-300">"广交会考察", "商务对接"</span>
+                  </p>
                 </div>
 
                 {/* Sort Order */}
@@ -410,6 +452,9 @@ export const PackageCategoryModal: React.FC<PackageCategoryModalProps> = ({
                     onChange={(e) => setFormOrder(parseInt(e.target.value) || 1)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white font-mono"
                   />
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                    Ordering sequence in dropdown menus and filter chips
+                  </p>
                 </div>
               </div>
 
@@ -473,16 +518,22 @@ export const PackageCategoryModal: React.FC<PackageCategoryModalProps> = ({
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Description & Scope
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                    🇺🇸 EN
+                  </span>
+                  <span>Description & Scope</span>
                 </label>
                 <textarea
                   rows={2}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Describe the trade focus, target attendees, and key industry profile for this category..."
+                  placeholder="e.g. Focuses on high-level enterprise delegations, direct manufacturer sourcing, and trade fair visits..."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
                 />
+                <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                  Language: <span className="font-semibold text-blue-600 dark:text-blue-400">English (EN)</span> • Example: <span className="text-slate-600 dark:text-slate-300">"Focuses on B2B manufacturing expo delegations and supplier networking."</span>
+                </p>
               </div>
 
               {/* Active Toggle & Submit Buttons */}

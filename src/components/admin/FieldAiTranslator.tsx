@@ -333,38 +333,38 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
   if (!label) {
     if (isDualFieldMode) {
       if (preferredDirection === 'km_to_en' || (hasKm && !hasEn)) {
-        dynamicLabel = '⚡ Auto-Translate KM ➔ EN (English)';
+        dynamicLabel = '⚡ Translate 🇰🇭 KM ➔ 🇺🇸 EN';
         dynamicTooltip = 'Khmer detected! Click to auto-translate into English field';
       } else if (preferredDirection === 'en_to_km' || (hasEn && !hasKm)) {
-        dynamicLabel = '⚡ Auto-Translate EN ➔ KM (ខ្មែរ)';
+        dynamicLabel = '⚡ Translate 🇺🇸 EN ➔ 🇰🇭 KM';
         dynamicTooltip = 'English detected! Click to auto-translate into Khmer field';
       } else if (dualDirection === 'both_filled') {
-        dynamicLabel = preferredDirection === 'en_to_km' ? '⚡ Sync EN ➔ KM' : '⚡ Sync KM ➔ EN';
+        dynamicLabel = preferredDirection === 'en_to_km' ? '⚡ Sync 🇺🇸 EN ➔ 🇰🇭 KM' : '⚡ Sync 🇰🇭 KM ➔ 🇺🇸 EN';
         dynamicTooltip = 'Click to re-synchronize translation between fields';
       } else {
-        dynamicLabel = '✨ Smart AI Translate';
+        dynamicLabel = '✨ AI Translate (🇰🇭 ⇄ 🇺🇸)';
         dynamicTooltip = 'Type in either English or Khmer to auto-translate';
       }
     } else if (isDualArrayMode) {
       if (preferredDirection === 'km_to_en' || (hasKmArray && !hasEnArray)) {
-        dynamicLabel = '⚡ Auto-Translate All KM ➔ EN';
+        dynamicLabel = '⚡ Translate All 🇰🇭 KM ➔ 🇺🇸 EN';
       } else if (preferredDirection === 'en_to_km' || (hasEnArray && !hasKmArray)) {
-        dynamicLabel = '⚡ Auto-Translate All EN ➔ KM';
+        dynamicLabel = '⚡ Translate All 🇺🇸 EN ➔ 🇰🇭 KM';
       } else {
-        dynamicLabel = '✨ Smart Sync All Items';
+        dynamicLabel = '✨ AI Sync All (🇰🇭 ⇄ 🇺🇸)';
       }
     } else {
       if (targetLang === 'km') {
-        dynamicLabel = 'ខ្មែរ';
+        dynamicLabel = '🇰🇭 KM';
         dynamicTooltip = 'Translate into Khmer (ខ្មែរ)';
       } else if (targetLang === 'en') {
-        dynamicLabel = 'EN';
+        dynamicLabel = '🇺🇸 EN';
         dynamicTooltip = 'Translate into English';
       } else if (singleDetectedDirection === 'km_to_en') {
-        dynamicLabel = 'EN';
+        dynamicLabel = '🇺🇸 EN';
         dynamicTooltip = 'Khmer detected: Translate into English';
       } else if (singleDetectedDirection === 'en_to_km') {
-        dynamicLabel = 'ខ្មែរ';
+        dynamicLabel = '🇰🇭 KM';
         dynamicTooltip = 'English detected: Translate into Khmer';
       } else {
         dynamicLabel = '✨ AI Translate';

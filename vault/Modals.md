@@ -40,7 +40,11 @@ To close a modal: `setActiveModal(null)`
 
 ### 4. `PackageEditorModal`
 **Trigger:** Click "New Package" or "Edit" inside Admin Package Management  
-**Purpose:** Multi-tab tour creation studio: basic info, pricing & early-bird tiers, itinerary day builder, inclusions/exclusions, tour director assignments, image galleries, and **Video Gallery & File Uploads** (supports uploading MP4/WebM/MOV from local device with automated canvas thumbnail snapshots & duration calculations, or embedding YouTube/Vimeo/CDN video URLs with default auto-play controls).  
+**Layout & Navigation Options:** Dual-mode Responsive Workspace with 1-click switcher between:
+- **Aside Menu Style**: Dedicated Left Navigation Aside Sidebar with studio badges, descriptions, quick search filtering, AI language copilot batch translation (`🇺🇸 EN ➔ 🇰🇭 KM`), and Category Management launcher.
+- **Tab Style**: Sleek top horizontal scrolling tab bar with pill indicators, step numbering, category management, and batch AI translation launcher.
+- **Studio Header Banner**: Integrated in both styles featuring Studio step indicators ("Studio X of 7"), previous/next quick navigation, and instant 1-click layout toggle pill.  
+**Purpose:** Multi-section tour creation studio: basic info, pricing & early-bird tiers, itinerary day builder, inclusions/exclusions, tour director assignments, image galleries, and **Video Gallery & File Uploads** (supports uploading MP4/WebM/MOV from local device with automated canvas thumbnail snapshots & duration calculations, or embedding YouTube/Vimeo/CDN video URLs with default auto-play controls). All sub-sections are housed in modern, accessible card-based containers (`rounded-2xl`, `bg-slate-50/60`, `border-slate-200/80`) equipped with inline AI translation tools (`FieldAiTranslator`).  
 **File:** `src/components/admin/PackageEditorModal.tsx`
 
 ---
