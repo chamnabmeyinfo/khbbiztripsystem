@@ -191,20 +191,20 @@ export function getLocalizedPackage(pkg: TourPackage, lang: LanguageCode = 'km')
 
       return {
         ...slot,
-        activity: getLocalizedText(slotActKm, slotActEn, slot.activity, lang),
-        location: slot.location ? getLocalizedText(slotLocKm, slotLocEn, slot.location, lang) : (slotLocEn || slotLocKm || ''),
-        notes: slot.notes ? getLocalizedText(slotNotesKm, slotNotesEn, slot.notes, lang) : (slotNotesEn || slotNotesKm || ''),
+        activity: getLocalizedText(slotActKm, slotActEn, slot.activity || '', lang),
+        location: getLocalizedText(slotLocKm, slotLocEn, slot.location || '', lang) || undefined,
+        notes: getLocalizedText(slotNotesKm, slotNotesEn, slot.notes || '', lang) || undefined,
       };
     });
 
     return {
       ...step,
-      title: getLocalizedText(stepTitleKm, stepTitleEn, step.title, lang),
-      description: getLocalizedText(stepDescKm, stepDescEn, step.description, lang),
-      hotelName: step.hotelName ? getLocalizedText(stepHotelKm, stepHotelEn, step.hotelName, lang) : (stepHotelEn || stepHotelKm),
+      title: getLocalizedText(stepTitleKm, stepTitleEn, step.title || '', lang),
+      description: getLocalizedText(stepDescKm, stepDescEn, step.description || '', lang),
+      hotelName: getLocalizedText(stepHotelKm, stepHotelEn, step.hotelName || '', lang) || undefined,
       mealsIncluded: getLocalizedArray(stepMealsKm, stepMealsEn, step.mealsIncluded || [], lang),
       dayHighlights: getLocalizedArray(stepHighlightsKm, stepHighlightsEn, step.dayHighlights || [], lang),
-      assemblyPoint: step.assemblyPoint ? getLocalizedText(stepAssemblyKm, stepAssemblyEn, step.assemblyPoint, lang) : (stepAssemblyEn || stepAssemblyKm),
+      assemblyPoint: getLocalizedText(stepAssemblyKm, stepAssemblyEn, step.assemblyPoint || '', lang) || undefined,
       guideAgenda: localizedGuideAgenda
     };
   });
@@ -229,32 +229,32 @@ export function getLocalizedPackage(pkg: TourPackage, lang: LanguageCode = 'km')
 
     return {
       ...prog,
-      title: getLocalizedText(progTitleKm, progTitleEn, prog.title, lang),
-      description: getLocalizedText(progDescKm, progDescEn, prog.description, lang),
-      recommendedAudience: prog.recommendedAudience ? getLocalizedText(progAudKm, progAudEn, prog.recommendedAudience, lang) : (progAudEn || progAudKm || ''),
+      title: getLocalizedText(progTitleKm, progTitleEn, prog.title || '', lang),
+      description: getLocalizedText(progDescKm, progDescEn, prog.description || '', lang),
+      recommendedAudience: getLocalizedText(progAudKm, progAudEn, prog.recommendedAudience || '', lang) || undefined,
       highlights: getLocalizedArray(progHlKm, progHlEn, prog.highlights || [], lang),
-      includedMeals: prog.includedMeals ? getLocalizedArray(progMealsKm, progMealsEn, prog.includedMeals, lang) : (progMealsEn || progMealsKm || []),
-      meetingPoint: prog.meetingPoint ? getLocalizedText(progMeetingKm, progMeetingEn, prog.meetingPoint, lang) : (progMeetingEn || progMeetingKm || ''),
+      includedMeals: getLocalizedArray(progMealsKm, progMealsEn, prog.includedMeals || [], lang),
+      meetingPoint: getLocalizedText(progMeetingKm, progMeetingEn, prog.meetingPoint || '', lang) || undefined,
     };
   });
 
   const tourGuideSource = pkg.tourGuide;
   const localizedTourGuide: TourGuide | undefined = tourGuideSource ? {
     ...tourGuideSource,
-    name: getLocalizedText(tourGuideSource.nameKm, tourGuideSource.nameEn, tourGuideSource.name, lang),
-    title: getLocalizedText(tourGuideSource.titleKm, tourGuideSource.titleEn, tourGuideSource.title, lang),
-    bio: tourGuideSource.bio ? getLocalizedText(tourGuideSource.bioKm, tourGuideSource.bioEn, tourGuideSource.bio, lang) : (tourGuideSource.bioEn || tourGuideSource.bioKm),
-    briefingMeetingPoint: tourGuideSource.briefingMeetingPoint ? getLocalizedText(tourGuideSource.briefingMeetingPointKm, tourGuideSource.briefingMeetingPointEn, tourGuideSource.briefingMeetingPoint, lang) : (tourGuideSource.briefingMeetingPointEn || tourGuideSource.briefingMeetingPointKm),
-    briefingTime: tourGuideSource.briefingTime ? getLocalizedText(tourGuideSource.briefingTimeKm, tourGuideSource.briefingTimeEn, tourGuideSource.briefingTime, lang) : (tourGuideSource.briefingTimeEn || tourGuideSource.briefingTimeKm),
+    name: getLocalizedText(tourGuideSource.nameKm, tourGuideSource.nameEn, tourGuideSource.name || '', lang),
+    title: getLocalizedText(tourGuideSource.titleKm, tourGuideSource.titleEn, tourGuideSource.title || '', lang),
+    bio: getLocalizedText(tourGuideSource.bioKm, tourGuideSource.bioEn, tourGuideSource.bio || '', lang) || undefined,
+    briefingMeetingPoint: getLocalizedText(tourGuideSource.briefingMeetingPointKm, tourGuideSource.briefingMeetingPointEn, tourGuideSource.briefingMeetingPoint || '', lang) || undefined,
+    briefingTime: getLocalizedText(tourGuideSource.briefingTimeKm, tourGuideSource.briefingTimeEn, tourGuideSource.briefingTime || '', lang) || undefined,
   } : undefined;
 
   return {
     ...pkg,
-    title: getLocalizedText(titleKm, titleEn, pkg.title, lang),
-    description: getLocalizedText(descriptionKm, descriptionEn, pkg.description, lang),
-    destination: getLocalizedText(destinationKm, destinationEn, pkg.destination, lang),
-    country: getLocalizedText(countryKm, countryEn, pkg.country, lang),
-    category: pkg.category ? getLocalizedText(categoryKm, categoryEn, pkg.category, lang) : (categoryEn || categoryKm || pkg.category),
+    title: getLocalizedText(titleKm, titleEn, pkg.title || '', lang),
+    description: getLocalizedText(descriptionKm, descriptionEn, pkg.description || '', lang),
+    destination: getLocalizedText(destinationKm, destinationEn, pkg.destination || '', lang),
+    country: getLocalizedText(countryKm, countryEn, pkg.country || '', lang),
+    category: getLocalizedText(categoryKm, categoryEn, pkg.category || '', lang) || pkg.category,
     highlights: getLocalizedArray(highlightsKm, highlightsEn, pkg.highlights || [], lang),
     whoShouldJoin: getLocalizedArray(whoShouldJoinKm, whoShouldJoinEn, pkg.whoShouldJoin || [], lang),
     whyShouldJoin: getLocalizedArray(whyShouldJoinKm, whyShouldJoinEn, pkg.whyShouldJoin || [], lang),

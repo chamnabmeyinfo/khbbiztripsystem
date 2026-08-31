@@ -36,9 +36,9 @@
 |---|---|---|
 | `CustomerDashboard` | `CustomerDashboard.tsx` | Traveler portal displaying active bookings, live itinerary status, flight gates, and quick actions |
 | `CheckoutModal` | `CheckoutModal.tsx` | Multi-step booking checkout with delegate details, optional upgrades, payment gateways (Cards, ABA PayWay, ACLEDA, Wing, Biometrics), and celebratory confetti |
-| `PackageDetailModal` | `PackageDetailModal.tsx` | Full tour dossier, day-by-day agenda, inclusions/exclusions, guide profile, optional B2B programs, direct PDF download, and zero-crash React hook ordering (`useMemo` initialized unconditionally before modal visibility guards) |
+| `PackageDetailModal` | `PackageDetailModal.tsx` | Full tour dossier, day-by-day agenda (Day 1..N with localized headings & slot translations), inclusions/exclusions, guide profile, optional B2B programs, direct PDF download, and zero-crash React hook ordering (`useMemo` initialized unconditionally before modal visibility guards) |
 | `AgendaPdfModal` | `AgendaPdfModal.tsx` | In-app high-fidelity PDF agenda & mission dossier visual previewer for desktop (mobile uses direct download), with dynamic language switching (EN, KM, JA, ES, AR, HE), synchronized live preview & PDF download payload binding, package-specific guide prioritization, and complete bilingual field resolution |
-| `StandaloneAgendaView` | `StandaloneAgendaView.tsx` | Dedicated full-page print/export agenda view |
+| `StandaloneAgendaView` | `StandaloneAgendaView.tsx` | Dedicated full-page print/export agenda view with dynamic language switching, SEO social metadata synchronization, and client share links |
 | `VoucherModal` | `VoucherModal.tsx` | Digital booking confirmation voucher with QR code, hotel address, and escort details |
 | `InvoiceModal` | `InvoiceModal.tsx` | Formal VAT tax invoice with itemized pricing, tax breakdown, and PDF export |
 | `ModifyDatesModal` | `ModifyDatesModal.tsx` | Self-service travel departure date rescheduling modal |

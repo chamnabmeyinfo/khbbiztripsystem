@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getAgendaPreviewHtml, generateShortAgendaUrl, parseAgendaUrlParams, downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
+import { getLocalizedPackage } from '../../utils/packageLocalization';
 import { LanguageCode } from '../../types';
 import { DynamicHead } from '../common/DynamicHead';
 import { ArrowLeft, Globe, Printer, Share2, Check, ExternalLink, Download } from 'lucide-react';
@@ -70,12 +71,17 @@ export const StandaloneAgendaView: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [pkg, date, travelerName, selectedOptions, currentLang, systemSettings, isDownloading]);
 
+  const localizedPkg = useMemo(() => {
+    if (!pkg) return null;
+    return getLocalizedPackage(pkg, currentLang);
+  }, [pkg, currentLang]);
+
   // Sync document title and social metadata with tour package attributes
   useEffect(() => {
-    if (!pkg) return;
-    const cleanTitle = `${pkg.title} | KHB Business Trips`;
-    const cleanDesc = `📍 ${pkg.destination}, ${pkg.country} • 🗓️ ${pkg.durationDays} Days / ${pkg.durationNights} Nights • 💼 Official B2B Trade Mission Agenda`;
-    const cleanImg = pkg.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
+    if (!localizedPkg) return;
+    const cleanTitle = `${localizedPkg.title} | KHB Business Trips`;
+    const cleanDesc = `📍 ${localizedPkg.destination}, ${localizedPkg.country} • 🗓️ ${localizedPkg.durationDays} Days / ${localizedPkg.durationNights} Nights • 💼 Official B2B Trade Mission Agenda`;
+    const cleanImg = localizedPkg.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
 
     document.title = cleanTitle;
 
@@ -92,16 +98,16 @@ export const StandaloneAgendaView: React.FC = () => {
     };
 
     setMeta('description', cleanDesc);
-    setMeta('og:title', pkg.title, true);
+    setMeta('og:title', localizedPkg.title, true);
     setMeta('og:description', cleanDesc, true);
     setMeta('og:image', cleanImg, true);
     setMeta('og:site_name', 'KHB Business Trips', true);
     setMeta('og:type', 'article', true);
     setMeta('twitter:card', 'summary_large_image');
-    setMeta('twitter:title', pkg.title);
+    setMeta('twitter:title', localizedPkg.title);
     setMeta('twitter:description', cleanDesc);
     setMeta('twitter:image', cleanImg);
-  }, [pkg]);
+  }, [localizedPkg]);
 
   const getShortUrl = (langToUse: LanguageCode = currentLang) => {
     if (!pkg) return window.location.href;
@@ -176,7 +182,7 @@ export const StandaloneAgendaView: React.FC = () => {
 
   return (
     <div className="w-full h-screen h-[100dvh] max-h-[100dvh] bg-slate-950 flex flex-col overflow-hidden select-text">
-      <DynamicHead customPackage={pkg} />
+      <DynamicHead customPackage={localizedPkg || pkg} />
       {/* Top Client View Action Navigation Bar */}
       <header className="px-2.5 sm:px-6 py-2 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap z-30 shrink-0 text-xs backdrop-blur-md">
         <div className="flex items-center gap-2">

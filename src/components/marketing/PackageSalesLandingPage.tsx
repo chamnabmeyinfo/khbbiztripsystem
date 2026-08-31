@@ -841,7 +841,7 @@ export const PackageSalesLandingPage: React.FC = () => {
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    Day {day.day}
+                    {language === 'km' ? `ថ្ងៃទី ${day.day}` : `Day ${day.day}`}
                   </button>
                 ))}
               </div>
@@ -886,11 +886,11 @@ export const PackageSalesLandingPage: React.FC = () => {
                     <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold">
                         <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
-                        <span>Assembly Point: {currentDay.assemblyPoint || 'Designated Hotel Portico'}</span>
+                        <span>{language === 'km' ? 'ទីតាំងប្រមូលផ្តុំ' : 'Assembly Point'}: {currentDay.assemblyPoint || (language === 'km' ? 'មុខសណ្ឋាគារ' : 'Designated Hotel Portico')}</span>
                       </div>
                       {currentDay.assemblyTime && (
                         <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono font-bold text-[11px] self-start sm:self-auto">
-                          🕒 Assembly Time: {currentDay.assemblyTime}
+                          🕒 {language === 'km' ? 'ម៉ោងជួបជុំ' : 'Assembly Time'}: {currentDay.assemblyTime}
                         </span>
                       )}
                     </div>
@@ -901,7 +901,7 @@ export const PackageSalesLandingPage: React.FC = () => {
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center justify-between">
                         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          Escort Timeline ({currentDay.guideAgenda.length} Activities)
+                          {language === 'km' ? 'កាលវិភាគមគ្គុទ្ទេសក៍' : 'Escort Timeline'} ({currentDay.guideAgenda.length} {language === 'km' ? 'កម្មវិធី' : 'Activities'})
                         </h4>
                         {currentDay.guideAgenda.length > 3 && (
                           <button

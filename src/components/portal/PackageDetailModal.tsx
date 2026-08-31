@@ -78,7 +78,7 @@ export const PackageDetailModal: React.FC = () => {
     try {
       setIsDownloadingPdf(true);
       await downloadAgendaHtmlToPdf({
-        packageData: pkg,
+        packageData: rawPkg,
         selectedDate: currentDepartureDate,
         travelerName: 'Valued Business Delegate',
         numberOfAdults: adults,
@@ -710,7 +710,7 @@ export const PackageDetailModal: React.FC = () => {
                           </div>
                           <div>
                             <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-                              <span>Day {step.day}: {step.title}</span>
+                              <span>{language === 'km' ? `ថ្ងៃទី ${step.day}:` : `Day ${step.day}:`} {step.title}</span>
                               {step.hotelName && (
                                 <span className="text-[10px] font-semibold text-slate-500 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
                                   🏨 {step.hotelName}
