@@ -36,9 +36,11 @@ export const LandingPage: React.FC = () => {
     }
 
     const matched = packages.filter(p =>
-      p.destination.toLowerCase().includes(destination.toLowerCase()) ||
-      p.title.toLowerCase().includes(destination.toLowerCase()) ||
-      p.country.toLowerCase().includes(destination.toLowerCase())
+      (!p.status || p.status === 'active') && (
+        p.destination.toLowerCase().includes(destination.toLowerCase()) ||
+        p.title.toLowerCase().includes(destination.toLowerCase()) ||
+        p.country.toLowerCase().includes(destination.toLowerCase())
+      )
     );
 
     setSearchResults({

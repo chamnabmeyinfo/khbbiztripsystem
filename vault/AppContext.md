@@ -94,8 +94,8 @@ restorePackage(packageId: string);
 
 // Package Reconciliation & Zero-Data-Loss Architecture
 // - packageReconciler (reconcileTourPackages): Safe dual-layer conflict resolution comparing createdAt, updatedAt, and version counters
-// - Firestore snapshot synchronization: Reconciles local and remote packages, preserving local updates and safely pushing them to the cloud
-// - Deleted item tracking (deletedIds): Prevents remote snapshots or initial fallback seeds from resurrecting deleted packages
+// - Firestore snapshot synchronization: Reconciles local and remote packages. When remote snapshot has documents, Firestore is authoritative and missing seed packages are recognized as deleted (preventing zombie resurrection).
+// - Deleted item tracking (deletedIds & deleted_items sync): Real-time onSnapshot listener on 'deleted_items' collection propagates deletions across all clients, updating Recycle Bin and preventing stale seed resurrection.
 // - Seed Translation Hydration: Automatically enriches cached localStorage packages with updated English translations from INITIAL_PACKAGES on startup
 
 // Package Categories

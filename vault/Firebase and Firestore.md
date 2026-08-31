@@ -65,10 +65,12 @@ Fields: `id`, `userId`, `sender` (user/agent/system/ai), `text`, `timestamp`
 
 ## Real-Time Sync (onSnapshot)
 AppContext sets up live listeners for:
-- `/packages` — synced for all users
+- `/packages` — synced for all users (with authoritative cloud reconciliation)
+- `/deleted_items` — synced for all users to track Recycle Bin items and deleted IDs globally
 - `/bookings` — filtered by userId (or all for admin)
 - `/invoices` — filtered by userId (or all for admin)
 - `/support_messages` — filtered by userId (or all for admin)
+- ERP collections (`/suppliers`, `/cost_templates`, `/purchase_orders`, `/customer_payments`, `/supplier_payments`, `/expenses`)
 
 ## Error Handling
 `handleFirestoreError()` logs operation type, path, and full auth context on any Firestore error.

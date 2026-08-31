@@ -137,18 +137,22 @@ export const InteractiveMap: React.FC = () => {
     lng: 104.9282
   };
 
+  const activePackagesList = useMemo(() => {
+    return packages.filter(p => !p.status || p.status === 'active');
+  }, [packages]);
+
   const filteredPackages = useMemo(() => {
-    if (selectedFilterTag === 'all') return packages;
-    if (selectedFilterTag === 'canton') return packages.filter(p => p.isCantonFair || p.category === 'canton_fair');
-    if (selectedFilterTag === 'vietnam') return packages.filter(p => p.country.toLowerCase().includes('vietnam'));
-    if (selectedFilterTag === 'thailand') return packages.filter(p => p.country.toLowerCase().includes('thailand'));
-    return packages.filter(p => p.tags?.includes(selectedFilterTag as any));
-  }, [packages, selectedFilterTag]);
+    if (selectedFilterTag === 'all') return activePackagesList;
+    if (selectedFilterTag === 'canton') return activePackagesList.filter(p => p.isCantonFair || p.category === 'canton_fair');
+    if (selectedFilterTag === 'vietnam') return activePackagesList.filter(p => p.country.toLowerCase().includes('vietnam'));
+    if (selectedFilterTag === 'thailand') return activePackagesList.filter(p => p.country.toLowerCase().includes('thailand'));
+    return activePackagesList.filter(p => p.tags?.includes(selectedFilterTag as any));
+  }, [activePackagesList, selectedFilterTag]);
 
   const activePkg = useMemo(() => {
-    const raw = packages.find(p => p.id === (hoveredPkgId || selectedPkgId)) || packages[0] || null;
+    const raw = activePackagesList.find(p => p.id === (hoveredPkgId || selectedPkgId)) || activePackagesList[0] || null;
     return raw ? getLocalizedPackage(raw, language) : null;
-  }, [packages, hoveredPkgId, selectedPkgId, language]);
+  }, [activePackagesList, hoveredPkgId, selectedPkgId, language]);
 
   // Compute flight metrics from PNH
   const activeFlightMetrics = useMemo(() => {

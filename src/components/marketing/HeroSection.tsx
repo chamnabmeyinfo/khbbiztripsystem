@@ -67,9 +67,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSearchSubmit }) => {
   }, [heroSlides.length, currentSlideIndex]);
 
   const filteredDestinations = packages.filter(p =>
-    p.destination.toLowerCase().includes(destinationInput.toLowerCase()) ||
-    p.title.toLowerCase().includes(destinationInput.toLowerCase()) ||
-    p.country.toLowerCase().includes(destinationInput.toLowerCase())
+    (!p.status || p.status === 'active') && (
+      p.destination.toLowerCase().includes(destinationInput.toLowerCase()) ||
+      p.title.toLowerCase().includes(destinationInput.toLowerCase()) ||
+      p.country.toLowerCase().includes(destinationInput.toLowerCase())
+    )
   );
 
   const handleSearch = (e: React.FormEvent) => {

@@ -22,9 +22,10 @@ export const TrendingDeals: React.FC = () => {
   const { packages, setSelectedPackage, setActiveModal, openPackageSalesPage, openPackageEditor, currency, language, t } = useApp();
   const [selectedTag, setSelectedTag] = useState<string>('all');
 
+  const activePackages = packages.filter(p => !p.status || p.status === 'active');
   const filtered = selectedTag === 'all'
-    ? packages
-    : packages.filter(p => {
+    ? activePackages
+    : activePackages.filter(p => {
         if (selectedTag === 'canton_all') return p.isCantonFair || p.title.toLowerCase().includes('canton') || p.category === 'canton_fair';
         if (selectedTag === 'canton_phase_1') return p.cantonFairPhase === 'Phase 1' || (p.title.includes('Phase 1') && p.isCantonFair);
         if (selectedTag === 'canton_phase_2') return p.cantonFairPhase === 'Phase 2' || (p.title.includes('Phase 2') && p.isCantonFair);

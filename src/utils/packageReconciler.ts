@@ -20,49 +20,61 @@ export function reconcileTourPackages(
   const deletedSet = deletedIds instanceof Set ? deletedIds : new Set(deletedIds || []);
   const resultMap = new Map<string, TourPackage>();
   const packagesToPush: TourPackage[] = [];
+  const seedIdSet = new Set(seedPackages.map((s) => s.id));
 
-  // 1. Populate remote packages
+  // 1. Populate remote packages from Firestore (excluding deleted items)
   remoteList.forEach((rem) => {
-    if (!rem || !rem.id || deletedSet.has(rem.id)) return;
+    if (!rem || !rem.id || deletedSet.has(rem.id) || rem.status === 'deleted') return;
     resultMap.set(rem.id, rem);
   });
 
   // 2. Reconcile with local packages
-  localList.forEach((loc) => {
-    if (!loc || !loc.id || deletedSet.has(loc.id)) return;
+  if (remoteList.length > 0) {
+    localList.forEach((loc) => {
+      if (!loc || !loc.id || deletedSet.has(loc.id) || loc.status === 'deleted') return;
 
-    if (!resultMap.has(loc.id)) {
-      // Exists locally but not in remote snapshot -> Keep local & push to cloud
-      resultMap.set(loc.id, loc);
-      packagesToPush.push(loc);
-    } else {
-      const rem = resultMap.get(loc.id)!;
-      const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
-      const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
-      const locVer = loc.version || 1;
-      const remVer = rem.version || 1;
+      if (resultMap.has(loc.id)) {
+        // Exists in both: preserve local modifications if local version or timestamp is newer
+        const rem = resultMap.get(loc.id)!;
+        const locTime = loc.updatedAt ? new Date(loc.updatedAt).getTime() : 0;
+        const remTime = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+        const locVer = loc.version || 1;
+        const remVer = rem.version || 1;
 
-      // If local version is newer or has a higher version number
-      if (locTime > remTime || (locTime === remTime && locVer > remVer)) {
+        if (locTime > remTime || (locTime === remTime && locVer > remVer)) {
+          resultMap.set(loc.id, loc);
+          packagesToPush.push(loc);
+        }
+      } else {
+        // Not in remoteList.
+        // If it belongs to default seed packages, it was removed from Firestore, so DO NOT resurrect it!
+        if (seedIdSet.has(loc.id)) {
+          return;
+        }
+        // Custom user-created offline package (not in seed list): keep and sync to Firestore
         resultMap.set(loc.id, loc);
         packagesToPush.push(loc);
       }
-    }
-  });
-
-  // 3. Fallback to seeds ONLY IF no packages exist locally AND remote is empty
-  let finalPackages = Array.from(resultMap.values());
-  if (finalPackages.length === 0 && localList.length === 0 && seedPackages.length > 0) {
-    const validSeeds = seedPackages.filter((p) => p && p.id && !deletedSet.has(p.id));
-    validSeeds.forEach((s) => {
-      resultMap.set(s.id, s);
-      packagesToPush.push(s);
     });
-    finalPackages = validSeeds;
+  } else {
+    // Remote snapshot is completely empty
+    localList.forEach((loc) => {
+      if (!loc || !loc.id || deletedSet.has(loc.id) || loc.status === 'deleted') return;
+      resultMap.set(loc.id, loc);
+    });
+
+    // Fallback to seeds ONLY IF no packages exist locally AND remote is empty AND no deletions occurred
+    if (resultMap.size === 0 && localList.length === 0 && seedPackages.length > 0 && deletedSet.size === 0) {
+      const validSeeds = seedPackages.filter((p) => p && p.id && !deletedSet.has(p.id) && p.status !== 'deleted');
+      validSeeds.forEach((s) => {
+        resultMap.set(s.id, s);
+        packagesToPush.push(s);
+      });
+    }
   }
 
   return {
-    merged: finalPackages,
+    merged: Array.from(resultMap.values()),
     packagesToPushToCloud: packagesToPush,
   };
 }

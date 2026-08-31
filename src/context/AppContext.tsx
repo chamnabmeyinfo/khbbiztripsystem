@@ -608,7 +608,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const valid = parsed.filter((p: TourPackage) => p && p.id && !delSet.has(p.id));
+          const valid = parsed.filter((p: TourPackage) => p && p.id && !delSet.has(p.id) && p.status !== 'deleted');
           if (valid.length > 0) {
             return valid.map((savedPkg: TourPackage) => {
               const seedMatch = INITIAL_PACKAGES.find(ip => ip.id === savedPkg.id);
@@ -663,7 +663,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       }
     } catch {}
-    return INITIAL_PACKAGES;
+    let delSet = new Set<string>();
+    try {
+      const savedDel = localStorage.getItem(STORAGE_KEYS.DELETED_IDS);
+      if (savedDel) delSet = new Set(JSON.parse(savedDel));
+    } catch {}
+    return INITIAL_PACKAGES.filter(p => !delSet.has(p.id) && p.status !== 'deleted');
   });
 
   const [bookings, setBookings] = useState<Booking[]>(() => {
@@ -1501,7 +1506,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [currentUser, deletedIds]);
 
-  // ERP Listeners (with Deleted IDs Guard)
+  // ERP Listeners (with Deleted IDs Guard & Deleted Items Sync)
   useEffect(() => {
     const deletedSet = new Set(deletedIds);
     const collections = [
@@ -1511,6 +1516,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       { name: 'customer_payments', setter: setCustomerPayments },
       { name: 'supplier_payments', setter: setSupplierPayments },
       { name: 'expenses', setter: setExpenses },
+      {
+        name: 'deleted_items',
+        setter: (items: DeletedItemRecord[]) => {
+          setDeletedItems(items);
+          try { localStorage.setItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(items)); } catch (e) {}
+          const extractedIds = items.map(i => i.originalId || i.id).filter(Boolean);
+          if (extractedIds.length > 0) {
+            setDeletedIds(prev => {
+              const combined = Array.from(new Set([...prev, ...extractedIds]));
+              try { localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(combined)); } catch (e) {}
+              return combined;
+            });
+          }
+        }
+      },
     ];
     
     const unsubscribes = collections.map(coll => {
@@ -1520,8 +1540,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const data: any[] = [];
           snapshot.forEach(docSnap => {
             const item = docSnap.data() as any;
-            if (item && item.id && !deletedSet.has(item.id)) {
-              data.push(item);
+            if (item) {
+              const itemId = item.id || docSnap.id;
+              if (coll.name === 'deleted_items') {
+                data.push({ ...item, id: itemId });
+              } else if (itemId && !deletedSet.has(itemId)) {
+                data.push({ ...item, id: itemId });
+              }
             }
           });
           coll.setter(data as any);
