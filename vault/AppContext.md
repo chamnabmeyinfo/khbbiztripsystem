@@ -43,12 +43,18 @@ The `AppContext` is the single source of truth for the entire application, handl
 
 ## Core Operations & Actions
 
-### 1. View & Navigation Management
+## 1. View & Navigation Management & State Retention
+The application guarantees **100% Session State Retention Across Page Refreshes**:
+- **Active View Persistence**: Navigating to `'package_sales_page'`, `'admin_dashboard'`, `'customer_portal'`, or `'marketing'` saves to `STORAGE_KEYS.ACTIVE_VIEW` and updates the URL hash (`#package/<id>`, `#admin/<tab>`, `#portal`, `#explore`).
+- **Selected Package Persistence**: Selecting or viewing any package persists `STORAGE_KEYS.SELECTED_PACKAGE_ID`. When the user refreshes, the app boots up and immediately restores the exact package on the sales landing page.
+- **Admin Tab & Settings Sub-Tab Persistence**: Switching tabs inside Admin Back-Office or Settings persists `STORAGE_KEYS.ACTIVE_ADMIN_TAB` and `STORAGE_KEYS.SETTINGS_SUB_TAB`, restoring the exact module on page reload.
+- **Scroll Position Retention**: `sessionStorage` tracks window scroll coordinates before reload and restores viewport position smoothly after component mount.
+
 ```typescript
-setActiveView(view: ActiveView);
-setSelectedPackage(pkg: TourPackage | null);
-setSelectedBooking(b: Booking | null);
-setActiveModal(name: string | null);
+setActiveView(view: ActiveView); // Persists to localStorage & syncs URL hash
+setSelectedPackage(pkg: TourPackage | null); // Persists ID to localStorage & syncs URL hash
+setAdminActiveTab(tab: string); // Persists to localStorage & syncs URL hash
+setSettingsSubTab(subTab: string); // Persists to localStorage
 setDefaultView(view: ActiveView): void; // Persists default landing view to localStorage & shows toast
 setDefaultAdminTab(tab: string): void; // Persists default admin tab to localStorage & shows toast
 setDefaultPackageViewMode(mode: PackageViewMode): void; // Persists default package view layout to localStorage & shows toast

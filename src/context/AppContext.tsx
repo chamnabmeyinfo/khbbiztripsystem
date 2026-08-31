@@ -450,6 +450,10 @@ const STORAGE_KEYS = {
   INBOUND_LEADS: 'tripdesk_inbound_leads_prod',
   PACKAGE_CATEGORIES: 'tripdesk_package_categories_prod',
   SYSTEM_UPDATES: 'tripdesk_system_updates_prod',
+  ACTIVE_VIEW: 'tripdesk_active_view_prod',
+  SELECTED_PACKAGE_ID: 'tripdesk_selected_package_id_prod',
+  ACTIVE_ADMIN_TAB: 'tripdesk_active_admin_tab_prod',
+  SETTINGS_SUB_TAB: 'tripdesk_settings_sub_tab_prod',
   DEFAULT_VIEW: 'tripdesk_default_view_prod',
   DEFAULT_ADMIN_TAB: 'tripdesk_default_admin_tab_prod',
   DEFAULT_PACKAGE_VIEW_MODE: 'tripdesk_default_package_view_mode_prod',
@@ -992,14 +996,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   };
 
-  // Helper to extract package ID from URL query or hash on startup
+  // Helper to extract package ID from URL query, hash, or localStorage on startup
   const getInitialPackageFromUrl = (): TourPackage | null => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const pkgParam = urlParams.get('pkg') || urlParams.get('packageId');
       const hash = window.location.hash;
-      const hashParam = hash.startsWith('#package/') ? hash.replace('#package/', '') : (hash.startsWith('#pkg=') ? hash.replace('#pkg=', '') : null);
-      const targetId = pkgParam || hashParam;
+      const hashParam = hash.startsWith('#package/')
+        ? hash.replace('#package/', '')
+        : hash.startsWith('#sales/')
+        ? hash.replace('#sales/', '')
+        : hash.startsWith('#pkg=')
+        ? hash.replace('#pkg=', '')
+        : null;
+      const savedPkgId = localStorage.getItem(STORAGE_KEYS.SELECTED_PACKAGE_ID);
+      const targetId = pkgParam || hashParam || savedPkgId;
       if (targetId) {
         let pkgList: TourPackage[] = INITIAL_PACKAGES;
         const saved = localStorage.getItem(STORAGE_KEYS.PACKAGES);
@@ -1017,32 +1028,188 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const initialPkg = getInitialPackageFromUrl();
 
-  const [activeView, setActiveView] = useState<ActiveView>(() => {
+  const [activeView, setActiveViewState] = useState<ActiveView>(() => {
     try {
+      const hash = window.location.hash;
+      const urlParams = new URLSearchParams(window.location.search);
+      const pathname = window.location.pathname.toLowerCase();
+
+      if (hash.startsWith('#package/') || hash.startsWith('#sales/') || urlParams.get('pkg') || urlParams.get('packageId')) {
+        return 'package_sales_page';
+      }
+      if (hash.startsWith('#admin') || urlParams.get('tab') || pathname.includes('/admin')) {
+        return 'admin_dashboard';
+      }
+      if (hash.startsWith('#portal') || hash.startsWith('#customer') || urlParams.get('view') === 'portal') {
+        return 'customer_portal';
+      }
+      if (hash.startsWith('#explore') || hash.startsWith('#marketing') || urlParams.get('view') === 'marketing') {
+        return 'marketing';
+      }
+
+      // Check persisted active view from prior session / before refresh
+      const savedActive = localStorage.getItem(STORAGE_KEYS.ACTIVE_VIEW) as ActiveView;
+      if (savedActive && ['marketing', 'customer_portal', 'admin_dashboard', 'package_sales_page'].includes(savedActive)) {
+        if (savedActive === 'package_sales_page' && !initialPkg) {
+          // If no package exists, fall through
+        } else {
+          return savedActive;
+        }
+      }
+
       if (initialPkg) {
         return 'package_sales_page';
       }
-      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_VIEW) as ActiveView;
-      if (saved && ['marketing', 'customer_portal', 'admin_dashboard', 'package_sales_page'].includes(saved)) {
-        return saved;
+
+      const savedDefault = localStorage.getItem(STORAGE_KEYS.DEFAULT_VIEW) as ActiveView;
+      if (savedDefault && ['marketing', 'customer_portal', 'admin_dashboard', 'package_sales_page'].includes(savedDefault)) {
+        return savedDefault;
       }
     } catch {}
     return 'marketing';
   });
 
-  const [adminActiveTab, setAdminActiveTab] = useState<string>(() => {
+  const [adminActiveTab, setAdminActiveTabState] = useState<string>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB);
-      if (saved) return saved;
+      const hash = window.location.hash;
+      const urlParams = new URLSearchParams(window.location.search);
+      if (hash.startsWith('#admin/')) {
+        const tab = hash.replace('#admin/', '').trim();
+        if (tab) return tab;
+      }
+      const tabParam = urlParams.get('tab');
+      if (tabParam) return tabParam;
+
+      const savedActive = localStorage.getItem(STORAGE_KEYS.ACTIVE_ADMIN_TAB);
+      if (savedActive) return savedActive;
+
+      const savedDefault = localStorage.getItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB);
+      if (savedDefault) return savedDefault;
     } catch {}
     return 'overview';
   });
 
-  const [settingsSubTab, setSettingsSubTab] = useState<string>('features');
-  const [selectedPackage, setSelectedPackage] = useState<TourPackage | null>(() => initialPkg);
+  const [settingsSubTab, setSettingsSubTabState] = useState<string>(() => {
+    try {
+      const hash = window.location.hash;
+      const urlParams = new URLSearchParams(window.location.search);
+      const subParam = urlParams.get('subTab') || urlParams.get('sub');
+      if (subParam) return subParam;
+      if (hash.startsWith('#settings/')) {
+        return hash.replace('#settings/', '').trim();
+      }
+      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS_SUB_TAB);
+      if (saved) return saved;
+    } catch {}
+    return 'features';
+  });
+
+  const [selectedPackage, setSelectedPackageState] = useState<TourPackage | null>(() => initialPkg);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  const setActiveView = (view: ActiveView) => {
+    setActiveViewState(view);
+    try {
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_VIEW, view);
+    } catch {}
+  };
+
+  const setAdminActiveTab = (tab: string) => {
+    setAdminActiveTabState(tab);
+    try {
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_ADMIN_TAB, tab);
+    } catch {}
+  };
+
+  const setSettingsSubTab = (subTab: string) => {
+    setSettingsSubTabState(subTab);
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS_SUB_TAB, subTab);
+    } catch {}
+  };
+
+  const setSelectedPackage = (pkgOrUpdater: TourPackage | null | ((prev: TourPackage | null) => TourPackage | null)) => {
+    setSelectedPackageState(prev => {
+      const next = typeof pkgOrUpdater === 'function' ? pkgOrUpdater(prev) : pkgOrUpdater;
+      try {
+        if (next && next.id) {
+          localStorage.setItem(STORAGE_KEYS.SELECTED_PACKAGE_ID, next.id);
+        } else if (next === null) {
+          localStorage.removeItem(STORAGE_KEYS.SELECTED_PACKAGE_ID);
+        }
+      } catch {}
+      return next;
+    });
+  };
+
+  // Keep selectedPackage synchronized with live packages updates
+  useEffect(() => {
+    if (packages.length > 0) {
+      const targetId = selectedPackage?.id || localStorage.getItem(STORAGE_KEYS.SELECTED_PACKAGE_ID);
+      if (targetId) {
+        const found = packages.find(p => p.id === targetId);
+        if (found && (!selectedPackage || JSON.stringify(found) !== JSON.stringify(selectedPackage))) {
+          setSelectedPackageState(found);
+        }
+      }
+    }
+  }, [packages]);
+
+  // URL Hash synchronization
+  useEffect(() => {
+    try {
+      if (activeView === 'package_sales_page') {
+        const targetId = selectedPackage?.id || localStorage.getItem(STORAGE_KEYS.SELECTED_PACKAGE_ID);
+        if (targetId) {
+          const newHash = `#package/${targetId}`;
+          if (window.location.hash !== newHash) {
+            window.history.replaceState(null, '', newHash);
+          }
+        }
+      } else if (activeView === 'admin_dashboard') {
+        const newHash = `#admin/${adminActiveTab || 'overview'}`;
+        if (window.location.hash !== newHash) {
+          window.history.replaceState(null, '', newHash);
+        }
+      } else if (activeView === 'customer_portal') {
+        if (window.location.hash !== '#portal') {
+          window.history.replaceState(null, '', '#portal');
+        }
+      } else if (activeView === 'marketing') {
+        if (window.location.hash && (window.location.hash.startsWith('#package/') || window.location.hash.startsWith('#admin') || window.location.hash.startsWith('#portal'))) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    } catch {}
+  }, [activeView, selectedPackage?.id, adminActiveTab]);
+
+  // Scroll position retention across page refreshes
+  useEffect(() => {
+    try {
+      const savedScroll = sessionStorage.getItem('tripdesk_scroll_pos');
+      if (savedScroll) {
+        const y = parseInt(savedScroll, 10);
+        if (!isNaN(y) && y > 0) {
+          setTimeout(() => {
+            window.scrollTo({ top: y, behavior: 'instant' });
+          }, 60);
+        }
+      }
+    } catch {}
+
+    const handleBeforeUnload = () => {
+      try {
+        sessionStorage.setItem('tripdesk_scroll_pos', window.scrollY.toString());
+      } catch {}
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const navigateToSettings = (subTab?: string) => {
     if (subTab) {
