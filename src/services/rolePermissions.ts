@@ -479,20 +479,30 @@ export function isAuthorizedCorporateEditor(user: User | null | undefined): bool
   if (user.status === 'suspended' || user.status === 'inactive') return false;
 
   const emailLower = user.email.toLowerCase().trim();
-  const isCorporateDomain =
-    emailLower.endsWith('@khbevents.com') ||
-    emailLower.endsWith('@khbmedia.asia') ||
+
+  // Super Admins & Founders have unconditional editor access
+  if (
     emailLower === 'chamnabmey.info@gmail.com' ||
     emailLower === 'vutha.tim@khbmedia.asia' ||
-    emailLower === 'vutha.tim@khbevents.com';
+    emailLower === 'vutha.tim@khbevents.com' ||
+    user.role === 'super_admin'
+  ) {
+    return true;
+  }
+
+  const isCorporateDomain =
+    emailLower.endsWith('@khbevents.com') ||
+    emailLower.endsWith('@khbmedia.asia');
 
   if (!isCorporateDomain) return false;
 
   // Must have management/admin permissions or role
   return (
-    user.role === 'super_admin' ||
     user.role === 'admin' ||
     user.role === 'operations_manager' ||
+    user.role === 'procurement_officer' ||
+    user.role === 'finance_officer' ||
+    user.role === 'general_staff' ||
     userHasPermission(user, 'packages_manage')
   );
 }
@@ -519,7 +529,15 @@ export const ERP_TABS_LIST = [
  * Check if a user is a staff/back-office member
  */
 export function isStaffMember(user: User | null): boolean {
-  if (!user) return false;
+  if (!user || !user.email) return false;
+  const emailLower = user.email.toLowerCase().trim();
+  if (
+    emailLower === 'chamnabmey.info@gmail.com' ||
+    emailLower === 'vutha.tim@khbmedia.asia' ||
+    emailLower === 'vutha.tim@khbevents.com'
+  ) {
+    return true;
+  }
   if (user.role === 'traveler') return false;
   return [
     'super_admin',

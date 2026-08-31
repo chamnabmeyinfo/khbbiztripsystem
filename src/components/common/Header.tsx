@@ -38,6 +38,7 @@ import {
   Star
 } from 'lucide-react';
 import { ViewContextMenu, ViewContextMenuState } from './ViewContextMenu';
+import { AutoSaveStatusPill } from './AutoSaveStatusPill';
 
 export const Header: React.FC = () => {
   const {
@@ -294,7 +295,7 @@ export const Header: React.FC = () => {
               )}
             </button>
 
-            {isAdmin && (
+            {(isAdmin || isStaff || currentUser?.email?.toLowerCase().trim() === 'chamnabmey.info@gmail.com') && (
               <button
                 onClick={() => setActiveView('admin_dashboard')}
                 onContextMenu={(e) =>
@@ -453,6 +454,9 @@ export const Header: React.FC = () => {
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
+
+            {/* Auto-Save & Cloud Database Status Pill */}
+            <AutoSaveStatusPill variant="compact" className="hidden md:inline-flex" />
 
             {/* Push Notifications Bell */}
             <div ref={notifRef} className="relative">
@@ -860,7 +864,7 @@ export const Header: React.FC = () => {
                         {t('setupBiometrics')} & Settings
                       </button>
 
-                      {isAdmin ? (
+                      {(isAdmin || isStaff || currentUser?.email?.toLowerCase().trim() === 'chamnabmey.info@gmail.com') ? (
                         <button
                           onClick={() => {
                             setShowUserDropdown(false);

@@ -81,11 +81,20 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    // If navigator is offline, client is definitively offline
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return false;
+    }
+    // Attempt fast connection ping to Firestore test collection
+    await Promise.race([
+      getDocFromServer(doc(db, 'test', 'connection')),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+    ]);
     return true;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firestore connection check: Client is offline or initializing.');
+    // If timeout or transient error, if browser is online, Firestore offline cache and background sync is active
+    if (typeof navigator !== 'undefined' && navigator.onLine) {
+      return true;
     }
     return false;
   }

@@ -523,6 +523,9 @@ export const AuthModal: React.FC = () => {
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-mono text-xs font-bold border border-emerald-300 dark:border-emerald-700">
                     @khbevents.com
                   </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 font-mono text-xs font-bold border border-emerald-300 dark:border-emerald-700">
+                    chamnabmey.info@gmail.com
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 italic pt-1">
                   * Public travelers and trade delegates must use the <strong className="text-sky-600 dark:text-sky-400 not-italic cursor-pointer" onClick={() => setActiveTab('public')}>Public Delegates tab</strong> to register using Phone or Email.

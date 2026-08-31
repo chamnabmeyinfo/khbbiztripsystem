@@ -1407,26 +1407,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (fbUser: FirebaseUser | null) => {
       if (fbUser) {
+        const userEmail = (fbUser.email || '').toLowerCase().trim();
+        const isChamnab = userEmail === 'chamnabmey.info@gmail.com';
         const isSuperAdminEmail =
-          fbUser.email === 'chamnabmey.info@gmail.com' ||
-          fbUser.email === 'vutha.tim@khbmedia.asia' ||
-          fbUser.email === 'vutha.tim@khbevents.com';
+          isChamnab ||
+          userEmail === 'vutha.tim@khbmedia.asia' ||
+          userEmail === 'vutha.tim@khbevents.com';
         const isCorporateStaff =
           isSuperAdminEmail ||
-          fbUser.email?.endsWith('@khbevents.com') ||
-          fbUser.email?.endsWith('@khbmedia.asia');
-        const isVutha = fbUser.email === 'vutha.tim@khbmedia.asia' || fbUser.email === 'vutha.tim@khbevents.com';
+          userEmail.endsWith('@khbevents.com') ||
+          userEmail.endsWith('@khbmedia.asia');
+        const isVutha = userEmail === 'vutha.tim@khbmedia.asia' || userEmail === 'vutha.tim@khbevents.com';
 
-        const existing = users.find(u => u.email.toLowerCase() === fbUser.email?.toLowerCase());
+        const existing = users.find(u => u.email.toLowerCase() === userEmail);
 
         const updatedUser: User = {
-          id: isVutha ? 'usr_vutha_tim' : (existing?.id || fbUser.uid),
-          name: isVutha ? (fbUser.displayName || 'Tim Vutha') : (fbUser.displayName || existing?.name || fbUser.email?.split('@')[0] || 'Traveler'),
-          email: fbUser.email || 'traveler@example.com',
+          id: isVutha ? 'usr_vutha_tim' : (isChamnab ? 'usr_chamnab_mey' : (existing?.id || fbUser.uid)),
+          name: isVutha ? (fbUser.displayName || 'Tim Vutha') : (isChamnab ? (fbUser.displayName || 'Chamnab Mey') : (fbUser.displayName || existing?.name || userEmail.split('@')[0] || 'Traveler')),
+          email: fbUser.email || userEmail || 'traveler@example.com',
           phone: fbUser.phoneNumber || existing?.phone || (isVutha ? '060 815 515' : '+855 12 345 678'),
           role: isSuperAdminEmail ? 'super_admin' : (existing?.role || (isCorporateStaff ? 'general_staff' : 'traveler')),
           department: isSuperAdminEmail ? 'Executive Leadership' : (existing?.department || (isCorporateStaff ? 'General Staff' : 'Trade Delegates')),
-          jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (existing?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isCorporateStaff ? 'Staff Member (Pending Clearance)' : undefined))),
+          jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (isChamnab ? 'Executive Director & Founder' : (existing?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isCorporateStaff ? 'Staff Member (Pending Clearance)' : undefined)))),
           status: isSuperAdminEmail ? 'active' : (existing?.status || (isCorporateStaff ? 'invited' : 'active')),
           customPermissions: existing?.customPermissions,
           customAccessibleTabs: existing?.customAccessibleTabs,
@@ -2273,8 +2275,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return { success: false, error: errorMsg };
       }
 
+      const isChamnab = userEmail === 'chamnabmey.info@gmail.com';
       const isSuperAdminEmail =
-        userEmail === 'chamnabmey.info@gmail.com' ||
+        isChamnab ||
         userEmail === 'vutha.tim@khbmedia.asia' ||
         userEmail === 'vutha.tim@khbevents.com';
       const isVutha = userEmail === 'vutha.tim@khbmedia.asia' || userEmail === 'vutha.tim@khbevents.com';
@@ -2287,13 +2290,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         : (existingUser?.role && existingUser.role !== 'traveler' ? existingUser.role : 'general_staff');
 
       const newUser: User = {
-        id: isVutha ? 'usr_vutha_tim' : (existingUser?.id || user.uid),
-        name: isVutha ? (user.displayName || 'Tim Vutha') : (user.displayName || existingUser?.name || userEmail.split('@')[0] || 'KHB Staff Member'),
+        id: isVutha ? 'usr_vutha_tim' : (isChamnab ? 'usr_chamnab_mey' : (existingUser?.id || user.uid)),
+        name: isVutha ? (user.displayName || 'Tim Vutha') : (isChamnab ? (user.displayName || 'Chamnab Mey') : (user.displayName || existingUser?.name || userEmail.split('@')[0] || 'KHB Staff Member')),
         email: user.email || userEmail,
         phone: user.phoneNumber || existingUser?.phone || (isVutha ? '060 815 515' : '+855 12 345 678'),
         role: assignedRole,
         department: isSuperAdminEmail ? 'Executive Leadership' : (existingUser?.department || (isFirstTimeStaff ? 'General Staff' : 'Trip Operations')),
-        jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (existingUser?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isFirstTimeStaff ? 'Staff Member (Pending Clearance)' : 'Staff Member'))),
+        jobTitle: isVutha ? 'Chief Executive Officer (CEO)' : (isChamnab ? 'Executive Director & Founder' : (existingUser?.jobTitle || (isSuperAdminEmail ? 'Executive Leadership & Super Admin' : (isFirstTimeStaff ? 'Staff Member (Pending Clearance)' : 'Staff Member')))),
         status: isSuperAdminEmail ? 'active' : (existingUser?.status || (isFirstTimeStaff ? 'invited' : 'active')),
         customPermissions: existingUser?.customPermissions || [],
         customAccessibleTabs: existingUser?.customAccessibleTabs || [],

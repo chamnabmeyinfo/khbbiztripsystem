@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
   const [newPkgImg, setNewPkgImg] = useState('https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop&q=80');
 
   // If not logged in as staff, display authorization screen
-  if (!currentUser || !isAdmin) {
+  if (!currentUser || (!isAdmin && !isStaff && currentUser?.email?.toLowerCase().trim() !== 'chamnabmey.info@gmail.com')) {
     return (
       <div className="py-20 max-w-xl mx-auto px-4 text-center">
         <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
