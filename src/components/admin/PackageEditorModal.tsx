@@ -148,6 +148,13 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [previewLang, setPreviewLang] = useState<'km' | 'en'>(language === 'en' ? 'en' : 'km');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
+  // Auto-Save & Success Indicator State
+  const [showSuccessToast, setShowSuccessToast] = useState<boolean>(false);
+  const [savedPackageTitle, setSavedPackageTitle] = useState<string>('');
+  const [savedAtTimestamp, setSavedAtTimestamp] = useState<string>('');
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [lastAutoSavedTime, setLastAutoSavedTime] = useState<string | null>(null);
+
   // Basic Info State
   const [status, setStatus] = useState<TourPackageStatus>(pkg?.status || 'active');
   const [title, setTitle] = useState(pkg?.title || '');
@@ -410,6 +417,40 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       }
     }
   }, [pkg]);
+
+  // Background Auto-Save Engine (Saves transient form draft to localStorage)
+  useEffect(() => {
+    if (!title.trim() && !titleKm.trim() && !titleEn.trim()) return;
+
+    setAutoSaveStatus('saving');
+    const timer = setTimeout(() => {
+      try {
+        const draftKey = `khb_editor_draft_${pkg?.id || 'new'}`;
+        const draftData = {
+          pkgId: pkg?.id,
+          status,
+          title, titleKm, titleEn,
+          destination, destinationKm, destinationEn,
+          country, category, priceUSD, discountPriceUSD, durationDays, durationNights,
+          description, descriptionKm, descriptionEn,
+          images, itinerary, optionalPrograms,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(draftKey, JSON.stringify(draftData));
+        setAutoSaveStatus('saved');
+        setLastAutoSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } catch (e) {
+        console.warn('Auto-save to localStorage failed', e);
+        setAutoSaveStatus('idle');
+      }
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [
+    title, titleKm, titleEn, destination, destinationKm, destinationEn,
+    country, category, priceUSD, discountPriceUSD, durationDays, durationNights,
+    description, descriptionKm, descriptionEn, images, itinerary, optionalPrograms, status, pkg?.id
+  ]);
 
   // Package-wide Auto-Translate Loading State
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
@@ -1386,8 +1427,21 @@ Highlights:
       }))
     };
 
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setSavedPackageTitle(updatedPackage.title);
+    setSavedAtTimestamp(nowTime);
+    setShowSuccessToast(true);
+
+    try {
+      localStorage.removeItem(`khb_editor_draft_${pkg?.id || 'new'}`);
+    } catch {}
+
     onSave(updatedPackage);
-    onClose();
+
+    setTimeout(() => {
+      setShowSuccessToast(false);
+      onClose();
+    }, 1600);
   };
 
   const studios: { id: TabType; studioNum: number; label: string; shortTitle: string; icon: any; desc: string; badge: string; badgeColor: string; isFilled: boolean }[] = [
@@ -1678,6 +1732,27 @@ Highlights:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+      {/* SUCCESS NOTIFICATION TOAST */}
+      {showSuccessToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-2xl bg-slate-900 text-white border border-emerald-500/50 shadow-2xl flex items-center gap-4 animate-in slide-in-from-top duration-300">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-6 h-6 animate-bounce text-emerald-400" />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white flex items-center gap-2">
+              <span>Tour Package Updated & Synchronized!</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">Live Sync</span>
+            </h4>
+            <p className="text-xs text-slate-300 mt-0.5">
+              "{savedPackageTitle}" updated at {savedAtTimestamp}. Cloud Firestore & LocalStorage synced.
+            </p>
+          </div>
+          <button type="button" onClick={() => setShowSuccessToast(false)} className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-7xl max-h-[94vh] flex flex-col overflow-hidden my-auto">
         
         {/* Modal Header */}
@@ -1687,13 +1762,25 @@ Highlights:
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
                   {isEditing ? 'Edit Tour Package & Master Information' : 'Create & Publish New Tour Package'}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
                   <Wand2 className="w-3 h-3" /> AI Copilot Enabled
                 </span>
+                
+                {/* Auto-Save Status Badge */}
+                {autoSaveStatus === 'saving' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    <RefreshCw className="w-3 h-3 text-amber-600 animate-spin" /> Auto-Saving...
+                  </span>
+                )}
+                {autoSaveStatus === 'saved' && lastAutoSavedTime && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800" title="Draft saved automatically to local storage">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Auto-Saved {lastAutoSavedTime}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500">
                 Update every commercial, itinerary, guide, and add-on detail, or use AI to parse raw text instantly.
@@ -5348,10 +5435,22 @@ Highlights:
 
             {/* Sticky Modal Footer Controls */}
             <div className="sticky bottom-0 px-6 py-3.5 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_20px_-4px_rgba(0,0,0,0.5)]">
-              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="hidden sm:inline">Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
-                <span className="sm:hidden">Auto-syncs to Cloud & Storage</span>
+              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="hidden sm:inline">Real-time sync to Cloud Firestore, Local Storage & Audit Trail</span>
+                  <span className="sm:hidden">Auto-syncs to Cloud & Storage</span>
+                </div>
+                {autoSaveStatus === 'saved' && lastAutoSavedTime && (
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 font-mono">
+                    💾 Auto-Saved: {lastAutoSavedTime}
+                  </span>
+                )}
+                {autoSaveStatus === 'saving' && (
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 font-mono flex items-center gap-1">
+                    <RefreshCw className="w-2.5 h-2.5 text-amber-600 animate-spin" /> Auto-Saving...
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
