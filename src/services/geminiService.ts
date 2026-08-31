@@ -1577,25 +1577,46 @@ export async function translateEntirePackage(
     (pkgData.itinerary || []).map(async (day) => {
       const srcDayTitle = isTargetEn ? (day.titleKm || day.title || '') : (day.titleEn || day.title || '');
       const srcDayDesc = isTargetEn ? (day.descriptionKm || day.description || '') : (day.descriptionEn || day.description || '');
+      const srcHotel = isTargetEn ? (day.hotelNameKm || day.hotelName || '') : (day.hotelNameEn || day.hotelName || '');
+      const srcAssembly = isTargetEn ? (day.assemblyPointKm || day.assemblyPoint || '') : (day.assemblyPointEn || day.assemblyPoint || '');
+      const srcMeals = isTargetEn ? (day.mealsIncludedKm?.join(', ') || day.mealsIncluded?.join(', ') || '') : (day.mealsIncludedEn?.join(', ') || day.mealsIncluded?.join(', ') || '');
 
-      const dayTitle = await translateTextField(srcDayTitle, target, sourceLang, 'Itinerary Day Title');
-      const dayDesc = await translateTextField(srcDayDesc, target, sourceLang, 'Itinerary Day Description');
-      const hotel = day.hotelName ? await translateTextField(day.hotelName, target, sourceLang, 'Hotel Name') : { translatedText: '' };
-      const assembly = day.assemblyPoint ? await translateTextField(day.assemblyPoint, target, sourceLang, 'Assembly Point') : { translatedText: '' };
+      const [dayTitle, dayDesc, hotel, assembly, meals] = await Promise.all([
+        srcDayTitle ? translateTextField(srcDayTitle, target, sourceLang, 'Itinerary Day Title') : Promise.resolve({ translatedText: '' }),
+        srcDayDesc ? translateTextField(srcDayDesc, target, sourceLang, 'Itinerary Day Description') : Promise.resolve({ translatedText: '' }),
+        srcHotel ? translateTextField(srcHotel, target, sourceLang, 'Hotel Name') : Promise.resolve({ translatedText: '' }),
+        srcAssembly ? translateTextField(srcAssembly, target, sourceLang, 'Assembly Point') : Promise.resolve({ translatedText: '' }),
+        srcMeals ? translateTextField(srcMeals, target, sourceLang, 'Included Meals') : Promise.resolve({ translatedText: '' })
+      ]);
 
       const agenda = await Promise.all(
         (day.guideAgenda || []).map(async (slot) => {
-          const act = await translateTextField(slot.activity, target, sourceLang, 'Agenda Activity');
-          const loc = slot.location ? await translateTextField(slot.location, target, sourceLang, 'Location') : { translatedText: slot.location || '' };
-          const notes = slot.notes ? await translateTextField(slot.notes, target, sourceLang, 'Notes') : { translatedText: slot.notes || '' };
+          const srcAct = isTargetEn ? (slot.activityKm || slot.activity || '') : (slot.activityEn || slot.activity || '');
+          const srcLoc = isTargetEn ? (slot.locationKm || slot.location || '') : (slot.locationEn || slot.location || '');
+          const srcNotes = isTargetEn ? (slot.notesKm || slot.notes || '') : (slot.notesEn || slot.notes || '');
+
+          const [act, loc, notes] = await Promise.all([
+            srcAct ? translateTextField(srcAct, target, sourceLang, 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
+            srcLoc ? translateTextField(srcLoc, target, sourceLang, 'Location') : Promise.resolve({ translatedText: '' }),
+            srcNotes ? translateTextField(srcNotes, target, sourceLang, 'Notes') : Promise.resolve({ translatedText: '' })
+          ]);
+
           return {
             ...slot,
-            activity: act.translatedText,
-            location: loc.translatedText,
-            notes: notes.translatedText
+            activity: isTargetKm ? (act.translatedText || slot.activity) : (slot.activity || act.translatedText),
+            activityKm: isTargetKm ? act.translatedText : (slot.activityKm || slot.activity || ''),
+            activityEn: isTargetEn ? act.translatedText : (slot.activityEn || ''),
+            location: isTargetKm ? (loc.translatedText || slot.location) : (slot.location || loc.translatedText),
+            locationKm: isTargetKm ? loc.translatedText : (slot.locationKm || slot.location || ''),
+            locationEn: isTargetEn ? loc.translatedText : (slot.locationEn || ''),
+            notes: isTargetKm ? (notes.translatedText || slot.notes) : (slot.notes || notes.translatedText),
+            notesKm: isTargetKm ? notes.translatedText : (slot.notesKm || slot.notes || ''),
+            notesEn: isTargetEn ? notes.translatedText : (slot.notesEn || '')
           };
         })
       );
+
+      const parsedMeals = meals.translatedText ? meals.translatedText.split(',').map(m => m.trim()).filter(Boolean) : [];
 
       return {
         ...day,
@@ -1605,8 +1626,15 @@ export async function translateEntirePackage(
         description: day.description || dayDesc.translatedText,
         descriptionKm: isTargetKm ? dayDesc.translatedText : (day.descriptionKm || day.description),
         descriptionEn: isTargetEn ? dayDesc.translatedText : (day.descriptionEn || ''),
-        hotelName: hotel.translatedText || day.hotelName,
-        assemblyPoint: assembly.translatedText || day.assemblyPoint,
+        hotelName: isTargetKm ? (hotel.translatedText || day.hotelName) : (day.hotelName || hotel.translatedText),
+        hotelNameKm: isTargetKm ? hotel.translatedText : (day.hotelNameKm || day.hotelName || ''),
+        hotelNameEn: isTargetEn ? hotel.translatedText : (day.hotelNameEn || ''),
+        assemblyPoint: isTargetKm ? (assembly.translatedText || day.assemblyPoint) : (day.assemblyPoint || assembly.translatedText),
+        assemblyPointKm: isTargetKm ? assembly.translatedText : (day.assemblyPointKm || day.assemblyPoint || ''),
+        assemblyPointEn: isTargetEn ? assembly.translatedText : (day.assemblyPointEn || ''),
+        mealsIncluded: parsedMeals.length > 0 ? parsedMeals : day.mealsIncluded,
+        mealsIncludedKm: isTargetKm ? parsedMeals : (day.mealsIncludedKm || day.mealsIncluded || []),
+        mealsIncludedEn: isTargetEn ? parsedMeals : (day.mealsIncludedEn || []),
         guideAgenda: agenda
       };
     })

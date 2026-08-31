@@ -10,7 +10,7 @@ import {
   TourGuide,
   EmergencyContact
 } from '../../types';
-import { parseTourPackageFromText, translateEntirePackage } from '../../services/geminiService';
+import { parseTourPackageFromText, translateEntirePackage, translateTextField } from '../../services/geminiService';
 import { getLocalizedPackage } from '../../utils/packageLocalization';
 import { FieldAiTranslator } from './FieldAiTranslator';
 import { BilingualListEditor } from './BilingualListEditor';
@@ -542,6 +542,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [isTranslatingAll, setIsTranslatingAll] = useState(false);
   const [translatingDirection, setTranslatingDirection] = useState<'km-en' | 'en-km' | null>(null);
   const [translationSuccessMessage, setTranslationSuccessMessage] = useState<string | null>(null);
+  const [translatingDaySlotIndex, setTranslatingDaySlotIndex] = useState<number | null>(null);
 
   const handleTranslateEntirePackage = async (fromLang: 'km' | 'en', toLang: 'km' | 'en') => {
     setIsTranslatingAll(true);
@@ -1069,6 +1070,51 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     const day = itinerary[dayIndex];
     const currentAgenda = day.guideAgenda || [];
     handleUpdateDayField(dayIndex, 'guideAgenda', currentAgenda.filter((_, sIdx) => sIdx !== slotIndex));
+  };
+
+  const handleAutoTranslateDaySlots = async (dayIndex: number) => {
+    const day = itinerary[dayIndex];
+    const currentAgenda = day.guideAgenda || [];
+    if (currentAgenda.length === 0) return;
+
+    setTranslatingDaySlotIndex(dayIndex);
+    try {
+      const fromLang = isEnglishMain ? 'en' : 'km';
+      const toLang = isEnglishMain ? 'km' : 'en';
+
+      const updatedAgenda = await Promise.all(
+        currentAgenda.map(async (slot) => {
+          const srcAct = isEnglishMain ? (slot.activityEn || slot.activity || '') : (slot.activityKm || slot.activity || '');
+          const srcLoc = isEnglishMain ? (slot.locationEn || slot.location || '') : (slot.locationKm || slot.location || '');
+          const srcNotes = isEnglishMain ? (slot.notesEn || slot.notes || '') : (slot.notesKm || slot.notes || '');
+
+          const [actRes, locRes, notesRes] = await Promise.all([
+            srcAct ? translateTextField(srcAct, toLang, fromLang, 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
+            srcLoc ? translateTextField(srcLoc, toLang, fromLang, 'Agenda Location') : Promise.resolve({ translatedText: '' }),
+            srcNotes ? translateTextField(srcNotes, toLang, fromLang, 'Agenda Notes') : Promise.resolve({ translatedText: '' })
+          ]);
+
+          return {
+            ...slot,
+            activity: isEnglishMain ? (slot.activity || srcAct) : (actRes.translatedText || slot.activity || srcAct),
+            activityKm: isEnglishMain ? (slot.activityKm || actRes.translatedText) : (slot.activityKm || srcAct),
+            activityEn: isEnglishMain ? (slot.activityEn || srcAct) : (slot.activityEn || actRes.translatedText),
+            location: isEnglishMain ? (slot.location || srcLoc) : (locRes.translatedText || slot.location || srcLoc),
+            locationKm: isEnglishMain ? (slot.locationKm || locRes.translatedText) : (slot.locationKm || srcLoc),
+            locationEn: isEnglishMain ? (slot.locationEn || srcLoc) : (slot.locationEn || locRes.translatedText),
+            notes: isEnglishMain ? (slot.notes || srcNotes) : (notesRes.translatedText || slot.notes || srcNotes),
+            notesKm: isEnglishMain ? (slot.notesKm || notesRes.translatedText) : (slot.notesKm || srcNotes),
+            notesEn: isEnglishMain ? (slot.notesEn || srcNotes) : (slot.notesEn || notesRes.translatedText)
+          };
+        })
+      );
+
+      handleUpdateDayField(dayIndex, 'guideAgenda', updatedAgenda);
+    } catch (err) {
+      console.error('Error auto-translating day slots:', err);
+    } finally {
+      setTranslatingDaySlotIndex(null);
+    }
   };
 
   // Optional Program Handlers
@@ -5062,7 +5108,7 @@ Highlights:
 
                           {/* Hourly Agenda Section */}
                           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
                               <div>
                                 <label className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                                   <Clock className="w-3.5 h-3.5" />
@@ -5072,149 +5118,223 @@ Highlights:
                                   {language === 'km' ? 'កំណត់ពេលវេលា សកម្មភាព ទីតាំង និងការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍ជាទ្វេភាសា' : 'Specify exact timings, bilingual activities, locations, and coordinator notes for delegates.'}
                                 </p>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => handleAddAgendaItem(dIdx)}
-                                className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold hover:bg-indigo-100 cursor-pointer flex items-center gap-1"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                                <span>{language === 'km' ? '+ បន្ថែមម៉ោងកម្មវិធី' : '+ Add Agenda Slot'}</span>
-                              </button>
+                              <div className="flex items-center gap-2">
+                                {(day.guideAgenda || []).length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAutoTranslateDaySlots(dIdx)}
+                                    disabled={translatingDaySlotIndex === dIdx}
+                                    className="px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 text-[11px] font-bold hover:bg-sky-100 dark:hover:bg-sky-900/50 cursor-pointer flex items-center gap-1 transition-all"
+                                    title={language === 'km' ? 'បកប្រែគ្រប់ម៉ោងទាំងអស់ក្នុងថ្ងៃនេះដោយស្វ័យប្រវត្តិ' : 'Auto-translate all slots for this day'}
+                                  >
+                                    {translatingDaySlotIndex === dIdx ? (
+                                      <>
+                                        <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                                        <span>{language === 'km' ? 'កំពុងបកប្រែ...' : 'Translating...'}</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+                                        <span>{language === 'km' ? '⚡ បកប្រែម៉ោងទាំងអស់' : '⚡ Auto-Translate Slots'}</span>
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddAgendaItem(dIdx)}
+                                  className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold hover:bg-indigo-100 cursor-pointer flex items-center gap-1"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  <span>{language === 'km' ? '+ បន្ថែមម៉ោងកម្មវិធី' : '+ Add Agenda Slot'}</span>
+                                </button>
+                              </div>
                             </div>
 
                             <div className="space-y-3">
-                              {(day.guideAgenda || []).map((slot, sIdx) => (
-                                <div
-                                  key={sIdx}
-                                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 shadow-2xs"
-                                >
-                                  {/* Slot Header Bar */}
-                                  <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
-                                    <div className="flex items-center gap-2">
-                                      <span className="w-5 h-5 rounded-md bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-[10px] flex items-center justify-center">
-                                        #{sIdx + 1}
-                                      </span>
-                                      <input
-                                        type="text"
-                                        value={slot.time || ''}
-                                        onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'time', e.target.value)}
-                                        className="w-40 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400"
-                                        placeholder="09:00 AM - 12:00 PM"
-                                      />
+                              {(day.guideAgenda || []).map((slot, sIdx) => {
+                                const kmAct = slot.activityKm || (!isEnglishMain ? slot.activity : '') || '';
+                                const enAct = slot.activityEn || (isEnglishMain ? slot.activity : '') || '';
+                                const kmLoc = slot.locationKm || (!isEnglishMain ? slot.location : '') || '';
+                                const enLoc = slot.locationEn || (isEnglishMain ? slot.location : '') || '';
+                                const kmNote = slot.notesKm || (!isEnglishMain ? slot.notes : '') || '';
+                                const enNote = slot.notesEn || (isEnglishMain ? slot.notes : '') || '';
+
+                                return (
+                                  <div
+                                    key={sIdx}
+                                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 shadow-2xs"
+                                  >
+                                    {/* Slot Header Bar */}
+                                    <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-200/70 dark:border-slate-700/60">
+                                      <div className="flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-md bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-[10px] flex items-center justify-center">
+                                          #{sIdx + 1}
+                                        </span>
+                                        <input
+                                          type="text"
+                                          value={slot.time || ''}
+                                          onChange={(e) => handleUpdateAgendaItem(dIdx, sIdx, 'time', e.target.value)}
+                                          className="w-44 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400"
+                                          placeholder="09:00 AM - 12:00 PM"
+                                        />
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <FieldAiTranslator
+                                          kmText={kmAct}
+                                          enText={enAct}
+                                          preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
+                                          fieldHint={`Tour Day ${day.day} Slot ${sIdx + 1} Activity`}
+                                          size="xs"
+                                          onTranslateToKm={(trans) => {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', trans);
+                                            if (!isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
+                                          }}
+                                          onTranslateToEn={(trans) => {
+                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', trans);
+                                            if (isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
+                                          }}
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveAgendaItem(dIdx, sIdx)}
+                                          className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                                          title={language === 'km' ? 'លុបម៉ោងកម្មវិធីនេះ' : 'Remove slot'}
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                      <FieldAiTranslator
-                                        kmText={slot.activityKm || slot.activity}
-                                        enText={slot.activityEn}
-                                        preferredDirection={isEnglishMain ? "en_to_km" : "km_to_en"}
-                                        fieldHint={`Tour Day ${day.day} Slot ${sIdx + 1} Activity`}
-                                        size="xs"
-                                        onTranslateToKm={(trans) => {
-                                          handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', trans);
-                                          if (!isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
-                                        }}
-                                        onTranslateToEn={(trans) => {
-                                          handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', trans);
-                                          if (isEnglishMain) handleUpdateAgendaItem(dIdx, sIdx, 'activity', trans);
-                                        }}
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRemoveAgendaItem(dIdx, sIdx)}
-                                        className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-                                        title={language === 'km' ? 'លុបម៉ោងកម្មវិធីនេះ' : 'Remove slot'}
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
+                                    {/* Activity Description (Bilingual) */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                          {isEnglishMain ? '🇺🇸 Activity (English - Primary)' : '🇰🇭 សកម្មភាពកម្មវិធី (ភាសាខ្មែរ)'}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={isEnglishMain ? enAct : (slot.activityKm || slot.activity || '')}
+                                          onChange={(e) => {
+                                            if (isEnglishMain) {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
+                                            } else {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
+                                            }
+                                          }}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                                          placeholder={isEnglishMain ? "e.g. Pazhou Complex Area A Exhibition Walkthrough" : "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A"}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                          {isEnglishMain ? '🇰🇭 Activity (Khmer - Secondary)' : '🇺🇸 សកម្មភាពកម្មវិធី (ភាសាអង់គ្លេស)'}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={isEnglishMain ? (slot.activityKm || '') : (slot.activityEn || '')}
+                                          onChange={(e) => {
+                                            if (isEnglishMain) {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
+                                            } else {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
+                                            }
+                                          }}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
+                                          placeholder={isEnglishMain ? "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A" : "e.g. Pazhou Complex Area A Exhibition Walkthrough"}
+                                        />
+                                      </div>
                                     </div>
-                                  </div>
 
-                                  {/* Activity Description (Bilingual) */}
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <div>
-                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                        {isEnglishMain ? '🇺🇸 Activity (English - Primary)' : '🇰🇭 Activity (Khmer - Primary)'}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={isEnglishMain ? (slot.activityEn || slot.activity || '') : (slot.activityKm || slot.activity || '')}
-                                        onChange={(e) => {
-                                          if (isEnglishMain) {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
-                                          } else {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activity', e.target.value);
-                                          }
-                                        }}
-                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
-                                        placeholder={isEnglishMain ? "e.g. Pazhou Complex Area A Exhibition Walkthrough" : "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A"}
-                                      />
+                                    {/* Location & Notes (Bilingual) */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                          📍 {isEnglishMain ? '🇺🇸 Location (EN)' : '🇰🇭 ទីតាំង (KM)'}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={isEnglishMain ? enLoc : (slot.locationKm || slot.location || '')}
+                                          onChange={(e) => {
+                                            if (isEnglishMain) {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
+                                            } else {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
+                                            }
+                                          }}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                                          placeholder={isEnglishMain ? "Pazhou Complex Area A" : "សាលពិព័រណ៍ Pazhou តំបន់ A"}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                          📍 {isEnglishMain ? '🇰🇭 Location (KM)' : '🇺🇸 ទីតាំង (EN)'}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={isEnglishMain ? (slot.locationKm || '') : (slot.locationEn || '')}
+                                          onChange={(e) => {
+                                            if (isEnglishMain) {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
+                                            } else {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
+                                            }
+                                          }}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
+                                          placeholder={isEnglishMain ? "សាលពិព័រណ៍ Pazhou តំបន់ A" : "Pazhou Complex Area A"}
+                                        />
+                                      </div>
                                     </div>
-                                    <div>
-                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                        {isEnglishMain ? '🇰🇭 Activity (Khmer - Secondary)' : '🇺🇸 Activity (English - Secondary)'}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={isEnglishMain ? (slot.activityKm || '') : (slot.activityEn || '')}
-                                        onChange={(e) => {
-                                          if (isEnglishMain) {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityKm', e.target.value);
-                                          } else {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'activityEn', e.target.value);
-                                          }
-                                        }}
-                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold"
-                                        placeholder={isEnglishMain ? "ឧ. ទស្សនកិច្ចសាលពិព័រណ៍ Pazhou Complex តំបន់ A" : "e.g. Pazhou Complex Area A Exhibition Walkthrough"}
-                                      />
-                                    </div>
-                                  </div>
 
-                                  {/* Location & Notes (Bilingual) */}
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    <div>
-                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                        📍 {isEnglishMain ? '🇺🇸 Location (EN)' : '🇰🇭 Location (KM)'}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={isEnglishMain ? (slot.locationEn || slot.location || '') : (slot.locationKm || slot.location || '')}
-                                        onChange={(e) => {
-                                          if (isEnglishMain) {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
-                                          } else {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'location', e.target.value);
-                                          }
-                                        }}
-                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                                        placeholder={isEnglishMain ? "Pazhou Complex Area A" : "សាលពិព័រណ៍ Pazhou តំបន់ A"}
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
-                                        📍 {isEnglishMain ? '🇰🇭 Location (KM)' : '🇺🇸 Location (EN)'}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={isEnglishMain ? (slot.locationKm || '') : (slot.locationEn || '')}
-                                        onChange={(e) => {
-                                          if (isEnglishMain) {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationKm', e.target.value);
-                                          } else {
-                                            handleUpdateAgendaItem(dIdx, sIdx, 'locationEn', e.target.value);
-                                          }
-                                        }}
-                                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs"
-                                        placeholder={isEnglishMain ? "សាលពិព័រណ៍ Pazhou តំបន់ A" : "Pazhou Complex Area A"}
-                                      />
+                                    {/* Optional Notes / Escort Guidance */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                          💡 {isEnglishMain ? '🇺🇸 Notes / Tips (EN)' : '🇰🇭 ការណែនាំ / កំណត់សម្គាល់ (KM)'}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={isEnglishMain ? enNote : (slot.notesKm || slot.notes || '')}
+                                          onChange={(e) => {
+                                            if (isEnglishMain) {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesEn', e.target.value);
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'notes', e.target.value);
+                                            } else {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesKm', e.target.value);
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'notes', e.target.value);
+                                            }
+                                          }}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px]"
+                                          placeholder={isEnglishMain ? "Optional tips, escort instructions..." : "ការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍..."}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">
+                                          💡 {isEnglishMain ? '🇰🇭 Notes / Tips (KM)' : '🇺🇸 ការណែនាំ / កំណត់សម្គាល់ (EN)'}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={isEnglishMain ? (slot.notesKm || '') : (slot.notesEn || '')}
+                                          onChange={(e) => {
+                                            if (isEnglishMain) {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesKm', e.target.value);
+                                            } else {
+                                              handleUpdateAgendaItem(dIdx, sIdx, 'notesEn', e.target.value);
+                                            }
+                                          }}
+                                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px]"
+                                          placeholder={isEnglishMain ? "ការណែនាំពីមគ្គុទ្ទេសក៍ទេសចរណ៍..." : "Optional tips, escort instructions..."}
+                                        />
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
