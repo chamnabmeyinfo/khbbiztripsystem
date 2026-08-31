@@ -60,10 +60,11 @@ export const PackageDetailModal: React.FC = () => {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState<boolean>(false);
   const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false);
 
-  if (activeModal !== 'package_detail' || !selectedPackage) return null;
-
   const rawPkg = selectedPackage;
-  const pkg = useMemo(() => getLocalizedPackage(rawPkg, language), [rawPkg, language]);
+  const pkg = useMemo(() => rawPkg ? getLocalizedPackage(rawPkg, language) : null, [rawPkg, language]);
+
+  if (activeModal !== 'package_detail' || !selectedPackage || !pkg) return null;
+
   const currentDepartureDate = selectedDate || pkg.availableDates[0] || '2026-09-15';
 
   const highlightsList = pkg.highlights || [];
