@@ -19,15 +19,16 @@ To close a modal: `setActiveModal(null)`
 ---
 
 ### 2. `PackageDetailModal`
-**Trigger:** Click any tour package card across marketing or customer portal  
-**Purpose:** Full interactive dossier — daily itinerary timeline, inclusions/exclusions, tour director profile, optional B2B programs, and trigger to download statutory PDF or open preview  
+**Trigger:** Click any tour package card across marketing, customer portal, or admin packages  
+**Purpose:** Full interactive dossier — daily itinerary timeline, inclusions/exclusions, tour director profile, optional B2B programs, and trigger to download statutory PDF or open preview.  
+**Direct Edit Quick Action:** Features a prominent direct `✏️ Edit Package` button in both the Sticky Header and Bottom Action Bar. When clicked by administrators or operators, it immediately opens the full-featured `PackageEditorModal` for instant editing without navigating through multiple menus.  
 **File:** `src/components/portal/PackageDetailModal.tsx`
 
 ---
 
 ### 3. `AgendaPdfModal`
 **Trigger:** Click "Preview PDF" inside `PackageDetailModal` or marketing landing pages  
-**Purpose:** High-fidelity in-browser rendering of the statutory tour agenda & trade mission dossier with direct download and print capabilities  
+**Purpose:** High-fidelity in-browser rendering of the statutory tour agenda & trade mission dossier with direct download, print, and **Direct Quick Edit** (`✏️ Edit Package` button in toolbar to immediately customize schedule and dossier details in the Package Editor).  
 **Export Features:**
 - **Pre-Flight Dynamic Layout Analyzer & Auto-Fit Engine**: Automatically scans the rendered DOM of every A4 page prior to PDF compilation. If any page exceeds the safe A4 height threshold (1080px), it dynamically applies micro-scaling and spacing compensation to guarantee that zero lines, cards, or paragraphs are ever cut or sliced at page breaks.
 - **Exact HTML as PDF 1:1 Engine**: Direct button allowing users to download the entire HTML page as a PDF (`downloadAgendaHtmlToPdf`) with `scale: 2.2` high-DPI rasterization, guaranteeing that the downloaded PDF is an exact visual replica of the rendered HTML page.
@@ -39,7 +40,7 @@ To close a modal: `setActiveModal(null)`
 ---
 
 ### 4. `PackageEditorModal`
-**Trigger:** Click "New Package" or "Edit" inside Admin Package Management  
+**Trigger:** Click "New Package" or "Edit" inside Admin Package Management, or click `✏️ Edit Package` inside `PackageDetailModal`, `PackageSalesLandingPage`, or `AgendaPdfModal` via `openPackageEditor` in [[AppContext]].  
 **Layout & Navigation Options:** Multi-tier Responsive Workspace with dual-mode navigation at both top-level and inner sub-section level:
 - **Top-Level Navigation**: 1-click switcher between **Aside Menu Style** (dedicated left sidebar with search, badges, and copilot actions) and **Tab Style** (horizontal scrolling tab bar).
 - **Inner Sub-Section Navigator & Controller**: Allows users to control and navigate elements inside each active studio section-by-section:

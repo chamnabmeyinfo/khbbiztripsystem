@@ -22,6 +22,7 @@ import { SocialShareModal } from './components/common/SocialShareModal';
 import { SupportChatWidget } from './components/portal/SupportChatWidget';
 import { AiFloatingCopilot } from './components/common/AiFloatingCopilot';
 import { GlobalToast } from './components/common/GlobalToast';
+import { PackageEditorModal } from './components/admin/PackageEditorModal';
 
 import { StandaloneAgendaView } from './components/portal/StandaloneAgendaView';
 
@@ -85,7 +86,17 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 const MainLayout: React.FC = () => {
-  const { activeView, language } = useApp();
+  const {
+    activeView,
+    language,
+    isPackageEditorOpen,
+    editingPackage,
+    openPackageEditorWithAi,
+    closePackageEditor,
+    rawPackages,
+    updatePackage,
+    addPackage
+  } = useApp();
   const fontClass = getFontFamilyClass(language);
   const dir = isRTL(language) ? 'rtl' : 'ltr';
 
@@ -119,6 +130,26 @@ const MainLayout: React.FC = () => {
       <ProfileSettingsModal />
       <AgendaPdfModal />
       <SocialShareModal />
+
+      {/* Global Tour Package Editor Modal */}
+      {isPackageEditorOpen && (
+        <PackageEditorModal
+          key={editingPackage ? editingPackage.id : (openPackageEditorWithAi ? 'new-ai' : 'new-manual')}
+          pkg={editingPackage}
+          isOpen={isPackageEditorOpen}
+          initialOpenWithAi={openPackageEditorWithAi}
+          onClose={closePackageEditor}
+          onSave={(savedPkg) => {
+            const isExisting = rawPackages?.some(p => p.id === savedPkg.id) || (editingPackage && editingPackage.id === savedPkg.id);
+            if (isExisting) {
+              updatePackage(savedPkg);
+            } else {
+              addPackage(savedPkg);
+            }
+            closePackageEditor();
+          }}
+        />
+      )}
 
       {/* KHB AI Operations Assistant (Auto-CRUD) */}
       <AiFloatingCopilot />

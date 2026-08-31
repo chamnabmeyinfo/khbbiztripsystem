@@ -32,7 +32,8 @@ import {
   Download,
   FileText,
   AlertCircle,
-  Share2
+  Share2,
+  Edit3
 } from 'lucide-react';
 import { OptionalTourProgram } from '../../types';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
@@ -45,6 +46,7 @@ export const PackageDetailModal: React.FC = () => {
     activeModal,
     setActiveModal,
     openPackageSalesPage,
+    openPackageEditor,
     currency,
     language,
     t
@@ -265,6 +267,18 @@ export const PackageDetailModal: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Direct Quick Edit Tour Package Button */}
+            <button
+              onClick={() => {
+                openPackageEditor(rawPkg || pkg);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 border border-amber-400/30"
+              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះភ្លាមៗ' : 'Quickly edit this tour package in Package Editor'}
+            >
+              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{language === 'km' ? '✏️ កែប្រែកញ្ចប់' : '✏️ Edit Package'}</span>
+            </button>
+
             <button
               onClick={() => {
                 setSelectedPackage(pkg);
@@ -1216,6 +1230,17 @@ export const PackageDetailModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                openPackageEditor(rawPkg || pkg);
+              }}
+              className="px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះ' : 'Direct Edit Tour Package'}
+            >
+              <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 stroke-[2.5]" />
+              <span>{language === 'km' ? '✏️ កែប្រែកញ្ចប់' : '✏️ Edit Package'}</span>
+            </button>
+
             <button
               onClick={handleProceedToCheckout}
               className="flex-1 sm:flex-initial px-6 py-3 rounded-2xl bg-gradient-to-r from-sky-600 via-teal-600 to-sky-700 hover:from-sky-700 hover:to-teal-700 text-white font-bold text-xs shadow-xl shadow-sky-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"

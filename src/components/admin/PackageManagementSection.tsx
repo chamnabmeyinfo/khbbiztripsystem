@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TourPackage, TourPackageStatus, PackageViewMode } from '../../types';
-import { PackageEditorModal } from './PackageEditorModal';
 import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
 import { formatMoney } from '../../services/currencyService';
 import { getLocalizedPackage } from '../../utils/packageLocalization';
@@ -65,6 +64,7 @@ export const PackageManagementSection: React.FC = () => {
     setSelectedPackage,
     setActiveModal,
     openPackageSalesPage,
+    openPackageEditor,
     currency,
     language,
     defaultPackageViewMode,
@@ -77,10 +77,7 @@ export const PackageManagementSection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft' | 'archived' | 'deleted'>('all');
   const [viewMode, setViewMode] = useState<PackageViewMode>(() => defaultPackageViewMode || 'grid');
-  const [editingPkg, setEditingPkg] = useState<TourPackage | null>(null);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
-  const [openWithAi, setOpenWithAi] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDefaultDropdownOpen, setIsDefaultDropdownOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ViewContextMenuState | null>(null);
@@ -135,31 +132,23 @@ export const PackageManagementSection: React.FC = () => {
   });
 
   const handleOpenCreate = () => {
-    setEditingPkg(null);
-    setOpenWithAi(false);
-    setIsEditorOpen(true);
+    openPackageEditor(null, false);
   };
 
   const handleOpenAiCreate = () => {
-    setEditingPkg(null);
-    setOpenWithAi(true);
-    setIsEditorOpen(true);
+    openPackageEditor(null, true);
   };
 
   const handleOpenEdit = (pkg: TourPackage) => {
     const targetRawPkg = rawPackages?.find(p => p.id === pkg.id) || pkg;
-    setEditingPkg(targetRawPkg);
-    setOpenWithAi(false);
-    setIsEditorOpen(true);
+    openPackageEditor(targetRawPkg, false);
   };
 
   const handleCloneAsDraft = (pkg: TourPackage) => {
     // Call deep cloning helper in AppContext
     const cloned = clonePackageAsDraft(pkg);
     // Immediately open editor for review
-    setEditingPkg(cloned);
-    setOpenWithAi(false);
-    setIsEditorOpen(true);
+    openPackageEditor(cloned, false);
   };
 
   const handleStatusChange = (packageId: string, newStatus: TourPackageStatus) => {
@@ -177,15 +166,6 @@ export const PackageManagementSection: React.FC = () => {
   const handlePermanentDelete = (pkg: any) => {
     if (pkg._deletedItemId) {
       permanentDeleteItem(pkg._deletedItemId);
-    }
-  };
-
-  const handleSavePackage = (savedPkg: TourPackage) => {
-    const isExisting = rawPackages?.some(p => p.id === savedPkg.id) || (editingPkg && editingPkg.id === savedPkg.id);
-    if (isExisting) {
-      updatePackage(savedPkg);
-    } else {
-      addPackage(savedPkg);
     }
   };
 
@@ -1564,18 +1544,6 @@ export const PackageManagementSection: React.FC = () => {
             );
           })}
         </div>
-      )}
-
-      {/* Full-Featured Modal Editor */}
-      {isEditorOpen && (
-        <PackageEditorModal
-          key={editingPkg ? editingPkg.id : (openWithAi ? 'new-ai' : 'new-manual')}
-          pkg={editingPkg}
-          isOpen={isEditorOpen}
-          initialOpenWithAi={openWithAi}
-          onClose={() => setIsEditorOpen(false)}
-          onSave={handleSavePackage}
-        />
       )}
 
       {/* Package Categories Management Modal */}

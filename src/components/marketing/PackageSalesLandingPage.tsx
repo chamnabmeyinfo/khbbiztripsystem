@@ -32,7 +32,8 @@ import {
   Users,
   Compass,
   Briefcase,
-  Gift
+  Gift,
+  Edit3
 } from 'lucide-react';
 import { VideoGalleryPlayer } from '../common/VideoGalleryPlayer';
 import { downloadAgendaHtmlToPdf } from '../../services/agendaExportService';
@@ -45,6 +46,7 @@ export const PackageSalesLandingPage: React.FC = () => {
     setSelectedPackage,
     setActiveView,
     setActiveModal,
+    openPackageEditor,
     currency,
     language,
     t
@@ -186,6 +188,19 @@ export const PackageSalesLandingPage: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Direct Quick Edit Tour Package Button */}
+            <button
+              onClick={() => {
+                openPackageEditor(rawPkg || pkg);
+              }}
+              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/80 bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 transition-all"
+              title={language === 'km' ? 'កែសម្រួលកញ្ចប់ដំណើរកម្សាន្តនេះភ្លាមៗ' : 'Quickly edit this tour package in Package Editor'}
+            >
+              <Edit3 className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span className="hidden sm:inline">{language === 'km' ? '✏️ កែប្រែកញ្ចប់' : '✏️ Edit Package'}</span>
+              <span className="sm:hidden">Edit</span>
+            </button>
+
             <button
               onClick={() => {
                 setSelectedPackage(pkg);

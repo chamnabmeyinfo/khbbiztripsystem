@@ -246,6 +246,12 @@ interface AppContextType {
   // Actions
   setActiveView: (view: ActiveView) => void;
   openPackageSalesPage: (pkgOrId: TourPackage | string) => void;
+  // Tour Package Direct Editor
+  isPackageEditorOpen: boolean;
+  editingPackage: TourPackage | null;
+  openPackageEditorWithAi: boolean;
+  openPackageEditor: (pkgOrId?: TourPackage | string | null, openWithAi?: boolean) => void;
+  closePackageEditor: () => void;
   setSelectedPackage: (pkg: TourPackage | null) => void;
   setSelectedBooking: (booking: Booking | null) => void;
   setSelectedInvoice: (invoice: Invoice | null) => void;
@@ -1050,6 +1056,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     setActiveView('admin_dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const [isPackageEditorOpen, setIsPackageEditorOpen] = useState<boolean>(false);
+  const [editingPackage, setEditingPackage] = useState<TourPackage | null>(null);
+  const [openPackageEditorWithAi, setOpenPackageEditorWithAi] = useState<boolean>(false);
+
+  const openPackageEditor = (pkgOrId?: TourPackage | string | null, openWithAi: boolean = false) => {
+    let target: TourPackage | null = null;
+    if (typeof pkgOrId === 'string') {
+      target = rawPackages?.find(p => p.id === pkgOrId) || packages.find(p => p.id === pkgOrId) || null;
+    } else if (pkgOrId && typeof pkgOrId === 'object') {
+      target = rawPackages?.find(p => p.id === pkgOrId.id) || pkgOrId;
+    }
+
+    setEditingPackage(target);
+    setOpenPackageEditorWithAi(!!openWithAi);
+    setIsPackageEditorOpen(true);
+    // If a modal preview was active, close it so administrator can focus on editing
+    if (activeModal === 'package_detail' || activeModal === 'agenda_pdf') {
+      setActiveModal(null);
+    }
+  };
+
+  const closePackageEditor = () => {
+    setIsPackageEditorOpen(false);
+    setEditingPackage(null);
+    setOpenPackageEditorWithAi(false);
   };
 
   const openPackageSalesPage = (pkgOrId: TourPackage | string) => {
@@ -5363,6 +5396,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         getTripProfitReport, getCashFlowSummary, getErpDashboardStats, exportProfitReportCSV,
         setActiveView,
         openPackageSalesPage,
+        isPackageEditorOpen,
+        editingPackage,
+        openPackageEditorWithAi,
+        openPackageEditor,
+        closePackageEditor,
         setSelectedPackage,
         setSelectedBooking,
         setSelectedInvoice,
