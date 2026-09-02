@@ -143,12 +143,21 @@ dotenv.config();
     if (provider === 'gemini') {
       const geminiClient = getAiClient();
       if (!geminiClient) return null;
-      const models = candidateGeminiModels || (providerConfig?.modelName ? [providerConfig.modelName] : [
+      const defaultGeminiModels = [
         "gemini-3.1-flash-lite",
         "gemini-flash-latest",
         "gemini-2.5-flash",
         "gemini-3.7-flash",
-      ]);
+      ];
+      // A user-selected model (from the translate-button model dropdowns) always
+      // takes priority, followed by the endpoint's candidate fallback cascade.
+      let models: string[];
+      if (providerConfig?.modelName?.trim()) {
+        const preferred = providerConfig.modelName.trim();
+        models = [preferred, ...(candidateGeminiModels || defaultGeminiModels)].filter((m, idx, arr) => arr.indexOf(m) === idx);
+      } else {
+        models = candidateGeminiModels || defaultGeminiModels;
+      }
       const res = await generateWithModelFallback(geminiClient, prompt, {
         systemInstruction,
         temperature: temp,

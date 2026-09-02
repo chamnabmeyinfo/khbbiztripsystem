@@ -19,11 +19,99 @@ export function getActiveAiTranslationConfig(): AiTranslationProviderConfig | un
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed?.aiTranslationConfig) {
-        return parsed.aiTranslationConfig;
+        const cfg: AiTranslationProviderConfig = { ...parsed.aiTranslationConfig };
+        // Apply the user-selected translation model override (chosen from the
+        // model dropdowns on the translate buttons). Empty = server default.
+        const modelOverride = getActiveTranslationModel();
+        if (modelOverride) {
+          cfg.modelName = modelOverride;
+        }
+        return cfg;
       }
     }
   } catch {}
   return undefined;
+}
+
+/**
+ * Translation Model Selector — lets users pick which AI model performs translations
+ * directly from the translate-button dropdowns (overrides the Settings default).
+ */
+export interface TranslationModelOption {
+  id: string;
+  label: string;
+  description?: string;
+}
+
+export const TRANSLATION_MODEL_OPTIONS: Record<string, TranslationModelOption[]> = {
+  gemini: [
+    { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite', description: 'Fastest · best for bulk lists' },
+    { id: 'gemini-flash-latest', label: 'Gemini Flash (Latest)', description: 'Balanced speed & quality' },
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Stable workhorse' },
+    { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash', description: 'Highest nuance quality' },
+    { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', description: 'Deep reasoning · slower' }
+  ],
+  openai: [
+    { id: 'gpt-4o-mini', label: 'GPT-4o mini', description: 'Fast & affordable' },
+    { id: 'gpt-4o', label: 'GPT-4o', description: 'Higher quality' },
+    { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', description: 'Newest compact model' }
+  ],
+  deepseek: [
+    { id: 'deepseek-chat', label: 'DeepSeek Chat (V3)', description: 'Standard translation' },
+    { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner (R1)', description: 'Deep reasoning · slower' }
+  ],
+  groq: [
+    { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', description: 'Ultra-fast LPU inference' }
+  ],
+  custom_openai: [],
+  offline_heuristic: []
+};
+
+const TRANSLATION_MODEL_KEY = 'tripdesk_ai_translate_model_v1';
+
+/** Currently selected translation model ('' = Auto / server default). */
+export function getActiveTranslationModel(): string {
+  try {
+    return localStorage.getItem(TRANSLATION_MODEL_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+/** Persists the translation model choice ('' clears back to Auto). */
+export function setActiveTranslationModel(model: string): void {
+  try {
+    if (model) {
+      localStorage.setItem(TRANSLATION_MODEL_KEY, model);
+    } else {
+      localStorage.removeItem(TRANSLATION_MODEL_KEY);
+    }
+  } catch {}
+}
+
+/** Human-readable label of the active translation provider (for model menu headers). */
+export function getActiveTranslationProviderLabel(): string {
+  const provider = getActiveAiTranslationConfig()?.provider || 'gemini';
+  const labels: Record<string, string> = {
+    gemini: 'Google Gemini',
+    openai: 'OpenAI',
+    deepseek: 'DeepSeek',
+    anthropic: 'Anthropic Claude',
+    groq: 'Groq LPU',
+    custom_openai: 'Custom API',
+    offline_heuristic: 'Offline Dictionary'
+  };
+  return labels[provider] || 'Google Gemini';
+}
+
+/** Short display name of a model id for success status pills. */
+export function shortModelLabel(modelUsed?: string): string {
+  if (!modelUsed) return 'adaptive engine';
+  return modelUsed
+    .replace(/^gemini-/, 'Gemini ')
+    .replace(/^gpt-/, 'GPT ')
+    .replace(/^deepseek-/, 'DeepSeek ')
+    .replace(/^llama-/, 'Llama ');
 }
 
 /**
@@ -1529,7 +1617,7 @@ export async function translateTextField(
   sourceLang: string = 'auto',
   fieldHint?: string,
   providerConfig?: AiTranslationProviderConfig
-): Promise<{ success: boolean; translatedText: string; detectedLang?: string }> {
+): Promise<{ success: boolean; translatedText: string; detectedLang?: string; modelUsed?: string; providerUsed?: string }> {
   if (!text || !text.trim()) {
     return { success: true, translatedText: '' };
   }
@@ -1576,7 +1664,9 @@ export async function translateTextField(
         return {
           success: true,
           translatedText: data.translatedText.trim(),
-          detectedLang: data.detectedSourceLang || resolvedSource
+          detectedLang: data.detectedSourceLang || resolvedSource,
+          modelUsed: data.modelUsed,
+          providerUsed: data.providerUsed
         };
       }
     }
@@ -1724,7 +1814,7 @@ export async function translateArrayField(
   sourceLang: string = 'auto',
   fieldHint?: string,
   providerConfig?: AiTranslationProviderConfig
-): Promise<{ success: boolean; translatedItems: string[] }> {
+): Promise<{ success: boolean; translatedItems: string[]; modelUsed?: string; providerUsed?: string }> {
   if (!items || items.length === 0) {
     return { success: true, translatedItems: [] };
   }
@@ -1777,7 +1867,7 @@ export async function translateArrayField(
           const candidate = data.translatedTexts[idx];
           return (typeof candidate === 'string' && candidate.trim()) ? candidate.trim() : orig;
         });
-        return { success: true, translatedItems: normalized };
+        return { success: true, translatedItems: normalized, modelUsed: data.modelUsed, providerUsed: data.providerUsed };
       }
     }
   } catch (err) {
@@ -1878,7 +1968,7 @@ export async function translateEntirePackage(
   targetLang: string = 'en',
   sourceLang: string = 'auto',
   providerConfig?: AiTranslationProviderConfig
-): Promise<{ success: boolean; translatedPackage: Partial<TourPackage>; summary: string }> {
+): Promise<{ success: boolean; translatedPackage: Partial<TourPackage>; summary: string; modelUsed?: string; providerUsed?: string }> {
   const activeConfig = providerConfig || getActiveAiTranslationConfig();
 
   try {
@@ -1899,7 +1989,9 @@ export async function translateEntirePackage(
         return {
           success: true,
           translatedPackage: sanitizeTranslatedPackage(data.translatedPackage, pkgData),
-          summary: data.summary || `Successfully translated entire package to ${targetLang}`
+          summary: data.summary || `Successfully translated entire package to ${targetLang}`,
+          modelUsed: data.modelUsed,
+          providerUsed: data.providerUsed
         };
       }
     }

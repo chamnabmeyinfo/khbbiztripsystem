@@ -10,7 +10,7 @@ import {
   TourGuide,
   EmergencyContact
 } from '../../types';
-import { parseTourPackageFromText, translateEntirePackage, translateTextField, detectTextLanguage, matchesTargetScript } from '../../services/geminiService';
+import { parseTourPackageFromText, translateEntirePackage, translateTextField, detectTextLanguage, matchesTargetScript, shortModelLabel } from '../../services/geminiService';
 import { getLocalizedPackage } from '../../utils/packageLocalization';
 import { FieldAiTranslator } from './FieldAiTranslator';
 import { BilingualListEditor } from './BilingualListEditor';
@@ -592,7 +592,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
           if (trans.tourGuide?.briefingTimeEn || trans.tourGuide?.briefingTime) setBriefingTimeEn(trans.tourGuide.briefingTimeEn || trans.tourGuide.briefingTime || '');
           if (trans.itinerary) setItinerary(trans.itinerary);
           if (trans.optionalPrograms) setOptionalPrograms(trans.optionalPrograms);
-          setTranslationSuccessMessage('✨ AI បានបកប្រែពត៌មានដំណើរកម្សាន្តទាំងអស់ទៅជាភាសាអង់គ្លេសដោយជោគជ័យ!');
+          setTranslationSuccessMessage(`✨ AI បានបកប្រែពត៌មានដំណើរកម្សាន្តទាំងអស់ទៅជាភាសាអង់គ្លេសដោយជោគជ័យ! (via ${shortModelLabel(result.modelUsed)})`);
         } else {
           if (trans.titleKm || trans.title) { setTitle(trans.titleKm || trans.title || ''); setTitleKm(trans.titleKm || trans.title || ''); }
           if (trans.destinationKm || trans.destination) { setDestination(trans.destinationKm || trans.destination || ''); setDestinationKm(trans.destinationKm || trans.destination || ''); }
@@ -612,7 +612,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
           if (trans.tourGuide?.briefingTimeKm || trans.tourGuide?.briefingTime) { setBriefingTime(trans.tourGuide.briefingTimeKm || trans.tourGuide.briefingTime || ''); setBriefingTimeKm(trans.tourGuide.briefingTimeKm || trans.tourGuide.briefingTime || ''); }
           if (trans.itinerary) setItinerary(trans.itinerary);
           if (trans.optionalPrograms) setOptionalPrograms(trans.optionalPrograms);
-          setTranslationSuccessMessage('✨ AI បានបកប្រែពត៌មានដំណើរកម្សាន្តទាំងអស់ទៅជាភាសាខ្មែរដោយជោគជ័យ!');
+          setTranslationSuccessMessage(`✨ AI បានបកប្រែពត៌មានដំណើរកម្សាន្តទាំងអស់ទៅជាភាសាខ្មែរដោយជោគជ័យ! (via ${shortModelLabel(result.modelUsed)})`);
         }
       }
     } catch (e: any) {
