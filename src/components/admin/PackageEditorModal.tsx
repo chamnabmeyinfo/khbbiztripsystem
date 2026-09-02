@@ -178,7 +178,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [destination, setDestination] = useState(pkg?.destination || '');
   const [destinationKm, setDestinationKm] = useState(pkg?.destinationKm || pkg?.destination || '');
   const [destinationEn, setDestinationEn] = useState(pkg?.destinationEn || '');
-  const [country, setCountry] = useState(pkg?.country || 'Vietnam');
+  const [country, setCountry] = useState(pkg?.country || '');
   const [countryKm, setCountryKm] = useState(pkg?.countryKm || pkg?.country || '');
   const [countryEn, setCountryEn] = useState(pkg?.countryEn || '');
   const [category, setCategory] = useState(pkg?.category || 'trade_mission');
@@ -186,34 +186,31 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const [categoryEn, setCategoryEn] = useState(pkg?.categoryEn || '');
   const [isCantonFair, setIsCantonFair] = useState<boolean>(pkg?.isCantonFair ?? (pkg?.category === 'canton_fair' || !!pkg?.cantonFairPhase));
   const [cantonFairPhase, setCantonFairPhase] = useState<'Phase 1' | 'Phase 2' | 'Phase 3' | 'All Phases' | 'Multi-Phase' | undefined>(pkg?.cantonFairPhase);
-  const [priceUSD, setPriceUSD] = useState<number>(pkg ? (pkg.priceUSD ?? 0) : 350);
+  const [priceUSD, setPriceUSD] = useState<number>(pkg?.priceUSD ?? 0);
   const [discountPriceUSD, setDiscountPriceUSD] = useState<number | undefined>(pkg ? pkg.discountPriceUSD : undefined);
-  const [durationDays, setDurationDays] = useState<number>(pkg?.durationDays || 4);
-  const [durationNights, setDurationNights] = useState<number>(pkg?.durationNights ?? Math.max(0, (pkg?.durationDays || 4) - 1));
+  const [durationDays, setDurationDays] = useState<number>(pkg?.durationDays || 1);
+  const [durationNights, setDurationNights] = useState<number>(pkg?.durationNights ?? (pkg?.durationDays ? Math.max(0, pkg.durationDays - 1) : 0));
   const [hotelStars, setHotelStars] = useState<number>(pkg?.hotelStars || 4);
-  const [flightIncluded, setFlightIncluded] = useState<boolean>(pkg?.flightIncluded ?? true);
-  const [availableDates, setAvailableDates] = useState<string[]>(pkg?.availableDates || (pkg ? [] : ['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01']));
+  const [flightIncluded, setFlightIncluded] = useState<boolean>(pkg?.flightIncluded ?? false);
+  const [availableDates, setAvailableDates] = useState<string[]>(pkg?.availableDates || []);
   const [newDateInput, setNewDateInput] = useState('');
-  const [availableDatesText, setAvailableDatesText] = useState(pkg?.availableDates?.join(', ') || (pkg ? '' : '2026-10-29, 2026-10-30, 2026-10-31, 2026-11-01'));
-  const [tags, setTags] = useState<string[]>(pkg?.tags || ['trending', 'popular', 'cultural']);
+  const [availableDatesText, setAvailableDatesText] = useState(pkg?.availableDates?.join(', ') || '');
+  const [tags, setTags] = useState<string[]>(pkg?.tags || []);
   const [newTagInput, setNewTagInput] = useState('');
   const [rating, setRating] = useState<number>(pkg?.rating ?? 5.0);
-  const [reviewCount, setReviewCount] = useState<number>(pkg?.reviewCount ?? 1);
+  const [reviewCount, setReviewCount] = useState<number>(pkg?.reviewCount ?? 0);
   const [bookedThisMonth, setBookedThisMonth] = useState<number>(pkg?.bookedThisMonth ?? 0);
-  const [lat, setLat] = useState<number>(pkg?.coordinates?.lat || 10.8231);
-  const [lng, setLng] = useState<number>(pkg?.coordinates?.lng || 106.6297);
-  const [mapX, setMapX] = useState<number>(pkg?.coordinates?.mapX || 74);
-  const [mapY, setMapY] = useState<number>(pkg?.coordinates?.mapY || 62);
+  const [lat, setLat] = useState<number>(pkg?.coordinates?.lat || 0);
+  const [lng, setLng] = useState<number>(pkg?.coordinates?.lng || 0);
+  const [mapX, setMapX] = useState<number>(pkg?.coordinates?.mapX || 50);
+  const [mapY, setMapY] = useState<number>(pkg?.coordinates?.mapY || 50);
 
   // Media & Descriptions State
   const [description, setDescription] = useState(pkg?.description || '');
   const [descriptionKm, setDescriptionKm] = useState(pkg?.descriptionKm || pkg?.description || '');
   const [descriptionEn, setDescriptionEn] = useState(pkg?.descriptionEn || '');
   const [newLanguageInput, setNewLanguageInput] = useState('');
-  const [images, setImages] = useState<string[]>(pkg?.images || [
-    'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop&q=80'
-  ]);
+  const [images, setImages] = useState<string[]>(pkg?.images || []);
   const [newImageUrl, setNewImageUrl] = useState('');
 
   // Video Gallery & Featured Video State
@@ -231,11 +228,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (pkg.highlights !== undefined) return pkg.highlights;
       return [];
     }
-    return [
-      '🤝 ស្វែងរកផលិតផលបោះដុំពាក់ព័ន្ធនឹង តែ កាហ្វេ ការដុតនំ និងការលក់រាយ (Wholesale Sourcing)',
-      '⚙️ សម្ភារៈ និងឧបករណ៍ឆុងកាហ្វេ ធ្វើនំ និងបច្ចេកវិទ្យាពាក់ព័ន្ធនឹងលក់រាយ (Equipment & RetailTech)',
-      '🏢 ប្រេនល្បីៗនៅវៀតណាម និងអន្តរជាតិសម្រាប់ទិញសិទ្ធិ Franchise មកកម្ពុជា (Franchise Opportunities)'
-    ];
+    return [];
   });
   const [highlightsEn, setHighlightsEn] = useState<string[]>(() => pkg?.highlightsEn || []);
 
@@ -246,11 +239,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (pkg.whoShouldJoin !== undefined) return pkg.whoShouldJoin;
       return [];
     }
-    return [
-      'ម្ចាស់ហាងកាហ្វេ ម្ចាស់ហាងនំ Bakery និងភោជនីយដ្ឋាន ដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ',
-      'សហគ្រិន និងអ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា',
-      'អ្នកនាំចូល និងចែកចាយ (Importers & Wholesalers) សម្ភារៈ គ្រឿងផ្សំ និងឧបករណ៍ឧស្សាហកម្មម្ហូបអាហារ'
-    ];
+    return [];
   });
   const [whoShouldJoinEn, setWhoShouldJoinEn] = useState<string[]>(() => pkg?.whoShouldJoinEn || []);
 
@@ -261,11 +250,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (pkg.whyShouldJoin !== undefined) return pkg.whyShouldJoin;
       return [];
     }
-    return [
-      'ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល',
-      'ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងម្ចាស់ប្រេនល្បីៗជាង ១,០០០ ក្រុមហ៊ុន',
-      'សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ៤ ផ្កាយប្រណិត'
-    ];
+    return [];
   });
   const [whyShouldJoinEn, setWhyShouldJoinEn] = useState<string[]>(() => pkg?.whyShouldJoinEn || []);
 
@@ -276,18 +261,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (pkg.inclusions !== undefined) return pkg.inclusions;
       return [];
     }
-    return [
-      'រថយន្តក្រុង VIP ពីភ្នំពេញ ទៅកាន់ប្រទេសវៀតណាម (Phnom Penh to Vietnam VIP Coach)',
-      'សណ្ឋាគារស្នាក់នៅស្តង់ដារ ៤ ផ្កាយ (៣ យប់ / ៤ ថ្ងៃ)',
-      'អាហារពេលព្រឹកប៊ូហ្វេប្រចាំថ្ងៃនៅសណ្ឋាគារ (Daily Hotel Buffet Breakfast)',
-      'រថយន្តក្រុង VIP ដឹកជញ្ជូនពេញដំណើរបេសកកម្មនៅប្រទេសវៀតណាម (Dedicated Bus in Vietnam)',
-      'សំបុត្រជិះកប៉ាល់ល្បឿនលឿនពី កោះត្រល់ មកកាន់ខេត្តកំពត (High-Speed Ferry: Phu Quoc to Kampot)',
-      'រថយន្តក្រុង VIP ពីខេត្តកំពត ត្រឡប់មកកាន់រាជធានីភ្នំពេញ (VIP Coach: Kampot to Phnom Penh)',
-      'មគ្គុទ្ទេសក៍ទេសចរណ៍ជំនាញនិយាយ វៀតណាម-អង់គ្លេស-ខ្មែរ (Certified Bilingual Escort & Guide)',
-      'ការចុះឈ្មោះ និងកាតផ្លូវការចូលទស្សនាពិព័រណ៍ទាំង ៣ ដោយឥតគិតថ្លៃ (Official VIP Expo Passes)',
-      'សេវាសម្រួលបែបបទឆ្លងដែន VIP (Fast-Track Border & Immigration VIP Clearance)',
-      'សំបុត្រយន្តហោះក្នុងស្រុកពី ហូជីមិញ ទៅកាន់ កោះត្រល់ (Domestic Flight: HCMC to Phu Quoc)'
-    ];
+    return [];
   });
   const [inclusionsEn, setInclusionsEn] = useState<string[]>(() => pkg?.inclusionsEn || []);
 
@@ -298,12 +272,7 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (pkg.exclusions !== undefined) return pkg.exclusions;
       return [];
     }
-    return [
-      'អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចផ្ទាល់ខ្លួន (លើកលែងតែកម្មវិធីដែលបានបញ្ជាក់)',
-      'ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាបោកអ៊ុត, ទូរស័ព្ទ)',
-      'ថ្លៃកម្មវិធីជម្រើសបន្ថែម (Optional Tour Programs / VIP 1-on-1 Dinner)',
-      'ធានារ៉ាប់រងការធ្វើដំណើរក្រៅប្រទេសផ្ទាល់ខ្លួន'
-    ];
+    return [];
   });
   const [exclusionsEn, setExclusionsEn] = useState<string[]>(() => pkg?.exclusionsEn || []);
 
@@ -314,78 +283,45 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (pkg.termsAndConditions !== undefined) return pkg.termsAndConditions;
       return [];
     }
-    return [
-      'លិខិតឆ្លងដែន (Passport) ត្រូវតែមានសុពលភាពយ៉ាងតិច ៦ ខែ គិតចាប់ពីថ្ងៃចេញដំណើរ។',
-      'ការកក់កន្លែង និងធានាសិទ្ធិចូលរួម ត្រូវតម្កល់ប្រាក់កក់យ៉ាងតិច 50% នៃតម្លៃសរុបពេលចុះឈ្មោះ។',
-      'ការបង់ប្រាក់បង្គ្រប់ 100% ត្រូវធ្វើឡើងយ៉ាងតិច ៧ ថ្ងៃ មុនកាលបរិច្ឆេទចេញដំណើរ។',
-      'ករណីលុបចោលការធ្វើដំណើរមុន ១៥ ថ្ងៃ នឹងទទួលបានការបង្វិលប្រាក់វិញ 70%។ ករណីលុបចោលក្រោម ៧ ថ្ងៃ មិនអាចបង្វិលប្រាក់បានទេ។',
-      'អ្នកចូលរួមត្រូវគោរពតាមពេលវេលា និងការណែនាំរបស់មគ្គុទ្ទេសក៍ និងអ្នកសម្របសម្រួលបេសកកម្ម។',
-      'ក្រុមហ៊ុនសូមរក្សាសិទ្ធិកែប្រែកាលវិភាគ ឬសណ្ឋាគារក្នុងកម្រិតស្មើគ្នា ករណីមានប្រធានសក្តិ ឬហេតុការណ៍ចៃដន្យ។'
-    ];
+    return [];
   });
   const [termsAndConditionsEn, setTermsAndConditionsEn] = useState<string[]>(() => pkg?.termsAndConditionsEn || []);
 
   // Tour Guide Profile Bilingual State
-  const [guideName, setGuideName] = useState(pkg?.tourGuide?.name || 'Mr. Tim Vutha & Senior Escort Team');
-  const [guideNameKm, setGuideNameKm] = useState(pkg?.tourGuide?.nameKm || pkg?.tourGuide?.name || 'Mr. Tim Vutha & Senior Escort Team');
+  const [guideName, setGuideName] = useState(pkg?.tourGuide?.name || '');
+  const [guideNameKm, setGuideNameKm] = useState(pkg?.tourGuide?.nameKm || pkg?.tourGuide?.name || '');
   const [guideNameEn, setGuideNameEn] = useState(pkg?.tourGuide?.nameEn || '');
-  const [guideTitle, setGuideTitle] = useState(pkg?.tourGuide?.title || 'Lead Trade Mission Coordinator & Certified Tour Director');
-  const [guideTitleKm, setGuideTitleKm] = useState(pkg?.tourGuide?.titleKm || pkg?.tourGuide?.title || 'Lead Trade Mission Coordinator & Certified Tour Director');
+  const [guideTitle, setGuideTitle] = useState(pkg?.tourGuide?.title || '');
+  const [guideTitleKm, setGuideTitleKm] = useState(pkg?.tourGuide?.titleKm || pkg?.tourGuide?.title || '');
   const [guideTitleEn, setGuideTitleEn] = useState(pkg?.tourGuide?.titleEn || '');
-  const [guidePhone, setGuidePhone] = useState(pkg?.tourGuide?.phone || '060 815 515');
-  const [guideTelegram, setGuideTelegram] = useState(pkg?.tourGuide?.telegram || '@VuthaTim');
-  const [guideLanguages, setGuideLanguages] = useState<string[]>(pkg?.tourGuide?.languages || ['Khmer', 'Vietnamese', 'English']);
-  const [guideBadge, setGuideBadge] = useState(pkg?.tourGuide?.badgeNumber || 'KHB-TM-2026-01');
-  const [guidePhoto, setGuidePhoto] = useState(pkg?.tourGuide?.photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80');
-  const [guideBio, setGuideBio] = useState(pkg?.tourGuide?.bio || 'អ្នកសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្មជាន់ខ្ពស់ និងជាប្រធានដឹកនាំគណៈប្រតិភូពាណិជ្ជកម្មកម្ពុជា-វៀតណាម ប្រកបដោយបទពិសោធន៍ជាង ១២ ឆ្នាំ។');
-  const [guideBioKm, setGuideBioKm] = useState(pkg?.tourGuide?.bioKm || pkg?.tourGuide?.bio || 'អ្នកសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្មជាន់ខ្ពស់ និងជាប្រធានដឹកនាំគណៈប្រតិភូពាណិជ្ជកម្មកម្ពុជា-វៀតណាម ប្រកបដោយបទពិសោធន៍ជាង ១២ ឆ្នាំ។');
+  const [guidePhone, setGuidePhone] = useState(pkg?.tourGuide?.phone || '');
+  const [guideTelegram, setGuideTelegram] = useState(pkg?.tourGuide?.telegram || '');
+  const [guideLanguages, setGuideLanguages] = useState<string[]>(pkg?.tourGuide?.languages || []);
+  const [guideBadge, setGuideBadge] = useState(pkg?.tourGuide?.badgeNumber || '');
+  const [guidePhoto, setGuidePhoto] = useState(pkg?.tourGuide?.photoUrl || '');
+  const [guideBio, setGuideBio] = useState(pkg?.tourGuide?.bio || '');
+  const [guideBioKm, setGuideBioKm] = useState(pkg?.tourGuide?.bioKm || pkg?.tourGuide?.bio || '');
   const [guideBioEn, setGuideBioEn] = useState(pkg?.tourGuide?.bioEn || '');
-  const [briefingMeetingPoint, setBriefingMeetingPoint] = useState(pkg?.tourGuide?.briefingMeetingPoint || 'រាជធានីភ្នំពេញ (ចំណុចប្រមូលផ្តុំ KHB Head Office / រថយន្ត VIP) - ម៉ោង ០៦:០០ ព្រឹក');
-  const [briefingMeetingPointKm, setBriefingMeetingPointKm] = useState(pkg?.tourGuide?.briefingMeetingPointKm || pkg?.tourGuide?.briefingMeetingPoint || 'រាជធានីភ្នំពេញ (ចំណុចប្រមូលផ្តុំ KHB Head Office / រថយន្ត VIP) - ម៉ោង ០៦:០០ ព្រឹក');
+  const [briefingMeetingPoint, setBriefingMeetingPoint] = useState(pkg?.tourGuide?.briefingMeetingPoint || '');
+  const [briefingMeetingPointKm, setBriefingMeetingPointKm] = useState(pkg?.tourGuide?.briefingMeetingPointKm || pkg?.tourGuide?.briefingMeetingPoint || '');
   const [briefingMeetingPointEn, setBriefingMeetingPointEn] = useState(pkg?.tourGuide?.briefingMeetingPointEn || '');
-  const [briefingTime, setBriefingTime] = useState(pkg?.tourGuide?.briefingTime || '06:00 AM (ថ្ងៃទី 29/10/2026)');
-  const [briefingTimeKm, setBriefingTimeKm] = useState(pkg?.tourGuide?.briefingTimeKm || pkg?.tourGuide?.briefingTime || '06:00 AM (ថ្ងៃទី 29/10/2026)');
+  const [briefingTime, setBriefingTime] = useState(pkg?.tourGuide?.briefingTime || '');
+  const [briefingTimeKm, setBriefingTimeKm] = useState(pkg?.tourGuide?.briefingTimeKm || pkg?.tourGuide?.briefingTime || '');
   const [briefingTimeEn, setBriefingTimeEn] = useState(pkg?.tourGuide?.briefingTimeEn || '');
 
   // Itinerary & Hourly Agendas State
-  const [itinerary, setItinerary] = useState<ItineraryStep[]>(pkg?.itinerary || [
-    {
-      day: 1,
-      title: 'ភ្នំពេញ - ឆ្លងដែន VIP - ទីក្រុងហូជីមិញ & ពិធីស្វាគមន៍គណៈប្រតិភូ',
-      description: 'ចេញដំណើរពីរាជធានីភ្នំពេញដោយរថយន្តក្រុង VIP ឆ្លងកាត់ច្រកទ្វារព្រំដែនបាវិត/ម៉ុកបៃ ជាមួយនឹងសេវាសម្រួលបែបបទឆ្លងដែនរហ័ស។',
-      hotelName: 'Grand Saigon Riverside Boutique Hotel (4-Star)',
-      mealsIncluded: ['Breakfast', 'Welcome Dinner'],
-      guideAgenda: [
-        { time: '06:00 AM - 06:30 AM', activity: 'ជួបជុំគណៈប្រតិភូនៅភ្នំពេញ & ចែកកាតសម្គាល់បេសកកម្ម', location: 'KHB Head Office Departure Bay', notes: 'សូមរៀបចំ Passport ឱ្យបានរួចរាល់' },
-        { time: '10:30 AM - 11:30 AM', activity: 'សម្រួលបែបបទឆ្លងដែន VIP Fast-Track & ចូលប្រទេសវៀតណាម', location: 'Bavet - Moc Bai Border Checkpoint' },
-        { time: '05:30 PM - 08:30 PM', activity: 'កម្មវិធីណែនាំគណៈប្រតិភូ Orientation & អាហារពេលល្ងាចស្វាគមន៍', location: 'Hotel Grand Banquet Hall' }
-      ]
-    }
-  ]);
+  const [itinerary, setItinerary] = useState<ItineraryStep[]>(pkg?.itinerary || []);
   const [expandedDayIndex, setExpandedDayIndex] = useState<number | null>(0);
 
   // Optional Programs State
-  const [optionalPrograms, setOptionalPrograms] = useState<OptionalTourProgram[]>(pkg?.optionalPrograms || [
-    {
-      id: 'opt_vip_matchmaking',
-      title: 'កម្មវិធី B2B VIP Matchmaking & ជំនួបពាណិជ្ជកម្មទល់មុខ',
-      description: 'ការរៀបចំជំនួបផ្ទាល់ជាមួយម្ចាស់សហគ្រាសក្នុងស្រុក 3-5 ក្រុមហ៊ុន និងអាហារពេលល្ងាចបណ្តាញពាណិជ្ជកម្ម VIP',
-      additionalCostUSD: 120,
-      durationHours: 3.5,
-      recommendedAudience: 'Business Owners & Franchise Investors',
-      highlights: ['Dedicated bilingual translator', 'Private conference lounge', 'Buyer directory'],
-      includesGuide: true,
-      includedMeals: ['VIP Executive Banquet'],
-      meetingPoint: 'Hotel Executive Conference Lounge (5:30 PM)'
-    }
-  ]);
+  const [optionalPrograms, setOptionalPrograms] = useState<OptionalTourProgram[]>(pkg?.optionalPrograms || []);
 
   // Emergency Contacts State
-  const [emergencyCountry, setEmergencyCountry] = useState(pkg?.emergencyContact?.country || 'Vietnam (Ho Chi Minh City & Phu Quoc)');
-  const [emergencyPolice, setEmergencyPolice] = useState(pkg?.emergencyContact?.police || '113');
-  const [emergencyAmbulance, setEmergencyAmbulance] = useState(pkg?.emergencyContact?.ambulance || '115');
-  const [emergencyHelpline, setEmergencyHelpline] = useState(pkg?.emergencyContact?.touristHelpline || '060 815 515 (Mr. Tim Vutha)');
-  const [emergencyEmbassy, setEmergencyEmbassy] = useState(pkg?.emergencyContact?.embassySupport || '+84 28 3829 2751 (Royal Embassy of Cambodia in Vietnam)');
+  const [emergencyCountry, setEmergencyCountry] = useState(pkg?.emergencyContact?.country || '');
+  const [emergencyPolice, setEmergencyPolice] = useState(pkg?.emergencyContact?.police || '');
+  const [emergencyAmbulance, setEmergencyAmbulance] = useState(pkg?.emergencyContact?.ambulance || '');
+  const [emergencyHelpline, setEmergencyHelpline] = useState(pkg?.emergencyContact?.touristHelpline || '');
+  const [emergencyEmbassy, setEmergencyEmbassy] = useState(pkg?.emergencyContact?.embassySupport || '');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoFileInputRef = useRef<HTMLInputElement>(null);
@@ -1008,13 +944,15 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     const nextDayNum = itinerary.length + 1;
     const newDay: ItineraryStep = {
       day: nextDayNum,
-      title: `Day ${nextDayNum}: Trade Mission & Business Activity`,
-      description: 'Program description for delegates and participants.',
-      hotelName: '4-Star Hotel / Resort',
-      mealsIncluded: ['Breakfast'],
-      guideAgenda: [
-        { time: '08:00 AM', activity: 'Morning Assembly & Briefing', location: 'Hotel Lobby' }
-      ]
+      title: '',
+      titleEn: '',
+      titleKm: '',
+      description: '',
+      descriptionEn: '',
+      descriptionKm: '',
+      hotelName: '',
+      mealsIncluded: [],
+      guideAgenda: []
     };
     setItinerary([...itinerary, newDay]);
     setExpandedDayIndex(itinerary.length);
@@ -1044,17 +982,17 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   // Guide Agenda Item Handlers for a Day
   const handleAddAgendaItem = (dayIndex: number) => {
     const newSlot: GuideScheduleSlot = {
-      time: '09:00 AM - 12:00 PM',
-      activity: 'B2B Trade Session & Exhibition Walkthrough',
-      activityEn: 'B2B Trade Session & Exhibition Walkthrough',
-      activityKm: 'ទស្សនកិច្ចពាណិជ្ជកម្ម និងពិព័រណ៍',
-      location: 'Main Exhibition Hall',
-      locationEn: 'Main Exhibition Hall',
-      locationKm: 'សាលពិព័រណ៍ធំ',
+      time: '',
+      activity: '',
+      activityEn: '',
+      activityKm: '',
+      location: '',
+      locationEn: '',
+      locationKm: '',
       notes: '',
       notesEn: '',
       notesKm: '',
-      type: 'exhibition'
+      type: 'site_visit'
     };
     setItinerary(prev => prev.map((day, dIdx) => {
       if (dIdx !== dayIndex) return day;
@@ -1146,19 +1084,19 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   const handleAddOptionalProgram = () => {
     const newProg: OptionalTourProgram = {
       id: `opt_${Date.now()}`,
-      title: 'New Optional Program / Site Tour',
-      titleEn: 'New Optional Program / Site Tour',
+      title: '',
+      titleEn: '',
       titleKm: '',
-      description: 'Detailed description of the optional program.',
-      descriptionEn: 'Detailed description of the optional program.',
+      description: '',
+      descriptionEn: '',
       descriptionKm: '',
-      additionalCostUSD: 50,
-      durationHours: 3,
-      recommendedAudience: 'All Delegates',
-      highlights: ['Guided service', 'Exclusive access'],
+      additionalCostUSD: 0,
+      durationHours: 1,
+      recommendedAudience: '',
+      highlights: [],
       includesGuide: true,
-      includedMeals: ['Refreshments'],
-      meetingPoint: 'Hotel Main Lobby'
+      includedMeals: [],
+      meetingPoint: ''
     };
     setOptionalPrograms(prev => [...prev, newProg]);
   };
