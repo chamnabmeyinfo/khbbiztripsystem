@@ -1354,6 +1354,20 @@ export function detectTextLanguage(text: string): 'km' | 'en' | 'zh' | 'vi' | 'a
 }
 
 /**
+ * Validates that a translation result actually matches the requested target script.
+ * Guards against "echo" fallback results (untranslatable text returned unchanged)
+ * being written into the wrong language field — e.g. English text landing in a Khmer
+ * field or vice versa, which produces mixed-language "strange results".
+ */
+export function matchesTargetScript(text: string, targetLang: string): boolean {
+  if (!text) return false;
+  const hasKhmer = /[\u1780-\u17FF]/.test(text);
+  if (targetLang === 'km') return hasKhmer;
+  // English and other Latin-script targets must not contain Khmer glyphs
+  return !hasKhmer;
+}
+
+/**
  * Common Dictionary for fallback translations between Khmer, English, Chinese, Vietnamese
  */
 const TRAVEL_TRANSLATION_FALLBACK_DICT: Record<string, Record<string, string>> = {
@@ -1533,8 +1547,12 @@ export async function translateTextField(
     resolvedSource = detected;
   }
 
-  if (resolvedTarget === 'auto' || !resolvedTarget || resolvedTarget === resolvedSource) {
+  if (resolvedTarget === 'auto' || !resolvedTarget) {
     resolvedTarget = resolvedSource === 'km' ? 'en' : 'km';
+  } else if (resolvedTarget === resolvedSource) {
+    // Source text is already in the requested target language — return unchanged
+    // instead of silently flipping direction (prevents Khmer fields receiving English text).
+    return { success: true, translatedText: trimmed, detectedLang: resolvedSource };
   }
 
   const activeConfig = providerConfig || getActiveAiTranslationConfig();
@@ -1727,8 +1745,11 @@ export async function translateArrayField(
     resolvedSource = detected === 'km' ? 'km' : 'en';
   }
 
-  if (resolvedTarget === 'auto' || !resolvedTarget || resolvedTarget === resolvedSource) {
+  if (resolvedTarget === 'auto' || !resolvedTarget) {
     resolvedTarget = resolvedSource === 'km' ? 'en' : 'km';
+  } else if (resolvedTarget === resolvedSource) {
+    // Source items are already in the requested target language — return unchanged.
+    return { success: true, translatedItems: validItems };
   }
 
   const activeConfig = providerConfig || getActiveAiTranslationConfig();
@@ -1749,7 +1770,14 @@ export async function translateArrayField(
     if (res.ok) {
       const data = await res.json();
       if ((data.mode === 'gemini_success' || data.mode === 'ai_success') && Array.isArray(data.translatedTexts)) {
-        return { success: true, translatedItems: data.translatedTexts };
+        // Normalize strictly by index: guarantee same length & order as the input array.
+        // If the AI dropped/reordered an entry, keep the original text for that slot
+        // (prevents misaligned bilingual list pairs).
+        const normalized = validItems.map((orig, idx) => {
+          const candidate = data.translatedTexts[idx];
+          return (typeof candidate === 'string' && candidate.trim()) ? candidate.trim() : orig;
+        });
+        return { success: true, translatedItems: normalized };
       }
     }
   } catch (err) {
@@ -1762,6 +1790,84 @@ export async function translateArrayField(
   );
 
   return { success: true, translatedItems: translated };
+}
+
+/**
+ * Defensive merge of an AI-translated package over the original package.
+ * ONLY whitelisted translatable text fields are taken from the AI response.
+ * Every non-translatable field (id, price, images, coordinates, tags, dates,
+ * guide phone/telegram, day numbers, slot times, program costs...) is always
+ * preserved from the original — guaranteeing zero data loss / zero corruption
+ * even if the AI omits, empties, or hallucinates structural fields.
+ */
+function sanitizeTranslatedPackage(
+  serverPkg: any,
+  original: Partial<TourPackage>
+): Partial<TourPackage> {
+  const isText = (v: any): boolean => typeof v === 'string' && v.trim().length > 0;
+  const isTextArray = (v: any): boolean => Array.isArray(v) && v.length > 0 && v.every((i: any) => typeof i === 'string');
+
+  const merged: any = { ...original };
+
+  // Simple bilingual text fields (base + Km + En twins)
+  const textFields = ['title', 'titleKm', 'titleEn', 'destination', 'destinationKm', 'destinationEn', 'country', 'countryKm', 'countryEn', 'category', 'categoryKm', 'categoryEn', 'description', 'descriptionKm', 'descriptionEn'];
+  textFields.forEach(f => {
+    if (serverPkg && isText(serverPkg[f])) merged[f] = serverPkg[f].trim();
+  });
+
+  // Bilingual array fields (accept only valid string arrays; otherwise keep original)
+  const arrayFields = ['highlights', 'highlightsKm', 'highlightsEn', 'whoShouldJoin', 'whoShouldJoinKm', 'whoShouldJoinEn', 'whyShouldJoin', 'whyShouldJoinKm', 'whyShouldJoinEn', 'inclusions', 'inclusionsKm', 'inclusionsEn', 'exclusions', 'exclusionsKm', 'exclusionsEn', 'termsAndConditions', 'termsAndConditionsKm', 'termsAndConditionsEn'];
+  arrayFields.forEach(f => {
+    if (serverPkg && isTextArray(serverPkg[f])) merged[f] = serverPkg[f];
+  });
+
+  // Tour Guide: overlay text fields only — always keep phone, telegram, photo, badge, languages
+  if (serverPkg?.tourGuide && original.tourGuide) {
+    const g: any = { ...original.tourGuide };
+    ['name', 'nameKm', 'nameEn', 'title', 'titleKm', 'titleEn', 'bio', 'bioKm', 'bioEn', 'briefingMeetingPoint', 'briefingMeetingPointKm', 'briefingMeetingPointEn', 'briefingTime', 'briefingTimeKm', 'briefingTimeEn'].forEach(f => {
+      if (isText(serverPkg.tourGuide[f])) g[f] = serverPkg.tourGuide[f].trim();
+    });
+    merged.tourGuide = g;
+  }
+
+  // Itinerary: accept only when day count matches the original (index-keyed merge).
+  // Per day, overlay ONLY text fields — day number, slots' times/ids, and structure stay original.
+  if (Array.isArray(serverPkg?.itinerary) && Array.isArray(original.itinerary) && serverPkg.itinerary.length === original.itinerary.length) {
+    const dayTextFields = ['title', 'titleKm', 'titleEn', 'description', 'descriptionKm', 'descriptionEn', 'hotelName', 'hotelNameKm', 'hotelNameEn', 'assemblyPoint', 'assemblyPointKm', 'assemblyPointEn'];
+    const dayArrayFields = ['mealsIncluded', 'mealsIncludedKm', 'mealsIncludedEn', 'dayHighlights', 'dayHighlightsKm', 'dayHighlightsEn'];
+    merged.itinerary = original.itinerary.map((origDay: any, idx: number) => {
+      const srvDay: any = serverPkg.itinerary[idx] || {};
+      const day: any = { ...origDay };
+      dayTextFields.forEach(f => { if (isText(srvDay[f])) day[f] = srvDay[f].trim(); });
+      dayArrayFields.forEach(f => { if (isTextArray(srvDay[f])) day[f] = srvDay[f]; });
+      // Guide agenda slots: index-keyed text-only overlay
+      if (Array.isArray(origDay.guideAgenda) && Array.isArray(srvDay.guideAgenda) && srvDay.guideAgenda.length === origDay.guideAgenda.length) {
+        const slotTextFields = ['activity', 'activityKm', 'activityEn', 'location', 'locationKm', 'locationEn', 'notes', 'notesKm', 'notesEn'];
+        day.guideAgenda = origDay.guideAgenda.map((origSlot: any, sIdx: number) => {
+          const srvSlot: any = srvDay.guideAgenda[sIdx] || {};
+          const slot: any = { ...origSlot };
+          slotTextFields.forEach(f => { if (isText(srvSlot[f])) slot[f] = srvSlot[f].trim(); });
+          return slot;
+        });
+      }
+      return day;
+    });
+  }
+
+  // Optional Programs: index-keyed merge — costs, durations, ids stay original
+  if (Array.isArray(serverPkg?.optionalPrograms) && Array.isArray(original.optionalPrograms) && serverPkg.optionalPrograms.length === original.optionalPrograms.length) {
+    const progTextFields = ['title', 'titleKm', 'titleEn', 'description', 'descriptionKm', 'descriptionEn', 'recommendedAudience', 'recommendedAudienceKm', 'recommendedAudienceEn', 'meetingPoint', 'meetingPointKm', 'meetingPointEn'];
+    const progArrayFields = ['highlights', 'highlightsKm', 'highlightsEn', 'includedMeals', 'includedMealsKm', 'includedMealsEn'];
+    merged.optionalPrograms = original.optionalPrograms.map((origProg: any, idx: number) => {
+      const srvProg: any = serverPkg.optionalPrograms[idx] || {};
+      const prog: any = { ...origProg };
+      progTextFields.forEach(f => { if (isText(srvProg[f])) prog[f] = srvProg[f].trim(); });
+      progArrayFields.forEach(f => { if (isTextArray(srvProg[f])) prog[f] = srvProg[f]; });
+      return prog;
+    });
+  }
+
+  return merged as Partial<TourPackage>;
 }
 
 /**
@@ -1792,7 +1898,7 @@ export async function translateEntirePackage(
       if ((data.mode === 'gemini_success' || data.mode === 'ai_success') && data.translatedPackage) {
         return {
           success: true,
-          translatedPackage: data.translatedPackage,
+          translatedPackage: sanitizeTranslatedPackage(data.translatedPackage, pkgData),
           summary: data.summary || `Successfully translated entire package to ${targetLang}`
         };
       }
@@ -1845,6 +1951,19 @@ export async function translateEntirePackage(
     translateArrayField(srcTerms, target, sourceLang, 'Terms & Conditions', activeConfig)
   ]);
 
+  // Script validation: drop fallback "echo" results that don't match the target language
+  // script (prevents untranslated English text landing in Khmer fields and vice versa)
+  const scriptOkText = (translated: string, keepOriginal: string): string =>
+    (translated && matchesTargetScript(translated, target)) ? translated : keepOriginal;
+  const scriptOkItems = (items: string[]): string[] =>
+    (items || []).filter(it => matchesTargetScript(it, target));
+  transHighlights.translatedItems = scriptOkItems(transHighlights.translatedItems);
+  transWho.translatedItems = scriptOkItems(transWho.translatedItems);
+  transWhy.translatedItems = scriptOkItems(transWhy.translatedItems);
+  transInclusions.translatedItems = scriptOkItems(transInclusions.translatedItems);
+  transExclusions.translatedItems = scriptOkItems(transExclusions.translatedItems);
+  transTerms.translatedItems = scriptOkItems(transTerms.translatedItems);
+
   // Translate Itinerary Days
   const translatedItinerary = await Promise.all(
     (pkgData.itinerary || []).map(async (day) => {
@@ -1877,34 +1996,35 @@ export async function translateEntirePackage(
           return {
             ...slot,
             activity: isTargetKm ? (act.translatedText || slot.activity) : (slot.activity || act.translatedText),
-            activityKm: isTargetKm ? act.translatedText : (slot.activityKm || slot.activity || ''),
-            activityEn: isTargetEn ? act.translatedText : (slot.activityEn || ''),
+            activityKm: isTargetKm ? scriptOkText(act.translatedText, slot.activityKm || '') : (slot.activityKm || slot.activity || ''),
+            activityEn: isTargetEn ? scriptOkText(act.translatedText, slot.activityEn || '') : (slot.activityEn || ''),
             location: isTargetKm ? (loc.translatedText || slot.location) : (slot.location || loc.translatedText),
-            locationKm: isTargetKm ? loc.translatedText : (slot.locationKm || slot.location || ''),
-            locationEn: isTargetEn ? loc.translatedText : (slot.locationEn || ''),
+            locationKm: isTargetKm ? scriptOkText(loc.translatedText, slot.locationKm || '') : (slot.locationKm || slot.location || ''),
+            locationEn: isTargetEn ? scriptOkText(loc.translatedText, slot.locationEn || '') : (slot.locationEn || ''),
             notes: isTargetKm ? (notes.translatedText || slot.notes) : (slot.notes || notes.translatedText),
-            notesKm: isTargetKm ? notes.translatedText : (slot.notesKm || slot.notes || ''),
-            notesEn: isTargetEn ? notes.translatedText : (slot.notesEn || '')
+            notesKm: isTargetKm ? scriptOkText(notes.translatedText, slot.notesKm || '') : (slot.notesKm || slot.notes || ''),
+            notesEn: isTargetEn ? scriptOkText(notes.translatedText, slot.notesEn || '') : (slot.notesEn || '')
           };
         })
       );
 
-      const parsedMeals = meals.translatedText ? meals.translatedText.split(',').map(m => m.trim()).filter(Boolean) : [];
+      const mealsValid = matchesTargetScript(meals.translatedText, target);
+      const parsedMeals = (meals.translatedText && mealsValid) ? meals.translatedText.split(',').map(m => m.trim()).filter(Boolean) : [];
 
       return {
         ...day,
         title: day.title || dayTitle.translatedText,
-        titleKm: isTargetKm ? dayTitle.translatedText : (day.titleKm || day.title),
-        titleEn: isTargetEn ? dayTitle.translatedText : (day.titleEn || ''),
+        titleKm: isTargetKm ? scriptOkText(dayTitle.translatedText, day.titleKm || '') : (day.titleKm || day.title),
+        titleEn: isTargetEn ? scriptOkText(dayTitle.translatedText, day.titleEn || '') : (day.titleEn || ''),
         description: day.description || dayDesc.translatedText,
-        descriptionKm: isTargetKm ? dayDesc.translatedText : (day.descriptionKm || day.description),
-        descriptionEn: isTargetEn ? dayDesc.translatedText : (day.descriptionEn || ''),
+        descriptionKm: isTargetKm ? scriptOkText(dayDesc.translatedText, day.descriptionKm || '') : (day.descriptionKm || day.description),
+        descriptionEn: isTargetEn ? scriptOkText(dayDesc.translatedText, day.descriptionEn || '') : (day.descriptionEn || ''),
         hotelName: isTargetKm ? (hotel.translatedText || day.hotelName) : (day.hotelName || hotel.translatedText),
-        hotelNameKm: isTargetKm ? hotel.translatedText : (day.hotelNameKm || day.hotelName || ''),
-        hotelNameEn: isTargetEn ? hotel.translatedText : (day.hotelNameEn || ''),
+        hotelNameKm: isTargetKm ? scriptOkText(hotel.translatedText, day.hotelNameKm || '') : (day.hotelNameKm || day.hotelName || ''),
+        hotelNameEn: isTargetEn ? scriptOkText(hotel.translatedText, day.hotelNameEn || '') : (day.hotelNameEn || ''),
         assemblyPoint: isTargetKm ? (assembly.translatedText || day.assemblyPoint) : (day.assemblyPoint || assembly.translatedText),
-        assemblyPointKm: isTargetKm ? assembly.translatedText : (day.assemblyPointKm || day.assemblyPoint || ''),
-        assemblyPointEn: isTargetEn ? assembly.translatedText : (day.assemblyPointEn || ''),
+        assemblyPointKm: isTargetKm ? scriptOkText(assembly.translatedText, day.assemblyPointKm || '') : (day.assemblyPointKm || day.assemblyPoint || ''),
+        assemblyPointEn: isTargetEn ? scriptOkText(assembly.translatedText, day.assemblyPointEn || '') : (day.assemblyPointEn || ''),
         mealsIncluded: parsedMeals.length > 0 ? parsedMeals : day.mealsIncluded,
         mealsIncludedKm: isTargetKm ? parsedMeals : (day.mealsIncludedKm || day.mealsIncluded || []),
         mealsIncludedEn: isTargetEn ? parsedMeals : (day.mealsIncludedEn || []),
@@ -1933,20 +2053,20 @@ export async function translateEntirePackage(
     translatedGuide = {
       ...pkgData.tourGuide,
       name: pkgData.tourGuide.name,
-      nameKm: isTargetKm ? gName.translatedText : (pkgData.tourGuide.nameKm || pkgData.tourGuide.name),
-      nameEn: isTargetEn ? gName.translatedText : (pkgData.tourGuide.nameEn || ''),
+      nameKm: isTargetKm ? scriptOkText(gName.translatedText, pkgData.tourGuide.nameKm || '') : (pkgData.tourGuide.nameKm || pkgData.tourGuide.name),
+      nameEn: isTargetEn ? scriptOkText(gName.translatedText, pkgData.tourGuide.nameEn || '') : (pkgData.tourGuide.nameEn || ''),
       title: gTitle.translatedText || pkgData.tourGuide.title,
-      titleKm: isTargetKm ? gTitle.translatedText : (pkgData.tourGuide.titleKm || pkgData.tourGuide.title),
-      titleEn: isTargetEn ? gTitle.translatedText : (pkgData.tourGuide.titleEn || ''),
+      titleKm: isTargetKm ? scriptOkText(gTitle.translatedText, pkgData.tourGuide.titleKm || '') : (pkgData.tourGuide.titleKm || pkgData.tourGuide.title),
+      titleEn: isTargetEn ? scriptOkText(gTitle.translatedText, pkgData.tourGuide.titleEn || '') : (pkgData.tourGuide.titleEn || ''),
       bio: gBio.translatedText || pkgData.tourGuide.bio,
-      bioKm: isTargetKm ? gBio.translatedText : (pkgData.tourGuide.bioKm || pkgData.tourGuide.bio),
-      bioEn: isTargetEn ? gBio.translatedText : (pkgData.tourGuide.bioEn || ''),
+      bioKm: isTargetKm ? scriptOkText(gBio.translatedText, pkgData.tourGuide.bioKm || '') : (pkgData.tourGuide.bioKm || pkgData.tourGuide.bio),
+      bioEn: isTargetEn ? scriptOkText(gBio.translatedText, pkgData.tourGuide.bioEn || '') : (pkgData.tourGuide.bioEn || ''),
       briefingMeetingPoint: gPoint.translatedText || pkgData.tourGuide.briefingMeetingPoint,
-      briefingMeetingPointKm: isTargetKm ? gPoint.translatedText : (pkgData.tourGuide.briefingMeetingPointKm || pkgData.tourGuide.briefingMeetingPoint),
-      briefingMeetingPointEn: isTargetEn ? gPoint.translatedText : (pkgData.tourGuide.briefingMeetingPointEn || ''),
+      briefingMeetingPointKm: isTargetKm ? scriptOkText(gPoint.translatedText, pkgData.tourGuide.briefingMeetingPointKm || '') : (pkgData.tourGuide.briefingMeetingPointKm || pkgData.tourGuide.briefingMeetingPoint),
+      briefingMeetingPointEn: isTargetEn ? scriptOkText(gPoint.translatedText, pkgData.tourGuide.briefingMeetingPointEn || '') : (pkgData.tourGuide.briefingMeetingPointEn || ''),
       briefingTime: gTime.translatedText || pkgData.tourGuide.briefingTime,
-      briefingTimeKm: isTargetKm ? gTime.translatedText : (pkgData.tourGuide.briefingTimeKm || pkgData.tourGuide.briefingTime),
-      briefingTimeEn: isTargetEn ? gTime.translatedText : (pkgData.tourGuide.briefingTimeEn || '')
+      briefingTimeKm: isTargetKm ? scriptOkText(gTime.translatedText, pkgData.tourGuide.briefingTimeKm || '') : (pkgData.tourGuide.briefingTimeKm || pkgData.tourGuide.briefingTime),
+      briefingTimeEn: isTargetEn ? scriptOkText(gTime.translatedText, pkgData.tourGuide.briefingTimeEn || '') : (pkgData.tourGuide.briefingTimeEn || '')
     };
   }
 
@@ -1965,18 +2085,29 @@ export async function translateEntirePackage(
         prog.meetingPoint ? translateTextField(prog.meetingPoint, target, sourceLang, 'Meeting Point', activeConfig) : Promise.resolve({ translatedText: prog.meetingPoint || '' })
       ]);
 
+      const okHl = scriptOkItems(pHl.translatedItems);
+      const okMeals = scriptOkItems(pMeals.translatedItems);
+
       return {
         ...prog,
         title: prog.title || pTitle.translatedText,
-        titleKm: isTargetKm ? pTitle.translatedText : (prog.titleKm || prog.title),
-        titleEn: isTargetEn ? pTitle.translatedText : (prog.titleEn || ''),
+        titleKm: isTargetKm ? scriptOkText(pTitle.translatedText, prog.titleKm || '') : (prog.titleKm || prog.title),
+        titleEn: isTargetEn ? scriptOkText(pTitle.translatedText, prog.titleEn || '') : (prog.titleEn || ''),
         description: prog.description || pDesc.translatedText,
-        descriptionKm: isTargetKm ? pDesc.translatedText : (prog.descriptionKm || prog.description),
-        descriptionEn: isTargetEn ? pDesc.translatedText : (prog.descriptionEn || ''),
+        descriptionKm: isTargetKm ? scriptOkText(pDesc.translatedText, prog.descriptionKm || '') : (prog.descriptionKm || prog.description),
+        descriptionEn: isTargetEn ? scriptOkText(pDesc.translatedText, prog.descriptionEn || '') : (prog.descriptionEn || ''),
         recommendedAudience: pAud.translatedText || prog.recommendedAudience,
-        highlights: pHl.translatedItems,
-        includedMeals: pMeals.translatedItems,
-        meetingPoint: pMeeting.translatedText || prog.meetingPoint
+        recommendedAudienceKm: isTargetKm ? scriptOkText(pAud.translatedText, prog.recommendedAudienceKm || '') : (prog.recommendedAudienceKm || ''),
+        recommendedAudienceEn: isTargetEn ? scriptOkText(pAud.translatedText, prog.recommendedAudienceEn || '') : (prog.recommendedAudienceEn || ''),
+        highlights: okHl.length > 0 ? okHl : (prog.highlights || []),
+        highlightsKm: isTargetKm ? okHl : (prog.highlightsKm || []),
+        highlightsEn: isTargetEn ? okHl : (prog.highlightsEn || []),
+        includedMeals: okMeals.length > 0 ? okMeals : (prog.includedMeals || []),
+        includedMealsKm: isTargetKm ? okMeals : (prog.includedMealsKm || []),
+        includedMealsEn: isTargetEn ? okMeals : (prog.includedMealsEn || []),
+        meetingPoint: pMeeting.translatedText || prog.meetingPoint,
+        meetingPointKm: isTargetKm ? scriptOkText(pMeeting.translatedText, prog.meetingPointKm || '') : (prog.meetingPointKm || ''),
+        meetingPointEn: isTargetEn ? scriptOkText(pMeeting.translatedText, prog.meetingPointEn || '') : (prog.meetingPointEn || '')
       };
     })
   );
@@ -1987,36 +2118,49 @@ export async function translateEntirePackage(
     translatedPackage: {
       ...pkgData,
       title: pkgData.title || transTitle.translatedText,
-      titleKm: isTargetKm ? transTitle.translatedText : (pkgData.titleKm || pkgData.title),
-      titleEn: isTargetEn ? transTitle.translatedText : (pkgData.titleEn || ''),
+      titleKm: isTargetKm ? scriptOkText(transTitle.translatedText, pkgData.titleKm || pkgData.title || '') : (pkgData.titleKm || pkgData.title),
+      titleEn: isTargetEn ? scriptOkText(transTitle.translatedText, pkgData.titleEn || '') : (pkgData.titleEn || ''),
       destination: pkgData.destination || transDest.translatedText,
-      destinationKm: isTargetKm ? transDest.translatedText : (pkgData.destinationKm || pkgData.destination),
-      destinationEn: isTargetEn ? transDest.translatedText : (pkgData.destinationEn || ''),
+      destinationKm: isTargetKm ? scriptOkText(transDest.translatedText, pkgData.destinationKm || pkgData.destination || '') : (pkgData.destinationKm || pkgData.destination),
+      destinationEn: isTargetEn ? scriptOkText(transDest.translatedText, pkgData.destinationEn || '') : (pkgData.destinationEn || ''),
       country: pkgData.country || transCountry.translatedText,
-      countryKm: isTargetKm ? transCountry.translatedText : (pkgData.countryKm || pkgData.country),
-      countryEn: isTargetEn ? transCountry.translatedText : (pkgData.countryEn || ''),
+      countryKm: isTargetKm ? scriptOkText(transCountry.translatedText, pkgData.countryKm || pkgData.country || '') : (pkgData.countryKm || pkgData.country),
+      countryEn: isTargetEn ? scriptOkText(transCountry.translatedText, pkgData.countryEn || '') : (pkgData.countryEn || ''),
       category: pkgData.category || transCategory.translatedText,
-      categoryKm: isTargetKm ? transCategory.translatedText : (pkgData.categoryKm || pkgData.category),
-      categoryEn: isTargetEn ? transCategory.translatedText : (pkgData.categoryEn || ''),
+      categoryKm: isTargetKm ? scriptOkText(transCategory.translatedText, pkgData.categoryKm || pkgData.category || '') : (pkgData.categoryKm || pkgData.category),
+      categoryEn: isTargetEn ? scriptOkText(transCategory.translatedText, pkgData.categoryEn || '') : (pkgData.categoryEn || ''),
       description: pkgData.description || transDesc.translatedText,
-      descriptionKm: isTargetKm ? transDesc.translatedText : (pkgData.descriptionKm || pkgData.description),
-      descriptionEn: isTargetEn ? transDesc.translatedText : (pkgData.descriptionEn || ''),
-      highlights: isTargetKm ? transHighlights.translatedItems : (pkgData.highlightsKm || pkgData.highlights),
+      descriptionKm: isTargetKm ? scriptOkText(transDesc.translatedText, pkgData.descriptionKm || pkgData.description || '') : (pkgData.descriptionKm || pkgData.description),
+      descriptionEn: isTargetEn ? scriptOkText(transDesc.translatedText, pkgData.descriptionEn || '') : (pkgData.descriptionEn || ''),
+      // Base arrays: never wiped by an empty translation result or an empty-but-present *Km array
+      highlights: isTargetKm
+        ? (transHighlights.translatedItems.length > 0 ? transHighlights.translatedItems : (pkgData.highlights || []))
+        : ((pkgData.highlightsKm && pkgData.highlightsKm.length > 0) ? pkgData.highlightsKm : (pkgData.highlights || [])),
       highlightsKm: isTargetKm ? transHighlights.translatedItems : (pkgData.highlightsKm || []),
       highlightsEn: isTargetEn ? transHighlights.translatedItems : (pkgData.highlightsEn || []),
-      whoShouldJoin: isTargetKm ? transWho.translatedItems : (pkgData.whoShouldJoinKm || pkgData.whoShouldJoin),
+      whoShouldJoin: isTargetKm
+        ? (transWho.translatedItems.length > 0 ? transWho.translatedItems : (pkgData.whoShouldJoin || []))
+        : ((pkgData.whoShouldJoinKm && pkgData.whoShouldJoinKm.length > 0) ? pkgData.whoShouldJoinKm : (pkgData.whoShouldJoin || [])),
       whoShouldJoinKm: isTargetKm ? transWho.translatedItems : (pkgData.whoShouldJoinKm || []),
       whoShouldJoinEn: isTargetEn ? transWho.translatedItems : (pkgData.whoShouldJoinEn || []),
-      whyShouldJoin: isTargetKm ? transWhy.translatedItems : (pkgData.whyShouldJoinKm || pkgData.whyShouldJoin),
+      whyShouldJoin: isTargetKm
+        ? (transWhy.translatedItems.length > 0 ? transWhy.translatedItems : (pkgData.whyShouldJoin || []))
+        : ((pkgData.whyShouldJoinKm && pkgData.whyShouldJoinKm.length > 0) ? pkgData.whyShouldJoinKm : (pkgData.whyShouldJoin || [])),
       whyShouldJoinKm: isTargetKm ? transWhy.translatedItems : (pkgData.whyShouldJoinKm || []),
       whyShouldJoinEn: isTargetEn ? transWhy.translatedItems : (pkgData.whyShouldJoinEn || []),
-      inclusions: isTargetKm ? transInclusions.translatedItems : (pkgData.inclusionsKm || pkgData.inclusions),
+      inclusions: isTargetKm
+        ? (transInclusions.translatedItems.length > 0 ? transInclusions.translatedItems : (pkgData.inclusions || []))
+        : ((pkgData.inclusionsKm && pkgData.inclusionsKm.length > 0) ? pkgData.inclusionsKm : (pkgData.inclusions || [])),
       inclusionsKm: isTargetKm ? transInclusions.translatedItems : (pkgData.inclusionsKm || []),
       inclusionsEn: isTargetEn ? transInclusions.translatedItems : (pkgData.inclusionsEn || []),
-      exclusions: isTargetKm ? transExclusions.translatedItems : (pkgData.exclusionsKm || pkgData.exclusions),
+      exclusions: isTargetKm
+        ? (transExclusions.translatedItems.length > 0 ? transExclusions.translatedItems : (pkgData.exclusions || []))
+        : ((pkgData.exclusionsKm && pkgData.exclusionsKm.length > 0) ? pkgData.exclusionsKm : (pkgData.exclusions || [])),
       exclusionsKm: isTargetKm ? transExclusions.translatedItems : (pkgData.exclusionsKm || []),
       exclusionsEn: isTargetEn ? transExclusions.translatedItems : (pkgData.exclusionsEn || []),
-      termsAndConditions: isTargetKm ? transTerms.translatedItems : (pkgData.termsAndConditionsKm || pkgData.termsAndConditions),
+      termsAndConditions: isTargetKm
+        ? (transTerms.translatedItems.length > 0 ? transTerms.translatedItems : (pkgData.termsAndConditions || []))
+        : ((pkgData.termsAndConditionsKm && pkgData.termsAndConditionsKm.length > 0) ? pkgData.termsAndConditionsKm : (pkgData.termsAndConditions || [])),
       termsAndConditionsKm: isTargetKm ? transTerms.translatedItems : (pkgData.termsAndConditionsKm || []),
       termsAndConditionsEn: isTargetEn ? transTerms.translatedItems : (pkgData.termsAndConditionsEn || []),
       tourGuide: translatedGuide,

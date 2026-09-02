@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Pencil, Check, X, Sparkles, Languages, CheckCircle2, ArrowRightLeft } from 'lucide-react';
 import { FieldAiTranslator } from './FieldAiTranslator';
-import { translateArrayField, translateTextField } from '../../services/geminiService';
+import { translateArrayField, translateTextField, matchesTargetScript } from '../../services/geminiService';
 import { useApp } from '../../context/AppContext';
 import { LanguageCode } from '../../types';
 
@@ -51,7 +51,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
     setIsAddingWithTrans(true);
     try {
       const res = await translateTextField(kmStr, 'en', 'km', fieldCategoryHint);
-      const enStr = res.success && res.translatedText ? res.translatedText : '';
+      const enStr = res.success && res.translatedText && matchesTargetScript(res.translatedText, 'en') ? res.translatedText : '';
       onKmChange([...kmItems, kmStr]);
       if (enStr) {
         onEnChange([...enItems, enStr]);
@@ -72,7 +72,7 @@ export const BilingualListEditor: React.FC<BilingualListEditorProps> = ({
     setIsAddingWithTrans(true);
     try {
       const res = await translateTextField(enStr, 'km', 'en', fieldCategoryHint);
-      const kmStr = res.success && res.translatedText ? res.translatedText : '';
+      const kmStr = res.success && res.translatedText && matchesTargetScript(res.translatedText, 'km') ? res.translatedText : '';
       onEnChange([...enItems, enStr]);
       if (kmStr) {
         onKmChange([...kmItems, kmStr]);

@@ -663,6 +663,7 @@ Respond strictly with valid JSON format:
 Translate the following array of strings into target language: ${target === 'auto' ? 'English (or Khmer if input is in English)' : target} (Source: ${source}).
 Context / Field Type: ${fieldHint || "Tourism & business delegation content"}.
 Preserve emojis, bullet numbers, acronyms, brand names, and formatting intact.
+CRITICAL: The output array MUST contain exactly ${texts.length} items, in the exact same order as the input array. Never merge, split, drop, or reorder items.
 
 STRINGS TO TRANSLATE:
 ${JSON.stringify(texts, null, 2)}
@@ -706,6 +707,7 @@ Target Requested: ${target}
 Field Context: ${fieldHint || "General travel, business, and itinerary details"}
 
 SMART TRANSLATION INSTRUCTIONS:
+- If the source text is already in the requested target language (or is a proper noun, brand name, number, time, or currency amount), return it unchanged.
 - If the source text is in English and target is 'km' or 'auto', translate naturally and accurately into fluent Khmer (ភាសាខ្មែរ).
 - If the source text is in Khmer and target is 'en' or 'auto', translate naturally and accurately into professional business English.
 - Preserve emojis, bullet points, numbers, currency symbols ($), and brand names.

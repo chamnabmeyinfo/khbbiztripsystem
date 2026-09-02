@@ -10,7 +10,7 @@ import {
   TourGuide,
   EmergencyContact
 } from '../../types';
-import { parseTourPackageFromText, translateEntirePackage, translateTextField } from '../../services/geminiService';
+import { parseTourPackageFromText, translateEntirePackage, translateTextField, detectTextLanguage, matchesTargetScript } from '../../services/geminiService';
 import { getLocalizedPackage } from '../../utils/packageLocalization';
 import { FieldAiTranslator } from './FieldAiTranslator';
 import { BilingualListEditor } from './BilingualListEditor';
@@ -1047,28 +1047,60 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     try {
       const updatedAgenda = await Promise.all(
         currentAgenda.map(async (slot) => {
-          // Default EN -> KM
+          // Script-aware source detection: prefer explicit En fields, then base, then Km.
+          // If the actual source text turns out to be Khmer (only KM fields were filled),
+          // translate KM -> EN instead of blindly writing Khmer into the English fields.
           const srcAct = slot.activityEn || slot.activity || slot.activityKm || '';
           const srcLoc = slot.locationEn || slot.location || slot.locationKm || '';
           const srcNotes = slot.notesEn || slot.notes || slot.notesKm || '';
 
+          const actIsKm = srcAct ? detectTextLanguage(srcAct) === 'km' : false;
+          const locIsKm = srcLoc ? detectTextLanguage(srcLoc) === 'km' : false;
+          const notesIsKm = srcNotes ? detectTextLanguage(srcNotes) === 'km' : false;
+
           const [actRes, locRes, notesRes] = await Promise.all([
-            srcAct ? translateTextField(srcAct, 'km', 'en', 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
-            srcLoc ? translateTextField(srcLoc, 'km', 'en', 'Agenda Location') : Promise.resolve({ translatedText: '' }),
-            srcNotes ? translateTextField(srcNotes, 'km', 'en', 'Agenda Notes') : Promise.resolve({ translatedText: '' })
+            srcAct ? translateTextField(srcAct, actIsKm ? 'en' : 'km', actIsKm ? 'km' : 'en', 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
+            srcLoc ? translateTextField(srcLoc, locIsKm ? 'en' : 'km', locIsKm ? 'km' : 'en', 'Agenda Location') : Promise.resolve({ translatedText: '' }),
+            srcNotes ? translateTextField(srcNotes, notesIsKm ? 'en' : 'km', notesIsKm ? 'km' : 'en', 'Agenda Notes') : Promise.resolve({ translatedText: '' })
           ]);
 
+          // Script validation: only accept results that match the destination language,
+          // otherwise keep the original field values (no wrong-language leakage).
+          const actKmOk = actRes.translatedText && matchesTargetScript(actRes.translatedText, 'km') ? actRes.translatedText : '';
+          const actEnOk = actRes.translatedText && matchesTargetScript(actRes.translatedText, 'en') ? actRes.translatedText : '';
+          const locKmOk = locRes.translatedText && matchesTargetScript(locRes.translatedText, 'km') ? locRes.translatedText : '';
+          const locEnOk = locRes.translatedText && matchesTargetScript(locRes.translatedText, 'en') ? locRes.translatedText : '';
+          const notesKmOk = notesRes.translatedText && matchesTargetScript(notesRes.translatedText, 'km') ? notesRes.translatedText : '';
+          const notesEnOk = notesRes.translatedText && matchesTargetScript(notesRes.translatedText, 'en') ? notesRes.translatedText : '';
+
+          if (actIsKm || locIsKm || notesIsKm) {
+            // KM-source slot: fill English fields from the KM->EN result
+            return {
+              ...slot,
+              activity: actEnOk || slot.activity || srcAct,
+              activityEn: actEnOk || slot.activityEn || '',
+              activityKm: actIsKm ? srcAct : (actKmOk || slot.activityKm || ''),
+              location: locEnOk || slot.location || srcLoc,
+              locationEn: locEnOk || slot.locationEn || '',
+              locationKm: locIsKm ? srcLoc : (locKmOk || slot.locationKm || ''),
+              notes: notesEnOk || slot.notes || srcNotes,
+              notesEn: notesEnOk || slot.notesEn || '',
+              notesKm: notesIsKm ? srcNotes : (notesKmOk || slot.notesKm || '')
+            };
+          }
+
+          // Default EN-source slot: fill Khmer fields from the EN->KM result
           return {
             ...slot,
             activity: srcAct,
             activityEn: srcAct,
-            activityKm: actRes.translatedText || slot.activityKm || '',
+            activityKm: actKmOk || slot.activityKm || '',
             location: srcLoc,
             locationEn: srcLoc,
-            locationKm: locRes.translatedText || slot.locationKm || '',
+            locationKm: locKmOk || slot.locationKm || '',
             notes: srcNotes,
             notesEn: srcNotes,
-            notesKm: notesRes.translatedText || slot.notesKm || ''
+            notesKm: notesKmOk || slot.notesKm || ''
           };
         })
       );

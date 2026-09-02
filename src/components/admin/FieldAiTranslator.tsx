@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Loader2, Check, ArrowRightLeft, Languages } from 'lucide-react';
-import { translateTextField, translateArrayField, detectTextLanguage, smartTranslateFieldPair } from '../../services/geminiService';
+import { translateTextField, translateArrayField, detectTextLanguage, smartTranslateFieldPair, matchesTargetScript } from '../../services/geminiService';
 
 export interface FieldAiTranslatorProps {
   // Single text / array mode (legacy & direct)
@@ -120,7 +120,7 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         setIsLoading(true);
         try {
           const res = await translateTextField(textToTranslate, 'en', 'km', fieldHint);
-          if (res.success && res.translatedText) {
+          if (res.success && res.translatedText && matchesTargetScript(res.translatedText, 'en')) {
             onTranslateToEn(res.translatedText);
             onTranslatedText?.(res.translatedText);
             setIsDone(true);
@@ -142,7 +142,7 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         setIsLoading(true);
         try {
           const res = await translateTextField(textToTranslate, 'km', 'en', fieldHint);
-          if (res.success && res.translatedText) {
+          if (res.success && res.translatedText && matchesTargetScript(res.translatedText, 'km')) {
             onTranslateToKm(res.translatedText);
             onTranslatedText?.(res.translatedText);
             setIsDone(true);
@@ -162,7 +162,7 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         setIsLoading(true);
         try {
           const res = await translateTextField(kmText!, 'en', 'km', fieldHint);
-          if (res.success && res.translatedText) {
+          if (res.success && res.translatedText && matchesTargetScript(res.translatedText, 'en')) {
             onTranslateToEn(res.translatedText);
             onTranslatedText?.(res.translatedText);
             setIsDone(true);
@@ -187,8 +187,10 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         try {
           const res = await translateArrayField(itemsToTranslate, 'en', 'km', fieldHint);
           if (res.success && res.translatedItems) {
-            onTranslateArrayToEn(res.translatedItems);
-            onTranslatedArray?.(res.translatedItems);
+            // Per-item script validation: untranslated/echo items become empty instead of leaking
+            const validated = res.translatedItems.map(it => (it && matchesTargetScript(it, 'en')) ? it : '');
+            onTranslateArrayToEn(validated);
+            onTranslatedArray?.(validated);
             setIsDone(true);
             setStatusMessage('List translated to EN!');
             setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
@@ -208,8 +210,10 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         try {
           const res = await translateArrayField(itemsToTranslate, 'km', 'en', fieldHint);
           if (res.success && res.translatedItems) {
-            onTranslateArrayToKm(res.translatedItems);
-            onTranslatedArray?.(res.translatedItems);
+            // Per-item script validation: untranslated/echo items become empty instead of leaking
+            const validated = res.translatedItems.map(it => (it && matchesTargetScript(it, 'km')) ? it : '');
+            onTranslateArrayToKm(validated);
+            onTranslatedArray?.(validated);
             setIsDone(true);
             setStatusMessage('List translated to ខ្មែរ!');
             setTimeout(() => { setIsDone(false); setStatusMessage(''); }, 2200);
@@ -260,7 +264,7 @@ export const FieldAiTranslator: React.FC<FieldAiTranslatorProps> = ({
         }
 
         const res = await translateTextField(sourceText, effTarget, effSource, fieldHint);
-        if (res.success && typeof res.translatedText === 'string') {
+        if (res.success && res.translatedText && matchesTargetScript(res.translatedText, effTarget)) {
           onTranslatedText(res.translatedText);
           setIsDone(true);
           setStatusMessage('Translated!');
