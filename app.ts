@@ -420,201 +420,90 @@ Respond strictly with valid JSON format:
         });
       }
 
-      const parsePrompt = `You are the Chief Travel Architect, Business Delegation Director & Senior Natural Language Entity Extraction Engine for KHB Events Business Trip System.
-Analyze the following unstructured raw text (which may be a brochure, WhatsApp message, Telegram flyer, email agenda, PDF text, or Facebook announcement) and deeply understand its semantic meaning, business context, logistics, schedule, pricing, and all operational details.
+      const parsePrompt = `You are the Chief Travel Architect & Senior Natural Language Entity Extraction Engine for KHB Events Business Trip System.
+Analyze the following unstructured raw text (which may be a brochure, WhatsApp message, Telegram flyer, email agenda, PDF text, or Facebook announcement).
 
-FOCUS DIRECTIVE: Focus EXCLUSIVELY on extracting pristine, high-fidelity English fields for all content.
-- Map and extract ALL content into standard English fields ('title', 'titleEn', 'destination', 'destinationEn', 'country', 'countryEn', 'category', 'description', 'descriptionEn', 'highlights', 'highlightsEn', 'whoShouldJoin', 'whoShouldJoinEn', 'whyShouldJoin', 'whyShouldJoinEn', 'inclusions', 'inclusionsEn', 'exclusions', 'exclusionsEn', 'termsAndConditions', 'termsAndConditionsEn', 'tourGuide', 'itinerary', 'optionalPrograms').
-- Leave all secondary/Khmer fields empty (empty string "" for string fields, and empty array [] for array fields) so that translation into other languages can be executed separately later.
+CRITICAL DIRECTIVE: STRICT MATCH ONLY — ZERO HALLUCINATION / ZERO GUESSING
+1. INDEPENDENT STRICT EXTRACTION: ONLY extract and fill fields that are EXPLICITLY STATED or CLEARLY EVIDENT in the provided source text.
+2. IF ANY INFORMATION IS NOT MENTIONED OR UNCLEAR:
+   - YOU MUST NOT INVENT, ASSUME, GUESS, OR HALLUCINATE PLACEHOLDER DATA.
+   - Leave string fields as "" (empty string).
+   - Leave array fields (highlights, whoShouldJoin, whyShouldJoin, inclusions, exclusions, termsAndConditions, availableDates, images) as [] (empty array).
+   - If pricing (priceUSD) is not stated in the text, set priceUSD: null.
+   - If early-bird discount (discountPriceUSD) is not stated, set discountPriceUSD: null.
+   - If duration (days/nights) is not stated in the text, set durationDays: null, durationNights: null.
+   - If hotel name is not mentioned in the text, leave hotelName / hotelNameEn as "".
+   - If tour guide / coordinator (name, phone, bio) is NOT mentioned in the text, set tourGuide: null.
+   - If emergency contacts (police, embassy, helpline) are NOT mentioned in the text, set emergencyContact: null.
+   - If images are not provided in the text, set images: [].
+   - If day-by-day itinerary is not provided in the text, set itinerary: []. If only Day 1 is provided, extract ONLY Day 1.
+3. LANGUAGE FOCUS:
+   - Extract all matched content into English fields (title, titleEn, destination, destinationEn, country, countryEn, category, description, descriptionEn, highlightsEn, inclusionsEn, etc.).
+   - Leave all secondary/Khmer fields empty ("" or []) so they can be translated separately on demand.
+4. MATCHED FIELDS AUDIT:
+   - In "matchedFields", return ONLY the exact keys that were actually found and extracted from the text (e.g. ["title", "destination", "priceUSD", "dates"]). Do NOT list fields that were missing or not found.
 
 RAW UNSTRUCTURED SOURCE TEXT:
 """
 ${text}
 """
 
-SEMANTIC UNDERSTANDING & FIELD MATCHING REQUIREMENTS (ENGLISH-ONLY FOCUS):
-1. Title: Create a pristine, high-impact title in English (title, titleEn). Set titleKm to "".
-2. Destination & Country: Identify exact cities/regions (e.g. "Tokyo & Osaka", "Guangzhou & Shenzhen", "Bangkok & Pattaya", "Ho Chi Minh City & Phu Quoc") and Country ("Japan", "China", "Thailand", "Vietnam", "Singapore", "Cambodia"). Provide English (destination, destinationEn, country, countryEn). Set destinationKm to "" and countryKm to "".
-3. Category: Determine exact category from ['trade_mission', 'franchise', 'coffee_tea_bakery', 'technology', 'retail_expo', 'canton_fair', 'cultural', 'luxury']. Set categoryKm to "".
-4. Pricing & Yield:
-   - priceUSD: Standard base package price in USD as a number.
-   - discountPriceUSD: Early-bird, delegation special, or promo price in USD if mentioned.
-5. Duration:
-   - durationDays: Total days (integer, e.g. 4, 5, 6).
-   - durationNights: Total nights (integer, e.g. 3, 4, 5).
-6. Available Dates: Array of ISO dates ['YYYY-MM-DD'] matching any dates mentioned (e.g. ['2026-10-29', '2026-10-30']). If only a month/year or day range is mentioned (e.g. "October 29 to November 1, 2026"), calculate the actual date array.
-7. Commercial Specs:
-   - hotelStars: Hotel star rating (integer, default 4 or 5).
-   - flightIncluded: Boolean (true if flights or airfare mentioned).
-   - tags: Array of tags (e.g. ['trending', 'popular', 'luxury', 'cultural']).
-8. Description:
-   - description & descriptionEn: Comprehensive, persuasive business executive summary in English highlighting delegation advantages, factory sourcing, B2B meetings, and networking. Set descriptionKm to "".
-9. High-Value Bullet Points (Arrays of Strings in English):
-   - highlights & highlightsEn: 4-7 punchy bullet points in English with executive emojis (e.g. '🤝 Wholesale Sourcing & Direct Factory Pricing', '⚙️ Advanced Automated Machinery & Equipment', '🏢 Exclusive Franchise & Licensing Opportunities'). Set highlightsKm to [].
-   - whoShouldJoin & whoShouldJoinEn: 3-5 specific target delegate profiles in English (e.g. 'Business owners, founders, and enterprise executives', 'Importers and wholesale distributors', 'Franchise investors and retail operators'). Set whoShouldJoinKm to [].
-   - whyShouldJoin & whyShouldJoinEn: 3-5 strategic ROI justifications in English (e.g. 'Direct access to 1,000+ verified manufacturers without middlemen', 'VIP fast-track customs clearance and 4-star executive accommodation', 'Pre-arranged 1-on-1 bilateral business matchmaking sessions'). Set whyShouldJoinKm to [].
-   - inclusions & inclusionsEn: 6-10 detailed inclusions in English (transportation, hotel with buffet breakfast, expo passes, airport transfers, bilingual escort, insurance). Set inclusionsKm to [].
-   - exclusions & exclusionsEn: 3-5 clear standard exclusions in English (personal shopping, personal meals, single room supplement, visa fees). Set exclusionsKm to [].
-   - termsAndConditions & termsAndConditionsEn: 4-6 corporate terms in English (deposit requirements, passport validity, cancellation policy, code of conduct). Set termsAndConditionsKm to [].
-10. Lead Tour Guide & Coordinator:
-    - name & nameEn in English (e.g. "Mr. Tim Vutha & Senior Escort Team"). Set nameKm to "".
-    - title & titleEn in English (e.g. "Lead Trade Mission Coordinator & Certified Tour Director"). Set titleKm to "".
-    - phone (e.g. "060 815 515")
-    - telegram (e.g. "@VuthaTim")
-    - languages (e.g. ["English", "Khmer", "Chinese" / "Vietnamese" / "Japanese" / "Thai"])
-    - badgeNumber (e.g. "KHB-TM-2026-01")
-    - bio & bioEn in English. Set bioKm to "".
-    - briefingMeetingPoint & briefingMeetingPointEn in English. Set briefingMeetingPointKm to "".
-    - briefingTime & briefingTimeEn in English. Set briefingTimeKm to "".
-    - photoUrl
-11. Day-by-Day Rich Itinerary in English (Exactly durationDays items):
-    - day: 1, 2, 3...
-    - title & titleEn: Specific descriptive theme for that day in English. Set titleKm to "".
-    - description & descriptionEn: Detailed agenda description in English. Set descriptionKm to "".
-    - hotelName & hotelNameEn: Hotel name in English (e.g. "Novotel Sukhumvit (4-Star)"). Set hotelNameKm to "".
-    - mealsIncluded: e.g. ["Breakfast", "Lunch", "Dinner"].
-    - dayHighlightsEn: Key milestones for that day in English. Set dayHighlightsKm to [].
-    - guideAgenda: Array of time slots in English:
-      [{ time: "08:00 AM", activity: "...", activityEn: "...", activityKm: "", location: "...", locationEn: "...", locationKm: "", notes: "...", notesEn: "...", notesKm: "", type: "gathering"|"exhibition"|"b2b_meeting"|"site_visit"|"networking_lunch"|"free_time"|"briefing" }]
-12. Optional Programs in English:
-    - [{ id: "opt_1", title: "...", titleEn: "...", titleKm: "", description: "...", descriptionEn: "...", descriptionKm: "", additionalCostUSD: 80, durationHours: 3, recommendedAudienceEn: "...", highlightsEn: ["..."], includesGuide: true, includedMeals: ["Dinner"], meetingPointEn: "..." }]
-13. Emergency Contacts & Geolocation:
-    - emergencyContact: { country, police, ambulance, touristHelpline, embassySupport }
-    - coordinates: { lat, lng, mapX, mapY } (Accurate latitude/longitude and schematic coordinates 0-100% for the destination).
-14. Curated Visual Imagery:
-    - images: 3-5 high-resolution photography URLs matching the destination and business theme from Unsplash.
-
 Respond ONLY with a valid, parseable JSON object matching this schema:
 {
-  "summary": "1-2 sentence executive summary of what was extracted in English.",
-  "matchedFields": ["title", "destination", "country", "category", "price", "duration", "dates", "highlights", "whoShouldJoin", "whyShouldJoin", "inclusions", "exclusions", "terms", "tourGuide", "itinerary", "optionalPrograms", "emergencyContact", "coordinates"],
+  "summary": "1-2 sentence factual summary of what was matched from the text in English.",
+  "matchedFields": ["title", "destination", "priceUSD"],
   "fieldConfidence": {
-    "title": 99,
-    "pricing": 98,
-    "dates": 95,
-    "itinerary": 97,
-    "guide": 96
+    "title": 95,
+    "destination": 90
   },
   "package": {
-    "title": "string (English)",
-    "titleEn": "string (English)",
+    "title": "string or empty",
+    "titleEn": "string or empty",
     "titleKm": "",
-    "destination": "string",
-    "destinationEn": "string",
+    "destination": "string or empty",
+    "destinationEn": "string or empty",
     "destinationKm": "",
-    "country": "string",
-    "countryEn": "string",
+    "country": "string or empty",
+    "countryEn": "string or empty",
     "countryKm": "",
-    "category": "string",
-    "categoryEn": "string",
+    "category": "trade_mission | franchise | coffee_tea_bakery | technology | retail_expo | canton_fair | cultural | luxury or empty",
+    "categoryEn": "string or empty",
     "categoryKm": "",
-    "priceUSD": 350,
-    "discountPriceUSD": 299,
-    "durationDays": 4,
-    "durationNights": 3,
-    "hotelStars": 4,
-    "flightIncluded": true,
-    "availableDates": ["2026-10-29", "2026-10-30"],
-    "tags": ["trending", "popular", "luxury"],
-    "description": "string (English)",
-    "descriptionEn": "string (English)",
+    "priceUSD": null,
+    "discountPriceUSD": null,
+    "durationDays": null,
+    "durationNights": null,
+    "hotelStars": null,
+    "flightIncluded": null,
+    "availableDates": [],
+    "tags": [],
+    "description": "string or empty",
+    "descriptionEn": "string or empty",
     "descriptionKm": "",
-    "highlights": ["string"],
-    "highlightsEn": ["string"],
+    "highlights": [],
+    "highlightsEn": [],
     "highlightsKm": [],
-    "whoShouldJoin": ["string"],
-    "whoShouldJoinEn": ["string"],
+    "whoShouldJoin": [],
+    "whoShouldJoinEn": [],
     "whoShouldJoinKm": [],
-    "whyShouldJoin": ["string"],
-    "whyShouldJoinEn": ["string"],
+    "whyShouldJoin": [],
+    "whyShouldJoinEn": [],
     "whyShouldJoinKm": [],
-    "inclusions": ["string"],
-    "inclusionsEn": ["string"],
+    "inclusions": [],
+    "inclusionsEn": [],
     "inclusionsKm": [],
-    "exclusions": ["string"],
-    "exclusionsEn": ["string"],
+    "exclusions": [],
+    "exclusionsEn": [],
     "exclusionsKm": [],
-    "termsAndConditions": ["string"],
-    "termsAndConditionsEn": ["string"],
+    "termsAndConditions": [],
+    "termsAndConditionsEn": [],
     "termsAndConditionsKm": [],
-    "coordinates": { "lat": 10.8231, "lng": 106.6297, "mapX": 74, "mapY": 62 },
-    "images": [
-      "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop&q=80"
-    ],
-    "tourGuide": {
-      "name": "Mr. Tim Vutha & Senior Escort Team",
-      "nameEn": "Mr. Tim Vutha & Senior Escort Team",
-      "nameKm": "",
-      "title": "Lead Trade Mission Coordinator & Certified Tour Director",
-      "titleEn": "Lead Trade Mission Coordinator & Certified Tour Director",
-      "titleKm": "",
-      "phone": "060 815 515",
-      "telegram": "@VuthaTim",
-      "languages": ["English", "Khmer"],
-      "badgeNumber": "KHB-TM-2026-01",
-      "bio": "Senior international business delegation leader with over 12 years of experience in cross-border trade and B2B supplier networking.",
-      "bioEn": "Senior international business delegation leader with over 12 years of experience in cross-border trade and B2B supplier networking.",
-      "bioKm": "",
-      "briefingMeetingPoint": "Phnom Penh Assembly Point (KHB Head Office / VIP Transport Lounge)",
-      "briefingMeetingPointEn": "Phnom Penh Assembly Point (KHB Head Office / VIP Transport Lounge)",
-      "briefingMeetingPointKm": "",
-      "briefingTime": "06:00 AM (Departure Day)",
-      "briefingTimeEn": "06:00 AM (Departure Day)",
-      "briefingTimeKm": "",
-      "photoUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"
-    },
-    "itinerary": [
-      {
-        "day": 1,
-        "title": "Day 1: Delegation Arrival & Executive Orientation",
-        "titleEn": "Day 1: Delegation Arrival & Executive Orientation",
-        "titleKm": "",
-        "description": "VIP border/airport clearance, executive transfer, check-in to 4-Star hotel, and welcome briefing.",
-        "descriptionEn": "VIP border/airport clearance, executive transfer, check-in to 4-Star hotel, and welcome briefing.",
-        "descriptionKm": "",
-        "hotelName": "Grand Palace Hotel (4-Star)",
-        "hotelNameEn": "Grand Palace Hotel (4-Star)",
-        "hotelNameKm": "",
-        "mealsIncluded": ["Breakfast", "Dinner"],
-        "dayHighlightsEn": ["VIP Fast-Track Clearance", "Executive Check-in", "Welcome Gala Dinner"],
-        "dayHighlightsKm": [],
-        "guideAgenda": [
-          { "time": "06:00 AM", "activity": "Assembly & VIP Transport Departure", "activityEn": "Assembly & VIP Transport Departure", "activityKm": "", "location": "KHB Head Office", "locationEn": "KHB Head Office", "locationKm": "", "type": "gathering" },
-          { "time": "01:30 PM", "activity": "Hotel Check-in & Room Allocation", "activityEn": "Hotel Check-in & Room Allocation", "activityKm": "", "location": "Hotel Lobby", "locationEn": "Hotel Lobby", "locationKm": "", "type": "briefing" },
-          { "time": "06:30 PM", "activity": "Welcome Delegation Dinner & Business Networking", "activityEn": "Welcome Delegation Dinner & Business Networking", "activityKm": "", "location": "Hotel Ballroom", "locationEn": "Hotel Ballroom", "locationKm": "", "type": "networking_lunch" }
-        ]
-      }
-    ],
-    "optionalPrograms": [
-      {
-        "id": "opt_1",
-        "title": "VIP Evening River Cruise & Private Networking",
-        "titleEn": "VIP Evening River Cruise & Private Networking",
-        "titleKm": "",
-        "description": "Exclusive evening networking cruise with buffet dinner and panoramic city views.",
-        "descriptionEn": "Exclusive evening networking cruise with buffet dinner and panoramic city views.",
-        "descriptionKm": "",
-        "additionalCostUSD": 65,
-        "durationHours": 3,
-        "recommendedAudience": "Delegates seeking high-level private business conversations",
-        "recommendedAudienceEn": "Delegates seeking high-level private business conversations",
-        "highlights": ["Private Cruise Lounge", "International Buffet Dinner", "Executive Networking"],
-        "highlightsEn": ["Private Cruise Lounge", "International Buffet Dinner", "Executive Networking"],
-        "highlightsKm": [],
-        "includesGuide": true,
-        "includedMeals": ["Dinner"],
-        "meetingPoint": "Hotel Lobby (18:00)",
-        "meetingPointEn": "Hotel Lobby (18:00)"
-      }
-    ],
-    "emergencyContact": {
-      "country": "Vietnam",
-      "police": "113",
-      "ambulance": "115",
-      "touristHelpline": "+855 60 815 515 (Mr. Tim Vutha)",
-      "embassySupport": "+855 23 888 999 (Royal Embassy of Cambodia)"
-    }
+    "coordinates": null,
+    "images": [],
+    "tourGuide": null,
+    "itinerary": [],
+    "optionalPrograms": [],
+    "emergencyContact": null
   }
 }`;
 

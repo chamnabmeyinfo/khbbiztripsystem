@@ -1147,20 +1147,26 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
         
         // 1. Primary & Dual-Language Titles (English Main Focus)
         const primaryTitle = d.titleEn || d.title || '';
-        setTitle(primaryTitle);
-        setTitleEn(primaryTitle);
-        setTitleKm(d.titleKm || '');
+        if (primaryTitle) {
+          setTitle(primaryTitle);
+          setTitleEn(primaryTitle);
+          if (d.titleKm) setTitleKm(d.titleKm);
+        }
 
         // 2. Destination & Country
         const primaryDest = d.destinationEn || d.destination || '';
-        setDestination(primaryDest);
-        setDestinationEn(primaryDest);
-        setDestinationKm(d.destinationKm || '');
+        if (primaryDest) {
+          setDestination(primaryDest);
+          setDestinationEn(primaryDest);
+          if (d.destinationKm) setDestinationKm(d.destinationKm);
+        }
 
         const primaryCountry = d.countryEn || d.country || '';
-        setCountry(primaryCountry);
-        setCountryEn(primaryCountry);
-        setCountryKm(d.countryKm || '');
+        if (primaryCountry) {
+          setCountry(primaryCountry);
+          setCountryEn(primaryCountry);
+          if (d.countryKm) setCountryKm(d.countryKm);
+        }
 
         // 3. Category & Commercials
         if (d.category) {
@@ -1170,8 +1176,8 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
             setCantonFairPhase('Phase 1');
           }
         }
-        setCategoryEn(d.categoryEn || d.category || '');
-        setCategoryKm(d.categoryKm || '');
+        if (d.categoryEn || d.category) setCategoryEn(d.categoryEn || d.category || '');
+        if (d.categoryKm) setCategoryKm(d.categoryKm);
         if (d.priceUSD !== undefined) setPriceUSD(d.priceUSD);
         if (d.discountPriceUSD !== undefined) setDiscountPriceUSD(d.discountPriceUSD);
         if (d.durationDays !== undefined) setDurationDays(d.durationDays);
@@ -1194,37 +1200,51 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
         // 5. Rich Executive Descriptions
         const primaryDesc = d.descriptionEn || d.description || '';
-        setDescription(primaryDesc);
-        setDescriptionEn(primaryDesc);
-        setDescriptionKm(d.descriptionKm || '');
+        if (primaryDesc) {
+          setDescription(primaryDesc);
+          setDescriptionEn(primaryDesc);
+          if (d.descriptionKm) setDescriptionKm(d.descriptionKm);
+        }
 
         // 6. High-Impact Highlights (English Focus)
         const parsedHighlightsEn = d.highlightsEn && d.highlightsEn.length > 0 ? d.highlightsEn : (d.highlights || []);
-        setHighlightsEn(parsedHighlightsEn);
-        setHighlightsKm(d.highlightsKm && d.highlightsKm.length > 0 ? d.highlightsKm : []);
+        if (parsedHighlightsEn.length > 0) {
+          setHighlightsEn(parsedHighlightsEn);
+          if (d.highlightsKm && d.highlightsKm.length > 0) setHighlightsKm(d.highlightsKm);
+        }
 
         // 7. Who & Why Should Join (English Focus)
         const parsedWhoEn = d.whoShouldJoinEn && d.whoShouldJoinEn.length > 0 ? d.whoShouldJoinEn : (d.whoShouldJoin || []);
-        setWhoShouldJoinEn(parsedWhoEn);
-        setWhoShouldJoinKm(d.whoShouldJoinKm && d.whoShouldJoinKm.length > 0 ? d.whoShouldJoinKm : []);
+        if (parsedWhoEn.length > 0) {
+          setWhoShouldJoinEn(parsedWhoEn);
+          if (d.whoShouldJoinKm && d.whoShouldJoinKm.length > 0) setWhoShouldJoinKm(d.whoShouldJoinKm);
+        }
 
         const parsedWhyEn = d.whyShouldJoinEn && d.whyShouldJoinEn.length > 0 ? d.whyShouldJoinEn : (d.whyShouldJoin || []);
-        setWhyShouldJoinEn(parsedWhyEn);
-        setWhyShouldJoinKm(d.whyShouldJoinKm && d.whyShouldJoinKm.length > 0 ? d.whyShouldJoinKm : []);
+        if (parsedWhyEn.length > 0) {
+          setWhyShouldJoinEn(parsedWhyEn);
+          if (d.whyShouldJoinKm && d.whyShouldJoinKm.length > 0) setWhyShouldJoinKm(d.whyShouldJoinKm);
+        }
 
         // 8. Inclusions & Exclusions (English Focus)
         const parsedInclusionsEn = d.inclusionsEn && d.inclusionsEn.length > 0 ? d.inclusionsEn : (d.inclusions || []);
-        setInclusionsEn(parsedInclusionsEn);
-        setInclusionsKm(d.inclusionsKm && d.inclusionsKm.length > 0 ? d.inclusionsKm : []);
+        if (parsedInclusionsEn.length > 0) {
+          setInclusionsEn(parsedInclusionsEn);
+          if (d.inclusionsKm && d.inclusionsKm.length > 0) setInclusionsKm(d.inclusionsKm);
+        }
 
         const parsedExclusionsEn = d.exclusionsEn && d.exclusionsEn.length > 0 ? d.exclusionsEn : (d.exclusions || []);
-        setExclusionsEn(parsedExclusionsEn);
-        setExclusionsKm(d.exclusionsKm && d.exclusionsKm.length > 0 ? d.exclusionsKm : []);
+        if (parsedExclusionsEn.length > 0) {
+          setExclusionsEn(parsedExclusionsEn);
+          if (d.exclusionsKm && d.exclusionsKm.length > 0) setExclusionsKm(d.exclusionsKm);
+        }
 
         // 9. Terms & Conditions (English Focus)
         const parsedTermsEn = d.termsAndConditionsEn && d.termsAndConditionsEn.length > 0 ? d.termsAndConditionsEn : (d.termsAndConditions || []);
-        setTermsAndConditionsEn(parsedTermsEn);
-        setTermsAndConditionsKm(d.termsAndConditionsKm && d.termsAndConditionsKm.length > 0 ? d.termsAndConditionsKm : []);
+        if (parsedTermsEn.length > 0) {
+          setTermsAndConditionsEn(parsedTermsEn);
+          if (d.termsAndConditionsKm && d.termsAndConditionsKm.length > 0) setTermsAndConditionsKm(d.termsAndConditionsKm);
+        }
 
         // 10. Curated Images
         if (d.images && d.images.length > 0) setImages(d.images);

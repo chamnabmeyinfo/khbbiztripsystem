@@ -808,17 +808,18 @@ export function extractTourPackageHeuristically(
   const tLower = (text || '').toLowerCase();
   const detectedLang = detectTextLanguage(text);
   const isEnglishPrimary = lang === 'en' || detectedLang === 'en';
+  const matchedFields: string[] = [];
 
   // 1. Price extraction (Supports USD, $, Early bird, Regular, Range)
   const priceMatches = [...text.matchAll(/(?:\$|usd\s*)\s*([\d,]{2,7})|([\d,]{2,7})\s*(?:usd|\$|ដុល្លារ)/gi)];
-  let priceUSD = 350;
+  let priceUSD: number | undefined = undefined;
   let discountPriceUSD: number | undefined = undefined;
 
   const foundPrices: number[] = [];
   for (const m of priceMatches) {
     const rawNum = (m[1] || m[2] || '').replace(/,/g, '');
     const num = parseInt(rawNum, 10);
-    if (!isNaN(num) && num >= 50 && num <= 50000 && !foundPrices.includes(num)) {
+    if (!isNaN(num) && num >= 20 && num <= 50000 && !foundPrices.includes(num)) {
       foundPrices.push(num);
     }
   }
@@ -827,8 +828,9 @@ export function extractTourPackageHeuristically(
   const earlyBirdMatch = text.match(/(?:early\s*bird|special|discount|promo|តម្លៃពិសេស|បញ្ចុះតម្លៃ)[^$\d]*\$?\s*([\d,]+)/i);
   if (earlyBirdMatch) {
     const earlyNum = parseInt(earlyBirdMatch[1].replace(/,/g, ''), 10);
-    if (!isNaN(earlyNum) && earlyNum >= 50 && earlyNum <= 50000) {
+    if (!isNaN(earlyNum) && earlyNum >= 20 && earlyNum <= 50000) {
       discountPriceUSD = earlyNum;
+      matchedFields.push('discountPriceUSD');
     }
   }
 
@@ -837,101 +839,111 @@ export function extractTourPackageHeuristically(
     if (!discountPriceUSD) {
       discountPriceUSD = foundPrices[0];
       priceUSD = foundPrices[1];
+      matchedFields.push('priceUSD', 'discountPriceUSD');
     } else {
       priceUSD = foundPrices.find(p => p > discountPriceUSD!) || foundPrices[foundPrices.length - 1];
+      matchedFields.push('priceUSD');
     }
   } else if (foundPrices.length === 1) {
-    if (discountPriceUSD && discountPriceUSD < foundPrices[0]) {
-      priceUSD = foundPrices[0];
-    } else {
-      priceUSD = foundPrices[0];
-    }
+    priceUSD = foundPrices[0];
+    matchedFields.push('priceUSD');
   }
 
   // 2. Duration extraction (Days & Nights)
   const daysMatch = text.match(/(\d+)\s*(?:ថ្ងៃ|days|day|d)\b/i) || text.match(/(\d+)\s*d\s*\/?\s*\d*\s*n/i);
   const nightsMatch = text.match(/(\d+)\s*(?:យប់|nights|night|n)\b/i);
-  const durationDays = daysMatch ? parseInt(daysMatch[1], 10) : 4;
-  const durationNights = nightsMatch ? parseInt(nightsMatch[1], 10) : Math.max(1, durationDays - 1);
+  const durationDays: number | undefined = daysMatch ? parseInt(daysMatch[1], 10) : undefined;
+  const durationNights: number | undefined = nightsMatch 
+    ? parseInt(nightsMatch[1], 10) 
+    : (durationDays ? Math.max(1, durationDays - 1) : undefined);
+
+  if (durationDays !== undefined) {
+    matchedFields.push('durationDays');
+  }
+  if (durationNights !== undefined) {
+    matchedFields.push('durationNights');
+  }
 
   // 3. Destination & Country inference with intelligent geographic recognition
-  let destinationEn = 'Ho Chi Minh City & Phu Quoc';
-  let destinationKm = 'ហូជីមិញ និងកោះត្រល់';
-  let countryEn = 'Vietnam';
-  let countryKm = 'វៀតណាម';
-  let category: any = 'trade_mission';
-  let coords = { lat: 10.8231, lng: 106.6297, mapX: 74, mapY: 62 };
+  let destinationEn = '';
+  let destinationKm = '';
+  let countryEn = '';
+  let countryKm = '';
+  let category: any = undefined;
+  let coords: { lat: number; lng: number; mapX: number; mapY: number } | undefined = undefined;
 
   if (tLower.includes('japan') || tLower.includes('ជប៉ុន') || tLower.includes('tokyo') || tLower.includes('osaka') || tLower.includes('តូក្យូ') || tLower.includes('អូសាកា')) {
     destinationEn = 'Tokyo & Osaka';
-    destinationKm = 'តូក្យូ និងអូសាកា';
     countryEn = 'Japan';
-    countryKm = 'ជប៉ុន';
     coords = { lat: 35.6762, lng: 139.6503, mapX: 85, mapY: 42 };
     category = 'technology';
+    matchedFields.push('destination', 'country');
   } else if (tLower.includes('china') || tLower.includes('ចិន') || tLower.includes('guangzhou') || tLower.includes('shenzhen') || tLower.includes('canton') || tLower.includes('ក្វាងចូវ') || tLower.includes('ស៊ិនជិន')) {
     destinationEn = 'Guangzhou & Shenzhen';
-    destinationKm = 'ក្វាងចូវ និងស៊ិនជិន';
     countryEn = 'China';
-    countryKm = 'ចិន';
     coords = { lat: 23.1291, lng: 113.2644, mapX: 78, mapY: 48 };
     category = tLower.includes('canton') ? 'canton_fair' : 'trade_mission';
+    matchedFields.push('destination', 'country');
   } else if (tLower.includes('thailand') || tLower.includes('ថៃ') || tLower.includes('bangkok') || tLower.includes('pattaya') || tLower.includes('បាងកក') || tLower.includes('ប៉ាតាយ៉ា')) {
     destinationEn = 'Bangkok & Pattaya';
-    destinationKm = 'បាងកក និងប៉ាតាយ៉ា';
     countryEn = 'Thailand';
-    countryKm = 'ថៃ';
     coords = { lat: 13.7563, lng: 100.5018, mapX: 72, mapY: 58 };
     category = 'retail_expo';
+    matchedFields.push('destination', 'country');
   } else if (tLower.includes('singapore') || tLower.includes('សិង្ហបុរី') || tLower.includes('sentosa') || tLower.includes('marina bay')) {
     destinationEn = 'Marina Bay & Sentosa';
-    destinationKm = 'ម៉ារីណាបេយ៍ និងសេនតូសា';
     countryEn = 'Singapore';
-    countryKm = 'សិង្ហបុរី';
     coords = { lat: 1.3521, lng: 103.8198, mapX: 73, mapY: 75 };
     category = 'technology';
+    matchedFields.push('destination', 'country');
   } else if (tLower.includes('korea') || tLower.includes('កូរ៉េ') || tLower.includes('seoul') || tLower.includes('សេអ៊ូល')) {
     destinationEn = 'Seoul & Incheon';
-    destinationKm = 'សេអ៊ូល និងអ៊ីនឆុន';
     countryEn = 'South Korea';
-    countryKm = 'កូរ៉េខាងត្បូង';
     coords = { lat: 37.5665, lng: 126.9780, mapX: 83, mapY: 38 };
     category = 'technology';
+    matchedFields.push('destination', 'country');
   } else if (tLower.includes('malaysia') || tLower.includes('ម៉ាឡេស៊ី') || tLower.includes('kuala lumpur') || tLower.includes('កូឡាឡាំពួរ')) {
     destinationEn = 'Kuala Lumpur & Cyberjaya';
-    destinationKm = 'កូឡាឡាំពួរ';
     countryEn = 'Malaysia';
-    countryKm = 'ម៉ាឡេស៊ី';
     coords = { lat: 3.1390, lng: 101.6869, mapX: 72, mapY: 70 };
     category = 'trade_mission';
+    matchedFields.push('destination', 'country');
   } else if (tLower.includes('vietnam') || tLower.includes('វៀតណាម') || tLower.includes('hcmc') || tLower.includes('saigon') || tLower.includes('phu quoc') || tLower.includes('ហូជីមិញ') || tLower.includes('កោះត្រល់')) {
     destinationEn = 'Ho Chi Minh City & Phu Quoc Island';
-    destinationKm = 'ទីក្រុងហូជីមិញ និងកោះត្រល់';
     countryEn = 'Vietnam';
-    countryKm = 'វៀតណាម';
     coords = { lat: 10.8231, lng: 106.6297, mapX: 74, mapY: 62 };
+    matchedFields.push('destination', 'country');
   }
 
   // Category refinement
   if (tLower.includes('coffee') || tLower.includes('កាហ្វេ') || tLower.includes('tea') || tLower.includes('តែ') || tLower.includes('bakery') || tLower.includes('ដុតនំ') || tLower.includes('f&b')) {
     category = 'coffee_tea_bakery';
+    if (!matchedFields.includes('category')) matchedFields.push('category');
   } else if (tLower.includes('franchise') || tLower.includes('ហ្វ្រេនឆាយ') || tLower.includes('licensing')) {
     category = 'franchise';
+    if (!matchedFields.includes('category')) matchedFields.push('category');
   } else if (tLower.includes('robot') || tLower.includes('ai') || tLower.includes('automation') || tLower.includes('tech') || tLower.includes('បច្ចេកវិទ្យា')) {
     category = 'technology';
+    if (!matchedFields.includes('category')) matchedFields.push('category');
   } else if (tLower.includes('canton') || tLower.includes('canton fair') || tLower.includes('ក្វាងចូវ')) {
     category = 'canton_fair';
+    if (!matchedFields.includes('category')) matchedFields.push('category');
   }
 
   // 4. Clean Title extraction
   const rawLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
-  let rawTitle = rawLines.length > 0 && rawLines[0].length < 130
-    ? rawLines[0].replace(/^[-*#•\d.)\s]+/, '').replace(/^(title|package|tour|mission|subject)\s*:\s*/i, '')
-    : `B2B Business Study Mission to ${destinationEn} (${durationDays}D/${durationNights}N)`;
-
-  let titleEn = isEnglishPrimary ? rawTitle : `${countryEn} B2B Trade & Sourcing Mission: ${destinationEn} (${durationDays}D/${durationNights}N)`;
+  let titleEn = '';
   let titleKm = '';
-  let title = titleEn;
+  let title = '';
+
+  if (rawLines.length > 0) {
+    const candidateTitle = rawLines[0].replace(/^[-*#•\d.)\s]+/, '').replace(/^(title|package|tour|mission|subject)\s*:\s*/i, '');
+    if (candidateTitle.length > 5) {
+      titleEn = candidateTitle;
+      title = titleEn;
+      matchedFields.push('title');
+    }
+  }
 
   // 5. Dates extraction
   const dateRegex = /\b(\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{4})\b/g;
@@ -940,252 +952,236 @@ export function extractTourPackageHeuristically(
   let availableDates: string[] = [];
   if (dateMatches.length > 0) {
     availableDates = Array.from(new Set(dateMatches)).slice(0, 6);
-  } else {
-    // Generate sequential dates starting from a reasonable schedule
-    availableDates = ['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01'].slice(0, durationDays);
+    matchedFields.push('dates');
   }
 
   // 6. Hotel Stars & Flight status
-  let hotelStars = 4;
+  let hotelStars: number | undefined = undefined;
   if (text.includes('5-star') || text.includes('5 star') || text.includes('៥ ផ្កាយ') || text.includes('5 ផ្កាយ') || text.includes('⭐⭐⭐⭐⭐')) {
     hotelStars = 5;
+    matchedFields.push('hotelStars');
+  } else if (text.includes('4-star') || text.includes('4 star') || text.includes('៤ ផ្កាយ') || text.includes('4 ផ្កាយ') || text.includes('⭐⭐⭐⭐')) {
+    hotelStars = 4;
+    matchedFields.push('hotelStars');
+  } else if (text.includes('3-star') || text.includes('3 star') || text.includes('៣ ផ្កាយ') || text.includes('3 ផ្កាយ') || text.includes('⭐⭐⭐')) {
+    hotelStars = 3;
+    matchedFields.push('hotelStars');
   }
-  const flightIncluded = tLower.includes('flight') || tLower.includes('សំបុត្រយន្តហោះ') || tLower.includes('ជើងហោះហើរ') || tLower.includes('airline') || tLower.includes('airfare');
 
-  // 7. Rich Highlights extraction
-  const highlightsEn: string[] = [
-    `🤝 Direct Wholesale Sourcing & B2B Matchmaking with verified ${countryEn} manufacturers`,
-    `⚙️ Advanced Industrial Machinery, Equipment & RetailTech Exhibition VIP Access`,
-    `🏢 Top Regional Brands & Exclusive Master Franchise Licensing Opportunities`,
-    `✈️ Complete VIP Logistics, Fast-Track Immigration & ${hotelStars}-Star Executive Hotel`,
-    `💼 Bilingual English/Khmer Business Facilitator & Dedicated Logistics Director`
-  ];
+  let flightIncluded: boolean | undefined = undefined;
+  if (tLower.includes('flight') || tLower.includes('សំបុត្រយន្តហោះ') || tLower.includes('ជើងហោះហើរ') || tLower.includes('airline') || tLower.includes('airfare')) {
+    flightIncluded = true;
+    matchedFields.push('flightIncluded');
+  }
+
+  // 7. Highlights extraction (ONLY if explicit bullet points or highlights are in source text)
+  const highlightsEn: string[] = [];
   const highlightsKm: string[] = [];
-
-  // If text has custom bullet points, parse them into English highlights
-  const bulletLines = rawLines.filter(l => /^[•\-\*🤝⚙️🏢☕✈️💥🔹✅1-9]/.test(l) && l.length > 10 && l.length < 200);
-  if (bulletLines.length >= 3) {
-    highlightsEn.length = 0;
-    highlightsEn.push(...bulletLines.slice(0, 6));
+  const bulletLines = rawLines.filter(l => /^[•\-\*🤝⚙️🏢☕✈️💥🔹✅1-9]/.test(l) && l.length > 8 && l.length < 200);
+  if (bulletLines.length >= 2) {
+    highlightsEn.push(...bulletLines.slice(0, 8).map(b => b.replace(/^[•\-\*1-9.)\s]+/, '').trim()));
+    matchedFields.push('highlights');
   }
 
-  // 8. Inclusions, Exclusions, Terms
-  const inclusionsEn: string[] = [
-    `Dedicated Luxury VIP Coach Transport for the entire delegation itinerary`,
-    `${hotelStars}-Star Luxury Hotel Accommodation (${durationNights} Nights / ${durationDays} Days)`,
-    `Daily International Buffet Breakfast at hotel restaurant`,
-    `Official VIP Exhibition Delegate Badges & Fast-Track Access`,
-    `Professional Bilingual Business Coordinator & Escort Director`,
-    `VIP Fast-Track Border Clearance & Airport Transfers`,
-    `Comprehensive International Travel & Emergency Medical Insurance`
-  ];
+  // 8. Inclusions, Exclusions, Terms (ONLY if explicitly present in source text)
+  const inclusionsEn: string[] = [];
   const inclusionsKm: string[] = [];
-
-  const exclusionsEn: string[] = [
-    `Personal leisure expenses (shopping, mini-bar, laundry, telephone calls)`,
-    `Individual lunch and dinner outside official scheduled banquets`,
-    `Single room occupancy supplement (if requesting private room)`,
-    `Entry visa fee for foreign passport holders (if applicable)`
-  ];
+  const exclusionsEn: string[] = [];
   const exclusionsKm: string[] = [];
-
-  const termsAndConditionsEn: string[] = [
-    `Booking is confirmed upon receipt of a minimum 50% advance deposit.`,
-    `Passports must have at least 6 months validity from the date of travel.`,
-    `Deposit is non-refundable for cancellations made within 7 days prior to departure.`,
-    `The organizer reserves the right to adjust sequence of events due to weather or flight changes.`
-  ];
+  const termsAndConditionsEn: string[] = [];
   const termsAndConditionsKm: string[] = [];
-
-  const whoShouldJoinEn: string[] = [
-    `Enterprise owners, entrepreneurs, and founders seeking direct factory procurement`,
-    `Wholesale importers, distributors, and retail chain procurement managers`,
-    `Investors looking to acquire master franchise and licensing rights for Cambodia`
-  ];
+  const whoShouldJoinEn: string[] = [];
   const whoShouldJoinKm: string[] = [];
-
-  const whyShouldJoinEn: string[] = [
-    `Factory-Direct Wholesale Pricing: Bypass trading intermediaries and negotiate volume discounts`,
-    `Strategic B2B Matchmaking: 1-on-1 scheduled meetings with vetted international manufacturers`,
-    `Zero-Hassle Executive Travel: Complete VIP escort, fast-track customs, and luxury lodging`
-  ];
+  const whyShouldJoinEn: string[] = [];
   const whyShouldJoinKm: string[] = [];
 
-  // 9. Day-by-Day Rich Itinerary
-  const itinerary = Array.from({ length: durationDays }, (_, i) => {
-    const dayNum = i + 1;
-    let dayTitleEn = `Day ${dayNum}: Business Delegation Sourcing & Industrial Agenda`;
-    let dayDescEn = `Delegation activities, factory inspection visits, and structured supplier networking in ${destinationEn}.`;
-
-    if (dayNum === 1) {
-      dayTitleEn = `Day 1: Phnom Penh Departure to ${destinationEn} & VIP Orientation`;
-      dayDescEn = `Executive assembly in Phnom Penh, VIP fast-track clearance, arrival in ${destinationEn}, check-in to ${hotelStars}-star hotel, and welcome delegation dinner.`;
-    } else if (dayNum === 2) {
-      dayTitleEn = `Day 2: International Trade Expo & 1-on-1 B2B Supplier Matchmaking`;
-      dayDescEn = `Full-day participation at premier convention center, pre-arranged bilateral meetings with factory principals and franchisors.`;
-    } else if (dayNum === durationDays) {
-      dayTitleEn = `Day ${dayNum}: Executive Sourcing Wrap-up & Return Transport`;
-      dayDescEn = `Contract finalization, wholesale procurement debrief, and VIP return transport to Phnom Penh.`;
+  // Look for specific sections in text
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const lowerLine = line.toLowerCase();
+    if (lowerLine.includes('include') || lowerLine.includes('inclusion') || lowerLine.includes('រួមបញ្ចូល')) {
+      const items = rawLines.slice(i + 1, i + 8).filter(l => /^[•\-\*✅\d]/.test(l)).map(l => l.replace(/^[•\-\*✅\d.)\s]+/, '').trim());
+      if (items.length > 0) {
+        inclusionsEn.push(...items);
+        matchedFields.push('inclusions');
+      }
+    } else if (lowerLine.includes('exclude') || lowerLine.includes('exclusion') || lowerLine.includes('not included') || lowerLine.includes('មិនរួមបញ្ចូល')) {
+      const items = rawLines.slice(i + 1, i + 6).filter(l => /^[•\-\*❌\d]/.test(l)).map(l => l.replace(/^[•\-\*❌\d.)\s]+/, '').trim());
+      if (items.length > 0) {
+        exclusionsEn.push(...items);
+        matchedFields.push('exclusions');
+      }
+    } else if (lowerLine.includes('term') || lowerLine.includes('condition') || lowerLine.includes('cancellation') || lowerLine.includes('deposit') || lowerLine.includes('លក្ខខណ្ឌ')) {
+      const items = rawLines.slice(i + 1, i + 6).filter(l => /^[•\-\*\d]/.test(l)).map(l => l.replace(/^[•\-\*\d.)\s]+/, '').trim());
+      if (items.length > 0) {
+        termsAndConditionsEn.push(...items);
+        matchedFields.push('terms');
+      }
+    } else if (lowerLine.includes('who should join') || lowerLine.includes('target audience') || lowerLine.includes('អ្នកគួរចូលរួម')) {
+      const items = rawLines.slice(i + 1, i + 5).filter(l => /^[•\-\*\d]/.test(l)).map(l => l.replace(/^[•\-\*\d.)\s]+/, '').trim());
+      if (items.length > 0) {
+        whoShouldJoinEn.push(...items);
+        matchedFields.push('whoShouldJoin');
+      }
+    } else if (lowerLine.includes('why should join') || lowerLine.includes('why join') || lowerLine.includes('benefits') || lowerLine.includes('អត្ថប្រយោជន៍')) {
+      const items = rawLines.slice(i + 1, i + 5).filter(l => /^[•\-\*\d]/.test(l)).map(l => l.replace(/^[•\-\*\d.)\s]+/, '').trim());
+      if (items.length > 0) {
+        whyShouldJoinEn.push(...items);
+        matchedFields.push('whyShouldJoin');
+      }
     }
+  }
 
-    return {
-      day: dayNum,
-      title: dayTitleEn,
-      titleEn: dayTitleEn,
+  // 9. Day-by-Day Itinerary (ONLY if explicitly mentioned with Day/Date headers in text)
+  const itinerary: any[] = [];
+  const dayHeaderRegex = /(?:day\s*(\d+)|d(\d+)|ថ្ងៃទី\s*(\d+))\s*[:\-–]?\s*(.*)/i;
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const match = line.match(dayHeaderRegex);
+    if (match) {
+      const dayNum = parseInt(match[1] || match[2] || match[3], 10);
+      const dayTitle = (match[4] || `Day ${dayNum}`).trim();
+      const descLines: string[] = [];
+      for (let j = i + 1; j < Math.min(rawLines.length, i + 5); j++) {
+        if (dayHeaderRegex.test(rawLines[j])) break;
+        descLines.push(rawLines[j]);
+      }
+      itinerary.push({
+        day: dayNum,
+        title: dayTitle,
+        titleEn: dayTitle,
+        titleKm: '',
+        description: descLines.join('. ') || dayTitle,
+        descriptionEn: descLines.join('. ') || dayTitle,
+        descriptionKm: '',
+        hotelName: '',
+        hotelNameEn: '',
+        hotelNameKm: '',
+        mealsIncluded: [],
+        dayHighlightsEn: [],
+        dayHighlightsKm: [],
+        guideAgenda: []
+      });
+    }
+  }
+  if (itinerary.length > 0) {
+    matchedFields.push('itinerary');
+  }
+
+  // 10. Tour Guide extraction (ONLY if explicit coordinator/guide/phone mentioned in text)
+  let tourGuide: any = undefined;
+  const phoneMatch = text.match(/(?:phone|tel|telegram|contact|ទំនាក់ទំនង|ទូរស័ព្ទ)\s*[:\-–]?\s*([+\d\s().-]{8,20})/i);
+  const guideNameMatch = text.match(/(?:guide|coordinator|escort|leader|mr\.|ms\.|លោក|អ្នកសម្របសម្រួល)\s*[:\-–]?\s*([A-Za-z\s]{3,30})/i);
+  if (phoneMatch || guideNameMatch) {
+    const name = guideNameMatch ? guideNameMatch[1].trim() : '';
+    const phone = phoneMatch ? phoneMatch[1].trim() : '';
+    tourGuide = {
+      name,
+      nameEn: name,
+      nameKm: '',
+      title: 'Tour Coordinator',
+      titleEn: 'Tour Coordinator',
       titleKm: '',
-      description: dayDescEn,
-      descriptionEn: dayDescEn,
-      descriptionKm: '',
-      hotelName: dayNum === durationDays ? 'Phnom Penh Arrival' : `${destinationEn} Grand ${hotelStars}-Star Hotel`,
-      hotelNameEn: dayNum === durationDays ? 'Phnom Penh Arrival' : `${destinationEn} Grand ${hotelStars}-Star Hotel`,
-      hotelNameKm: '',
-      mealsIncluded: ['Breakfast', dayNum === 1 ? 'Dinner' : 'Lunch'],
-      dayHighlightsEn: ['VIP Fast-Track Clearance', 'Executive Check-in', 'B2B Matchmaking'],
-      dayHighlightsKm: [],
-      guideAgenda: [
-        {
-          time: '07:30 AM - 08:30 AM',
-          activity: 'Hotel Buffet Breakfast & Morning Executive Briefing',
-          activityEn: 'Hotel Buffet Breakfast & Morning Executive Briefing',
-          activityKm: '',
-          location: 'Hotel Executive Lounge',
-          locationEn: 'Hotel Executive Lounge',
-          locationKm: '',
-          type: 'briefing' as const
-        },
-        {
-          time: '09:00 AM - 12:30 PM',
-          activity: 'Official Trade Expo / Industrial Factory Inspection',
-          activityEn: 'Official Trade Expo / Industrial Factory Inspection',
-          activityKm: '',
-          location: 'Convention Center / Industrial Park',
-          locationEn: 'Convention Center / Industrial Park',
-          locationKm: '',
-          type: 'exhibition' as const
-        },
-        {
-          time: '02:00 PM - 05:30 PM',
-          activity: '1-on-1 Pre-Arranged B2B Supplier Meetings & Sourcing',
-          activityEn: '1-on-1 Pre-Arranged B2B Supplier Meetings & Sourcing',
-          activityKm: '',
-          location: 'Commercial B2B Lounge',
-          locationEn: 'Commercial B2B Lounge',
-          locationKm: '',
-          type: 'b2b_meeting' as const
-        }
-      ]
+      phone,
+      telegram: '',
+      languages: ['English', 'Khmer'],
+      badgeNumber: '',
+      bio: '',
+      bioEn: '',
+      bioKm: '',
+      briefingMeetingPoint: '',
+      briefingMeetingPointEn: '',
+      briefingMeetingPointKm: '',
+      briefingTime: '',
+      briefingTimeEn: '',
+      briefingTimeKm: '',
+      photoUrl: ''
     };
-  });
+    matchedFields.push('tourGuide');
+  }
+
+  // 11. Emergency contact (ONLY if explicit emergency numbers found in text)
+  let emergencyContact: any = undefined;
+  if (tLower.includes('police') || tLower.includes('embassy') || tLower.includes('ambulance') || tLower.includes('ប៉ូលីស') || tLower.includes('ស្ថានទូត')) {
+    emergencyContact = {
+      country: countryEn || destinationEn || '',
+      police: '',
+      ambulance: '',
+      touristHelpline: '',
+      embassySupport: ''
+    };
+    matchedFields.push('emergencyContact');
+  }
+
+  // 12. Images (ONLY if explicit URLs in text)
+  const urlRegex = /(https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|avif))/gi;
+  const imageMatches = [...text.matchAll(urlRegex)].map(m => m[0]);
+  const images = imageMatches.length > 0 ? imageMatches : [];
+  if (images.length > 0) {
+    matchedFields.push('images');
+  }
+
+  // 13. General Description (from non-header lines if available)
+  let descriptionEn = '';
+  if (rawLines.length > 1) {
+    const narrativeLines = rawLines.filter(l => !/^[•\-\*]/.test(l) && l.length > 25 && !dayHeaderRegex.test(l));
+    if (narrativeLines.length > 0) {
+      descriptionEn = narrativeLines.slice(0, 3).join('\n\n');
+      if (!matchedFields.includes('description')) matchedFields.push('description');
+    }
+  }
 
   const parsedPackage: Partial<TourPackage> = {
     id: 'pkg_ai_' + Date.now(),
-    title,
-    titleEn,
+    title: titleEn || undefined,
+    titleEn: titleEn || undefined,
     titleKm: '',
-    destination: destinationEn,
-    destinationEn,
+    destination: destinationEn || undefined,
+    destinationEn: destinationEn || undefined,
     destinationKm: '',
-    country: countryEn,
-    countryEn,
+    country: countryEn || undefined,
+    countryEn: countryEn || undefined,
     countryKm: '',
-    category,
-    priceUSD,
-    discountPriceUSD,
-    durationDays,
-    durationNights,
-    hotelStars,
-    flightIncluded,
-    availableDates,
-    tags: ['trending', 'popular', 'luxury', 'cultural'],
-    description: `✈️ Official KHB B2B Enterprise & Trade Study Mission to ${destinationEn}, ${countryEn}. Specially designed for enterprise leaders, founders, and wholesale buyers seeking direct manufacturer relationships.`,
-    descriptionEn: `✈️ Official KHB B2B Enterprise & Trade Study Mission to ${destinationEn}, ${countryEn}. Specially designed for enterprise leaders, founders, and wholesale buyers seeking direct manufacturer relationships.`,
+    category: category || undefined,
+    priceUSD: priceUSD !== undefined ? priceUSD : undefined,
+    discountPriceUSD: discountPriceUSD !== undefined ? discountPriceUSD : undefined,
+    durationDays: durationDays !== undefined ? durationDays : undefined,
+    durationNights: durationNights !== undefined ? durationNights : undefined,
+    hotelStars: hotelStars !== undefined ? hotelStars : undefined,
+    flightIncluded: flightIncluded !== undefined ? flightIncluded : undefined,
+    availableDates: availableDates.length > 0 ? availableDates : [],
+    tags: category ? [category] : [],
+    description: descriptionEn || undefined,
+    descriptionEn: descriptionEn || undefined,
     descriptionKm: '',
-    highlights: highlightsEn,
-    highlightsEn,
+    highlights: highlightsEn.length > 0 ? highlightsEn : [],
+    highlightsEn: highlightsEn.length > 0 ? highlightsEn : [],
     highlightsKm: [],
-    whoShouldJoin: whoShouldJoinEn,
-    whoShouldJoinEn,
+    whoShouldJoin: whoShouldJoinEn.length > 0 ? whoShouldJoinEn : [],
+    whoShouldJoinEn: whoShouldJoinEn.length > 0 ? whoShouldJoinEn : [],
     whoShouldJoinKm: [],
-    whyShouldJoin: whyShouldJoinEn,
-    whyShouldJoinEn,
+    whyShouldJoin: whyShouldJoinEn.length > 0 ? whyShouldJoinEn : [],
+    whyShouldJoinEn: whyShouldJoinEn.length > 0 ? whyShouldJoinEn : [],
     whyShouldJoinKm: [],
-    inclusions: inclusionsEn,
-    inclusionsEn,
+    inclusions: inclusionsEn.length > 0 ? inclusionsEn : [],
+    inclusionsEn: inclusionsEn.length > 0 ? inclusionsEn : [],
     inclusionsKm: [],
-    exclusions: exclusionsEn,
-    exclusionsEn,
+    exclusions: exclusionsEn.length > 0 ? exclusionsEn : [],
+    exclusionsEn: exclusionsEn.length > 0 ? exclusionsEn : [],
     exclusionsKm: [],
-    termsAndConditions: termsAndConditionsEn,
-    termsAndConditionsEn,
+    termsAndConditions: termsAndConditionsEn.length > 0 ? termsAndConditionsEn : [],
+    termsAndConditionsEn: termsAndConditionsEn.length > 0 ? termsAndConditionsEn : [],
     termsAndConditionsKm: [],
-    coordinates: coords,
-    images: [
-      'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1511081692775-05d0f180a065?w=1200&auto=format&fit=crop&q=80'
-    ],
-    tourGuide: {
-      name: 'Mr. Tim Vutha & Senior Escort Team',
-      nameEn: 'Mr. Tim Vutha & Senior Escort Team',
-      nameKm: '',
-      title: 'Lead Trade Mission Coordinator & Certified Tour Director',
-      titleEn: 'Lead Trade Mission Coordinator & Certified Tour Director',
-      titleKm: '',
-      phone: '060 815 515',
-      telegram: '@VuthaTim',
-      languages: ['English', 'Khmer', countryEn === 'Vietnam' ? 'Vietnamese' : 'Chinese'],
-      badgeNumber: 'KHB-TM-2026-01',
-      bio: 'Senior international business delegation leader with over 12 years of experience in cross-border trade and B2B supplier networking.',
-      bioEn: 'Senior international business delegation leader with over 12 years of experience in cross-border trade and B2B supplier networking.',
-      bioKm: '',
-      briefingMeetingPoint: 'Phnom Penh Assembly Point (KHB Head Office / VIP Transport Lounge)',
-      briefingMeetingPointEn: 'Phnom Penh Assembly Point (KHB Head Office / VIP Transport Lounge)',
-      briefingMeetingPointKm: '',
-      briefingTime: '06:00 AM (Departure Day)',
-      briefingTimeEn: '06:00 AM (Departure Day)',
-      briefingTimeKm: '',
-      photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80'
-    },
-    itinerary,
-    emergencyContact: {
-      country: `${countryEn} (${destinationEn})`,
-      police: '113',
-      ambulance: '115',
-      touristHelpline: '+855 60 815 515 (Mr. Tim Vutha)',
-      embassySupport: '+855 23 888 999 (Royal Embassy of Cambodia)'
-    }
+    coordinates: coords || undefined,
+    images: images.length > 0 ? images : [],
+    tourGuide: tourGuide || undefined,
+    itinerary: itinerary.length > 0 ? itinerary : [],
+    emergencyContact: emergencyContact || undefined
   };
 
-  const matchedFields = [
-    'title',
-    'titleEn',
-    'titleKm',
-    'destination',
-    'country',
-    'category',
-    'priceUSD',
-    ...(discountPriceUSD ? ['discountPriceUSD'] : []),
-    'durationDays',
-    'durationNights',
-    'hotelStars',
-    'flightIncluded',
-    'availableDates',
-    'description',
-    'highlights',
-    'whoShouldJoin',
-    'whyShouldJoin',
-    'inclusions',
-    'exclusions',
-    'termsAndConditions',
-    'tourGuide',
-    'itinerary',
-    'emergencyContact',
-    'coordinates'
-  ];
-
   const summary = isEnglishPrimary
-    ? `✨ Analyzed text and extracted comprehensive tour package: "${titleEn}" ($${priceUSD} USD, ${durationDays}D/${durationNights}N) with ${itinerary.length} daily agendas & ${highlightsEn.length} highlights.`
-    : `✨ បានវិភាគ និងទាញយកទិន្នន័យពីអត្ថបទជោគជ័យ: ${titleKm} ($${priceUSD} USD, ${durationDays}ថ្ងៃ/${durationNights}យប់)`;
+    ? `✨ Analyzed text and extracted ${matchedFields.length} matched data fields. Unclear or unmentioned sections were left unfilled.`
+    : `✨ បានវិភាគ និងទាញយកទិន្នន័យត្រូវគ្នា ${matchedFields.length} ចំណុច។ ព័ត៌មានមិនច្បាស់លាស់ត្រូវបានទុកនៅទទេ`;
 
   return {
     success: true,
@@ -1193,23 +1189,22 @@ export function extractTourPackageHeuristically(
     summary,
     matchedFields,
     fieldConfidence: {
-      title: 99,
-      pricing: discountPriceUSD ? 98 : 95,
-      dates: 96,
-      itinerary: 97,
-      logistics: 96,
-      guide: 98
+      title: titleEn ? 95 : 0,
+      pricing: priceUSD ? 95 : 0,
+      dates: availableDates.length > 0 ? 90 : 0,
+      itinerary: itinerary.length > 0 ? 90 : 0,
+      guide: tourGuide ? 90 : 0
     },
     thoughtTrace: {
       adaptedPersona: 'Chief Travel & Itinerary Architect',
-      detectedIntent: 'Adaptive Semantic Tour Package Extraction (English-First & Twin Dual-Language)',
-      confidence: 98,
+      detectedIntent: 'Strict Match-Only Semantic Tour Package Extraction',
+      confidence: 95,
       thinkingTimeMs: Date.now() - startTime,
       steps: [
         {
           phase: 'intent_extraction',
-          title: 'Semantic Text Analysis & Entity Resolution',
-          detail: `Extracted ${titleEn}, Pricing $${priceUSD} USD${discountPriceUSD ? ` (Early-bird $${discountPriceUSD})` : ''}, Duration ${durationDays}D/${durationNights}N, and mapped ${matchedFields.length} distinct fields.`,
+          title: 'Strict Entity Match Resolution',
+          detail: `Matched ${matchedFields.length} distinct fields directly from text: ${matchedFields.join(', ')}. All unmentioned items left untouched.`,
         }
       ]
     }
