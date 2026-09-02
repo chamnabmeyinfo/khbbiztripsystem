@@ -222,6 +222,35 @@ export interface SystemSettings {
   leadCoordinatorName: string;
   leadCoordinatorPhone: string;
   leadCoordinatorTelegram: string;
+
+  // Language & Internationalization Controls
+  defaultLanguage?: LanguageCode;
+  enabledLanguages?: LanguageCode[];
+  autoDetectBrowserLanguage?: boolean;
+  enableAiAutoTranslation?: boolean;
+  showLanguageSwitcher?: boolean;
+
+  // Multi-AI Translation Provider & Engine Suite
+  aiTranslationConfig?: AiTranslationProviderConfig;
+  crmConfig?: CrmConfig;
+}
+
+export type AiTranslationProvider =
+  | 'gemini'
+  | 'openai'
+  | 'deepseek'
+  | 'anthropic'
+  | 'groq'
+  | 'custom_openai'
+  | 'offline_heuristic';
+
+export interface AiTranslationProviderConfig {
+  provider: AiTranslationProvider;
+  modelName?: string;
+  apiKey?: string;
+  customBaseUrl?: string;
+  temperature?: number;
+  fallbackToGemini?: boolean;
 }
 ```
 

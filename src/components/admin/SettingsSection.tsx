@@ -80,10 +80,13 @@ import {
   ChevronDown,
   History,
   Star,
-  MousePointerClick
+  MousePointerClick,
+  Key,
+  EyeOff,
+  Server
 } from 'lucide-react';
 import { PackageCategoryModal, getCategoryBadgeClasses } from './PackageCategoryModal';
-import { SystemSettings, LanguageCode } from '../../types';
+import { SystemSettings, LanguageCode, AiTranslationProvider, AiTranslationProviderConfig } from '../../types';
 import { AiThemeColorDetectorModal } from './AiThemeColorDetectorModal';
 import { CrmIntegrationSection } from './CrmIntegrationSection';
 import { SystemUpdateHistoryTab } from './SystemUpdateHistoryTab';
@@ -97,7 +100,7 @@ import {
   isColorDark,
 } from '../../services/aiThemeService';
 import { SUPPORTED_LANGUAGES, isRTL, getFontFamilyClass } from '../../i18n/translations';
-import { translateTextField } from '../../services/geminiService';
+import { translateTextField, testAiTranslationProvider } from '../../services/geminiService';
 import { uploadImage } from '../../services/imageUploadService';
 
 const LOGO_PRESETS = [
@@ -216,6 +219,76 @@ export const SettingsSection: React.FC = () => {
   const [isTranslatingTest, setIsTranslatingTest] = useState(false);
   const [testCopied, setTestCopied] = useState(false);
 
+  // ── AI Translation Provider Suite State ──────────────
+  const [showAiApiKey, setShowAiApiKey] = useState(false);
+  const [isTestingProvider, setIsTestingProvider] = useState(false);
+  const [providerTestResult, setProviderTestResult] = useState<{
+    success: boolean;
+    provider: string;
+    modelUsed: string;
+    latencyMs: number;
+    message: string;
+    translatedText?: string;
+  } | null>(null);
+
+  const currentAiConfig: AiTranslationProviderConfig = formData.aiTranslationConfig || {
+    provider: 'gemini',
+    modelName: 'gemini-2.5-flash',
+    temperature: 0.1,
+    fallbackToGemini: true,
+  };
+
+  const handleUpdateAiConfig = (updates: Partial<AiTranslationProviderConfig>) => {
+    const updatedAiConfig: AiTranslationProviderConfig = {
+      ...currentAiConfig,
+      ...updates,
+    };
+    const updated: SystemSettings = {
+      ...formData,
+      aiTranslationConfig: updatedAiConfig,
+    };
+    setFormData(updated);
+    updateSystemSettings(updated);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleTestAiProvider = async () => {
+    setIsTestingProvider(true);
+    setProviderTestResult(null);
+    try {
+      const res = await testAiTranslationProvider(
+        currentAiConfig,
+        testSourceText || 'VIP B2B Trade Mission to Canton Fair & Factory Matchmaking 2026',
+        testTargetLang || 'km'
+      );
+      setProviderTestResult(res);
+      if (res.success) {
+        addNotification(
+          'AI Provider Connected',
+          `Successfully connected to ${res.provider.toUpperCase()} (${res.modelUsed}) in ${res.latencyMs}ms!`,
+          'success'
+        );
+        if (res.translatedText) {
+          setTestTranslatedResult(res.translatedText);
+        }
+      } else {
+        addNotification('AI Provider Error', res.message, 'error');
+      }
+    } catch (err: any) {
+      setProviderTestResult({
+        success: false,
+        provider: currentAiConfig.provider,
+        modelUsed: currentAiConfig.modelName || 'default',
+        latencyMs: 0,
+        message: err?.message || String(err),
+      });
+      addNotification('Connection Failed', err?.message || 'Failed to reach AI provider', 'error');
+    } finally {
+      setIsTestingProvider(false);
+    }
+  };
+
   const handleToggleLanguage = (code: LanguageCode) => {
     let updatedList: LanguageCode[];
     if (enabledLanguages.includes(code)) {
@@ -283,7 +356,13 @@ export const SettingsSection: React.FC = () => {
     if (!testSourceText.trim()) return;
     setIsTranslatingTest(true);
     try {
-      const res = await translateTextField(testSourceText, testTargetLang, testSourceLang, 'B2B Trade Mission');
+      const res = await translateTextField(
+        testSourceText,
+        testTargetLang,
+        testSourceLang,
+        'B2B Trade Mission',
+        currentAiConfig
+      );
       setTestTranslatedResult(res.translatedText || 'Translation completed.');
     } catch (err: any) {
       setTestTranslatedResult(`Translation error: ${err?.message || String(err)}`);
@@ -1001,13 +1080,381 @@ export const SettingsSection: React.FC = () => {
                     </label>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Auto-translate itinerary descriptions and highlights via Gemini API.
+                    Auto-translate itinerary descriptions, agenda slots, and highlights using your chosen AI provider.
                   </p>
                 </div>
                 <div className="mt-2 text-[10px] font-mono text-indigo-600 dark:text-indigo-400">
-                  {formData.enableAiAutoTranslation ?? true ? '● Gemini Engine Active' : '○ Manual Translations Only'}
+                  {formData.enableAiAutoTranslation ?? true
+                    ? `● AI Active: ${(currentAiConfig.provider || 'gemini').toUpperCase()}`
+                    : '○ Manual Translations Only'}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* ── AI TRANSLATION PROVIDER & ENGINE CONTROL CENTER ────────────── */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>Multi-Provider AI Engine Architecture</span>
+                </div>
+                <h4 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Cpu className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <span>AI Translation Provider & API Configuration</span>
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Choose your preferred AI intelligence engine for itinerary auto-translation, agenda localization, and package descriptions.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestAiProvider}
+                  disabled={isTestingProvider}
+                  className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 text-xs font-black transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isTestingProvider ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />}
+                  <span>{isTestingProvider ? 'Testing Engine...' : 'Test Connection & Latency'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Provider Selection Cards */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Select Active AI Provider
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {[
+                  {
+                    id: 'gemini' as AiTranslationProvider,
+                    name: 'Google Gemini',
+                    badge: 'Recommended / Built-in',
+                    badgeColor: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+                    desc: 'Fast, high-fidelity multimodal translation with Asian script optimization.',
+                    defaultModel: 'gemini-2.5-flash',
+                    icon: Sparkles
+                  },
+                  {
+                    id: 'openai' as AiTranslationProvider,
+                    name: 'OpenAI (GPT-4o)',
+                    badge: 'GPT-4o Precision',
+                    badgeColor: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                    desc: 'Industry standard for precise, structured international B2B terminology.',
+                    defaultModel: 'gpt-4o-mini',
+                    icon: Bot
+                  },
+                  {
+                    id: 'deepseek' as AiTranslationProvider,
+                    name: 'DeepSeek V3 / R1',
+                    badge: 'High Value / Low Cost',
+                    badgeColor: 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                    desc: 'Extremely cost-effective, high-accuracy Asian and European linguistic translations.',
+                    defaultModel: 'deepseek-chat',
+                    icon: Rocket
+                  },
+                  {
+                    id: 'anthropic' as AiTranslationProvider,
+                    name: 'Anthropic Claude',
+                    badge: 'Claude 3.5 Sonnet',
+                    badgeColor: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                    desc: 'Rich idiomatic phrasing, travel nuance, and VIP delegation wording.',
+                    defaultModel: 'claude-3-5-haiku-20241022',
+                    icon: ShieldCheck
+                  },
+                  {
+                    id: 'groq' as AiTranslationProvider,
+                    name: 'Groq LPU',
+                    badge: 'Sub-Second Speed',
+                    badgeColor: 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+                    desc: 'Ultra-fast Llama 3.3 and Mixtral inference on specialized hardware.',
+                    defaultModel: 'llama-3.3-70b-versatile',
+                    icon: Zap
+                  },
+                  {
+                    id: 'custom_openai' as AiTranslationProvider,
+                    name: 'Custom / Self-Hosted',
+                    badge: 'Ollama / LocalAI / Azure',
+                    badgeColor: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700',
+                    desc: 'Connect your private server, Ollama, LM Studio, or custom enterprise gateway.',
+                    defaultModel: 'llama3',
+                    icon: Server
+                  },
+                  {
+                    id: 'offline_heuristic' as AiTranslationProvider,
+                    name: 'Local Dictionary',
+                    badge: '100% Offline / Free',
+                    badgeColor: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700',
+                    desc: 'Zero external API calls. Uses built-in travel keyword heuristics.',
+                    defaultModel: 'builtin-dictionary-v1',
+                    icon: FileText
+                  }
+                ].map(p => {
+                  const isSelected = (currentAiConfig.provider || 'gemini') === p.id;
+                  const Icon = p.icon;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        handleUpdateAiConfig({
+                          provider: p.id,
+                          modelName: p.defaultModel,
+                          customBaseUrl: p.id === 'custom_openai' ? (currentAiConfig.customBaseUrl || 'http://localhost:11434/v1') : currentAiConfig.customBaseUrl
+                        });
+                        addNotification('AI Provider Selected', `Switched active AI translation provider to ${p.name}.`, 'system');
+                      }}
+                      className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-2 relative ${
+                        isSelected
+                          ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 dark:border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
+                          : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
+                              <Icon className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-xs font-black text-slate-900 dark:text-white">
+                              {p.name}
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 animate-pulse" />
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                          {p.desc}
+                        </p>
+                      </div>
+                      <div className="pt-1 flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${p.badgeColor}`}>
+                          {p.badge}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Provider Configuration Panel */}
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-indigo-500" />
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    {currentAiConfig.provider.toUpperCase()} Engine Parameters & Credentials
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  Active Model: <span className="font-bold text-indigo-600 dark:text-indigo-400">{currentAiConfig.modelName || 'default'}</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Model Selector / Presets */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Model Selection
+                  </label>
+                  <input
+                    type="text"
+                    value={currentAiConfig.modelName || ''}
+                    onChange={(e) => handleUpdateAiConfig({ modelName: e.target.value })}
+                    placeholder="e.g. gemini-2.5-flash or gpt-4o-mini"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {/* Quick Preset Buttons for Selected Provider */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                    <span className="text-[10px] font-bold text-slate-400">Presets:</span>
+                    {(
+                      currentAiConfig.provider === 'gemini' ? ['gemini-2.5-flash', 'gemini-2.5-pro'] :
+                      currentAiConfig.provider === 'openai' ? ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-turbo', 'gpt-3.5-turbo'] :
+                      currentAiConfig.provider === 'deepseek' ? ['deepseek-chat', 'deepseek-reasoner'] :
+                      currentAiConfig.provider === 'anthropic' ? ['claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'] :
+                      currentAiConfig.provider === 'groq' ? ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'] :
+                      currentAiConfig.provider === 'custom_openai' ? ['llama3', 'mistral-large-latest', 'qwen2.5-72b-instruct'] :
+                      ['builtin-dictionary-v1']
+                    ).map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => handleUpdateAiConfig({ modelName: m })}
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-mono transition-colors cursor-pointer ${
+                          currentAiConfig.modelName === m
+                            ? 'bg-indigo-600 text-white font-bold'
+                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* API Key Input (if applicable) */}
+                {currentAiConfig.provider !== 'offline_heuristic' && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Key className="w-3.5 h-3.5 text-amber-500" />
+                        <span>API Key / Secret Token</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAiApiKey(!showAiApiKey)}
+                        className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        {showAiApiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        <span>{showAiApiKey ? 'Hide' : 'Reveal'}</span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showAiApiKey ? 'text' : 'password'}
+                        value={currentAiConfig.apiKey || ''}
+                        onChange={(e) => handleUpdateAiConfig({ apiKey: e.target.value })}
+                        placeholder={
+                          currentAiConfig.provider === 'gemini'
+                            ? 'Using Server Built-in GEMINI_API_KEY (or enter custom key)'
+                            : `Enter ${currentAiConfig.provider.toUpperCase()} API Key (e.g. sk-...)`
+                        }
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {currentAiConfig.provider === 'gemini'
+                        ? 'Leave blank to use the secure server environment key.'
+                        : 'Stored in your secure admin configuration and passed to the backend proxy.'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Custom Base URL (if Custom OpenAI Provider) */}
+                {currentAiConfig.provider === 'custom_openai' && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Server className="w-3.5 h-3.5 text-sky-500" />
+                      <span>Custom Endpoint Base URL</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={currentAiConfig.customBaseUrl || ''}
+                      onChange={(e) => handleUpdateAiConfig({ customBaseUrl: e.target.value })}
+                      placeholder="http://localhost:11434/v1 or https://api.together.xyz/v1"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                      {[
+                        { name: 'Ollama', url: 'http://localhost:11434/v1' },
+                        { name: 'Together AI', url: 'https://api.together.xyz/v1' },
+                        { name: 'Mistral AI', url: 'https://api.mistral.ai/v1' }
+                      ].map(preset => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => handleUpdateAiConfig({ customBaseUrl: preset.url })}
+                          className="px-1.5 py-0.5 rounded text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono hover:bg-indigo-100 cursor-pointer"
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Temperature Slider & Fallback Toggle */}
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Temperature: <span className="font-mono text-indigo-600 dark:text-indigo-400">{currentAiConfig.temperature ?? 0.1}</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        {(currentAiConfig.temperature ?? 0.1) <= 0.2 ? 'Deterministic / Faithful' : 'Creative / Fluid'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={currentAiConfig.temperature ?? 0.1}
+                      onChange={(e) => handleUpdateAiConfig({ temperature: parseFloat(e.target.value) })}
+                      className="w-full accent-indigo-600 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Fallback to Gemini Toggle */}
+                  <label className="flex items-center gap-2 cursor-pointer pt-1">
+                    <input
+                      type="checkbox"
+                      checked={currentAiConfig.fallbackToGemini ?? true}
+                      onChange={(e) => handleUpdateAiConfig({ fallbackToGemini: e.target.checked })}
+                      className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                    />
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Auto-fallback to Gemini if provider is rate-limited or offline
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Provider Test Result Diagnostic Card */}
+              {providerTestResult && (
+                <div
+                  className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200 ${
+                    providerTestResult.success
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                      : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    {providerTestResult.success ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-black uppercase">
+                          {providerTestResult.success ? 'Provider Connected Successfully' : 'Connection Verification Failed'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white/60 dark:bg-black/40">
+                          {providerTestResult.provider} • {providerTestResult.modelUsed}
+                        </span>
+                        {providerTestResult.latencyMs > 0 && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                            ⚡ {providerTestResult.latencyMs}ms
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs mt-1 opacity-90 leading-relaxed font-sans">
+                        {providerTestResult.message}
+                      </p>
+                      {providerTestResult.translatedText && (
+                        <div className="mt-2 p-2 rounded-lg bg-white/80 dark:bg-black/40 border border-emerald-200/60 dark:border-emerald-800/60 text-xs font-sans">
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">Sample Translation:</span>
+                          <span className="text-slate-800 dark:text-slate-100">{providerTestResult.translatedText}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setProviderTestResult(null)}
+                    className="self-end sm:self-center px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white/60 dark:bg-black/30 hover:bg-white dark:hover:bg-black/50 transition-colors cursor-pointer"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1185,10 +1632,12 @@ export const SettingsSection: React.FC = () => {
               <div>
                 <h4 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-indigo-500 animate-pulse" />
-                  <span>AI Multilingual Translation Sandbox (Gemini 2.5 / 3.7)</span>
+                  <span>
+                    AI Multilingual Translation Sandbox ({currentAiConfig.provider.toUpperCase()} / {currentAiConfig.modelName || 'default'})
+                  </span>
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Test and verify real-time translation accuracy across any language pair for tour packages, itineraries, and delegation contracts.
+                  Test and verify real-time translation accuracy across any language pair using the configured {currentAiConfig.provider.toUpperCase()} intelligence engine.
                 </p>
               </div>
 
@@ -1199,7 +1648,7 @@ export const SettingsSection: React.FC = () => {
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isTranslatingTest ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                <span>{isTranslatingTest ? 'Translating with AI...' : 'Run Translation Test'}</span>
+                <span>{isTranslatingTest ? 'Translating with AI...' : `Run ${currentAiConfig.provider.toUpperCase()} Test`}</span>
               </button>
             </div>
 
@@ -1273,13 +1722,13 @@ export const SettingsSection: React.FC = () => {
                   {isTranslatingTest ? (
                     <div className="flex items-center justify-center gap-2 text-indigo-600 dark:text-indigo-400 py-6">
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span className="font-bold text-xs">Translating via Gemini AI Cascade...</span>
+                      <span className="font-bold text-xs">Translating via {currentAiConfig.provider.toUpperCase()} AI Engine...</span>
                     </div>
                   ) : testTranslatedResult ? (
                     <p className="whitespace-pre-wrap">{testTranslatedResult}</p>
                   ) : (
                     <p className="text-slate-400 dark:text-slate-500 italic">
-                      Click "Run Translation Test" to generate AI translation in {SUPPORTED_LANGUAGES.find(l => l.code === testTargetLang)?.nativeName}...
+                      Click "Run {currentAiConfig.provider.toUpperCase()} Test" to generate AI translation in {SUPPORTED_LANGUAGES.find(l => l.code === testTargetLang)?.nativeName}...
                     </p>
                   )}
                 </div>

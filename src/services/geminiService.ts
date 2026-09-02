@@ -6,8 +6,74 @@ import {
   CustomerPayment,
   SupplierPayment,
   Expense,
-  Booking
+  Booking,
+  AiTranslationProviderConfig
 } from '../types';
+
+/**
+ * Retrieves the currently active AI Translation & Engine Configuration from persistent store.
+ */
+export function getActiveAiTranslationConfig(): AiTranslationProviderConfig | undefined {
+  try {
+    const saved = localStorage.getItem('tripdesk_settings_prod');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.aiTranslationConfig) {
+        return parsed.aiTranslationConfig;
+      }
+    }
+  } catch {}
+  return undefined;
+}
+
+/**
+ * Tests the live connection and translation capability of any AI Provider.
+ */
+export async function testAiTranslationProvider(
+  config: AiTranslationProviderConfig,
+  sampleText?: string,
+  targetLang?: string
+): Promise<{
+  success: boolean;
+  provider: string;
+  modelUsed: string;
+  latencyMs: number;
+  detectedSourceLang?: string;
+  targetLang?: string;
+  translatedText?: string;
+  message: string;
+}> {
+  try {
+    const res = await fetch('/api/ai-test-provider', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        providerConfig: config,
+        sampleText: sampleText || "VIP B2B Trade Mission to Canton Fair & Factory Matchmaking 2026",
+        targetLang: targetLang || "km"
+      })
+    });
+
+    if (res.ok) {
+      return await res.json();
+    }
+    return {
+      success: false,
+      provider: config.provider,
+      modelUsed: config.modelName || 'default',
+      latencyMs: 0,
+      message: `HTTP ${res.status}: Failed to reach test endpoint.`
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      provider: config.provider,
+      modelUsed: config.modelName || 'default',
+      latencyMs: 0,
+      message: err?.message || String(err)
+    };
+  }
+}
 
 export type AiPersonaRole =
   | 'Autonomous Operations Lead'
@@ -1447,7 +1513,8 @@ export async function translateTextField(
   text: string,
   targetLang: string = 'auto',
   sourceLang: string = 'auto',
-  fieldHint?: string
+  fieldHint?: string,
+  providerConfig?: AiTranslationProviderConfig
 ): Promise<{ success: boolean; translatedText: string; detectedLang?: string }> {
   if (!text || !text.trim()) {
     return { success: true, translatedText: '' };
@@ -1470,6 +1537,8 @@ export async function translateTextField(
     resolvedTarget = resolvedSource === 'km' ? 'en' : 'km';
   }
 
+  const activeConfig = providerConfig || getActiveAiTranslationConfig();
+
   try {
     const res = await fetch('/api/ai-translate', {
       method: 'POST',
@@ -1478,13 +1547,14 @@ export async function translateTextField(
         text: trimmed,
         targetLang: resolvedTarget,
         sourceLang: resolvedSource,
-        fieldHint
+        fieldHint,
+        providerConfig: activeConfig
       })
     });
 
     if (res.ok) {
       const data = await res.json();
-      if (data.mode === 'gemini_success' && typeof data.translatedText === 'string' && data.translatedText.trim()) {
+      if ((data.mode === 'gemini_success' || data.mode === 'ai_success') && typeof data.translatedText === 'string' && data.translatedText.trim()) {
         return {
           success: true,
           translatedText: data.translatedText.trim(),
@@ -1553,6 +1623,7 @@ export async function smartTranslateFieldPair(params: {
   enText?: string;
   fieldHint?: string;
   forceDirection?: 'km_to_en' | 'en_to_km' | 'auto';
+  providerConfig?: AiTranslationProviderConfig;
 }): Promise<{
   success: boolean;
   targetField: 'km' | 'en' | 'none';
@@ -1565,7 +1636,7 @@ export async function smartTranslateFieldPair(params: {
 
   // Explicit forced direction
   if (dir === 'en_to_km' && en.length > 0) {
-    const res = await translateTextField(en, 'km', 'en', params.fieldHint);
+    const res = await translateTextField(en, 'km', 'en', params.fieldHint, params.providerConfig);
     return {
       success: res.success,
       targetField: 'km',
@@ -1575,7 +1646,7 @@ export async function smartTranslateFieldPair(params: {
   }
 
   if (dir === 'km_to_en' && km.length > 0) {
-    const res = await translateTextField(km, 'en', 'km', params.fieldHint);
+    const res = await translateTextField(km, 'en', 'km', params.fieldHint, params.providerConfig);
     return {
       success: res.success,
       targetField: 'en',
@@ -1586,7 +1657,7 @@ export async function smartTranslateFieldPair(params: {
 
   // Condition 1: English has text, Khmer is blank -> Translate English to Khmer
   if (en.length > 0 && km.length === 0) {
-    const res = await translateTextField(en, 'km', 'en', params.fieldHint);
+    const res = await translateTextField(en, 'km', 'en', params.fieldHint, params.providerConfig);
     return {
       success: res.success,
       targetField: 'km',
@@ -1597,7 +1668,7 @@ export async function smartTranslateFieldPair(params: {
 
   // Condition 2: Khmer has text, English is blank -> Translate Khmer to English
   if (km.length > 0 && en.length === 0) {
-    const res = await translateTextField(km, 'en', 'km', params.fieldHint);
+    const res = await translateTextField(km, 'en', 'km', params.fieldHint, params.providerConfig);
     return {
       success: res.success,
       targetField: 'en',
@@ -1609,7 +1680,7 @@ export async function smartTranslateFieldPair(params: {
   // Condition 3: Both are present -> Translate based on script content
   if (km.length > 0 && en.length > 0) {
     // If en is actually English and km is Khmer, translate Khmer to English
-    const res = await translateTextField(km, 'en', 'km', params.fieldHint);
+    const res = await translateTextField(km, 'en', 'km', params.fieldHint, params.providerConfig);
     return {
       success: res.success,
       targetField: 'en',
@@ -1633,7 +1704,8 @@ export async function translateArrayField(
   items: string[],
   targetLang: string = 'auto',
   sourceLang: string = 'auto',
-  fieldHint?: string
+  fieldHint?: string,
+  providerConfig?: AiTranslationProviderConfig
 ): Promise<{ success: boolean; translatedItems: string[] }> {
   if (!items || items.length === 0) {
     return { success: true, translatedItems: [] };
@@ -1659,6 +1731,8 @@ export async function translateArrayField(
     resolvedTarget = resolvedSource === 'km' ? 'en' : 'km';
   }
 
+  const activeConfig = providerConfig || getActiveAiTranslationConfig();
+
   try {
     const res = await fetch('/api/ai-translate', {
       method: 'POST',
@@ -1667,13 +1741,14 @@ export async function translateArrayField(
         texts: validItems,
         targetLang: resolvedTarget,
         sourceLang: resolvedSource,
-        fieldHint
+        fieldHint,
+        providerConfig: activeConfig
       })
     });
 
     if (res.ok) {
       const data = await res.json();
-      if (data.mode === 'gemini_success' && Array.isArray(data.translatedTexts)) {
+      if ((data.mode === 'gemini_success' || data.mode === 'ai_success') && Array.isArray(data.translatedTexts)) {
         return { success: true, translatedItems: data.translatedTexts };
       }
     }
@@ -1683,7 +1758,7 @@ export async function translateArrayField(
 
   // Fallback: translate individual items concurrently
   const translated = await Promise.all(
-    validItems.map(item => translateTextField(item, resolvedTarget, resolvedSource, fieldHint).then(r => r.translatedText))
+    validItems.map(item => translateTextField(item, resolvedTarget, resolvedSource, fieldHint, activeConfig).then(r => r.translatedText))
   );
 
   return { success: true, translatedItems: translated };
@@ -1695,8 +1770,11 @@ export async function translateArrayField(
 export async function translateEntirePackage(
   pkgData: Partial<TourPackage>,
   targetLang: string = 'en',
-  sourceLang: string = 'auto'
+  sourceLang: string = 'auto',
+  providerConfig?: AiTranslationProviderConfig
 ): Promise<{ success: boolean; translatedPackage: Partial<TourPackage>; summary: string }> {
+  const activeConfig = providerConfig || getActiveAiTranslationConfig();
+
   try {
     const res = await fetch('/api/ai-translate', {
       method: 'POST',
@@ -1704,13 +1782,14 @@ export async function translateEntirePackage(
       body: JSON.stringify({
         packageData: pkgData,
         targetLang,
-        sourceLang
+        sourceLang,
+        providerConfig: activeConfig
       })
     });
 
     if (res.ok) {
       const data = await res.json();
-      if (data.mode === 'gemini_success' && data.translatedPackage) {
+      if ((data.mode === 'gemini_success' || data.mode === 'ai_success') && data.translatedPackage) {
         return {
           success: true,
           translatedPackage: data.translatedPackage,
@@ -1753,17 +1832,17 @@ export async function translateEntirePackage(
     transExclusions,
     transTerms
   ] = await Promise.all([
-    translateTextField(srcTitle, target, sourceLang, 'Tour Package Title'),
-    translateTextField(srcDest, target, sourceLang, 'Tour Destination'),
-    translateTextField(srcCountry, target, sourceLang, 'Country Name'),
-    translateTextField(srcCategory, target, sourceLang, 'Category'),
-    translateTextField(srcDesc, target, sourceLang, 'Detailed Package Description'),
-    translateArrayField(srcHighlights, target, sourceLang, 'Package Highlights'),
-    translateArrayField(srcWho, target, sourceLang, 'Target Audience'),
-    translateArrayField(srcWhy, target, sourceLang, 'Key Value Proposition'),
-    translateArrayField(srcInclusions, target, sourceLang, 'Inclusions List'),
-    translateArrayField(srcExclusions, target, sourceLang, 'Exclusions List'),
-    translateArrayField(srcTerms, target, sourceLang, 'Terms & Conditions')
+    translateTextField(srcTitle, target, sourceLang, 'Tour Package Title', activeConfig),
+    translateTextField(srcDest, target, sourceLang, 'Tour Destination', activeConfig),
+    translateTextField(srcCountry, target, sourceLang, 'Country Name', activeConfig),
+    translateTextField(srcCategory, target, sourceLang, 'Category', activeConfig),
+    translateTextField(srcDesc, target, sourceLang, 'Detailed Package Description', activeConfig),
+    translateArrayField(srcHighlights, target, sourceLang, 'Package Highlights', activeConfig),
+    translateArrayField(srcWho, target, sourceLang, 'Target Audience', activeConfig),
+    translateArrayField(srcWhy, target, sourceLang, 'Key Value Proposition', activeConfig),
+    translateArrayField(srcInclusions, target, sourceLang, 'Inclusions List', activeConfig),
+    translateArrayField(srcExclusions, target, sourceLang, 'Exclusions List', activeConfig),
+    translateArrayField(srcTerms, target, sourceLang, 'Terms & Conditions', activeConfig)
   ]);
 
   // Translate Itinerary Days
@@ -1776,11 +1855,11 @@ export async function translateEntirePackage(
       const srcMeals = isTargetEn ? (day.mealsIncludedKm?.join(', ') || day.mealsIncluded?.join(', ') || '') : (day.mealsIncludedEn?.join(', ') || day.mealsIncluded?.join(', ') || '');
 
       const [dayTitle, dayDesc, hotel, assembly, meals] = await Promise.all([
-        srcDayTitle ? translateTextField(srcDayTitle, target, sourceLang, 'Itinerary Day Title') : Promise.resolve({ translatedText: '' }),
-        srcDayDesc ? translateTextField(srcDayDesc, target, sourceLang, 'Itinerary Day Description') : Promise.resolve({ translatedText: '' }),
-        srcHotel ? translateTextField(srcHotel, target, sourceLang, 'Hotel Name') : Promise.resolve({ translatedText: '' }),
-        srcAssembly ? translateTextField(srcAssembly, target, sourceLang, 'Assembly Point') : Promise.resolve({ translatedText: '' }),
-        srcMeals ? translateTextField(srcMeals, target, sourceLang, 'Included Meals') : Promise.resolve({ translatedText: '' })
+        srcDayTitle ? translateTextField(srcDayTitle, target, sourceLang, 'Itinerary Day Title', activeConfig) : Promise.resolve({ translatedText: '' }),
+        srcDayDesc ? translateTextField(srcDayDesc, target, sourceLang, 'Itinerary Day Description', activeConfig) : Promise.resolve({ translatedText: '' }),
+        srcHotel ? translateTextField(srcHotel, target, sourceLang, 'Hotel Name', activeConfig) : Promise.resolve({ translatedText: '' }),
+        srcAssembly ? translateTextField(srcAssembly, target, sourceLang, 'Assembly Point', activeConfig) : Promise.resolve({ translatedText: '' }),
+        srcMeals ? translateTextField(srcMeals, target, sourceLang, 'Included Meals', activeConfig) : Promise.resolve({ translatedText: '' })
       ]);
 
       const agenda = await Promise.all(
@@ -1790,9 +1869,9 @@ export async function translateEntirePackage(
           const srcNotes = isTargetEn ? (slot.notesKm || slot.notes || '') : (slot.notesEn || slot.notes || '');
 
           const [act, loc, notes] = await Promise.all([
-            srcAct ? translateTextField(srcAct, target, sourceLang, 'Agenda Activity') : Promise.resolve({ translatedText: '' }),
-            srcLoc ? translateTextField(srcLoc, target, sourceLang, 'Location') : Promise.resolve({ translatedText: '' }),
-            srcNotes ? translateTextField(srcNotes, target, sourceLang, 'Notes') : Promise.resolve({ translatedText: '' })
+            srcAct ? translateTextField(srcAct, target, sourceLang, 'Agenda Activity', activeConfig) : Promise.resolve({ translatedText: '' }),
+            srcLoc ? translateTextField(srcLoc, target, sourceLang, 'Location', activeConfig) : Promise.resolve({ translatedText: '' }),
+            srcNotes ? translateTextField(srcNotes, target, sourceLang, 'Notes', activeConfig) : Promise.resolve({ translatedText: '' })
           ]);
 
           return {
@@ -1844,11 +1923,11 @@ export async function translateEntirePackage(
     const srcGTime = isTargetEn ? (pkgData.tourGuide.briefingTimeKm || pkgData.tourGuide.briefingTime || '') : (pkgData.tourGuide.briefingTimeEn || pkgData.tourGuide.briefingTime || '');
 
     const [gName, gTitle, gBio, gPoint, gTime] = await Promise.all([
-      translateTextField(srcGName, target, sourceLang, 'Guide Name'),
-      translateTextField(srcGTitle, target, sourceLang, 'Guide Title'),
-      translateTextField(srcGBio, target, sourceLang, 'Guide Bio'),
-      translateTextField(srcGPoint, target, sourceLang, 'Meeting Point'),
-      translateTextField(srcGTime, target, sourceLang, 'Briefing Time')
+      translateTextField(srcGName, target, sourceLang, 'Guide Name', activeConfig),
+      translateTextField(srcGTitle, target, sourceLang, 'Guide Title', activeConfig),
+      translateTextField(srcGBio, target, sourceLang, 'Guide Bio', activeConfig),
+      translateTextField(srcGPoint, target, sourceLang, 'Meeting Point', activeConfig),
+      translateTextField(srcGTime, target, sourceLang, 'Briefing Time', activeConfig)
     ]);
 
     translatedGuide = {
@@ -1878,12 +1957,12 @@ export async function translateEntirePackage(
       const srcPDesc = isTargetEn ? (prog.descriptionKm || prog.description || '') : (prog.descriptionEn || prog.description || '');
 
       const [pTitle, pDesc, pAud, pHl, pMeals, pMeeting] = await Promise.all([
-        translateTextField(srcPTitle, target, sourceLang, 'Optional Tour Title'),
-        translateTextField(srcPDesc, target, sourceLang, 'Optional Tour Description'),
-        prog.recommendedAudience ? translateTextField(prog.recommendedAudience, target, sourceLang, 'Audience') : Promise.resolve({ translatedText: prog.recommendedAudience || '' }),
-        translateArrayField(prog.highlights || [], target, sourceLang, 'Optional Highlights'),
-        translateArrayField(prog.includedMeals || [], target, sourceLang, 'Meals'),
-        prog.meetingPoint ? translateTextField(prog.meetingPoint, target, sourceLang, 'Meeting Point') : Promise.resolve({ translatedText: prog.meetingPoint || '' })
+        translateTextField(srcPTitle, target, sourceLang, 'Optional Tour Title', activeConfig),
+        translateTextField(srcPDesc, target, sourceLang, 'Optional Tour Description', activeConfig),
+        prog.recommendedAudience ? translateTextField(prog.recommendedAudience, target, sourceLang, 'Audience', activeConfig) : Promise.resolve({ translatedText: prog.recommendedAudience || '' }),
+        translateArrayField(prog.highlights || [], target, sourceLang, 'Optional Highlights', activeConfig),
+        translateArrayField(prog.includedMeals || [], target, sourceLang, 'Meals', activeConfig),
+        prog.meetingPoint ? translateTextField(prog.meetingPoint, target, sourceLang, 'Meeting Point', activeConfig) : Promise.resolve({ translatedText: prog.meetingPoint || '' })
       ]);
 
       return {

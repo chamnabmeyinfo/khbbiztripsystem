@@ -42,7 +42,8 @@ In addition to UI system localization, the system provides high-precision **Fiel
 - **Contextual Example Hints**: Tailored, domain-specific examples underneath each input field (e.g. `"China"`, `"Join our exclusive delegation with VIP factory tours"`, `"ឧ. ពិព័រណ៍ក្វាងចូវ"`) ensuring intuitive data entry.
 - **`FieldAiTranslator` Component** (`src/components/admin/FieldAiTranslator.tsx`): Provides seamless single/dual-field and array bidirectional translation (Khmer 🇰🇭 ⇄ English 🇺🇸 ⇄ Multilingual) with clear direction indicators (`⚡ Translate 🇺🇸 EN ➔ 🇰🇭 KM`, `⚡ Translate 🇰🇭 KM ➔ 🇺🇸 EN`).
 - **Package Localization Utility** (`src/utils/packageLocalization.ts`): Resolves runtime localized fields (`titleKm`/`titleEn`, `descriptionKm`/`descriptionEn`, `highlightsKm`/`highlightsEn`, itinerary agendas `guideAgenda`, optional programs `optionalPrograms`, etc.) based on active system language.
-- **Server Translation Endpoint** (`/api/ai-translate` in `app.ts`): Secure server-side proxy powered by `@google/genai` with fallback cascade models (`gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-flash-latest`, `gemini-2.5-flash`).
+- **Server Translation Endpoint** (`/api/ai-translate` in `app.ts`): Secure server-side proxy supporting **Google Gemini**, **OpenAI**, **DeepSeek**, **Anthropic Claude**, **Groq LPU**, and **Custom OpenAI-Compatible APIs**, with automatic fallback cascades.
+- **Provider Settings & Verification** (`src/components/admin/SettingsSection.tsx`): Control center for switching AI engines, customizing model parameters, providing secure API keys or endpoints, and testing real-time connection latency (`/api/ai-test-provider`).
 - **Client Offline Translation Fallback** (`src/services/geminiService.ts`): Comprehensive `TRAVEL_TRANSLATION_FALLBACK_DICT` covering travel, Canton Fair B2B missions, VIP transport, hotels, meals, flight tickets, and itinerary milestones.
 
 ## Language Detection Order

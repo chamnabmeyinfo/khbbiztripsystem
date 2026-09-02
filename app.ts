@@ -106,6 +106,280 @@ dotenv.config();
     return null;
   };
 
+  // Multi-Provider AI Execution Interface
+  interface AiProviderConfigPayload {
+    provider?: 'gemini' | 'openai' | 'deepseek' | 'anthropic' | 'groq' | 'custom_openai' | 'offline_heuristic';
+    modelName?: string;
+    apiKey?: string;
+    customBaseUrl?: string;
+    temperature?: number;
+    fallbackToGemini?: boolean;
+  }
+
+  interface ExecuteAiOptions {
+    providerConfig?: AiProviderConfigPayload;
+    prompt: string;
+    systemInstruction?: string;
+    jsonOutput?: boolean;
+    temperature?: number;
+    candidateGeminiModels?: string[];
+  }
+
+  // Unified Multi-Provider Dispatcher (Google Gemini, OpenAI, DeepSeek, Anthropic Claude, Groq, Custom)
+  const executeAiCompletion = async (
+    options: ExecuteAiOptions
+  ): Promise<{ text: string; providerUsed: string; modelUsed: string } | null> => {
+    const { providerConfig, prompt, systemInstruction, jsonOutput, candidateGeminiModels } = options;
+    const provider = providerConfig?.provider || 'gemini';
+    const temp = providerConfig?.temperature ?? options.temperature ?? 0.1;
+    const fallbackToGemini = providerConfig?.fallbackToGemini !== false;
+
+    // 1. Offline / Heuristic mode -> return null to trigger client dictionary fallback
+    if (provider === 'offline_heuristic') {
+      return null;
+    }
+
+    // 2. Google Gemini Provider
+    if (provider === 'gemini') {
+      const geminiClient = getAiClient();
+      if (!geminiClient) return null;
+      const models = candidateGeminiModels || (providerConfig?.modelName ? [providerConfig.modelName] : [
+        "gemini-3.1-flash-lite",
+        "gemini-flash-latest",
+        "gemini-2.5-flash",
+        "gemini-3.7-flash",
+      ]);
+      const res = await generateWithModelFallback(geminiClient, prompt, {
+        systemInstruction,
+        temperature: temp,
+        jsonOutput,
+        candidateModels: models,
+      });
+      if (res?.text) {
+        return { text: res.text, providerUsed: 'gemini', modelUsed: res.modelUsed };
+      }
+      return null;
+    }
+
+    // 3. OpenAI-Compatible Providers (OpenAI ChatGPT, DeepSeek AI, Groq LPU, Custom OpenAI Gateway)
+    if (['openai', 'deepseek', 'groq', 'custom_openai'].includes(provider)) {
+      try {
+        let defaultBaseUrl = 'https://api.openai.com/v1';
+        let defaultModel = 'gpt-4o-mini';
+        let envKey = process.env.OPENAI_API_KEY;
+
+        if (provider === 'deepseek') {
+          defaultBaseUrl = 'https://api.deepseek.com/v1';
+          defaultModel = 'deepseek-chat';
+          envKey = process.env.DEEPSEEK_API_KEY;
+        } else if (provider === 'groq') {
+          defaultBaseUrl = 'https://api.groq.com/openai/v1';
+          defaultModel = 'llama-3.3-70b-versatile';
+          envKey = process.env.GROQ_API_KEY;
+        } else if (provider === 'custom_openai') {
+          defaultBaseUrl = providerConfig?.customBaseUrl || 'https://api.openai.com/v1';
+          defaultModel = 'gpt-4o-mini';
+          envKey = '';
+        }
+
+        const apiKey = providerConfig?.apiKey?.trim() || envKey;
+        if (!apiKey) {
+          if (fallbackToGemini) {
+            console.warn(`[AI Engine] No API key for ${provider}, attempting automatic Gemini fallback...`);
+            const geminiClient = getAiClient();
+            if (geminiClient) {
+              const res = await generateWithModelFallback(geminiClient, prompt, {
+                systemInstruction,
+                temperature: temp,
+                jsonOutput,
+                candidateModels: candidateGeminiModels,
+              });
+              if (res?.text) {
+                return { text: res.text, providerUsed: `gemini (fallback: ${provider} key missing)`, modelUsed: res.modelUsed };
+              }
+            }
+          }
+          return null;
+        }
+
+        const baseUrl = (providerConfig?.customBaseUrl?.trim() || defaultBaseUrl).replace(/\/+$/, '');
+        const targetModel = providerConfig?.modelName?.trim() || defaultModel;
+        const endpoint = `${baseUrl}/chat/completions`;
+
+        const messages: any[] = [];
+        if (systemInstruction) {
+          messages.push({ role: 'system', content: systemInstruction });
+        }
+        messages.push({ role: 'user', content: prompt });
+
+        const requestBody: any = {
+          model: targetModel,
+          messages,
+          temperature: temp,
+        };
+
+        if (jsonOutput) {
+          requestBody.response_format = { type: 'json_object' };
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+        const apiRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'User-Agent': 'khb-biztrip-ai-engine',
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!apiRes.ok) {
+          const errText = await apiRes.text().catch(() => '');
+          console.warn(`[AI Engine] ${provider} (${targetModel}) HTTP ${apiRes.status}: ${errText.slice(0, 300)}`);
+          if (fallbackToGemini) {
+            const geminiClient = getAiClient();
+            if (geminiClient) {
+              const res = await generateWithModelFallback(geminiClient, prompt, {
+                systemInstruction,
+                temperature: temp,
+                jsonOutput,
+                candidateModels: candidateGeminiModels,
+              });
+              if (res?.text) {
+                return { text: res.text, providerUsed: `gemini (fallback from ${provider})`, modelUsed: res.modelUsed };
+              }
+            }
+          }
+          return null;
+        }
+
+        const data: any = await apiRes.json();
+        const content = data?.choices?.[0]?.message?.content || '';
+        if (content.trim()) {
+          return { text: content, providerUsed: provider, modelUsed: targetModel };
+        }
+      } catch (err: any) {
+        console.warn(`[AI Engine] Error with ${provider}:`, err?.message || err);
+        if (fallbackToGemini) {
+          const geminiClient = getAiClient();
+          if (geminiClient) {
+            const res = await generateWithModelFallback(geminiClient, prompt, {
+              systemInstruction,
+              temperature: temp,
+              jsonOutput,
+              candidateModels: candidateGeminiModels,
+            });
+            if (res?.text) {
+              return { text: res.text, providerUsed: `gemini (fallback from ${provider})`, modelUsed: res.modelUsed };
+            }
+          }
+        }
+        return null;
+      }
+    }
+
+    // 4. Anthropic Claude Provider
+    if (provider === 'anthropic') {
+      try {
+        const apiKey = providerConfig?.apiKey?.trim() || process.env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+          if (fallbackToGemini) {
+            const geminiClient = getAiClient();
+            if (geminiClient) {
+              const res = await generateWithModelFallback(geminiClient, prompt, {
+                systemInstruction,
+                temperature: temp,
+                jsonOutput,
+                candidateModels: candidateGeminiModels,
+              });
+              if (res?.text) {
+                return { text: res.text, providerUsed: 'gemini (fallback: anthropic key missing)', modelUsed: res.modelUsed };
+              }
+            }
+          }
+          return null;
+        }
+
+        const targetModel = providerConfig?.modelName?.trim() || 'claude-3-5-haiku-20241022';
+        const endpoint = 'https://api.anthropic.com/v1/messages';
+
+        const requestBody: any = {
+          model: targetModel,
+          max_tokens: 4096,
+          temperature: temp,
+          messages: [{ role: 'user', content: prompt }],
+        };
+        if (systemInstruction) {
+          requestBody.system = systemInstruction;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+        const apiRes = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!apiRes.ok) {
+          const errText = await apiRes.text().catch(() => '');
+          console.warn(`[AI Engine] Anthropic HTTP ${apiRes.status}: ${errText.slice(0, 300)}`);
+          if (fallbackToGemini) {
+            const geminiClient = getAiClient();
+            if (geminiClient) {
+              const res = await generateWithModelFallback(geminiClient, prompt, {
+                systemInstruction,
+                temperature: temp,
+                jsonOutput,
+                candidateModels: candidateGeminiModels,
+              });
+              if (res?.text) {
+                return { text: res.text, providerUsed: 'gemini (fallback from anthropic)', modelUsed: res.modelUsed };
+              }
+            }
+          }
+          return null;
+        }
+
+        const data: any = await apiRes.json();
+        const content = data?.content?.[0]?.text || '';
+        if (content.trim()) {
+          return { text: content, providerUsed: 'anthropic', modelUsed: targetModel };
+        }
+      } catch (err: any) {
+        console.warn(`[AI Engine] Error with Anthropic:`, err?.message || err);
+        if (fallbackToGemini) {
+          const geminiClient = getAiClient();
+          if (geminiClient) {
+            const res = await generateWithModelFallback(geminiClient, prompt, {
+              systemInstruction,
+              temperature: temp,
+              jsonOutput,
+              candidateModels: candidateGeminiModels,
+            });
+            if (res?.text) {
+              return { text: res.text, providerUsed: 'gemini (fallback from anthropic)', modelUsed: res.modelUsed };
+            }
+          }
+        }
+        return null;
+      }
+    }
+
+    return null;
+  };
+
   // Clean and parse JSON helper
   const cleanAndParseJson = (raw: string): any => {
     let cleaned = (raw || "").trim();
@@ -113,6 +387,20 @@ dotenv.config();
       cleaned = cleaned.replace(/^```json\s*/, "").replace(/\s*```$/, "");
     } else if (cleaned.startsWith("```")) {
       cleaned = cleaned.replace(/^```\s*/, "").replace(/\s*```$/, "");
+    }
+    const jsonStart = cleaned.indexOf("{");
+    const jsonEnd = cleaned.lastIndexOf("}");
+    const arrStart = cleaned.indexOf("[");
+    const arrEnd = cleaned.lastIndexOf("]");
+    
+    if (jsonStart !== -1 && jsonEnd > jsonStart && (arrStart === -1 || jsonStart < arrStart)) {
+      try {
+        return JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+      } catch {}
+    } else if (arrStart !== -1 && arrEnd > arrStart) {
+      try {
+        return JSON.parse(cleaned.slice(arrStart, arrEnd + 1));
+      } catch {}
     }
     return JSON.parse(cleaned);
   };
@@ -122,23 +410,86 @@ dotenv.config();
     res.json({ status: "ok", service: "khb-ai-copilot", timestamp: new Date().toISOString() });
   });
 
+  // Dedicated Testing Endpoint for Multi-AI Provider Connection & Live Translation
+  app.post(["/api/ai-test-provider", "/ai-test-provider"], async (req, res) => {
+    const startTime = Date.now();
+    try {
+      const { providerConfig, sampleText, targetLang } = req.body;
+      const text = sampleText || "VIP B2B Trade Mission to Canton Fair & Factory Matchmaking 2026";
+      const target = targetLang || "km";
+
+      const testPrompt = `You are a professional AI translator for international travel and business delegations.
+Translate this text into ${target === 'km' ? 'Khmer (ភាសាខ្មែរ)' : target === 'zh' ? 'Chinese (中文)' : target === 'vi' ? 'Vietnamese (Tiếng Việt)' : 'English'}:
+"${text}"
+
+Respond in valid JSON format:
+{
+  "detectedSourceLang": "en",
+  "targetLang": "${target}",
+  "translatedText": "Clean translated text string"
+}`;
+
+      const genResult = await executeAiCompletion({
+        providerConfig,
+        prompt: testPrompt,
+        jsonOutput: true,
+        temperature: 0.1,
+      });
+
+      const latencyMs = Date.now() - startTime;
+
+      if (genResult?.text) {
+        try {
+          const parsed = cleanAndParseJson(genResult.text);
+          return res.json({
+            success: true,
+            provider: genResult.providerUsed,
+            modelUsed: genResult.modelUsed,
+            latencyMs,
+            detectedSourceLang: parsed?.detectedSourceLang || "en",
+            targetLang: parsed?.targetLang || target,
+            translatedText: parsed?.translatedText || genResult.text,
+            message: `Connected successfully to ${genResult.providerUsed} (${genResult.modelUsed}) in ${latencyMs}ms.`,
+          });
+        } catch {
+          return res.json({
+            success: true,
+            provider: genResult.providerUsed,
+            modelUsed: genResult.modelUsed,
+            latencyMs,
+            detectedSourceLang: "auto",
+            targetLang: target,
+            translatedText: genResult.text,
+            message: `Connected successfully to ${genResult.providerUsed} (${genResult.modelUsed}) in ${latencyMs}ms.`,
+          });
+        }
+      }
+
+      return res.status(200).json({
+        success: false,
+        provider: providerConfig?.provider || "gemini",
+        latencyMs: Date.now() - startTime,
+        message: "No response received from AI provider. Please verify API key, model selection, or network connectivity.",
+      });
+    } catch (err: any) {
+      return res.status(200).json({
+        success: false,
+        provider: req.body?.providerConfig?.provider || "unknown",
+        latencyMs: Date.now() - startTime,
+        message: err?.message || String(err),
+      });
+    }
+  });
+
   // Advanced AI Copilot Endpoint
   app.post(["/api/ai-copilot", "/ai-copilot"], async (req, res) => {
     try {
-      const { prompt, contextData } = req.body;
+      const { prompt, contextData, providerConfig } = req.body;
       if (!prompt) {
         return res.status(400).json({ error: "Missing prompt" });
       }
 
-      const client = getAiClient();
       const lang = contextData?.language || "km";
-
-      if (!client) {
-        return res.status(200).json({
-          mode: "fallback_needed",
-          message: "No Gemini API key available on server, triggering adaptive client engine."
-        });
-      }
 
       const systemInstruction = `You are the Lead Autonomous Operations AI & Strategic Copilot for KHB Events Business Trip System.
 You possess adaptive reasoning and full authority to perform CRUD operations, multi-entity orchestration, financial yield analysis, tour itinerary engineering, and procurement optimization across the KHB ERP ecosystem:
@@ -214,7 +565,9 @@ Please respond strictly with a valid JSON object in this schema:
   ]
 }`;
 
-      const genResult = await generateWithModelFallback(client, promptPayload, {
+      const genResult = await executeAiCompletion({
+        providerConfig,
+        prompt: promptPayload,
         jsonOutput: true,
         temperature: 0.2,
       });
@@ -222,7 +575,12 @@ Please respond strictly with a valid JSON object in this schema:
       if (genResult?.text) {
         try {
           const parsedData = cleanAndParseJson(genResult.text);
-          return res.json({ mode: "gemini_success", data: parsedData });
+          return res.json({
+            mode: "ai_success",
+            providerUsed: genResult.providerUsed,
+            modelUsed: genResult.modelUsed,
+            data: parsedData
+          });
         } catch {
           // JSON parse failed, fall through to adaptive engine
         }
@@ -230,7 +588,7 @@ Please respond strictly with a valid JSON object in this schema:
 
       return res.status(200).json({
         mode: "fallback_needed",
-        message: "Gemini capacity busy, adaptive autonomous engine activated.",
+        message: "AI engine capacity busy or key unconfigured, adaptive autonomous engine activated.",
       });
     } catch (error: any) {
       console.warn("AI Copilot request error handled gracefully:", error?.message || error);
@@ -241,20 +599,12 @@ Please respond strictly with a valid JSON object in this schema:
     }
   });
 
-  // Advanced AI Multilingual Translation Endpoint (Field, Batch Array, and Full Package)
+  // Advanced AI Multilingual Translation Endpoint (Field, Batch Array, and Full Package with Multi-Provider Support)
   app.post(["/api/ai-translate", "/ai-translate"], async (req, res) => {
     try {
-      const { text, texts, packageData, sourceLang, targetLang, fieldHint } = req.body;
+      const { text, texts, packageData, sourceLang, targetLang, fieldHint, providerConfig } = req.body;
       let target = targetLang || "auto";
       let source = sourceLang || "auto";
-
-      const client = getAiClient();
-      if (!client) {
-        return res.status(200).json({
-          mode: "fallback_needed",
-          message: "No Gemini API key available on server, triggering adaptive client translator.",
-        });
-      }
 
       // Case 1: Full Package Translation
       if (packageData && typeof packageData === "object") {
@@ -281,10 +631,12 @@ Respond strictly with valid JSON format:
   }
 }`;
 
-        const genResult = await generateWithModelFallback(client, translatePkgPrompt, {
+        const genResult = await executeAiCompletion({
+          providerConfig,
+          prompt: translatePkgPrompt,
           jsonOutput: true,
           temperature: 0.1,
-          candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+          candidateGeminiModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
         });
 
         if (genResult?.text) {
@@ -292,8 +644,10 @@ Respond strictly with valid JSON format:
             const parsedPkg = cleanAndParseJson(genResult.text);
             if (parsedPkg?.translatedPackage) {
               return res.json({
-                mode: "gemini_success",
-                summary: parsedPkg.summary || `Translated tour package`,
+                mode: "ai_success",
+                providerUsed: genResult.providerUsed,
+                modelUsed: genResult.modelUsed,
+                summary: parsedPkg.summary || `Translated tour package via ${genResult.providerUsed}`,
                 translatedPackage: parsedPkg.translatedPackage,
               });
             }
@@ -318,10 +672,12 @@ Respond strictly in valid JSON format:
   "translatedTexts": [ ...translated strings in exact same array order... ]
 }`;
 
-        const genResult = await generateWithModelFallback(client, translateArrayPrompt, {
+        const genResult = await executeAiCompletion({
+          providerConfig,
+          prompt: translateArrayPrompt,
           jsonOutput: true,
           temperature: 0.1,
-          candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+          candidateGeminiModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
         });
 
         if (genResult?.text) {
@@ -329,7 +685,9 @@ Respond strictly in valid JSON format:
             const parsedArr = cleanAndParseJson(genResult.text);
             if (Array.isArray(parsedArr?.translatedTexts)) {
               return res.json({
-                mode: "gemini_success",
+                mode: "ai_success",
+                providerUsed: genResult.providerUsed,
+                modelUsed: genResult.modelUsed,
                 translatedTexts: parsedArr.translatedTexts,
               });
             }
@@ -365,10 +723,12 @@ Respond strictly with valid JSON format:
   "translatedText": "Clean translated text string"
 }`;
 
-        const genResult = await generateWithModelFallback(client, singlePrompt, {
+        const genResult = await executeAiCompletion({
+          providerConfig,
+          prompt: singlePrompt,
           jsonOutput: true,
           temperature: 0.1,
-          candidateModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
+          candidateGeminiModels: ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"],
         });
 
         if (genResult?.text) {
@@ -376,7 +736,9 @@ Respond strictly with valid JSON format:
             const parsedSingle = cleanAndParseJson(genResult.text);
             if (typeof parsedSingle?.translatedText === "string") {
               return res.json({
-                mode: "gemini_success",
+                mode: "ai_success",
+                providerUsed: genResult.providerUsed,
+                modelUsed: genResult.modelUsed,
                 detectedSourceLang: parsedSingle.detectedSourceLang,
                 targetLang: parsedSingle.targetLang,
                 translatedText: parsedSingle.translatedText,
@@ -390,7 +752,7 @@ Respond strictly with valid JSON format:
 
       return res.status(200).json({
         mode: "fallback_needed",
-        message: "Gemini translation temporarily busy, triggering client adaptive translator.",
+        message: "Translation provider temporarily busy, triggering client adaptive translator.",
       });
     } catch (error: any) {
       console.warn("AI translation error:", error?.message || error);

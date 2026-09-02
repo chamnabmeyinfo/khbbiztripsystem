@@ -1999,6 +1999,14 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   enableAiAutoTranslation: true,
   showLanguageSwitcher: true,
 
+  // AI Translation Provider & Engine Controls
+  aiTranslationConfig: {
+    provider: 'gemini',
+    modelName: 'gemini-2.5-flash',
+    temperature: 0.1,
+    fallbackToGemini: true,
+  },
+
   // CRM & Webhook Integration
   crmConfig: {
     crmEndpointUrl: 'https://khbcrm.vercel.app/api/v1/bookings',

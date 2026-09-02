@@ -910,8 +910,33 @@ export interface SystemSettings {
   enableAiAutoTranslation?: boolean;
   showLanguageSwitcher?: boolean;
 
+  // AI Translation Provider & Engine Controls
+  aiTranslationConfig?: AiTranslationProviderConfig;
+
   // CRM & Webhook Integration
   crmConfig?: CrmConfig;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Multi-AI Translation Provider Suite
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AiTranslationProvider =
+  | 'gemini'
+  | 'openai'
+  | 'deepseek'
+  | 'anthropic'
+  | 'groq'
+  | 'custom_openai'
+  | 'offline_heuristic';
+
+export interface AiTranslationProviderConfig {
+  provider: AiTranslationProvider;
+  modelName?: string;
+  apiKey?: string;
+  customBaseUrl?: string;
+  temperature?: number;
+  fallbackToGemini?: boolean;
 }
 
 export type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package_sales_page';

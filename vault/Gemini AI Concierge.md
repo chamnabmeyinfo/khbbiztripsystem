@@ -14,6 +14,10 @@ A comprehensive AI intelligence suite powered by **Google Gemini API** (`@google
   - **On-Demand Package Translation**: Supports 1-click full-package bilingual translation (`handleTranslateEntirePackage` EN ➔ KM or KM ➔ EN) at any point during editing.
 - Multi-tier model fallback: `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-3.7-flash`, `gemini-3.1-flash-lite`, `gemini-flash-latest`
 - High-precision Field Translation & Package Translation with bilingual resolution (Khmer 🇰🇭 ⇄ English 🇺🇸)
+- **Multi-AI Translation Provider Suite (`AiTranslationProviderConfig`)**:
+  - Supports dynamic switching between **Google Gemini** (`gemini-2.5-flash`, `gemini-2.5-pro`), **OpenAI** (`gpt-4o-mini`, `gpt-4o`, `gpt-4.1-turbo`), **DeepSeek** (`deepseek-chat`, `deepseek-reasoner`), **Anthropic Claude** (`claude-3-5-haiku`, `claude-3-5-sonnet`), **Groq LPU** (`llama-3.3-70b-versatile`, `mixtral-8x7b-32768`), **Custom OpenAI-Compatible / Ollama / LocalAI**, and **Offline Heuristic Dictionary**.
+  - Server endpoints `/api/ai-translate` and `/api/ai-test-provider` handle secure multi-provider routing, API key injection, custom base URLs, temperature adjustments, and automatic fallback cascades.
+  - Interactive Admin Settings Panel in `SettingsSection.tsx` with provider cards, masked API keys, model presets, and real-time connection latency testing (`testAiTranslationProvider`).
 
 ## How It Works
 1. User clicks the chat bubble (bottom-right corner)
