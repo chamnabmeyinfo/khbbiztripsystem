@@ -103,6 +103,11 @@ import { CURRENCY_CONFIGS, convertFromUSD } from '../services/currencyService';
 import { isRTL, translations } from '../i18n/translations';
 import { getLocalizedPackage } from '../utils/packageLocalization';
 import { sanitizeForFirestore } from '../utils/firestoreSanitizer';
+import {
+  isFirestoreQuotaError,
+  markFirestoreQuotaExceeded,
+  isFirestoreQuotaCoolingDown
+} from '../utils/firestoreQuota';
 import { reconcileTourPackages } from '../utils/packageReconciler';
 import { applyThemeToDOM } from '../services/aiThemeService';
 import {
@@ -599,6 +604,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       window.removeEventListener('offline', handleOffline);
     };
   }, [offlineMode]);
+
+  // Firestore Free-Tier Quota Guard: gracefully pauses a real-time listener when the
+  // daily read quota is exhausted (instead of the SDK's endless retry loop burning
+  // more quota). Data continues to be served from the local offline cache.
+  const pauseListenerOnQuotaError = (label: string, unsubscribe: (() => void) | null) => {
+    try { unsubscribe?.(); } catch {}
+    markFirestoreQuotaExceeded();
+    setAutoSyncState(prev => ({
+      ...prev,
+      status: 'offline',
+      message: 'Daily cloud quota reached — saved locally'
+    }));
+    console.warn(`${label} sync paused: Firestore daily read quota exceeded — serving local cache (auto-retry in ~30 min).`);
+  };
+
   
   const [packages, setPackages] = useState<TourPackage[]>(() => {
     try {
@@ -771,6 +791,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(deletedIds));
+  }, [deletedIds]);
+
+  // Ref mirror of deletedIds for Firestore snapshot callbacks: lets listeners stay
+  // mounted with stable dependencies instead of unsubscribing/resubscribing (which
+  // re-reads every document and burns the free-tier daily read quota) every time a
+  // deletion is recorded.
+  const deletedIdsRef = useRef<Set<string>>(new Set(deletedIds));
+  useEffect(() => {
+    deletedIdsRef.current = new Set(deletedIds);
   }, [deletedIds]);
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
@@ -1443,11 +1472,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [language, currency, users]);
 
   // Firestore Real-Time Packages Sync (with Smart Conflict-Resolved Merge & Deleted IDs Guard)
+  // Quota-aware: subscribes once (deletedIds read via ref) and pauses gracefully when the
+  // Firestore free-tier daily read quota is exhausted.
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const q = query(collection(db, 'packages'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const deletedSet = new Set<string>(deletedIds);
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const deletedSet = deletedIdsRef.current;
         const remotePackages: TourPackage[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data() as TourPackage;
@@ -1494,25 +1527,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           });
         }
       }, (error) => {
+        if (isFirestoreQuotaError(error)) {
+          pauseListenerOnQuotaError('Packages', unsubscribe);
+          return;
+        }
         console.warn('Packages snapshot notice:', error.message);
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore package sync fallback to local store');
     }
-  }, [deletedIds]);
+    return () => { try { unsubscribe?.(); } catch {} };
+  }, []);
 
   // Firestore Real-Time Bookings Sync for currentUser (with Deleted IDs Guard)
   useEffect(() => {
     if (!currentUser) return;
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const bookingsRef = collection(db, 'bookings');
       const q = currentUser.role === 'admin'
         ? query(bookingsRef)
         : query(bookingsRef, where('userId', '==', currentUser.id));
 
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const deletedSet = new Set(deletedIds);
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const deletedSet = deletedIdsRef.current;
         const remoteBookings: Booking[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data() as Booking;
@@ -1522,17 +1561,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         });
         setBookings(remoteBookings);
       }, (error) => {
+        if (isFirestoreQuotaError(error)) {
+          pauseListenerOnQuotaError('Bookings', unsubscribe);
+          return;
+        }
         console.warn('Bookings snapshot notice:', error.message);
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore booking sync fallback to local store');
     }
-  }, [currentUser, deletedIds]);
+    return () => { try { unsubscribe?.(); } catch {} };
+  }, [currentUser]);
 
   // ERP Listeners (with Deleted IDs Guard & Deleted Items Sync)
   useEffect(() => {
-    const deletedSet = new Set(deletedIds);
+    if (isFirestoreQuotaCoolingDown()) return;
     const collections = [
       { name: 'suppliers', setter: setSuppliers },
       { name: 'cost_templates', setter: setCostTemplates },
@@ -1560,7 +1603,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const unsubscribes = collections.map(coll => {
       try {
         const q = query(collection(db, coll.name));
-        return onSnapshot(q, (snapshot) => {
+        let unsub: (() => void) | null = null;
+        unsub = onSnapshot(q, (snapshot) => {
+          const deletedSet = deletedIdsRef.current;
           const data: any[] = [];
           snapshot.forEach(docSnap => {
             const item = docSnap.data() as any;
@@ -1575,14 +1620,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           });
           coll.setter(data as any);
         }, err => {
+          if (isFirestoreQuotaError(err)) {
+            pauseListenerOnQuotaError(coll.name, unsub);
+            return;
+          }
           if (err.code !== 'permission-denied') console.warn(coll.name, 'snapshot notice:', err.message);
         });
+        return unsub;
       } catch {
         return () => {};
       }
     });
-    return () => unsubscribes.forEach(unsub => unsub());
-  }, [deletedIds]);
+    return () => unsubscribes.forEach(unsub => {
+      try { unsub(); } catch {}
+    });
+  }, []);
 
   // Sync Direction and HTML attributes when language changes
   useEffect(() => {
@@ -1636,9 +1688,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Firestore Real-Time Users Sync
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const q = query(collection(db, 'users'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      unsubscribe = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const remoteUsers: User[] = [];
           snapshot.forEach((docSnap) => {
@@ -1652,21 +1706,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
+        if (isFirestoreQuotaError(err)) {
+          pauseListenerOnQuotaError('Users', unsubscribe);
+          return;
+        }
         if (err.code !== 'permission-denied') {
           console.warn('Users snapshot notice:', err.message);
         }
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore user sync fallback to local store');
     }
+    return () => { try { unsubscribe?.(); } catch {} };
   }, []);
 
   // Firestore Real-Time Audit Logs Sync
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const q = query(collection(db, 'audit_logs'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      unsubscribe = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const remoteLogs: UserAuditLog[] = [];
           snapshot.forEach((docSnap) => {
@@ -1682,21 +1742,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
+        if (isFirestoreQuotaError(err)) {
+          pauseListenerOnQuotaError('Audit logs', unsubscribe);
+          return;
+        }
         if (err.code !== 'permission-denied') {
           console.warn('Audit logs snapshot notice:', err.message);
         }
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Audit logs sync fallback to local store');
     }
+    return () => { try { unsubscribe?.(); } catch {} };
   }, []);
 
   // Firestore Real-Time Inbound Won Leads Sync
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const q = query(collection(db, 'inbound_leads'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      unsubscribe = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const remoteLeads: InboundWonLead[] = [];
           snapshot.forEach((docSnap) => {
@@ -1715,20 +1781,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
+        if (isFirestoreQuotaError(err)) {
+          pauseListenerOnQuotaError('Inbound leads', unsubscribe);
+          return;
+        }
         if (err.code !== 'permission-denied') {
           console.warn('Inbound leads snapshot notice:', err.message);
         }
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore inbound leads sync fallback to local store');
     }
+    return () => { try { unsubscribe?.(); } catch {} };
   }, []);
 
   // Firestore Real-Time System Settings Sync
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
-      const unsubscribe = onSnapshot(doc(db, 'system_settings', 'global_config'), (docSnap) => {
+      unsubscribe = onSnapshot(doc(db, 'system_settings', 'global_config'), (docSnap) => {
         if (docSnap.exists()) {
           const remoteSettings = docSnap.data() as Partial<SystemSettings>;
           if (remoteSettings && remoteSettings.paymentGateways) {
@@ -1745,21 +1817,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
+        if (isFirestoreQuotaError(err)) {
+          pauseListenerOnQuotaError('System settings', unsubscribe);
+          return;
+        }
         if (err.code !== 'permission-denied') {
           console.warn('System settings snapshot notice:', err.message);
         }
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore system settings sync fallback to local store');
     }
+    return () => { try { unsubscribe?.(); } catch {} };
   }, []);
 
   // Firestore Real-Time Package Categories Sync
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const q = query(collection(db, 'package_categories'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      unsubscribe = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const remoteCategories = snapshot.docs.map(d => ({
             id: d.id,
@@ -1772,21 +1850,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           } catch (e) {}
         }
       }, (err) => {
+        if (isFirestoreQuotaError(err)) {
+          pauseListenerOnQuotaError('Package categories', unsubscribe);
+          return;
+        }
         if (err.code !== 'permission-denied') {
           console.warn('Package categories snapshot notice:', err.message);
         }
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore package categories sync fallback to local store');
     }
+    return () => { try { unsubscribe?.(); } catch {} };
   }, []);
 
   // Firestore Real-Time System Updates & Modification History Sync
   useEffect(() => {
+    if (isFirestoreQuotaCoolingDown()) return;
+    let unsubscribe: (() => void) | null = null;
     try {
       const q = query(collection(db, 'system_updates'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      unsubscribe = onSnapshot(q, (snapshot) => {
         if (!snapshot.empty) {
           const cloudUpdates: SystemUpdateHistoryRecord[] = [];
           snapshot.forEach((docSnap) => {
@@ -1812,14 +1896,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         }
       }, (err) => {
+        if (isFirestoreQuotaError(err)) {
+          pauseListenerOnQuotaError('System updates', unsubscribe);
+          return;
+        }
         if (err.code !== 'permission-denied') {
           console.warn('System updates snapshot notice:', err.message);
         }
       });
-      return () => unsubscribe();
     } catch (err) {
       console.warn('Firestore system updates sync fallback to local store');
     }
+    return () => { try { unsubscribe?.(); } catch {} };
   }, []);
 
   const isStaff = isStaffMember(currentUser);
@@ -3463,6 +3551,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const refreshTourPackagesFromDatabase = async (): Promise<TourPackage[]> => {
+    // Quota guard: skip the full-collection read while the free-tier quota cooldown is active
+    if (isFirestoreQuotaCoolingDown()) {
+      console.warn('Manual packages sync skipped: Firestore daily read quota cooling down — returning cached catalog.');
+      const cached = packages.filter(p => !deletedIdsRef.current.has(p.id) && p.status !== 'deleted');
+      addNotification(
+        'Using Cached Catalog',
+        'Cloud sync is paused until the Firestore daily quota resets. Showing locally saved packages.',
+        'system'
+      );
+      return cached;
+    }
     try {
       const q = query(collection(db, 'packages'));
       const snapshot = await getDocs(q);

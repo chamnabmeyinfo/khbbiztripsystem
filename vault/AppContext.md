@@ -98,6 +98,7 @@ refreshTourPackagesFromDatabase(): Promise<TourPackage[]>; // Fetches authoritat
 // - Firestore snapshot synchronization: Reconciles local and remote packages. When remote snapshot has documents, Firestore is authoritative and missing seed packages are recognized as deleted (preventing zombie resurrection).
 // - Deleted item tracking (deletedIds & deleted_items sync): Real-time onSnapshot listener on 'deleted_items' collection propagates deletions across all clients, updating Recycle Bin and preventing stale seed resurrection.
 // - Seed Translation Hydration: Automatically enriches cached localStorage packages with updated English translations from INITIAL_PACKAGES on startup
+// - Free-Tier Quota Guard: All listeners are quota-aware — on 'resource-exhausted' errors they self-unsubscribe, mark a 30-min sessionStorage cooldown (tripdesk_fs_quota_cooldown_v1 via src/utils/firestoreQuota.ts), flip autoSyncState to 'offline', and serve the local cache. Listeners read deletedIds through a deletedIdsRef mirror so they subscribe once (no churn-driven re-reads).
 
 // Package Categories
 addPackageCategory(cat);

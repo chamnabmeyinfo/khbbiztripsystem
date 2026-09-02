@@ -72,6 +72,14 @@ AppContext sets up live listeners for:
 - `/support_messages` — filtered by userId (or all for admin)
 - ERP collections (`/suppliers`, `/cost_templates`, `/purchase_orders`, `/customer_payments`, `/supplier_payments`, `/expenses`)
 
+## Free-Tier Quota Guard (Quota-Aware Listeners)
+All real-time listeners are **quota-aware** to survive the Firestore free-tier daily read limits (50K reads/day):
+- **Quota Detection** (`src/utils/firestoreQuota.ts`): `isFirestoreQuotaError()` detects `resource-exhausted` errors and "Quota" messages; `markFirestoreQuotaExceeded()` starts a **30-minute cooldown** persisted in `sessionStorage` (`tripdesk_fs_quota_cooldown_v1`); `isFirestoreQuotaCoolingDown()` gates listener subscription.
+- **Graceful Pause on Quota Exhaustion**: When a snapshot errors with quota exhaustion, the listener **unsubscribes itself** (stops the SDK retry loop), marks the cooldown, flips `autoSyncState` to `offline` ("Daily cloud quota reached — saved locally"), and logs a single concise warning. Data continues to be served from localStorage / IndexedDB offline cache — zero data loss.
+- **No Listener Churn**: `packages`, `bookings`, and ERP collection listeners read `deletedIds` through a **ref mirror** (`deletedIdsRef`) instead of closing over the state, so listeners subscribe **once** and are never torn down/re-subscribed on deletion updates (which previously re-read every document in every collection — the primary quota burner).
+- **Manual Sync Gating**: `refreshTourPackagesFromDatabase()` (Sync DB button) returns the locally cached catalog instead of performing a full `getDocs` read while the quota cooldown is active.
+- Cooldown auto-expires (~30 min) and listeners resume on the next subscription opportunity (page reload / remount).
+
 ## Error Handling
 `handleFirestoreError()` logs operation type, path, and full auth context on any Firestore error.
 

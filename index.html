@@ -33,7 +33,9 @@
         if (
           strMsg.indexOf('message channel closed') !== -1 ||
           strMsg.indexOf('ResizeObserver loop') !== -1 ||
-          strMsg.indexOf('runtime.lastError') !== -1
+          strMsg.indexOf('runtime.lastError') !== -1 ||
+          // Benign third-party web-vitals instrumentation (injected scripts, not app code)
+          (strMsg.indexOf("reading 'startTime'") !== -1 && strMsg.indexOf('reportAllChanges') !== -1)
         ) {
           return true;
         }
@@ -57,7 +59,9 @@
         if (
           msg.indexOf('message channel closed') !== -1 ||
           msg.indexOf('ResizeObserver loop') !== -1 ||
-          msg.indexOf('runtime.lastError') !== -1
+          msg.indexOf('runtime.lastError') !== -1 ||
+          // Benign third-party web-vitals instrumentation (injected scripts, not app code)
+          (msg.indexOf("reading 'startTime'") !== -1 && msg.indexOf('reportAllChanges') !== -1)
         ) {
           e.preventDefault && e.preventDefault();
           return;
