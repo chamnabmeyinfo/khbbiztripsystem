@@ -930,8 +930,8 @@ export function extractTourPackageHeuristically(
     : `B2B Business Study Mission to ${destinationEn} (${durationDays}D/${durationNights}N)`;
 
   let titleEn = isEnglishPrimary ? rawTitle : `${countryEn} B2B Trade & Sourcing Mission: ${destinationEn} (${durationDays}D/${durationNights}N)`;
-  let titleKm = !isEnglishPrimary ? rawTitle : `ដំណើរទស្សនកិច្ចពាណិជ្ជកម្ម និងផ្គូផ្គងដៃគូធុរកិច្ច ${destinationKm} (${durationDays} ថ្ងៃ / ${durationNights} យប់)`;
-  let title = isEnglishPrimary ? titleEn : titleKm;
+  let titleKm = '';
+  let title = titleEn;
 
   // 5. Dates extraction
   const dateRegex = /\b(\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{4})\b/g;
@@ -960,24 +960,13 @@ export function extractTourPackageHeuristically(
     `✈️ Complete VIP Logistics, Fast-Track Immigration & ${hotelStars}-Star Executive Hotel`,
     `💼 Bilingual English/Khmer Business Facilitator & Dedicated Logistics Director`
   ];
-  const highlightsKm: string[] = [
-    `🤝 ស្វែងរកផលិតផលបោះដុំ និងផ្គត់ផ្គង់អាជីវកម្មផ្ទាល់ពីរោងចក្រនៅ ${countryKm}`,
-    `⚙️ សម្ភារៈ គ្រឿងម៉ាស៊ីន និងបច្ចេកវិទ្យាលក់រាយទំនើប VIP Fast-Track`,
-    `🏢 ឱកាសទិញសិទ្ធិអាជីវកម្ម Franchise ល្បីៗមកកាន់ទីផ្សារកម្ពុជា`,
-    `✈️ រួមបញ្ចូលសេវាធ្វើដំណើរ VIP និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ${hotelStars} ផ្កាយ`,
-    `💼 មគ្គុទ្ទេសក៍ទេសចរណ៍ និងអ្នកសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្មជំនាញ`
-  ];
+  const highlightsKm: string[] = [];
 
-  // If text has custom bullet points, parse them!
+  // If text has custom bullet points, parse them into English highlights
   const bulletLines = rawLines.filter(l => /^[•\-\*🤝⚙️🏢☕✈️💥🔹✅1-9]/.test(l) && l.length > 10 && l.length < 200);
   if (bulletLines.length >= 3) {
-    if (isEnglishPrimary) {
-      highlightsEn.length = 0;
-      highlightsEn.push(...bulletLines.slice(0, 6));
-    } else {
-      highlightsKm.length = 0;
-      highlightsKm.push(...bulletLines.slice(0, 6));
-    }
+    highlightsEn.length = 0;
+    highlightsEn.push(...bulletLines.slice(0, 6));
   }
 
   // 8. Inclusions, Exclusions, Terms
@@ -990,15 +979,7 @@ export function extractTourPackageHeuristically(
     `VIP Fast-Track Border Clearance & Airport Transfers`,
     `Comprehensive International Travel & Emergency Medical Insurance`
   ];
-  const inclusionsKm: string[] = [
-    `រថយន្តក្រុង VIP ទំនើបដឹកជញ្ជូនពេញដំណើរបេសកកម្ម`,
-    `សណ្ឋាគារស្នាក់នៅស្តង់ដារ ${hotelStars} ផ្កាយ (${durationNights} យប់ / ${durationDays} ថ្ងៃ)`,
-    `អាហារពេលព្រឹកប៊ូហ្វេអន្តរជាតិប្រចាំថ្ងៃនៅសណ្ឋាគារ`,
-    `កាតផ្លូវការ VIP ចូលទស្សនាពិព័រណ៍ពាណិជ្ជកម្ម និងកិច្ចប្រជុំ`,
-    `មគ្គុទ្ទេសក៍ទេសចរណ៍ និងអ្នកសម្របសម្រួលជំនាញនិយាយ ខ្មែរ-អង់គ្លេស`,
-    `សេវាសម្រួលបែបបទឆ្លងដែន VIP និងព្រលានយន្តហោះ Fast-Track`,
-    `ការធានារ៉ាប់រងការធ្វើដំណើរអន្តរជាតិស្តង់ដារ`
-  ];
+  const inclusionsKm: string[] = [];
 
   const exclusionsEn: string[] = [
     `Personal leisure expenses (shopping, mini-bar, laundry, telephone calls)`,
@@ -1006,12 +987,7 @@ export function extractTourPackageHeuristically(
     `Single room occupancy supplement (if requesting private room)`,
     `Entry visa fee for foreign passport holders (if applicable)`
   ];
-  const exclusionsKm: string[] = [
-    `ការចំណាយផ្ទាល់ខ្លួន (ទិញទំនិញ, សេវាកម្មបន្ទប់, ទូរស័ព្ទ)`,
-    `អាហារថ្ងៃត្រង់ និងអាហារពេលល្ងាចក្រៅពីកម្មវិធីផ្លូវការ`,
-    `ថ្លៃបន្ថែមសម្រាប់បន្ទប់ទោល (Single Room Supplement)`,
-    `ថ្លៃទិដ្ឋាការ (Visa) សម្រាប់ជនបរទេស (ប្រសិនបើមាន)`
-  ];
+  const exclusionsKm: string[] = [];
 
   const termsAndConditionsEn: string[] = [
     `Booking is confirmed upon receipt of a minimum 50% advance deposit.`,
@@ -1019,103 +995,82 @@ export function extractTourPackageHeuristically(
     `Deposit is non-refundable for cancellations made within 7 days prior to departure.`,
     `The organizer reserves the right to adjust sequence of events due to weather or flight changes.`
   ];
-  const termsAndConditionsKm: string[] = [
-    `ការកក់នឹងមានសុពលភាពនៅពេលបានបង់ប្រាក់កក់យ៉ាងតិច 50%។`,
-    `លិខិតឆ្លងដែន (Passport) ត្រូវមានសុពលភាពយ៉ាងតិច ៦ ខែគិតពីថ្ងៃចេញដំណើរ។`,
-    `ប្រាក់កក់មិនអាចដកវិញបានទេក្នុងករណីលុបចោលមុនចេញដំណើរក្រោម ៧ ថ្ងៃ។`,
-    `ក្រុមហ៊ុនរក្សាសិទ្ធិក្នុងការផ្លាស់ប្តូរកាលវិភាគអាស្រ័យលើស្ថានភាពជាក់ស្តែង។`
-  ];
+  const termsAndConditionsKm: string[] = [];
 
   const whoShouldJoinEn: string[] = [
     `Enterprise owners, entrepreneurs, and founders seeking direct factory procurement`,
     `Wholesale importers, distributors, and retail chain procurement managers`,
     `Investors looking to acquire master franchise and licensing rights for Cambodia`
   ];
-  const whoShouldJoinKm: string[] = [
-    `ម្ចាស់អាជីវកម្ម សហគ្រិន និងស្ថាបនិកដែលចង់ស្វែងរកប្រភពទំនិញបោះដុំផ្ទាល់ពីរោងចក្រ`,
-    `អ្នកនាំចូល អ្នកចែកចាយបោះដុំ និងអ្នកគ្រប់គ្រងការទិញទំនិញលក់រាយ`,
-    `អ្នកវិនិយោគដែលចង់ទិញសិទ្ធិអាជីវកម្ម (Franchise) មកបើកដំណើរការនៅកម្ពុជា`
-  ];
+  const whoShouldJoinKm: string[] = [];
 
   const whyShouldJoinEn: string[] = [
     `Factory-Direct Wholesale Pricing: Bypass trading intermediaries and negotiate volume discounts`,
     `Strategic B2B Matchmaking: 1-on-1 scheduled meetings with vetted international manufacturers`,
     `Zero-Hassle Executive Travel: Complete VIP escort, fast-track customs, and luxury lodging`
   ];
-  const whyShouldJoinKm: string[] = [
-    `ទទួលបានតម្លៃដើមផ្ទាល់ពីរោងចក្រផលិត (Factory-Direct Wholesale Pricing) ដោយគ្មានឈ្មួញកណ្តាល`,
-    `ជំនួបធុរកិច្ច B2B ផ្តាច់មុខជាមួយដៃគូផ្គត់ផ្គង់ និងរោងចក្រល្បីៗជាង ១,០០០ ក្រុមហ៊ុន`,
-    `សេវាសម្រួលបែបបទឆ្លងដែន VIP Fast-Track និងការស្នាក់នៅសណ្ឋាគារលំដាប់ ${hotelStars} ផ្កាយប្រណិត`
-  ];
+  const whyShouldJoinKm: string[] = [];
 
   // 9. Day-by-Day Rich Itinerary
   const itinerary = Array.from({ length: durationDays }, (_, i) => {
     const dayNum = i + 1;
     let dayTitleEn = `Day ${dayNum}: Business Delegation Sourcing & Industrial Agenda`;
-    let dayTitleKm = `ថ្ងៃទី ${dayNum}: កម្មវិធីបេសកកម្មពាណិជ្ជកម្ម និងទស្សនកិច្ចរោងចក្រ`;
     let dayDescEn = `Delegation activities, factory inspection visits, and structured supplier networking in ${destinationEn}.`;
-    let dayDescKm = `សកម្មភាពគណៈប្រតិភូ ទស្សនកិច្ចរោងចក្រ និងការភ្ជាប់ទំនាក់ទំនងធុរកិច្ចនៅ ${destinationKm}។`;
 
     if (dayNum === 1) {
       dayTitleEn = `Day 1: Phnom Penh Departure to ${destinationEn} & VIP Orientation`;
-      dayTitleKm = `ថ្ងៃទី ១: ចេញដំណើរពីរាជធានីភ្នំពេញ ទៅកាន់ ${destinationKm} & កិច្ចប្រជុំតម្រង់ទិស`;
       dayDescEn = `Executive assembly in Phnom Penh, VIP fast-track clearance, arrival in ${destinationEn}, check-in to ${hotelStars}-star hotel, and welcome delegation dinner.`;
-      dayDescKm = `ជួបជុំគណៈប្រតិភូនៅភ្នំពេញ សម្រួលបែបបទឆ្លងដែន VIP មកដល់ ${destinationKm} ចុះឈ្មោះស្នាក់នៅសណ្ឋាគារ និងពិសារអាហារពេលល្ងាចស្វាគមន៍។`;
     } else if (dayNum === 2) {
       dayTitleEn = `Day 2: International Trade Expo & 1-on-1 B2B Supplier Matchmaking`;
-      dayTitleKm = `ថ្ងៃទី ២: ចូលរួមពិព័រណ៍ពាណិជ្ជកម្មអន្តរជាតិ និងជំនួបផ្គូផ្គង B2B`;
       dayDescEn = `Full-day participation at premier convention center, pre-arranged bilateral meetings with factory principals and franchisors.`;
-      dayDescKm = `ទស្សនាពិព័រណ៍ពាណិជ្ជកម្មពេញមួយថ្ងៃ ជួបពិភាក្សា និងចរចាផ្ទាល់ជាមួយតំណាងរោងចក្រ និងម្ចាស់ប្រេន Franchise។`;
     } else if (dayNum === durationDays) {
       dayTitleEn = `Day ${dayNum}: Executive Sourcing Wrap-up & Return Transport`;
-      dayTitleKm = `ថ្ងៃទី ${dayNum}: សន្និសីទបូកសរុបលទ្ធផលធុរកិច្ច និងធ្វើដំណើរត្រឡប់មកវិញ`;
       dayDescEn = `Contract finalization, wholesale procurement debrief, and VIP return transport to Phnom Penh.`;
-      dayDescKm = `ពិនិត្យ និងចុះកិច្ចសន្យាផ្គត់ផ្គង់ បូកសរុបលទ្ធផលបេសកកម្ម និងធ្វើដំណើរត្រឡប់មកភ្នំពេញវិញ។`;
     }
 
     return {
       day: dayNum,
-      title: isEnglishPrimary ? dayTitleEn : dayTitleKm,
+      title: dayTitleEn,
       titleEn: dayTitleEn,
-      titleKm: dayTitleKm,
-      description: isEnglishPrimary ? dayDescEn : dayDescKm,
+      titleKm: '',
+      description: dayDescEn,
       descriptionEn: dayDescEn,
-      descriptionKm: dayDescKm,
+      descriptionKm: '',
       hotelName: dayNum === durationDays ? 'Phnom Penh Arrival' : `${destinationEn} Grand ${hotelStars}-Star Hotel`,
       hotelNameEn: dayNum === durationDays ? 'Phnom Penh Arrival' : `${destinationEn} Grand ${hotelStars}-Star Hotel`,
-      hotelNameKm: dayNum === durationDays ? 'មកដល់ភ្នំពេញ' : `សណ្ឋាគារ ${hotelStars} ផ្កាយ ${destinationKm}`,
+      hotelNameKm: '',
       mealsIncluded: ['Breakfast', dayNum === 1 ? 'Dinner' : 'Lunch'],
       dayHighlightsEn: ['VIP Fast-Track Clearance', 'Executive Check-in', 'B2B Matchmaking'],
-      dayHighlightsKm: ['បែបបទឆ្លងដែន VIP', 'សណ្ឋាគារប្រណិត', 'ជំនួបផ្គូផ្គងពាណិជ្ជកម្ម'],
+      dayHighlightsKm: [],
       guideAgenda: [
         {
           time: '07:30 AM - 08:30 AM',
           activity: 'Hotel Buffet Breakfast & Morning Executive Briefing',
           activityEn: 'Hotel Buffet Breakfast & Morning Executive Briefing',
-          activityKm: 'ពិសារអាហារពេលព្រឹកប៊ូហ្វេ និងកិច្ចប្រជុំណែនាំប្រចាំថ្ងៃ',
+          activityKm: '',
           location: 'Hotel Executive Lounge',
           locationEn: 'Hotel Executive Lounge',
-          locationKm: 'សាលទទួលភ្ញៀវសណ្ឋាគារ',
+          locationKm: '',
           type: 'briefing' as const
         },
         {
           time: '09:00 AM - 12:30 PM',
           activity: 'Official Trade Expo / Industrial Factory Inspection',
           activityEn: 'Official Trade Expo / Industrial Factory Inspection',
-          activityKm: 'ទស្សនកិច្ចពិព័រណ៍ពាណិជ្ជកម្ម ឬរោងចក្រផលិតកម្ម',
+          activityKm: '',
           location: 'Convention Center / Industrial Park',
           locationEn: 'Convention Center / Industrial Park',
-          locationKm: 'មជ្ឈមណ្ឌលពិព័រណ៍ ឬតំបន់ឧស្សាហកម្ម',
+          locationKm: '',
           type: 'exhibition' as const
         },
         {
           time: '02:00 PM - 05:30 PM',
           activity: '1-on-1 Pre-Arranged B2B Supplier Meetings & Sourcing',
           activityEn: '1-on-1 Pre-Arranged B2B Supplier Meetings & Sourcing',
-          activityKm: 'ជំនួបចរចាផ្ទាល់ជាមួយដៃគូផ្គត់ផ្គង់ និងចុះកិច្ចសន្យា',
+          activityKm: '',
           location: 'Commercial B2B Lounge',
           locationEn: 'Commercial B2B Lounge',
-          locationKm: 'បន្ទប់ប្រជុំធុរកិច្ច',
+          locationKm: '',
           type: 'b2b_meeting' as const
         }
       ]
@@ -1126,13 +1081,13 @@ export function extractTourPackageHeuristically(
     id: 'pkg_ai_' + Date.now(),
     title,
     titleEn,
-    titleKm,
-    destination: isEnglishPrimary ? destinationEn : destinationKm,
+    titleKm: '',
+    destination: destinationEn,
     destinationEn,
-    destinationKm,
-    country: isEnglishPrimary ? countryEn : countryKm,
+    destinationKm: '',
+    country: countryEn,
     countryEn,
-    countryKm,
+    countryKm: '',
     category,
     priceUSD,
     discountPriceUSD,
@@ -1142,29 +1097,27 @@ export function extractTourPackageHeuristically(
     flightIncluded,
     availableDates,
     tags: ['trending', 'popular', 'luxury', 'cultural'],
-    description: isEnglishPrimary
-      ? `✈️ Official KHB B2B Enterprise & Trade Study Mission to ${destinationEn}, ${countryEn}. Specially designed for enterprise leaders, founders, and wholesale buyers seeking direct manufacturer relationships.`
-      : `✈️ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មផ្លូវការ KHB ទៅកាន់ ${destinationKm} ប្រទេស ${countryKm} រៀបចំឡើងជាពិសេសសម្រាប់ម្ចាស់អាជីវកម្ម និងអ្នកវិនិយោគកម្ពុជា។`,
+    description: `✈️ Official KHB B2B Enterprise & Trade Study Mission to ${destinationEn}, ${countryEn}. Specially designed for enterprise leaders, founders, and wholesale buyers seeking direct manufacturer relationships.`,
     descriptionEn: `✈️ Official KHB B2B Enterprise & Trade Study Mission to ${destinationEn}, ${countryEn}. Specially designed for enterprise leaders, founders, and wholesale buyers seeking direct manufacturer relationships.`,
-    descriptionKm: `✈️ ដំណើរទស្សនកិច្ចពាណិជ្ជកម្មផ្លូវការ KHB ទៅកាន់ ${destinationKm} ប្រទេស ${countryKm} រៀបចំឡើងជាពិសេសសម្រាប់ម្ចាស់អាជីវកម្ម និងអ្នកវិនិយោគកម្ពុជា។`,
-    highlights: isEnglishPrimary ? highlightsEn : highlightsKm,
+    descriptionKm: '',
+    highlights: highlightsEn,
     highlightsEn,
-    highlightsKm,
-    whoShouldJoin: isEnglishPrimary ? whoShouldJoinEn : whoShouldJoinKm,
+    highlightsKm: [],
+    whoShouldJoin: whoShouldJoinEn,
     whoShouldJoinEn,
-    whoShouldJoinKm,
-    whyShouldJoin: isEnglishPrimary ? whyShouldJoinEn : whyShouldJoinKm,
+    whoShouldJoinKm: [],
+    whyShouldJoin: whyShouldJoinEn,
     whyShouldJoinEn,
-    whyShouldJoinKm,
-    inclusions: isEnglishPrimary ? inclusionsEn : inclusionsKm,
+    whyShouldJoinKm: [],
+    inclusions: inclusionsEn,
     inclusionsEn,
-    inclusionsKm,
-    exclusions: isEnglishPrimary ? exclusionsEn : exclusionsKm,
+    inclusionsKm: [],
+    exclusions: exclusionsEn,
     exclusionsEn,
-    exclusionsKm,
-    termsAndConditions: isEnglishPrimary ? termsAndConditionsEn : termsAndConditionsKm,
+    exclusionsKm: [],
+    termsAndConditions: termsAndConditionsEn,
     termsAndConditionsEn,
-    termsAndConditionsKm,
+    termsAndConditionsKm: [],
     coordinates: coords,
     images: [
       'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&auto=format&fit=crop&q=80',
@@ -1174,23 +1127,23 @@ export function extractTourPackageHeuristically(
     tourGuide: {
       name: 'Mr. Tim Vutha & Senior Escort Team',
       nameEn: 'Mr. Tim Vutha & Senior Escort Team',
-      nameKm: 'លោក ទឹម វុត្ថា និងក្រុមការងារសម្របសម្រួលជាន់ខ្ពស់',
+      nameKm: '',
       title: 'Lead Trade Mission Coordinator & Certified Tour Director',
       titleEn: 'Lead Trade Mission Coordinator & Certified Tour Director',
-      titleKm: 'ប្រធានសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្ម និងមគ្គុទ្ទេសក៍ទេសចរណ៍ផ្លូវការ',
+      titleKm: '',
       phone: '060 815 515',
       telegram: '@VuthaTim',
       languages: ['English', 'Khmer', countryEn === 'Vietnam' ? 'Vietnamese' : 'Chinese'],
       badgeNumber: 'KHB-TM-2026-01',
       bio: 'Senior international business delegation leader with over 12 years of experience in cross-border trade and B2B supplier networking.',
       bioEn: 'Senior international business delegation leader with over 12 years of experience in cross-border trade and B2B supplier networking.',
-      bioKm: 'អ្នកសម្របសម្រួលបេសកកម្មពាណិជ្ជកម្មជាន់ខ្ពស់ មានបទពិសោធន៍ជាង ១២ ឆ្នាំក្នុងការដឹកនាំគណៈប្រតិភូពាណិជ្ជកម្មអន្តរជាតិ។',
+      bioKm: '',
       briefingMeetingPoint: 'Phnom Penh Assembly Point (KHB Head Office / VIP Transport Lounge)',
       briefingMeetingPointEn: 'Phnom Penh Assembly Point (KHB Head Office / VIP Transport Lounge)',
-      briefingMeetingPointKm: 'ចំណុចជួបជុំរាជធានីភ្នំពេញ (ការិយាល័យកណ្តាល KHB / កន្លែងទទួលភ្ញៀវរថយន្ត VIP)',
+      briefingMeetingPointKm: '',
       briefingTime: '06:00 AM (Departure Day)',
       briefingTimeEn: '06:00 AM (Departure Day)',
-      briefingTimeKm: '០៦:០០ ព្រឹក (ថ្ងៃចេញដំណើរ)',
+      briefingTimeKm: '',
       photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80'
     },
     itinerary,

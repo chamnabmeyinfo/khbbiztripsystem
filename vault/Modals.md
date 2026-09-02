@@ -48,9 +48,10 @@ To close a modal: `setActiveModal(null)`
   - **Show All Mode vs Focus Mode**: Toggle between seeing all studio elements seamlessly stacked with smooth scrolling/pulse highlighting, or isolating and focusing strictly on a single element at a time (e.g. Core & Pricing, Multilingual Titles, Image Gallery, Emergency Hotlines).
 - **Studio Header Banner**: Integrated in both styles featuring Studio step indicators ("Studio X of 7"), previous/next quick navigation, and instant 1-click layout toggle pill.  
 - **AI Smart Auto-Input Drawer & Text Importer**:
-  - **English-First Semantic Comprehension**: Ingests unstructured English text (flyers, trade mission briefs, PDF copies) or Khmer text and extracts 15+ structured form entities.
-  - **Language Focus Mode**: Toggle between `🇺🇸 English (Main)` and `🇰🇭 Khmer` with automatic bilingual twinning.
+  - **English-First Semantic Comprehension**: Ingests unstructured English text (flyers, trade mission briefs, PDF copies) and extracts 15+ structured form entities directly into English fields.
+  - **Clean Multilingual Placeholders**: Keeps Khmer fields clean as placeholders on initial Auto-Fill so users can focus on reviewing English fields first, and translate into Khmer or other languages later on demand.
   - **Matched Fields Visualizer**: Visual indicator chips displaying all form fields populated by AI alongside individual confidence scores.
+  - **1-Click Language Copilot**: One-click full package translation button allowing instant translation (`EN ➔ KM` or `KM ➔ EN`) whenever the user is ready.
   - **Quick Sample Presets**: Pre-configured real-world trade mission study briefs (Canton Fair 138th, Bangkok Retail & Bakery Summit, Tokyo AI & Robotics, Vietnam Specialty Coffee).
 **Purpose:** Multi-section tour creation studio: basic info, pricing & early-bird tiers, itinerary day builder, inclusions/exclusions, tour director assignments, image galleries, and **Video Gallery & File Uploads** (supports uploading MP4/WebM/MOV from local device with automated canvas thumbnail snapshots & duration calculations, or embedding YouTube/Vimeo/CDN video URLs with default auto-play controls). All sub-sections are housed in modern, accessible card-based containers (`rounded-2xl`, `bg-slate-50/60`, `border-slate-200/80`) equipped with inline AI translation tools (`FieldAiTranslator`).  
 **File:** `src/components/admin/PackageEditorModal.tsx`

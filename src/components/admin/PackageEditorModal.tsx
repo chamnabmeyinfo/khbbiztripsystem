@@ -489,21 +489,22 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     setTranslatingDirection(fromLang === 'km' ? 'km-en' : 'en-km');
     setTranslationSuccessMessage(null);
     try {
+      const isFromEn = fromLang === 'en';
       const currentPkg: TourPackage = {
         ...(pkg || {}),
         id: pkg?.id || 'temp',
-        title: title || titleKm,
-        titleKm: titleKm || title,
-        titleEn,
-        destination: destination || destinationKm,
-        destinationKm: destinationKm || destination,
-        destinationEn,
-        country: country || countryKm,
-        countryKm: countryKm || country,
-        countryEn,
-        category: category || categoryKm,
-        categoryKm: categoryKm || category,
-        categoryEn,
+        title: isFromEn ? (titleEn || title || '') : (titleKm || title || ''),
+        titleKm: titleKm || (isFromEn ? '' : title),
+        titleEn: titleEn || (isFromEn ? title : ''),
+        destination: isFromEn ? (destinationEn || destination || '') : (destinationKm || destination || ''),
+        destinationKm: destinationKm || (isFromEn ? '' : destination),
+        destinationEn: destinationEn || (isFromEn ? destination : ''),
+        country: isFromEn ? (countryEn || country || '') : (countryKm || country || ''),
+        countryKm: countryKm || (isFromEn ? '' : country),
+        countryEn: countryEn || (isFromEn ? country : ''),
+        category: isFromEn ? (categoryEn || category || '') : (categoryKm || category || ''),
+        categoryKm: categoryKm || (isFromEn ? '' : category),
+        categoryEn: categoryEn || (isFromEn ? category : ''),
         priceUSD: Number(priceUSD) || 0,
         discountPriceUSD: discountPriceUSD ? Number(discountPriceUSD) : undefined,
         durationDays: Number(durationDays) || 1,
@@ -522,48 +523,48 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
           mapX: Number(mapX) || 74,
           mapY: Number(mapY) || 62
         },
-        description: description || descriptionKm,
-        descriptionKm: descriptionKm || description,
-        descriptionEn,
-        highlights: highlightsKm.length > 0 ? highlightsKm : [],
+        description: isFromEn ? (descriptionEn || description || '') : (descriptionKm || description || ''),
+        descriptionKm: descriptionKm || (isFromEn ? '' : description),
+        descriptionEn: descriptionEn || (isFromEn ? description : ''),
+        highlights: isFromEn ? (highlightsEn.length > 0 ? highlightsEn : highlightsKm) : (highlightsKm.length > 0 ? highlightsKm : highlightsEn),
         highlightsKm,
         highlightsEn,
-        whoShouldJoin: whoShouldJoinKm.length > 0 ? whoShouldJoinKm : [],
+        whoShouldJoin: isFromEn ? (whoShouldJoinEn.length > 0 ? whoShouldJoinEn : whoShouldJoinKm) : (whoShouldJoinKm.length > 0 ? whoShouldJoinKm : whoShouldJoinEn),
         whoShouldJoinKm,
         whoShouldJoinEn,
-        whyShouldJoin: whyShouldJoinKm.length > 0 ? whyShouldJoinKm : [],
+        whyShouldJoin: isFromEn ? (whyShouldJoinEn.length > 0 ? whyShouldJoinEn : whyShouldJoinKm) : (whyShouldJoinKm.length > 0 ? whyShouldJoinKm : whyShouldJoinEn),
         whyShouldJoinKm,
         whyShouldJoinEn,
-        inclusions: inclusionsKm.length > 0 ? inclusionsKm : [],
+        inclusions: isFromEn ? (inclusionsEn.length > 0 ? inclusionsEn : inclusionsKm) : (inclusionsKm.length > 0 ? inclusionsKm : inclusionsEn),
         inclusionsKm,
         inclusionsEn,
-        exclusions: exclusionsKm.length > 0 ? exclusionsKm : [],
+        exclusions: isFromEn ? (exclusionsEn.length > 0 ? exclusionsEn : exclusionsKm) : (exclusionsKm.length > 0 ? exclusionsKm : exclusionsEn),
         exclusionsKm,
         exclusionsEn,
-        termsAndConditions: termsAndConditionsKm.length > 0 ? termsAndConditionsKm : [],
+        termsAndConditions: isFromEn ? (termsAndConditionsEn.length > 0 ? termsAndConditionsEn : termsAndConditionsKm) : (termsAndConditionsKm.length > 0 ? termsAndConditionsKm : termsAndConditionsEn),
         termsAndConditionsKm,
         termsAndConditionsEn,
         tourGuide: {
-          name: guideNameKm || guideName,
-          nameKm: guideNameKm || guideName,
-          nameEn: guideNameEn,
-          title: guideTitleKm || guideTitle,
-          titleKm: guideTitleKm || guideTitle,
-          titleEn: guideTitleEn,
+          name: isFromEn ? (guideNameEn || guideName) : (guideNameKm || guideName),
+          nameKm: guideNameKm || (isFromEn ? '' : guideName),
+          nameEn: guideNameEn || (isFromEn ? guideName : ''),
+          title: isFromEn ? (guideTitleEn || guideTitle) : (guideTitleKm || guideTitle),
+          titleKm: guideTitleKm || (isFromEn ? '' : guideTitle),
+          titleEn: guideTitleEn || (isFromEn ? guideTitle : ''),
           phone: guidePhone,
           telegram: guideTelegram,
           languages: guideLanguages,
           badgeNumber: guideBadge,
           photoUrl: guidePhoto,
-          bio: guideBioKm || guideBio,
-          bioKm: guideBioKm || guideBio,
-          bioEn: guideBioEn,
-          briefingMeetingPoint: briefingMeetingPointKm || briefingMeetingPoint,
-          briefingMeetingPointKm: briefingMeetingPointKm || briefingMeetingPoint,
-          briefingMeetingPointEn: briefingMeetingPointEn,
-          briefingTime: briefingTimeKm || briefingTime,
-          briefingTimeKm: briefingTimeKm || briefingTime,
-          briefingTimeEn: briefingTimeEn
+          bio: isFromEn ? (guideBioEn || guideBio) : (guideBioKm || guideBio),
+          bioKm: guideBioKm || (isFromEn ? '' : guideBio),
+          bioEn: guideBioEn || (isFromEn ? guideBio : ''),
+          briefingMeetingPoint: isFromEn ? (briefingMeetingPointEn || briefingMeetingPoint) : (briefingMeetingPointKm || briefingMeetingPoint),
+          briefingMeetingPointKm: briefingMeetingPointKm || (isFromEn ? '' : briefingMeetingPoint),
+          briefingMeetingPointEn: briefingMeetingPointEn || (isFromEn ? briefingMeetingPoint : ''),
+          briefingTime: isFromEn ? (briefingTimeEn || briefingTime) : (briefingTimeKm || briefingTime),
+          briefingTimeKm: briefingTimeKm || (isFromEn ? '' : briefingTime),
+          briefingTimeEn: briefingTimeEn || (isFromEn ? briefingTime : '')
         },
         itinerary,
         optionalPrograms
@@ -1144,20 +1145,22 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
       if (result.success && result.packageData) {
         const d = result.packageData;
         
-        // 1. Primary & Dual-Language Titles
-        if (d.title) setTitle(d.title);
-        if (d.titleEn) setTitleEn(d.titleEn);
-        if (d.titleKm) setTitleKm(d.titleKm);
-        if (!d.titleEn && parseLang === 'en' && d.title) setTitleEn(d.title);
-        if (!d.titleKm && parseLang === 'km' && d.title) setTitleKm(d.title);
+        // 1. Primary & Dual-Language Titles (English Main Focus)
+        const primaryTitle = d.titleEn || d.title || '';
+        setTitle(primaryTitle);
+        setTitleEn(primaryTitle);
+        setTitleKm(d.titleKm || '');
 
         // 2. Destination & Country
-        if (d.destination) setDestination(d.destination);
-        if (d.destinationEn) setDestinationEn(d.destinationEn);
-        if (d.destinationKm) setDestinationKm(d.destinationKm);
-        if (d.country) setCountry(d.country);
-        if (d.countryEn) setCountryEn(d.countryEn);
-        if (d.countryKm) setCountryKm(d.countryKm);
+        const primaryDest = d.destinationEn || d.destination || '';
+        setDestination(primaryDest);
+        setDestinationEn(primaryDest);
+        setDestinationKm(d.destinationKm || '');
+
+        const primaryCountry = d.countryEn || d.country || '';
+        setCountry(primaryCountry);
+        setCountryEn(primaryCountry);
+        setCountryKm(d.countryKm || '');
 
         // 3. Category & Commercials
         if (d.category) {
@@ -1167,8 +1170,8 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
             setCantonFairPhase('Phase 1');
           }
         }
-        if (d.categoryEn) setCategoryEn(d.categoryEn);
-        if (d.categoryKm) setCategoryKm(d.categoryKm);
+        setCategoryEn(d.categoryEn || d.category || '');
+        setCategoryKm(d.categoryKm || '');
         if (d.priceUSD !== undefined) setPriceUSD(d.priceUSD);
         if (d.discountPriceUSD !== undefined) setDiscountPriceUSD(d.discountPriceUSD);
         if (d.durationDays !== undefined) setDurationDays(d.durationDays);
@@ -1190,99 +1193,124 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
         }
 
         // 5. Rich Executive Descriptions
-        if (d.description) setDescription(d.description);
-        if (d.descriptionEn) setDescriptionEn(d.descriptionEn);
-        if (d.descriptionKm) setDescriptionKm(d.descriptionKm);
+        const primaryDesc = d.descriptionEn || d.description || '';
+        setDescription(primaryDesc);
+        setDescriptionEn(primaryDesc);
+        setDescriptionKm(d.descriptionKm || '');
 
-        // 6. High-Impact Highlights
-        if (d.highlights && d.highlights.length > 0) {
-          if (d.highlightsEn && d.highlightsEn.length > 0) setHighlightsEn(d.highlightsEn);
-          if (d.highlightsKm && d.highlightsKm.length > 0) setHighlightsKm(d.highlightsKm);
-          if (!d.highlightsEn || d.highlightsEn.length === 0) setHighlightsEn(d.highlights);
-          if (!d.highlightsKm || d.highlightsKm.length === 0) setHighlightsKm(d.highlights);
-        }
+        // 6. High-Impact Highlights (English Focus)
+        const parsedHighlightsEn = d.highlightsEn && d.highlightsEn.length > 0 ? d.highlightsEn : (d.highlights || []);
+        setHighlightsEn(parsedHighlightsEn);
+        setHighlightsKm(d.highlightsKm && d.highlightsKm.length > 0 ? d.highlightsKm : []);
 
-        // 7. Who & Why Should Join
-        if (d.whoShouldJoin && d.whoShouldJoin.length > 0) {
-          if (d.whoShouldJoinEn && d.whoShouldJoinEn.length > 0) setWhoShouldJoinEn(d.whoShouldJoinEn);
-          if (d.whoShouldJoinKm && d.whoShouldJoinKm.length > 0) setWhoShouldJoinKm(d.whoShouldJoinKm);
-          if (!d.whoShouldJoinEn || d.whoShouldJoinEn.length === 0) setWhoShouldJoinEn(d.whoShouldJoin);
-          if (!d.whoShouldJoinKm || d.whoShouldJoinKm.length === 0) setWhoShouldJoinKm(d.whoShouldJoin);
-        }
-        if (d.whyShouldJoin && d.whyShouldJoin.length > 0) {
-          if (d.whyShouldJoinEn && d.whyShouldJoinEn.length > 0) setWhyShouldJoinEn(d.whyShouldJoinEn);
-          if (d.whyShouldJoinKm && d.whyShouldJoinKm.length > 0) setWhyShouldJoinKm(d.whyShouldJoinKm);
-          if (!d.whyShouldJoinEn || d.whyShouldJoinEn.length === 0) setWhyShouldJoinEn(d.whyShouldJoin);
-          if (!d.whyShouldJoinKm || d.whyShouldJoinKm.length === 0) setWhyShouldJoinKm(d.whyShouldJoin);
-        }
+        // 7. Who & Why Should Join (English Focus)
+        const parsedWhoEn = d.whoShouldJoinEn && d.whoShouldJoinEn.length > 0 ? d.whoShouldJoinEn : (d.whoShouldJoin || []);
+        setWhoShouldJoinEn(parsedWhoEn);
+        setWhoShouldJoinKm(d.whoShouldJoinKm && d.whoShouldJoinKm.length > 0 ? d.whoShouldJoinKm : []);
 
-        // 8. Inclusions & Exclusions
-        if (d.inclusions && d.inclusions.length > 0) {
-          if (d.inclusionsEn && d.inclusionsEn.length > 0) setInclusionsEn(d.inclusionsEn);
-          if (d.inclusionsKm && d.inclusionsKm.length > 0) setInclusionsKm(d.inclusionsKm);
-          if (!d.inclusionsEn || d.inclusionsEn.length === 0) setInclusionsEn(d.inclusions);
-          if (!d.inclusionsKm || d.inclusionsKm.length === 0) setInclusionsKm(d.inclusions);
-        }
-        if (d.exclusions && d.exclusions.length > 0) {
-          if (d.exclusionsEn && d.exclusionsEn.length > 0) setExclusionsEn(d.exclusionsEn);
-          if (d.exclusionsKm && d.exclusionsKm.length > 0) setExclusionsKm(d.exclusionsKm);
-          if (!d.exclusionsEn || d.exclusionsEn.length === 0) setExclusionsEn(d.exclusions);
-          if (!d.exclusionsKm || d.exclusionsKm.length === 0) setExclusionsKm(d.exclusions);
-        }
+        const parsedWhyEn = d.whyShouldJoinEn && d.whyShouldJoinEn.length > 0 ? d.whyShouldJoinEn : (d.whyShouldJoin || []);
+        setWhyShouldJoinEn(parsedWhyEn);
+        setWhyShouldJoinKm(d.whyShouldJoinKm && d.whyShouldJoinKm.length > 0 ? d.whyShouldJoinKm : []);
 
-        // 9. Terms & Conditions
-        if (d.termsAndConditions && d.termsAndConditions.length > 0) {
-          if (d.termsAndConditionsEn && d.termsAndConditionsEn.length > 0) setTermsAndConditionsEn(d.termsAndConditionsEn);
-          if (d.termsAndConditionsKm && d.termsAndConditionsKm.length > 0) setTermsAndConditionsKm(d.termsAndConditionsKm);
-          if (!d.termsAndConditionsEn || d.termsAndConditionsEn.length === 0) setTermsAndConditionsEn(d.termsAndConditions);
-          if (!d.termsAndConditionsKm || d.termsAndConditionsKm.length === 0) setTermsAndConditionsKm(d.termsAndConditions);
-        }
+        // 8. Inclusions & Exclusions (English Focus)
+        const parsedInclusionsEn = d.inclusionsEn && d.inclusionsEn.length > 0 ? d.inclusionsEn : (d.inclusions || []);
+        setInclusionsEn(parsedInclusionsEn);
+        setInclusionsKm(d.inclusionsKm && d.inclusionsKm.length > 0 ? d.inclusionsKm : []);
+
+        const parsedExclusionsEn = d.exclusionsEn && d.exclusionsEn.length > 0 ? d.exclusionsEn : (d.exclusions || []);
+        setExclusionsEn(parsedExclusionsEn);
+        setExclusionsKm(d.exclusionsKm && d.exclusionsKm.length > 0 ? d.exclusionsKm : []);
+
+        // 9. Terms & Conditions (English Focus)
+        const parsedTermsEn = d.termsAndConditionsEn && d.termsAndConditionsEn.length > 0 ? d.termsAndConditionsEn : (d.termsAndConditions || []);
+        setTermsAndConditionsEn(parsedTermsEn);
+        setTermsAndConditionsKm(d.termsAndConditionsKm && d.termsAndConditionsKm.length > 0 ? d.termsAndConditionsKm : []);
 
         // 10. Curated Images
         if (d.images && d.images.length > 0) setImages(d.images);
 
-        // 11. Lead Coordinator & Escort Profile
+        // 11. Lead Coordinator & Escort Profile (English Focus)
         if (d.tourGuide) {
-          if (d.tourGuide.name) {
-            setGuideName(d.tourGuide.name);
-            setGuideNameKm(d.tourGuide.nameKm || d.tourGuide.name);
-            setGuideNameEn(d.tourGuide.nameEn || d.tourGuide.name);
-          }
-          if (d.tourGuide.title) {
-            setGuideTitle(d.tourGuide.title);
-            setGuideTitleKm(d.tourGuide.titleKm || d.tourGuide.title);
-            setGuideTitleEn(d.tourGuide.titleEn || d.tourGuide.title);
-          }
+          const guideNamePrimary = d.tourGuide.nameEn || d.tourGuide.name || '';
+          setGuideName(guideNamePrimary);
+          setGuideNameEn(guideNamePrimary);
+          setGuideNameKm(d.tourGuide.nameKm || '');
+
+          const guideTitlePrimary = d.tourGuide.titleEn || d.tourGuide.title || '';
+          setGuideTitle(guideTitlePrimary);
+          setGuideTitleEn(guideTitlePrimary);
+          setGuideTitleKm(d.tourGuide.titleKm || '');
+
           if (d.tourGuide.phone) setGuidePhone(d.tourGuide.phone);
           if (d.tourGuide.telegram) setGuideTelegram(d.tourGuide.telegram);
           if (d.tourGuide.languages) setGuideLanguages(d.tourGuide.languages);
           if (d.tourGuide.badgeNumber) setGuideBadge(d.tourGuide.badgeNumber);
           if (d.tourGuide.photoUrl) setGuidePhoto(d.tourGuide.photoUrl);
-          if (d.tourGuide.bio) {
-            setGuideBio(d.tourGuide.bio);
-            setGuideBioKm(d.tourGuide.bioKm || d.tourGuide.bio);
-            setGuideBioEn(d.tourGuide.bioEn || d.tourGuide.bio);
-          }
-          if (d.tourGuide.briefingMeetingPoint) {
-            setBriefingMeetingPoint(d.tourGuide.briefingMeetingPoint);
-            setBriefingMeetingPointKm(d.tourGuide.briefingMeetingPointKm || d.tourGuide.briefingMeetingPoint);
-            setBriefingMeetingPointEn(d.tourGuide.briefingMeetingPointEn || d.tourGuide.briefingMeetingPoint);
-          }
-          if (d.tourGuide.briefingTime) {
-            setBriefingTime(d.tourGuide.briefingTime);
-            setBriefingTimeKm(d.tourGuide.briefingTimeKm || d.tourGuide.briefingTime);
-            setBriefingTimeEn(d.tourGuide.briefingTimeEn || d.tourGuide.briefingTime);
-          }
+
+          const guideBioPrimary = d.tourGuide.bioEn || d.tourGuide.bio || '';
+          setGuideBio(guideBioPrimary);
+          setGuideBioEn(guideBioPrimary);
+          setGuideBioKm(d.tourGuide.bioKm || '');
+
+          const meetingPointPrimary = d.tourGuide.briefingMeetingPointEn || d.tourGuide.briefingMeetingPoint || '';
+          setBriefingMeetingPoint(meetingPointPrimary);
+          setBriefingMeetingPointEn(meetingPointPrimary);
+          setBriefingMeetingPointKm(d.tourGuide.briefingMeetingPointKm || '');
+
+          const briefingTimePrimary = d.tourGuide.briefingTimeEn || d.tourGuide.briefingTime || '';
+          setBriefingTime(briefingTimePrimary);
+          setBriefingTimeEn(briefingTimePrimary);
+          setBriefingTimeKm(d.tourGuide.briefingTimeKm || '');
         }
 
-        // 12. Day-by-Day Rich Itinerary with Hourly Agendas
+        // 12. Day-by-Day Rich Itinerary with Hourly Agendas (English Focus)
         if (d.itinerary && d.itinerary.length > 0) {
-          setItinerary(d.itinerary);
+          setItinerary(d.itinerary.map(item => ({
+            ...item,
+            title: item.titleEn || item.title || '',
+            titleEn: item.titleEn || item.title || '',
+            titleKm: item.titleKm || '',
+            description: item.descriptionEn || item.description || '',
+            descriptionEn: item.descriptionEn || item.description || '',
+            descriptionKm: item.descriptionKm || '',
+            hotelName: item.hotelNameEn || item.hotelName || undefined,
+            hotelNameEn: item.hotelNameEn || item.hotelName || undefined,
+            hotelNameKm: item.hotelNameKm || undefined,
+            assemblyPoint: item.assemblyPointEn || item.assemblyPoint || undefined,
+            assemblyPointEn: item.assemblyPointEn || item.assemblyPoint || undefined,
+            assemblyPointKm: item.assemblyPointKm || undefined,
+            dayHighlightsEn: item.dayHighlightsEn && item.dayHighlightsEn.length > 0 ? item.dayHighlightsEn : (item.dayHighlights || []),
+            dayHighlightsKm: item.dayHighlightsKm && item.dayHighlightsKm.length > 0 ? item.dayHighlightsKm : [],
+            guideAgenda: (item.guideAgenda || []).map(slot => ({
+              ...slot,
+              activity: slot.activityEn || slot.activity || '',
+              activityEn: slot.activityEn || slot.activity || '',
+              activityKm: slot.activityKm || '',
+              location: slot.locationEn || slot.location || undefined,
+              locationEn: slot.locationEn || slot.location || undefined,
+              locationKm: slot.locationKm || undefined,
+              notesEn: slot.notesEn || slot.notes || undefined,
+              notesKm: slot.notesKm || undefined
+            }))
+          })));
         }
 
-        // 13. Optional Add-On Programs
+        // 13. Optional Add-On Programs (English Focus)
         if (d.optionalPrograms && d.optionalPrograms.length > 0) {
-          setOptionalPrograms(d.optionalPrograms);
+          setOptionalPrograms(d.optionalPrograms.map(prog => ({
+            ...prog,
+            title: prog.titleEn || prog.title || '',
+            titleEn: prog.titleEn || prog.title || '',
+            titleKm: prog.titleKm || '',
+            description: prog.descriptionEn || prog.description || '',
+            descriptionEn: prog.descriptionEn || prog.description || '',
+            descriptionKm: prog.descriptionKm || '',
+            recommendedAudience: prog.recommendedAudienceEn || prog.recommendedAudience || undefined,
+            recommendedAudienceEn: prog.recommendedAudienceEn || prog.recommendedAudience || undefined,
+            recommendedAudienceKm: prog.recommendedAudienceKm || undefined,
+            highlightsEn: prog.highlightsEn && prog.highlightsEn.length > 0 ? prog.highlightsEn : (prog.highlights || []),
+            highlightsKm: prog.highlightsKm && prog.highlightsKm.length > 0 ? prog.highlightsKm : []
+          })));
         }
 
         // 14. Emergency Support & Contacts
@@ -2134,7 +2162,7 @@ Meeting: Phnom Penh International Airport (05:30 AM)`
 
                 <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                   <Info className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Main focus: English comprehension with automatic bilingual twinning</span>
+                  <span>Main focus: Deep English comprehension & auto-mapping. (Khmer fields left clean for later translation)</span>
                 </div>
               </div>
 
@@ -2144,7 +2172,7 @@ Meeting: Phnom Penh International Airport (05:30 AM)`
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>Successfully Understood & Mapped Fields:</span>
+                      <span>Successfully Understood & Mapped Fields (English):</span>
                     </span>
                     <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                       {aiMatchedFields.length} Form Sections Populated
@@ -2167,16 +2195,36 @@ Meeting: Phnom Penh International Airport (05:30 AM)`
 
               {/* Success / Error Banners */}
               {aiSuccessSummary && (
-                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-start gap-2.5 animate-in fade-in duration-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                      {aiSuccessSummary}
-                    </p>
-                    <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
-                      All commercial pricing, duration, geolocation, daily schedule steps, coordinator contact info, VIP inclusions, and terms have been mapped into the tabs below. Review and click "Save & Publish".
-                    </p>
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row items-start justify-between gap-3 animate-in fade-in duration-200">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                        {aiSuccessSummary}
+                      </p>
+                      <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
+                        All English commercial details, duration, geolocation, daily schedule steps, coordinator contact info, VIP inclusions, and terms are filled in the tabs.
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTranslateEntirePackage('en', 'km')}
+                    disabled={isTranslatingAll}
+                    className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isTranslatingAll ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Translating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Languages className="w-3.5 h-3.5" />
+                        <span>Translate to Khmer (🇰🇭) Now</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               )}
 
