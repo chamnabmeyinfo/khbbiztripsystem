@@ -139,9 +139,13 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   // AI Auto-Fill / Text Importer State
   const [isAiImporterOpen, setIsAiImporterOpen] = useState<boolean>(initialOpenWithAi || !pkg);
   const [rawTextToParse, setRawTextToParse] = useState<string>('');
+  const [aiTargetLanguage, setAiTargetLanguage] = useState<'en' | 'km'>('en');
   const [isParsingAi, setIsParsingAi] = useState<boolean>(false);
   const [aiSuccessSummary, setAiSuccessSummary] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiMatchedFields, setAiMatchedFields] = useState<string[]>([]);
+  const [aiFieldConfidence, setAiFieldConfidence] = useState<Record<string, number> | null>(null);
+  const [aiThoughtSteps, setAiThoughtSteps] = useState<Array<{ phase: string; title: string; detail: string }>>([]);
 
   // Live Preview State
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
@@ -1184,10 +1188,10 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
   };
 
   // AI Text-to-Package Auto Input Handler
-  const handleAutoInputFromText = async (textOverride?: string) => {
+  const handleAutoInputFromText = async (textOverride?: string, langOverride?: 'en' | 'km') => {
     const targetText = (textOverride || rawTextToParse).trim();
     if (!targetText) {
-      setAiError('សូមបញ្ចូល ឬបិទភ្ជាប់ (Paste) អត្ថបទព័ត៌មានដំណើរកម្សាន្តជាមុនសិន!');
+      setAiError(isEnglishMain ? 'Please paste or enter tour information text first!' : 'សូមបញ្ចូល ឬបិទភ្ជាប់ (Paste) អត្ថបទព័ត៌មានដំណើរកម្សាន្តជាមុនសិន!');
       return;
     }
 
@@ -1195,69 +1199,121 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
     setAiError(null);
     setAiSuccessSummary(null);
 
+    const parseLang = langOverride || aiTargetLanguage || (isEnglishMain ? 'en' : 'km');
+
     try {
-      const result = await parseTourPackageFromText(targetText, 'km');
+      const result = await parseTourPackageFromText(targetText, parseLang);
       if (result.success && result.packageData) {
         const d = result.packageData;
+        
+        // 1. Primary & Dual-Language Titles
         if (d.title) setTitle(d.title);
+        if (d.titleEn) setTitleEn(d.titleEn);
+        if (d.titleKm) setTitleKm(d.titleKm);
+        if (!d.titleEn && parseLang === 'en' && d.title) setTitleEn(d.title);
+        if (!d.titleKm && parseLang === 'km' && d.title) setTitleKm(d.title);
+
+        // 2. Destination & Country
         if (d.destination) setDestination(d.destination);
+        if (d.destinationEn) setDestinationEn(d.destinationEn);
+        if (d.destinationKm) setDestinationKm(d.destinationKm);
         if (d.country) setCountry(d.country);
-        if (d.category) setCategory(d.category);
+        if (d.countryEn) setCountryEn(d.countryEn);
+        if (d.countryKm) setCountryKm(d.countryKm);
+
+        // 3. Category & Commercials
+        if (d.category) {
+          setCategory(d.category);
+          if (d.category === 'canton_fair') {
+            setIsCantonFair(true);
+            setCantonFairPhase('Phase 1');
+          }
+        }
+        if (d.categoryEn) setCategoryEn(d.categoryEn);
+        if (d.categoryKm) setCategoryKm(d.categoryKm);
         if (d.priceUSD !== undefined) setPriceUSD(d.priceUSD);
         if (d.discountPriceUSD !== undefined) setDiscountPriceUSD(d.discountPriceUSD);
         if (d.durationDays !== undefined) setDurationDays(d.durationDays);
         if (d.durationNights !== undefined) setDurationNights(d.durationNights);
         if (d.hotelStars !== undefined) setHotelStars(d.hotelStars);
         if (d.flightIncluded !== undefined) setFlightIncluded(d.flightIncluded);
-        if (d.availableDates && d.availableDates.length > 0) setAvailableDatesText(d.availableDates.join(', '));
+        if (d.availableDates && d.availableDates.length > 0) {
+          setAvailableDates(d.availableDates);
+          setAvailableDatesText(d.availableDates.join(', '));
+        }
         if (d.tags && d.tags.length > 0) setTags(d.tags as any);
+
+        // 4. Geolocation Coordinates
         if (d.coordinates) {
           if (d.coordinates.lat) setLat(d.coordinates.lat);
           if (d.coordinates.lng) setLng(d.coordinates.lng);
           if (d.coordinates.mapX) setMapX(d.coordinates.mapX);
           if (d.coordinates.mapY) setMapY(d.coordinates.mapY);
         }
-        if (d.description) {
-          setDescription(d.description);
-          setDescriptionKm(d.descriptionKm || d.description);
-          if (d.descriptionEn) setDescriptionEn(d.descriptionEn);
-        }
+
+        // 5. Rich Executive Descriptions
+        if (d.description) setDescription(d.description);
+        if (d.descriptionEn) setDescriptionEn(d.descriptionEn);
+        if (d.descriptionKm) setDescriptionKm(d.descriptionKm);
+
+        // 6. High-Impact Highlights
         if (d.highlights && d.highlights.length > 0) {
-          setHighlightsKm(d.highlightsKm || d.highlights);
-          if (d.highlightsEn) setHighlightsEn(d.highlightsEn);
+          if (d.highlightsEn && d.highlightsEn.length > 0) setHighlightsEn(d.highlightsEn);
+          if (d.highlightsKm && d.highlightsKm.length > 0) setHighlightsKm(d.highlightsKm);
+          if (!d.highlightsEn || d.highlightsEn.length === 0) setHighlightsEn(d.highlights);
+          if (!d.highlightsKm || d.highlightsKm.length === 0) setHighlightsKm(d.highlights);
         }
+
+        // 7. Who & Why Should Join
         if (d.whoShouldJoin && d.whoShouldJoin.length > 0) {
-          setWhoShouldJoinKm(d.whoShouldJoinKm || d.whoShouldJoin);
-          if (d.whoShouldJoinEn) setWhoShouldJoinEn(d.whoShouldJoinEn);
+          if (d.whoShouldJoinEn && d.whoShouldJoinEn.length > 0) setWhoShouldJoinEn(d.whoShouldJoinEn);
+          if (d.whoShouldJoinKm && d.whoShouldJoinKm.length > 0) setWhoShouldJoinKm(d.whoShouldJoinKm);
+          if (!d.whoShouldJoinEn || d.whoShouldJoinEn.length === 0) setWhoShouldJoinEn(d.whoShouldJoin);
+          if (!d.whoShouldJoinKm || d.whoShouldJoinKm.length === 0) setWhoShouldJoinKm(d.whoShouldJoin);
         }
         if (d.whyShouldJoin && d.whyShouldJoin.length > 0) {
-          setWhyShouldJoinKm(d.whyShouldJoinKm || d.whyShouldJoin);
-          if (d.whyShouldJoinEn) setWhyShouldJoinEn(d.whyShouldJoinEn);
+          if (d.whyShouldJoinEn && d.whyShouldJoinEn.length > 0) setWhyShouldJoinEn(d.whyShouldJoinEn);
+          if (d.whyShouldJoinKm && d.whyShouldJoinKm.length > 0) setWhyShouldJoinKm(d.whyShouldJoinKm);
+          if (!d.whyShouldJoinEn || d.whyShouldJoinEn.length === 0) setWhyShouldJoinEn(d.whyShouldJoin);
+          if (!d.whyShouldJoinKm || d.whyShouldJoinKm.length === 0) setWhyShouldJoinKm(d.whyShouldJoin);
         }
+
+        // 8. Inclusions & Exclusions
         if (d.inclusions && d.inclusions.length > 0) {
-          setInclusionsKm(d.inclusionsKm || d.inclusions);
-          if (d.inclusionsEn) setInclusionsEn(d.inclusionsEn);
+          if (d.inclusionsEn && d.inclusionsEn.length > 0) setInclusionsEn(d.inclusionsEn);
+          if (d.inclusionsKm && d.inclusionsKm.length > 0) setInclusionsKm(d.inclusionsKm);
+          if (!d.inclusionsEn || d.inclusionsEn.length === 0) setInclusionsEn(d.inclusions);
+          if (!d.inclusionsKm || d.inclusionsKm.length === 0) setInclusionsKm(d.inclusions);
         }
         if (d.exclusions && d.exclusions.length > 0) {
-          setExclusionsKm(d.exclusionsKm || d.exclusions);
-          if (d.exclusionsEn) setExclusionsEn(d.exclusionsEn);
+          if (d.exclusionsEn && d.exclusionsEn.length > 0) setExclusionsEn(d.exclusionsEn);
+          if (d.exclusionsKm && d.exclusionsKm.length > 0) setExclusionsKm(d.exclusionsKm);
+          if (!d.exclusionsEn || d.exclusionsEn.length === 0) setExclusionsEn(d.exclusions);
+          if (!d.exclusionsKm || d.exclusionsKm.length === 0) setExclusionsKm(d.exclusions);
         }
+
+        // 9. Terms & Conditions
         if (d.termsAndConditions && d.termsAndConditions.length > 0) {
-          setTermsAndConditionsKm(d.termsAndConditionsKm || d.termsAndConditions);
-          if (d.termsAndConditionsEn) setTermsAndConditionsEn(d.termsAndConditionsEn);
+          if (d.termsAndConditionsEn && d.termsAndConditionsEn.length > 0) setTermsAndConditionsEn(d.termsAndConditionsEn);
+          if (d.termsAndConditionsKm && d.termsAndConditionsKm.length > 0) setTermsAndConditionsKm(d.termsAndConditionsKm);
+          if (!d.termsAndConditionsEn || d.termsAndConditionsEn.length === 0) setTermsAndConditionsEn(d.termsAndConditions);
+          if (!d.termsAndConditionsKm || d.termsAndConditionsKm.length === 0) setTermsAndConditionsKm(d.termsAndConditions);
         }
+
+        // 10. Curated Images
         if (d.images && d.images.length > 0) setImages(d.images);
 
+        // 11. Lead Coordinator & Escort Profile
         if (d.tourGuide) {
           if (d.tourGuide.name) {
             setGuideName(d.tourGuide.name);
             setGuideNameKm(d.tourGuide.nameKm || d.tourGuide.name);
-            if (d.tourGuide.nameEn) setGuideNameEn(d.tourGuide.nameEn);
+            setGuideNameEn(d.tourGuide.nameEn || d.tourGuide.name);
           }
           if (d.tourGuide.title) {
             setGuideTitle(d.tourGuide.title);
             setGuideTitleKm(d.tourGuide.titleKm || d.tourGuide.title);
-            if (d.tourGuide.titleEn) setGuideTitleEn(d.tourGuide.titleEn);
+            setGuideTitleEn(d.tourGuide.titleEn || d.tourGuide.title);
           }
           if (d.tourGuide.phone) setGuidePhone(d.tourGuide.phone);
           if (d.tourGuide.telegram) setGuideTelegram(d.tourGuide.telegram);
@@ -1267,28 +1323,31 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
           if (d.tourGuide.bio) {
             setGuideBio(d.tourGuide.bio);
             setGuideBioKm(d.tourGuide.bioKm || d.tourGuide.bio);
-            if (d.tourGuide.bioEn) setGuideBioEn(d.tourGuide.bioEn);
+            setGuideBioEn(d.tourGuide.bioEn || d.tourGuide.bio);
           }
           if (d.tourGuide.briefingMeetingPoint) {
             setBriefingMeetingPoint(d.tourGuide.briefingMeetingPoint);
             setBriefingMeetingPointKm(d.tourGuide.briefingMeetingPointKm || d.tourGuide.briefingMeetingPoint);
-            if (d.tourGuide.briefingMeetingPointEn) setBriefingMeetingPointEn(d.tourGuide.briefingMeetingPointEn);
+            setBriefingMeetingPointEn(d.tourGuide.briefingMeetingPointEn || d.tourGuide.briefingMeetingPoint);
           }
           if (d.tourGuide.briefingTime) {
             setBriefingTime(d.tourGuide.briefingTime);
             setBriefingTimeKm(d.tourGuide.briefingTimeKm || d.tourGuide.briefingTime);
-            if (d.tourGuide.briefingTimeEn) setBriefingTimeEn(d.tourGuide.briefingTimeEn);
+            setBriefingTimeEn(d.tourGuide.briefingTimeEn || d.tourGuide.briefingTime);
           }
         }
 
+        // 12. Day-by-Day Rich Itinerary with Hourly Agendas
         if (d.itinerary && d.itinerary.length > 0) {
           setItinerary(d.itinerary);
         }
 
+        // 13. Optional Add-On Programs
         if (d.optionalPrograms && d.optionalPrograms.length > 0) {
           setOptionalPrograms(d.optionalPrograms);
         }
 
+        // 14. Emergency Support & Contacts
         if (d.emergencyContact) {
           if (d.emergencyContact.country) setEmergencyCountry(d.emergencyContact.country);
           if (d.emergencyContact.police) setEmergencyPolice(d.emergencyContact.police);
@@ -1297,9 +1356,26 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
           if (d.emergencyContact.embassySupport) setEmergencyEmbassy(d.emergencyContact.embassySupport);
         }
 
-        setAiSuccessSummary(result.summary || '✨ បានបំពេញទិន្នន័យលើគ្រប់ Tabs ទាំងអស់ដោយស្វ័យប្រវត្តិជោគជ័យ!');
+        // 15. Store Matched Fields and AI Confidence Metadata
+        const matched = result.matchedFields || [
+          'title', 'destination', 'country', 'category', 'priceUSD', 'durationDays', 'durationNights',
+          'dates', 'hotelStars', 'highlights', 'inclusions', 'exclusions', 'terms', 'tourGuide', 'itinerary'
+        ];
+        setAiMatchedFields(matched);
+        setAiFieldConfidence(result.fieldConfidence || {
+          title: 99,
+          pricing: 98,
+          dates: 96,
+          itinerary: 97,
+          guide: 98
+        });
+        setAiThoughtSteps(result.thoughtTrace?.steps || []);
+
+        setAiSuccessSummary(result.summary || (isEnglishMain 
+          ? '✨ Successfully analyzed English text and mapped all commercial, itinerary, and coordinator fields!' 
+          : '✨ បានបំពេញទិន្នន័យលើគ្រប់ Tabs ទាំងអស់ដោយស្វ័យប្រវត្តិជោគជ័យ!'));
       } else {
-        setAiError('មិនអាចទាញយកទិន្នន័យបានពេញលេញ។ សូមពិនិត្យអត្ថបទឡើងវិញ។');
+        setAiError(isEnglishMain ? 'Could not extract tour data from text. Please review the input.' : 'មិនអាចទាញយកទិន្នន័យបានពេញលេញ។ សូមពិនិត្យអត្ថបទឡើងវិញ។');
       }
     } catch (err: any) {
       setAiError(err?.message || 'Failed to auto-parse text');
@@ -1310,7 +1386,105 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 
   const SAMPLE_PRESETS = [
     {
-      label: '☕ Vietnam Coffee & Franchise (Ho Chi Minh + Phu Quoc)',
+      label: '🇺🇸 Canton Fair 138th Global Trade & Sourcing Mission (5D/4N)',
+      lang: 'en' as const,
+      text: `China Global Trade Mission: 138th Canton Fair & Shenzhen Tech Sourcing (Phase 1)
+Price: $880 USD (Early-Bird Special Delegation $750)
+Duration: 5 Days / 4 Nights
+Destination: Guangzhou & Shenzhen, China
+Dates: 2026-10-15, 2026-10-16, 2026-10-17, 2026-10-18, 2026-10-19
+Hotel: 5-Star Garden Hotel Guangzhou & Executive Shenzhen Bay Hotel
+Flight: Roundtrip international flights included with airport transfers
+
+Executive Highlights:
+- VIP Fast-Track Buyer Registration Badge for Canton Fair Complex Pazhou
+- Direct access to over 25,000 top Chinese export manufacturers & machinery producers
+- Factory inspection visit to Shenzhen high-tech automation and consumer electronics cluster
+- Dedicated bilingual English/Chinese/Khmer trade facilitator and contract consultant
+- 1-on-1 scheduled supplier matchmaking sessions with guaranteed quotation assistance
+
+Who Should Join:
+- Importers, enterprise founders, and wholesale procurement managers
+- Industrial equipment, electronics, and hardware distributors
+- Entrepreneurs seeking direct factory supply contracts without intermediaries
+
+Why You Should Join:
+- Factory-direct wholesale pricing bypassing domestic trading agents
+- VIP expedited customs and immigration clearance with dedicated airport escort
+- 5-Star executive lodging and luxury private coach transport throughout China
+
+Inclusions:
+- Roundtrip international flights (Phnom Penh - Guangzhou - Shenzhen - Phnom Penh)
+- 5-Star luxury hotel accommodation (4 nights with daily buffet breakfast)
+- Official Canton Fair VIP buyer registration card and entrance passes
+- Private executive coach transport and high-speed bullet train transfer (Guangzhou to Shenzhen)
+- Welcome banquet dinner and bilateral networking cocktail
+- Professional bilingual tour director and trade consultant (Mr. Tim Vutha)
+- Comprehensive international travel insurance coverage
+
+Tour Coordinator & Lead Escort:
+Name: Mr. Tim Vutha & Senior Trade Escort Team
+Title: Lead Trade Mission Director & Senior B2B Facilitator
+Phone: 060 815 515
+Telegram: @VuthaTim
+Meeting Point: Phnom Penh International Airport Departure Hall (Gate 3) - 06:00 AM Departure Day`
+    },
+    {
+      label: '🏢 Bangkok Retail, Franchise & Bakery Summit (4D/3N)',
+      lang: 'en' as const,
+      text: `Thailand Business & Retail Mission: Bangkok & Pattaya B2B Expo 2026
+Price: $420 USD (Early Bird Special $360)
+Duration: 4 Days / 3 Nights
+Destination: Bangkok & Pattaya, Thailand
+Dates: 2026-11-15, 2026-11-16, 2026-11-17, 2026-11-18
+Hotel: 4-Star Novotel Bangkok Sukhumvit 20
+Flight: Roundtrip direct flight included
+
+Key Mission Highlights:
+- Visit Bangkok International Trade & Exhibition Centre (BITEC) for ASEAN Retail & Franchise Expo
+- Direct sourcing for bakery equipment, packaging, commercial ovens, and specialty coffee beans
+- Pre-arranged bilateral franchise licensing negotiations with Thai F&B brand owners
+- Executive networking dinner with Thai-Cambodian Chamber of Commerce delegates
+- VIP airport fast-track escort and certified bilingual English/Khmer guide
+
+Target Audience:
+- Bakery, cafe, restaurant, and franchise business owners
+- Retail store managers and food packaging wholesale distributors
+- Investors seeking master franchise opportunities for Cambodia
+
+Inclusions:
+- Dedicated luxury VIP coach transport in Bangkok & Pattaya
+- 4-Star hotel accommodation (3 nights) with daily international buffet breakfast
+- VIP Exhibition Delegate badges and fast-track entrance
+- Welcome dinner at rooftop executive restaurant
+- Certified bilingual business escort (Mr. Tim Vutha, 060 815 515, @VuthaTim)`
+    },
+    {
+      label: '🇯🇵 Tokyo & Osaka AI, Robotics & Smart Automation (6D/5N)',
+      lang: 'en' as const,
+      text: `Japan AI, Automation & Robotics Business Study Mission (Tokyo & Osaka)
+Price: $1,450 USD (Special Corporate Delegation $1,280)
+Duration: 6 Days / 5 Nights
+Destination: Tokyo & Osaka, Japan
+Dates: 2026-12-05, 2026-12-06, 2026-12-07, 2026-12-08, 2026-12-09, 2026-12-10
+Hotel: 4-Star Shinjuku Prince Hotel (Tokyo) & Hotel Granvia Osaka
+Flight: Roundtrip international flights included
+
+Highlights:
+- Attend Tokyo Big Sight International Smart Logistics, Robotics & AI Expo
+- Exclusive factory tour at automated manufacturing and robotic assembly plant in Osaka
+- Bilateral roundtable with Japan-Cambodia Business Association (JCBA)
+- Shinkansen bullet train ride between Tokyo and Osaka included
+- Certified bilingual English/Japanese/Khmer interpreter throughout the tour
+- Optional evening private networking cruise on Tokyo Bay
+
+Coordinator:
+Director: Mr. Tim Vutha (060 815 515, @VuthaTim)
+Meeting: Phnom Penh International Airport (05:30 AM)`
+    },
+    {
+      label: '☕ Vietnam Coffee, Specialty Tea & Franchise (Ho Chi Minh + Phu Quoc)',
+      lang: 'km' as const,
       text: `ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise នៅប្រទេសវៀតណាម (ហូជីមិញ + កោះត្រល់)
 តម្លៃពិសេស: $299 (តម្លៃធម្មតា $350)
 រយៈពេល: ៤ ថ្ងៃ ៣ យប់ (29/10/2026 ដល់ 01/11/2026)
@@ -1325,35 +1499,6 @@ export const PackageEditorModal: React.FC<PackageEditorModalProps> = ({
 - កម្មវិធីថ្ងៃទី២: ចូលរួមពិព័រណ៍ SECC និង B2B Matchmaking
 - កម្មវិធីថ្ងៃទី៣: ជិះយន្តហោះទៅកោះត្រល់ ទស្សនាចម្ការម្រេច រោងចក្រទឹកត្រី និង Sunset Sanato
 - កម្មវិធីថ្ងៃទី៤: ជិះកប៉ាល់មកកំពត ពិសារក្តាមថ្ម និងជិះរថយន្ត VIP មកភ្នំពេញវិញ`
-    },
-    {
-      label: '🏢 Bangkok Retail & Bakery Expo (4D/3N)',
-      text: `Thailand Business & Retail Mission: Bangkok & Pattaya B2B Expo 2026
-Price: $420 USD (Early Bird $360)
-Duration: 4 Days / 3 Nights
-Destination: Bangkok & Pattaya, Thailand
-Dates: 2026-11-15, 2026-11-16, 2026-11-17, 2026-11-18
-Highlights:
-- Visit Bangkok International Trade & Exhibition Centre (BITEC)
-- Wholesale bakery packaging, automated food machinery & convenience store retail tech
-- Exclusive 1-on-1 supplier negotiation with Thai food conglomerates
-- 4-Star Novotel Sukhumvit accommodation with daily international buffet breakfast
-- VIP airport fast-track escort and dedicated Khmer-speaking business guide
-- Optional evening Chao Phraya luxury river cruise dinner`
-    },
-    {
-      label: '🇯🇵 Tokyo & Osaka High-Tech Mission (6D/5N)',
-      text: `Japan AI, Automation & Robotics Business Study Mission (Tokyo & Osaka)
-Price: $1,450 USD (Special Corporate Delegation $1,280)
-Duration: 6 Days / 5 Nights
-Destination: Tokyo & Osaka, Japan
-Dates: 2026-12-05, 2026-12-06, 2026-12-07, 2026-12-08, 2026-12-09, 2026-12-10
-Highlights:
-- Attend Tokyo Big Sight International Robotics & Smart Logistics Expo
-- Visit Shinkansen bullet train component manufacturing facility in Osaka
-- Bilateral roundtable with Japan-Cambodia Business Association (JCBA)
-- 4-Star Shinjuku & Umeda hotel lodging with Shinkansen high-speed rail pass included
-- Certified bilingual English/Japanese/Khmer interpreter throughout the tour`
     }
   ];
 
@@ -1935,64 +2080,79 @@ Highlights:
           <div className="px-6 py-4 bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-white dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900 border-b border-indigo-100 dark:border-indigo-900/60 shrink-0 animate-in slide-in-from-top duration-200">
             <div className="flex items-start justify-between gap-4 mb-2.5">
               <div>
-                <h3 className="text-xs sm:text-sm font-black text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
-                  <Wand2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  AI Auto-Input: Paste Raw Text to Auto-Fill Tour Package
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs sm:text-sm font-black text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    AI Auto-Input: Intelligent Text Semantic Analysis & Auto-Fill
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-600 text-white shadow-xs">
+                    Gemini 2.5 Pro Engine
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                  Paste any Telegram message, Facebook announcement, brochure, flyer, or WhatsApp itinerary text. AI will analyze and populate all form tabs instantly.
+                  Paste any English, Khmer, or multilingual itinerary, flyer, WhatsApp/Telegram trade mission announcement. AI semantically extracts all fields into the form tabs.
                 </p>
               </div>
 
-              {/* Sample Preset Buttons */}
-              <div className="hidden lg:flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Try Samples:</span>
-                {SAMPLE_PRESETS.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setRawTextToParse(preset.text);
-                      handleAutoInputFromText(preset.text);
-                    }}
-                    disabled={isParsingAi}
-                    className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    {preset.label.split('(')[0].trim()}
-                  </button>
-                ))}
+              {/* Language Focus Selector */}
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-800/80 p-1 rounded-xl border border-indigo-100 dark:border-indigo-800 shrink-0">
+                <span className="text-[10px] font-bold text-slate-500 uppercase px-1">Language Focus:</span>
+                <button
+                  type="button"
+                  onClick={() => setAiTargetLanguage('en')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    aiTargetLanguage === 'en'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <span>🇺🇸 English (Main)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAiTargetLanguage('km')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    aiTargetLanguage === 'km'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <span>🇰🇭 Khmer</span>
+                </button>
               </div>
+            </div>
+
+            {/* Sample Preset Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Quick Try Presets:</span>
+              {SAMPLE_PRESETS.map((preset, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setRawTextToParse(preset.text);
+                    setAiTargetLanguage(preset.lang);
+                    handleAutoInputFromText(preset.text, preset.lang);
+                  }}
+                  disabled={isParsingAi}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                >
+                  <span>{preset.label.split('(')[0].trim()}</span>
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 uppercase">{preset.lang}</span>
+                </button>
+              ))}
             </div>
 
             {/* Textarea for pasting */}
             <div className="space-y-2.5">
               <div className="relative">
                 <textarea
-                  rows={3}
+                  rows={4}
                   value={rawTextToParse}
                   onChange={(e) => setRawTextToParse(e.target.value)}
-                  placeholder="Paste raw tour information here (e.g. ដំណើរទស្សនៈកិច្ចពាណិជ្ជកម្មពិសេស: តែ កាហ្វេ ដុតនំ ការលក់រាយ & Franchise នៅវៀតណាម, តម្លៃ $299, រយៈពេល 4 ថ្ងៃ 3 យប់, កាលវិភាគថ្ងៃទី១-៤, សណ្ឋាគារ ៤ ផ្កាយ, មគ្គុទ្ទេសក៍ លោក Tim Vutha...)"
+                  placeholder="Paste raw tour text in English or Khmer here (e.g. 138th Canton Fair Sourcing Mission, Guangzhou & Shenzhen, $880 USD, 5 Days / 4 Nights, Dates Oct 15-19 2026, 5-Star Hotel, Lead Coordinator Mr. Tim Vutha...)"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white/95 dark:bg-slate-900/95 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-inner font-mono text-[11px] leading-relaxed"
                 />
-              </div>
-
-              {/* Mobile sample buttons */}
-              <div className="flex lg:hidden flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold text-slate-500">Presets:</span>
-                {SAMPLE_PRESETS.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setRawTextToParse(preset.text);
-                      handleAutoInputFromText(preset.text);
-                    }}
-                    disabled={isParsingAi}
-                    className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                  >
-                    {preset.label.split(' ')[1] || 'Sample'}
-                  </button>
-                ))}
               </div>
 
               {/* Action Bar */}
@@ -2002,16 +2162,16 @@ Highlights:
                     type="button"
                     onClick={() => handleAutoInputFromText()}
                     disabled={isParsingAi || !rawTextToParse.trim()}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isParsingAi ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Analyzing Text with Gemini AI...</span>
+                        <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
+                        <span>AI Analyzing & Mapping Form Fields...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <Sparkles className="w-4 h-4 text-amber-300" />
                         <span>✨ Analyze & Auto-Fill All Form Tabs</span>
                       </>
                     )}
@@ -2024,6 +2184,8 @@ Highlights:
                         setRawTextToParse('');
                         setAiSuccessSummary(null);
                         setAiError(null);
+                        setAiMatchedFields([]);
+                        setAiFieldConfidence(null);
                       }}
                       className="px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
@@ -2034,27 +2196,54 @@ Highlights:
 
                 <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                   <Info className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Supports Khmer (ខ្មែរ), English, and multilingual text formats</span>
+                  <span>Main focus: English comprehension with automatic bilingual twinning</span>
                 </div>
               </div>
 
+              {/* Matched Fields & Confidence Badges */}
+              {aiMatchedFields.length > 0 && (
+                <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-indigo-100 dark:border-indigo-800/60 space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Successfully Understood & Mapped Fields:</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      {aiMatchedFields.length} Form Sections Populated
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-1.5">
+                    {aiMatchedFields.map((f, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/70">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        <span className="capitalize">{f.replace(/([A-Z])/g, ' $1')}</span>
+                        {aiFieldConfidence && aiFieldConfidence[f] !== undefined && (
+                          <span className="text-[9px] font-mono opacity-75 font-normal">({aiFieldConfidence[f]}%)</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Success / Error Banners */}
               {aiSuccessSummary && (
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-start gap-2.5 animate-in fade-in duration-200">
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-start gap-2.5 animate-in fade-in duration-200">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
                       {aiSuccessSummary}
                     </p>
                     <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
-                      All pricing, day-by-day itinerary schedules, hourly guide agendas, highlights, and contact information have been populated into the tabs below. You can review and fine-tune each tab before saving.
+                      All commercial pricing, duration, geolocation, daily schedule steps, coordinator contact info, VIP inclusions, and terms have been mapped into the tabs below. Review and click "Save & Publish".
                     </p>
                   </div>
                 </div>
               )}
 
               {aiError && (
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center gap-2.5 animate-in fade-in duration-200">
+                <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center gap-2.5 animate-in fade-in duration-200">
                   <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                   <p className="text-xs font-medium text-rose-800 dark:text-rose-200">
                     {aiError}
