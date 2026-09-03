@@ -25,6 +25,7 @@ import { GlobalToast } from './components/common/GlobalToast';
 import { PackageEditorModal } from './components/admin/PackageEditorModal';
 
 import { StandaloneAgendaView } from './components/portal/StandaloneAgendaView';
+import { cleanStorageForQuotaRelief, isQuotaExceededError } from './utils/safeStorage';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -58,26 +59,53 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     (this as any).setState({ errorInfo });
     console.error('React ErrorBoundary caught:', error, errorInfo);
+    if (isQuotaExceededError(error)) {
+      console.warn('[ErrorBoundary] Quota error caught. Running emergency storage relief...');
+      cleanStorageForQuotaRelief();
+    }
   }
 
   render() {
     if (this.state.hasError) {
+      const isQuota = isQuotaExceededError(this.state.error);
+
       return (
         <div style={{ padding: 40, fontFamily: 'system-ui', maxWidth: 700, margin: '0 auto' }}>
-          <h2 style={{ color: '#dc2626' }}>⚠️ Application Render Error</h2>
-          <p style={{ color: '#64748b' }}>The app crashed during rendering. Details below:</p>
+          <h2 style={{ color: '#dc2626' }}>⚠️ {isQuota ? 'Browser Storage Quota Exceeded' : 'Application Render Error'}</h2>
+          <p style={{ color: '#64748b' }}>
+            {isQuota
+              ? 'Your browser ran out of LocalStorage space due to accumulated deleted items or local cache. We can safely purge the bloated local items without losing any active cloud data.'
+              : 'The app crashed during rendering. Details below:'}
+          </p>
           <pre style={{ background: '#f1f5f9', padding: 16, borderRadius: 8, overflow: 'auto', fontSize: 13, color: '#0f172a' }}>
             {this.state.error?.message || 'Unknown error'}
             {'\n\n'}
             {this.state.error?.stack || ''}
             {this.state.errorInfo?.componentStack ? '\n\nComponent Stack:\n' + this.state.errorInfo.componentStack : ''}
           </pre>
-          <button
-            onClick={() => window.location.reload()}
-            style={{ marginTop: 16, padding: '10px 24px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}
-          >
-            Reload Page
-          </button>
+          <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
+            {isQuota && (
+              <button
+                onClick={() => {
+                  try {
+                    cleanStorageForQuotaRelief();
+                    localStorage.removeItem('tripdesk_deleted_items_prod');
+                    localStorage.removeItem('tripdesk_offline_prod');
+                  } catch {}
+                  window.location.reload();
+                }}
+                style={{ padding: '10px 24px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+              >
+                Clear Bloated Local Cache & Reload
+              </button>
+            )}
+            <button
+              onClick={() => window.location.reload()}
+              style={{ padding: '10px 24px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}
+            >
+              Reload Page
+            </button>
+          </div>
         </div>
       );
     }

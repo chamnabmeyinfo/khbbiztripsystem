@@ -111,6 +111,16 @@ import {
 import { reconcileTourPackages } from '../utils/packageReconciler';
 import { applyThemeToDOM } from '../services/aiThemeService';
 import {
+  safeSetItem,
+  safeGetItem,
+  safeRemoveItem,
+  sanitizeDeletedItemsForStorage,
+  initStorageSanitizer
+} from '../utils/safeStorage';
+
+// Run storage sanitizer immediately on script evaluation before any state initializes
+initStorageSanitizer();
+import {
   db,
   auth,
   googleAuthProvider,
@@ -790,7 +800,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(deletedIds));
+    safeSetItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(deletedIds));
   }, [deletedIds]);
 
   // Ref mirror of deletedIds for Firestore snapshot callbacks: lets listeners stay
@@ -811,7 +821,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
+    safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
     applyThemeToDOM(systemSettings, darkMode);
   }, [systemSettings, darkMode]);
 
@@ -828,9 +838,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
-    } catch (e) {}
+    safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
   }, [packageCategories]);
 
   // System Update & Modification History State
@@ -846,9 +854,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(systemUpdates));
-    } catch (e) {}
+    safeSetItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(systemUpdates));
   }, [systemUpdates]);
 
   // CRM & Webhook Inbound & Outbound Sync State
@@ -866,11 +872,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.INBOUND_LEADS, JSON.stringify(inboundLeads));
-    } catch (e) {
-      console.warn('Failed to save inbound leads to LocalStorage:', e);
-    }
+    safeSetItem(STORAGE_KEYS.INBOUND_LEADS, JSON.stringify(inboundLeads));
   }, [inboundLeads]);
 
   const [recentWonLeadAlert, setRecentWonLeadAlert] = useState<{ lead: InboundWonLead; timestamp: string } | null>(null);
@@ -894,11 +896,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   }, [users]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
+    safeSetItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
   }, [auditLogs]);
 
   // Default Startup View & Admin Tab User Preferences
@@ -961,10 +963,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setDefaultView = (view: ActiveView, targetAdminTab?: string) => {
     setDefaultViewState(view);
     try {
-      localStorage.setItem(STORAGE_KEYS.DEFAULT_VIEW, view);
+      safeSetItem(STORAGE_KEYS.DEFAULT_VIEW, view);
       if (targetAdminTab) {
         setDefaultAdminTabState(targetAdminTab);
-        localStorage.setItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB, targetAdminTab);
+        safeSetItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB, targetAdminTab);
       }
     } catch {}
 
@@ -986,7 +988,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setDefaultAdminTab = (tab: string) => {
     setDefaultAdminTabState(tab);
     try {
-      localStorage.setItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB, tab);
+      safeSetItem(STORAGE_KEYS.DEFAULT_ADMIN_TAB, tab);
     } catch {}
 
     showToast(
@@ -1000,7 +1002,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setDefaultPackageViewMode = (mode: PackageViewMode) => {
     setDefaultPackageViewModeState(mode);
     try {
-      localStorage.setItem(STORAGE_KEYS.DEFAULT_PACKAGE_VIEW_MODE, mode);
+      safeSetItem(STORAGE_KEYS.DEFAULT_PACKAGE_VIEW_MODE, mode);
     } catch {}
 
     const modeLabels: Record<PackageViewMode, string> = {
@@ -1152,21 +1154,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setActiveView = (view: ActiveView) => {
     setActiveViewState(view);
     try {
-      localStorage.setItem(STORAGE_KEYS.ACTIVE_VIEW, view);
+      safeSetItem(STORAGE_KEYS.ACTIVE_VIEW, view);
     } catch {}
   };
 
   const setAdminActiveTab = (tab: string) => {
     setAdminActiveTabState(tab);
     try {
-      localStorage.setItem(STORAGE_KEYS.ACTIVE_ADMIN_TAB, tab);
+      safeSetItem(STORAGE_KEYS.ACTIVE_ADMIN_TAB, tab);
     } catch {}
   };
 
   const setSettingsSubTab = (subTab: string) => {
     setSettingsSubTabState(subTab);
     try {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS_SUB_TAB, subTab);
+      safeSetItem(STORAGE_KEYS.SETTINGS_SUB_TAB, subTab);
     } catch {}
   };
 
@@ -1175,9 +1177,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const next = typeof pkgOrUpdater === 'function' ? pkgOrUpdater(prev) : pkgOrUpdater;
       try {
         if (next && next.id) {
-          localStorage.setItem(STORAGE_KEYS.SELECTED_PACKAGE_ID, next.id);
+          safeSetItem(STORAGE_KEYS.SELECTED_PACKAGE_ID, next.id);
         } else if (next === null) {
-          localStorage.removeItem(STORAGE_KEYS.SELECTED_PACKAGE_ID);
+          safeRemoveItem(STORAGE_KEYS.SELECTED_PACKAGE_ID);
         }
       } catch {}
       return next;
@@ -1511,7 +1513,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         setPackages(merged);
         try {
-          localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(merged));
+          safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(merged));
         } catch (e) {}
 
         // Push any local packages that are newer than cloud or newly created
@@ -1587,12 +1589,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         name: 'deleted_items',
         setter: (items: DeletedItemRecord[]) => {
           setDeletedItems(items);
-          try { localStorage.setItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(items)); } catch (e) {}
+          const sanitized = sanitizeDeletedItemsForStorage(items);
+          safeSetItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(sanitized));
           const extractedIds = items.map(i => i.originalId || i.id).filter(Boolean);
           if (extractedIds.length > 0) {
             setDeletedIds(prev => {
               const combined = Array.from(new Set([...prev, ...extractedIds]));
-              try { localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(combined)); } catch (e) {}
+              safeSetItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(combined));
               return combined;
             });
           }
@@ -1641,7 +1644,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const rtl = isRTL(language);
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
-    localStorage.setItem(STORAGE_KEYS.LANG, language);
+    safeSetItem(STORAGE_KEYS.LANG, language);
   }, [language]);
 
   // Sync Dark mode
@@ -1651,40 +1654,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem(STORAGE_KEYS.DARK_MODE, JSON.stringify(darkMode));
+    safeSetItem(STORAGE_KEYS.DARK_MODE, JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // Save changes to localStorage
+  // Save changes to localStorage safely
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
+    safeSetItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
+    safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
   }, [packages]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
+    safeSetItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
     // Cache confirmed bookings for offline access
     const confirmed = bookings.filter(b => b.status === 'confirmed');
-    localStorage.setItem(STORAGE_KEYS.CACHED_OFFLINE_ITINERARY, JSON.stringify(confirmed));
+    safeSetItem(STORAGE_KEYS.CACHED_OFFLINE_ITINERARY, JSON.stringify(confirmed));
   }, [bookings]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
+    safeSetItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
   }, [invoices]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(supportChats));
+    safeSetItem(STORAGE_KEYS.CHATS, JSON.stringify(supportChats));
   }, [supportChats]);
 
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(suppliers)); }, [suppliers]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.COST_TEMPLATES, JSON.stringify(costTemplates)); }, [costTemplates]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.PURCHASE_ORDERS, JSON.stringify(purchaseOrders)); }, [purchaseOrders]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.CUSTOMER_PAYMENTS, JSON.stringify(customerPayments)); }, [customerPayments]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SUPPLIER_PAYMENTS, JSON.stringify(supplierPayments)); }, [supplierPayments]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses)); }, [expenses]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(deletedItems)); }, [deletedItems]);
+  useEffect(() => { safeSetItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(suppliers)); }, [suppliers]);
+  useEffect(() => { safeSetItem(STORAGE_KEYS.COST_TEMPLATES, JSON.stringify(costTemplates)); }, [costTemplates]);
+  useEffect(() => { safeSetItem(STORAGE_KEYS.PURCHASE_ORDERS, JSON.stringify(purchaseOrders)); }, [purchaseOrders]);
+  useEffect(() => { safeSetItem(STORAGE_KEYS.CUSTOMER_PAYMENTS, JSON.stringify(customerPayments)); }, [customerPayments]);
+  useEffect(() => { safeSetItem(STORAGE_KEYS.SUPPLIER_PAYMENTS, JSON.stringify(supplierPayments)); }, [supplierPayments]);
+  useEffect(() => { safeSetItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses)); }, [expenses]);
+  useEffect(() => {
+    const sanitized = sanitizeDeletedItemsForStorage(deletedItems);
+    safeSetItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(sanitized));
+  }, [deletedItems]);
 
   // Firestore Real-Time Users Sync
   useEffect(() => {
@@ -1846,7 +1852,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           remoteCategories.sort((a, b) => (a.order || 999) - (b.order || 999));
           setPackageCategories(remoteCategories);
           try {
-            localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(remoteCategories));
+            safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(remoteCategories));
           } catch (e) {}
         }
       }, (err) => {
@@ -1889,7 +1895,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
               );
               try {
-                localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(merged));
+                safeSetItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(merged));
               } catch (e) {}
               return merged;
             });
@@ -2308,7 +2314,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang);
-    localStorage.setItem(STORAGE_KEYS.LANG, lang);
+    safeSetItem(STORAGE_KEYS.LANG, lang);
     if (currentUser) {
       setCurrentUser(prev => prev ? { ...prev, preferredLanguage: lang } : null);
       try {
@@ -2321,7 +2327,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const setCurrency = (curr: CurrencyCode) => {
     setCurrencyState(curr);
-    localStorage.setItem(STORAGE_KEYS.CURRENCY, curr);
+    safeSetItem(STORAGE_KEYS.CURRENCY, curr);
     if (currentUser) {
       setCurrentUser(prev => prev ? { ...prev, preferredCurrency: curr } : null);
     }
@@ -3215,13 +3221,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Remove from deletedIds in case ID was previously recycled
     setDeletedIds(prev => {
       const next = prev.filter(did => did !== newPkg.id);
-      try { localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(next)); } catch (e) {}
+      safeSetItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(next));
       return next;
     });
 
     setPackages(prev => {
       const next = [newPkg, ...prev.filter(p => p.id !== newPkg.id)];
-      try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+      safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next));
       return next;
     });
 
@@ -3307,7 +3313,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setPackages(prev => {
       const next = prev.map(p => p.id === pkg.id ? updatedPkg : p);
-      try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+      safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next));
       return next;
     });
 
@@ -3376,7 +3382,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setPackages(prev => {
       const next = prev.map(p => p.id === packageId ? updatedPkg : p);
-      try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+      safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next));
       return next;
     });
 
@@ -3489,7 +3495,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const pkg = packages.find(p => p.id === packageId);
     setDeletedIds(prev => {
       const next = Array.from(new Set([packageId, ...prev]));
-      try { localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(next)); } catch (e) {}
+      safeSetItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(next));
       return next;
     });
 
@@ -3506,7 +3512,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
       setDeletedItems(prev => {
         const next = [record, ...prev];
-        try { localStorage.setItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(next)); } catch (e) {}
+        const sanitized = sanitizeDeletedItemsForStorage(next);
+        safeSetItem(STORAGE_KEYS.DELETED_ITEMS, JSON.stringify(sanitized));
         return next;
       });
       try {
@@ -3516,7 +3523,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setPackages(prev => {
       const next = prev.filter(p => p.id !== packageId);
-      try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+      safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next));
       return next;
     });
 
@@ -3597,7 +3604,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       setPackages(merged);
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(merged));
+        safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(merged));
       } catch (e) {}
 
       addNotification(
@@ -3614,7 +3621,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const cleaned = packages.filter(p => !deletedSet.has(p.id) && p.status !== 'deleted');
       setPackages(cleaned);
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(cleaned));
+        safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(cleaned));
       } catch (e) {}
       addNotification(
         'Catalog Refreshed',
@@ -3654,7 +3661,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updated = [...prev, newCategory];
       }
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+        safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -3682,7 +3689,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setPackageCategories(prev => {
       const updated = prev.map(c => c.id === updatedCategory.id ? updatedCategory : c);
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+        safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -3707,7 +3714,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setPackageCategories(prev => {
       const updated = prev.filter(c => c.id !== categoryId);
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+        safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -3739,7 +3746,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return c;
       });
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
+        safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -3765,7 +3772,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
       });
       try {
-        localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(ordered));
+        safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(ordered));
       } catch (e) {}
       return ordered;
     });
@@ -3774,7 +3781,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const resetPackageCategories = () => {
     setPackageCategories(DEFAULT_PACKAGE_CATEGORIES);
     try {
-      localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(DEFAULT_PACKAGE_CATEGORIES));
+      safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(DEFAULT_PACKAGE_CATEGORIES));
       DEFAULT_PACKAGE_CATEGORIES.forEach(cat => {
         setDoc(doc(db, 'package_categories', cat.id), cat, { merge: true }).catch(err => {});
       });
@@ -4397,7 +4404,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
         setPackages(prev => {
           const next = [restoredPkg, ...prev.filter(p => p.id !== data.id)];
-          try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+          try { safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
           return next;
         });
         try { setDoc(doc(db, 'packages', data.id), sanitizeForFirestore(restoredPkg), { merge: true }); } catch (e) { console.warn(e); }
@@ -4469,7 +4476,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         };
         setPackages(prev => {
           const next = [restoredPkg, ...prev.filter(p => p.id !== data.id)];
-          try { localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
+          try { safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(next)); } catch (e) {}
           return next;
         });
         try { setDoc(doc(db, 'packages', data.id), sanitizeForFirestore(restoredPkg), { merge: true }); } catch (e) { console.warn(e); }
@@ -4663,7 +4670,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setSystemUpdates(prev => [newRecord, ...prev.filter(r => r.id !== id)]);
 
     try {
-      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify([newRecord, ...systemUpdates.filter(r => r.id !== id)]));
+      safeSetItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify([newRecord, ...systemUpdates.filter(r => r.id !== id)]));
       const cleanPayload = sanitizeForFirestore(newRecord);
       setDoc(doc(db, 'system_updates', id), cleanPayload, { merge: true }).catch(err => {
         if (err?.code !== 'permission-denied') {
@@ -4680,7 +4687,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setSystemUpdates(prev => prev.filter(u => u.id !== id));
     try {
       const remaining = systemUpdates.filter(u => u.id !== id);
-      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(remaining));
+      safeSetItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(remaining));
       deleteDoc(doc(db, 'system_updates', id)).catch(err => {
         if (err?.code !== 'permission-denied') {
           console.warn(err);
@@ -4692,7 +4699,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const clearSystemUpdateHistory = () => {
     setSystemUpdates(INITIAL_SYSTEM_UPDATES);
     try {
-      localStorage.setItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(INITIAL_SYSTEM_UPDATES));
+      safeSetItem(STORAGE_KEYS.SYSTEM_UPDATES, JSON.stringify(INITIAL_SYSTEM_UPDATES));
     } catch (e) {}
     addNotification('History Reset', 'System update history reset to initial release milestones.', 'system');
   };
@@ -4710,7 +4717,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
 
       try {
-        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
+        safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
         setDoc(doc(db, 'system_settings', 'global_config'), sanitizeForFirestore(updated), { merge: true });
       } catch (e) {
         console.warn('System settings cloud sync queued:', e);
@@ -4739,7 +4746,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const resetSystemSettings = () => {
     setSystemSettings(DEFAULT_SYSTEM_SETTINGS);
     try {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEFAULT_SYSTEM_SETTINGS));
+      safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEFAULT_SYSTEM_SETTINGS));
       setDoc(doc(db, 'system_settings', 'global_config'), sanitizeForFirestore(DEFAULT_SYSTEM_SETTINGS), { merge: true });
     } catch (e) {
       console.warn('Reset sync notice:', e);
@@ -4830,14 +4837,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setDoc(doc(db, 'package_categories', cat.id), sanitizeForFirestore(cat), { merge: true }).catch(() => {});
       });
 
-      // 4. Ensure LocalStorage is explicitly written
-      localStorage.setItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
-      localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
-      localStorage.setItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
-      localStorage.setItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(suppliers));
-      localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
-      localStorage.setItem(STORAGE_KEYS.PURCHASE_ORDERS, JSON.stringify(purchaseOrders));
+      // 4. Ensure LocalStorage is explicitly written safely
+      safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
+      safeSetItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
+      safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(systemSettings));
+      safeSetItem(STORAGE_KEYS.PACKAGE_CATEGORIES, JSON.stringify(packageCategories));
+      safeSetItem(STORAGE_KEYS.SUPPLIERS, JSON.stringify(suppliers));
+      safeSetItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+      safeSetItem(STORAGE_KEYS.PURCHASE_ORDERS, JSON.stringify(purchaseOrders));
 
       addNotification('Data Engine Synchronized', 'All packages, bookings, and configuration in sync with Cloud Firestore and LocalStorage.', 'system');
     } catch (err) {
