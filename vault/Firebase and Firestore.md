@@ -93,7 +93,34 @@ All real-time listeners are **quota-aware** to survive the Firestore free-tier d
 ## Error Handling
 `handleFirestoreError()` logs operation type, path, and full auth context on any Firestore error.
 
+## 🔍 How to Check Database & Storage on Google (Step-by-Step)
+
+### Option 1: Via Firebase Console (Recommended — Visual & Fast)
+1. Navigate to the [Firebase Console](https://console.firebase.google.com/).
+2. Sign in with the authorized Google Account (`chamnabmey.info@gmail.com`).
+3. Click on the project **`gen-lang-client-0746227717`**.
+4. **To Check Database (Firestore)**:
+   - In the left sidebar, click **Build** → **Firestore Database**.
+   - **CRITICAL STEP**: The project uses a custom named database ID instead of the default. At the top left of the Firestore viewer, open the Database dropdown and switch from `(default)` to:  
+     `ai-studio-tripdesktourpack-0b114919-d90c-4bf8-ac6a-2403837e13b5`
+   - You can now inspect all collections: `packages`, `bookings`, `invoices`, `suppliers`, `purchase_orders`, `expenses`, `deleted_items`, and `users`.
+5. **To Check Storage (Cloud Storage)**:
+   - In the left sidebar, click **Build** → **Storage**.
+   - Click the **Files** tab to view files in bucket `gen-lang-client-0746227717.firebasestorage.app`.
+   - You can browse uploaded receipts, passport scans, vouchers, and media assets.
+
+### Option 2: Via Google Cloud Platform (GCP) Console
+1. Navigate to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Select project **`gen-lang-client-0746227717`** in the top project picker.
+3. **To Check Database**:
+   - Go to **Firestore** → **Databases** (or search `Firestore` in the top bar).
+   - Select database `ai-studio-tripdesktourpack-0b114919-d90c-4bf8-ac6a-2403837e13b5` to view live documents and performance metrics.
+4. **To Check Storage**:
+   - Go to **Cloud Storage** → **Buckets** (or search `Cloud Storage` in the top bar).
+   - Click bucket `gen-lang-client-0746227717.firebasestorage.app` to inspect stored objects and access permissions.
+
 ## Related Notes
 - [[Security Rules]]
 - [[Data Models]]
 - [[AppContext]]
+- [[Architecture Overview]]
