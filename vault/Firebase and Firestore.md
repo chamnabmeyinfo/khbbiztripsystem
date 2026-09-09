@@ -21,6 +21,21 @@ File: `src/lib/firebase.ts`
 | **AI Services** | **Google Cloud (Gemini AI)** | Google Gemini Pro & Flash via `@google/genai` | AI Chat Concierge, AI Copilot, and automated mission itinerary translation |
 | **Frontend Web Hosting** | **Vercel** | Edge Network CDN via `vercel.json` | Global static asset caching, SPA routing rewrites, and fast browser delivery |
 
+## 🖼️ How Images and File Uploads are Stored
+
+The application employs an optimized, offline-resilient storage architecture for uploaded photos, logos, and receipts:
+1. **Client-Side Compression (`src/services/imageUploadService.ts`)**:
+   - Whenever an image is uploaded (tour package photos, tour guide photo, company logo, coordinator avatar, or coordinator signature), it is automatically compressed and scaled down client-side via HTML5 canvas to high-efficiency JPEG format (max width/height 1000–1200px, quality 78%, size target strictly <= 65 KB).
+2. **Direct Firestore & LocalStorage Persistence**:
+   - The compressed image is encoded as a self-contained Base64 Data URL (`data:image/jpeg;base64,...`) and written **directly into the Firestore document fields**:
+     - `/packages/{packageId}`: `images[]` array and `tourGuide.photoUrl`
+     - `/settings/global`: `companyLogoUrl`, `companyBannerUrl`, `leadCoordinatorAvatar`, `leadCoordinatorSignatureUrl`
+     - `/users/{userId}`: `avatarUrl`
+     - `/expenses/{expenseId}`: `receiptUrl`
+   - **Why this architecture?**: By embedding compact Base64 images directly inside documents (within Firestore's 1 MB per document limit), images load with zero latency, zero CORS restrictions, work seamlessly in offline PWA mode, and synchronize simultaneously to both LocalStorage and Cloud Firestore without needing separate Storage bucket network round-trips.
+3. **Cloud Storage Bucket (`gen-lang-client-0746227717.firebasestorage.app`)**:
+   - Provisioned for large binary file assets, documents, and external media.
+
 ## Collections
 
 ### /users/{userId}
