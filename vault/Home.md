@@ -10,6 +10,7 @@
 ## 🗺️ Map of Contents
 
 ### 🏗️ Architecture & Overview
+- [[Executive Overview & Core System Features]] — Executive summary for leadership & business owner, system complexity analysis, and core operational features
 - [[Architecture Overview]] — High-level system design & data flow
 - [[Tech Stack]] — All libraries, build pipelines, and packages
 
