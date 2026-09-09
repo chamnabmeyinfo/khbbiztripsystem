@@ -1,4 +1,4 @@
-﻿# 🏗️ Architecture Overview
+# 🏗️ Architecture Overview
 
 ← [[Home]]
 
@@ -21,14 +21,24 @@ TripDesk is a **client-side React SPA** with **Firebase as its Backend-as-a-Serv
 │  │  • Invoices     • Chats      • Notifications   │  │
 │  └────────────────────────────────────────────────┘  │
 └───────────────────┬─────────────────────────────────┘
-                    │ Firebase SDK
-        ┌───────────┼───────────────┐
-        ▼           ▼               ▼
-  ┌──────────┐ ┌──────────┐  ┌───────────┐
-  │Firestore │ │Firebase  │  │Gemini AI  │
-  │Database  │ │Auth      │  │API        │
-  └──────────┘ └──────────┘  └───────────┘
-```
+                    │ Firebase SDK & Google GenAI
+        ┌───────────┼───────────────┬─────────────────┐
+        ▼           ▼               ▼                 ▼
+  ┌──────────┐ ┌──────────┐  ┌───────────┐     ┌─────────────┐
+  │Firestore │ │Firebase  │  │Firebase   │     │Google Gemini│
+  │Database  │ │Storage   │  │Auth       │     │AI API       │
+  │ (Google) │ │ (Google) │  │ (Google)  │     │  (Google)   │
+  └──────────┘ └──────────┘  └───────────┘     └─────────────┘
+
+## 🌐 Hosting & Cloud Infrastructure Split
+
+| Layer | Hosting Provider | Details |
+|---|---|---|
+| **Database** | **Google Cloud Platform** | Google Cloud Firestore Enterprise multi-region NoSQL database (`ai-studio-tripdesktourpack-...` in project `gen-lang-client-0746227717`) |
+| **Media & File Storage** | **Google Cloud Platform** | Google Firebase Cloud Storage (`gen-lang-client-0746227717.firebasestorage.app`) for vouchers, receipts, and images |
+| **Identity & Authentication** | **Google Cloud Platform** | Google Firebase Auth (`gen-lang-client-0746227717.firebaseapp.com`) |
+| **Frontend Web Hosting & CDN** | **Vercel** | Vite SPA deployed on Vercel's global edge network via `vercel.json` |
+| **AI Intelligence** | **Google Cloud Platform** | Gemini 2.5 Flash / Pro via `@google/genai` |
 
 ## 3 Views / Routes
 

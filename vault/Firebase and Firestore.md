@@ -11,6 +11,16 @@ File: `src/lib/firebase.ts`
 - Exports: `db`, `auth`, `googleAuthProvider`
 - **Firestore Offline Persistence**: Configured with `initializeFirestore` using `persistentLocalCache({ tabManager: persistentMultipleTabManager() })`. This enables IndexedDB-backed cross-session caching and seamless synchronization across multiple browser tabs, ensuring data survives browser restarts, offline states, and eliminates data resets caused by ephemeral storage.
 
+## ☁️ Cloud Infrastructure & Hosting Providers
+
+| Component | Hosted Provider | Specific Resource / Identifier | Role & Purpose |
+|---|---|---|---|
+| **Database** | **Google Cloud Platform (Firebase)** | `ai-studio-tripdesktourpack-0b114919-d90c-4bf8-ac6a-2403837e13b5` in project `gen-lang-client-0746227717` | Cloud Firestore Enterprise multi-region NoSQL database for real-time data sync |
+| **File & Media Storage** | **Google Cloud Platform (Firebase)** | `gen-lang-client-0746227717.firebasestorage.app` | Cloud Storage bucket for receipts, vouchers, passport scans, and attachments |
+| **Authentication** | **Google Firebase Auth** | `gen-lang-client-0746227717.firebaseapp.com` | User identity, Google OAuth, session tokens, and WebAuthn biometrics |
+| **AI Services** | **Google Cloud (Gemini AI)** | Google Gemini Pro & Flash via `@google/genai` | AI Chat Concierge, AI Copilot, and automated mission itinerary translation |
+| **Frontend Web Hosting** | **Vercel** | Edge Network CDN via `vercel.json` | Global static asset caching, SPA routing rewrites, and fast browser delivery |
+
 ## Collections
 
 ### /users/{userId}
