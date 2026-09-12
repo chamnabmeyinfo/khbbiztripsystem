@@ -29,11 +29,12 @@
       // Global error handler — shows crash reason instead of blank screen
       window.onerror = function(msg, src, line, col, err) {
         var strMsg = String(msg || '');
-        // Ignore benign browser extension messaging / ResizeObserver issues
+        // Ignore benign browser extension messaging / ResizeObserver issues / Firestore lease arbitration
         if (
           strMsg.indexOf('message channel closed') !== -1 ||
           strMsg.indexOf('ResizeObserver loop') !== -1 ||
           strMsg.indexOf('runtime.lastError') !== -1 ||
+          strMsg.indexOf('Failed to obtain primary lease') !== -1 ||
           // Benign third-party web-vitals instrumentation (injected scripts, not app code)
           (strMsg.indexOf("reading 'startTime'") !== -1 && strMsg.indexOf('reportAllChanges') !== -1)
         ) {
@@ -55,11 +56,12 @@
       window.onunhandledrejection = function(e) {
         var reason = e.reason;
         var msg = reason instanceof Error ? reason.message + '\n' + reason.stack : String(reason);
-        // Silently ignore benign browser extension communication closures
+        // Silently ignore benign browser extension communication closures & Firestore lease arbitration
         if (
           msg.indexOf('message channel closed') !== -1 ||
           msg.indexOf('ResizeObserver loop') !== -1 ||
           msg.indexOf('runtime.lastError') !== -1 ||
+          msg.indexOf('Failed to obtain primary lease') !== -1 ||
           // Benign third-party web-vitals instrumentation (injected scripts, not app code)
           (msg.indexOf("reading 'startTime'") !== -1 && msg.indexOf('reportAllChanges') !== -1)
         ) {

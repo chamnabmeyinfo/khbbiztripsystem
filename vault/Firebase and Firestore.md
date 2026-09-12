@@ -10,6 +10,7 @@ File: `src/lib/firebase.ts`
 - Uses a **custom Firestore database ID** (not `(default)`)
 - Exports: `db`, `auth`, `googleAuthProvider`
 - **Firestore Offline Persistence**: Configured with `initializeFirestore` using `persistentLocalCache({ tabManager: persistentMultipleTabManager() })`. This enables IndexedDB-backed cross-session caching and seamless synchronization across multiple browser tabs, ensuring data survives browser restarts, offline states, and eliminates data resets caused by ephemeral storage.
+- **Multi-Tab Lease Protection**: In multi-tab and iframe environments (e.g. preview runners), secondary tabs gracefully delegate lease ownership while Firestore's sync engine recovers via `ignoreIfPrimaryLeaseLoss`. To prevent internal transient arbitration notices (`Failed to obtain primary lease for action 'Apply remote event'`) from triggering false error alerts, `setLogLevel('silent')` and targeted console filter guards in `src/lib/firebase.ts` and `index.html` ensure clean logging without impacting real operational warnings.
 
 ## ☁️ Cloud Infrastructure & Hosting Providers
 

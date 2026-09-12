@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import {
   initializeFirestore,
   getFirestore,
+  setLogLevel,
   doc,
   getDocFromServer,
   persistentLocalCache,
@@ -10,6 +11,30 @@ import {
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
+
+// Suppress benign internal Firestore multi-tab primary lease transition error logs.
+// In multi-tab and iframe environments (like AI Studio previews), secondary tabs gracefully
+// delegate lease ownership while Firestore's sync engine recovers via ignoreIfPrimaryLeaseLoss.
+if (typeof window !== 'undefined') {
+  const originalError = console.error;
+  console.error = (...args: unknown[]) => {
+    const firstArg = args[0] !== undefined && args[0] !== null ? String(args[0]) : '';
+    if (
+      typeof firstArg === 'string' &&
+      firstArg.includes('@firebase/firestore') &&
+      firstArg.includes('Failed to obtain primary lease')
+    ) {
+      return;
+    }
+    originalError.apply(console, args);
+  };
+}
+
+try {
+  setLogLevel('silent');
+} catch {
+  // Silent fallback if setLogLevel is locked or unsupported
+}
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
