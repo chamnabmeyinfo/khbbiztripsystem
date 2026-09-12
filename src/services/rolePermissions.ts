@@ -215,6 +215,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       'expenses',
       'recycle_bin',
       'crm',
+      'audit_log',
       'ai_copilot',
       'settings'
     ]
@@ -249,6 +250,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       'expenses',
       'recycle_bin',
       'crm',
+      'audit_log',
       'ai_copilot',
       'settings'
     ]
@@ -300,6 +302,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
       'suppliers',
       'invoices',
       'crm',
+      'audit_log',
       'ai_copilot'
     ]
   },
@@ -521,6 +524,7 @@ export const ERP_TABS_LIST = [
   { id: 'payments', label: 'Payments & Disbursements', category: 'Finances' },
   { id: 'expenses', label: 'Operational Trip Expenses', category: 'Finances' },
   { id: 'recycle_bin', label: 'Recycle Bin & Data Recovery', category: 'Administration' },
+  { id: 'audit_log', label: 'Integration & API Audit Log', category: 'Administration' },
   { id: 'ai_copilot', label: 'AI ERP Operations Copilot', category: 'AI & System' },
   { id: 'settings', label: 'System Settings & Gateway Config', category: 'Administration' }
 ];

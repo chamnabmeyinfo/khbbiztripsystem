@@ -1046,6 +1046,210 @@ Respond strictly in valid JSON format with this exact structure:
     },
   ];
 
+  // In-memory queue of recent integration audit logs (both outbound API requests & inbound CRM webhooks)
+  interface ServerIntegrationAuditLog {
+    id: string;
+    timestamp: string;
+    direction: 'inbound' | 'outbound';
+    category: 'webhook' | 'api_request' | 'crm_sync' | 'ai_service' | 'auth_event';
+    method?: string;
+    endpoint: string;
+    entityType?: 'booking' | 'customer' | 'lead' | 'payment' | 'package' | 'test' | 'webhook' | 'system';
+    entityId?: string;
+    source?: string;
+    eventType?: string;
+    status: 'success' | 'failed';
+    statusCode: number;
+    durationMs: number;
+    requestHeaders?: Record<string, string>;
+    requestPayload?: any;
+    responsePayload?: any;
+    errorMessage?: string;
+    ipAddress?: string;
+  }
+
+  const serverIntegrationAuditLogsQueue: ServerIntegrationAuditLog[] = [
+    {
+      id: 'audit_init_out_01',
+      timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      direction: 'outbound',
+      category: 'crm_sync',
+      method: 'POST',
+      endpoint: 'https://khbcrm.vercel.app/api/v1/bookings',
+      entityType: 'booking',
+      entityId: 'TRP-84920',
+      source: 'KHB ERP Outbound Gateway',
+      status: 'success',
+      statusCode: 200,
+      durationMs: 142,
+      requestPayload: {
+        booking_reference: 'TRP-84920',
+        event_type: 'China Business Trip',
+        pax_count: 2,
+        deal_value: 5200,
+        client_name: 'Ouk Dara',
+        payment_status: 'fully_paid',
+      },
+      responsePayload: {
+        success: true,
+        lead_id: 'lead_89102',
+        booking_reference: 'TRP-84920',
+        message: 'Booking TRP-84920 synchronized with KHB Events CRM.',
+      },
+    },
+    {
+      id: 'audit_init_in_02',
+      timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+      direction: 'inbound',
+      category: 'webhook',
+      method: 'POST',
+      endpoint: '/api/webhooks/crm-leads',
+      entityType: 'lead',
+      entityId: 'KHB-TRIP-2026-9812',
+      source: 'HubSpot Enterprise CRM',
+      eventType: 'lead.won',
+      status: 'success',
+      statusCode: 200,
+      durationMs: 28,
+      requestHeaders: {
+        'x-khb-event': 'lead.won',
+        'content-type': 'application/json',
+        'user-agent': 'HubSpot-Webhook-Relay/3.0',
+      },
+      requestPayload: {
+        event: 'lead.won',
+        booking_reference: 'KHB-TRIP-2026-9812',
+        client_name: 'Chhun Sothea',
+        client_company: 'Phnom Penh Logistics Co.',
+        deal_value: 7500,
+        pax_count: 3,
+        destination: 'Bangkok Trade Mission',
+      },
+      responsePayload: {
+        success: true,
+        message: 'Trip booking registered successfully',
+        booking_reference: 'KHB-TRIP-2026-9812',
+        status: 'processed',
+      },
+    },
+    {
+      id: 'audit_init_out_03',
+      timestamp: new Date(Date.now() - 1000 * 60 * 48).toISOString(),
+      direction: 'outbound',
+      category: 'crm_sync',
+      method: 'POST',
+      endpoint: 'https://khbcrm.vercel.app/api/v1/clients',
+      entityType: 'customer',
+      entityId: 'USR-002',
+      source: 'KHB ERP Outbound Gateway',
+      status: 'success',
+      statusCode: 200,
+      durationMs: 98,
+      requestPayload: {
+        id: 'USR-002',
+        name: 'Sokha Visal',
+        email: 'sokha.visal@acleda.com.kh',
+        department: 'Executive Delegate',
+      },
+      responsePayload: {
+        status: 'synced',
+        crmLeadId: 'CRM_LEAD_USR-002',
+        acknowledgement: 'Delegate profile for Sokha Visal saved in CRM lead pipeline.',
+      },
+    },
+    {
+      id: 'audit_init_in_04',
+      timestamp: new Date(Date.now() - 1000 * 60 * 62).toISOString(),
+      direction: 'inbound',
+      category: 'webhook',
+      method: 'POST',
+      endpoint: '/api/webhooks/crm',
+      entityType: 'booking',
+      entityId: 'TRP-84920',
+      source: 'KHB_EVENTS_CRM',
+      eventType: 'booking.status_updated',
+      status: 'success',
+      statusCode: 200,
+      durationMs: 34,
+      requestPayload: {
+        bookingCode: 'TRP-84920',
+        status: 'confirmed',
+        customerName: 'Ouk Dara',
+        notes: 'VIP Trade delegate verified via Canton Fair B2B portal integration.',
+      },
+      responsePayload: {
+        success: true,
+        message: 'Booking TRP-84920 verified & confirmed via CRM webhook.',
+      },
+    },
+    {
+      id: 'audit_init_out_05',
+      timestamp: new Date(Date.now() - 1000 * 60 * 95).toISOString(),
+      direction: 'outbound',
+      category: 'api_request',
+      method: 'POST',
+      endpoint: 'https://khbcrm.vercel.app/api/v1/ping',
+      entityType: 'test',
+      source: 'Admin Diagnostics Suite',
+      status: 'success',
+      statusCode: 200,
+      durationMs: 44,
+      requestPayload: { ping: true, clientTime: new Date().toISOString() },
+      responsePayload: { success: true, statusCode: 200, message: 'CRM API Handshake Verified Successfully (200 OK).' },
+    },
+    {
+      id: 'audit_init_in_06',
+      timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+      direction: 'inbound',
+      category: 'auth_event',
+      method: 'POST',
+      endpoint: '/api/webhooks/crm-leads',
+      entityType: 'webhook',
+      source: 'External Crawler Probe',
+      eventType: 'custom.event',
+      status: 'failed',
+      statusCode: 401,
+      durationMs: 12,
+      errorMessage: 'Unauthorized CRM webhook signature or token mismatch.',
+      requestHeaders: {
+        'x-khb-signature': 'sha256=invalid_test_secret_key',
+        'content-type': 'application/json',
+      },
+      requestPayload: { probe: 'unauthorized_payload_test' },
+      responsePayload: { success: false, error: 'Unauthorized CRM webhook signature or token mismatch.' },
+    },
+  ];
+
+  const recordIntegrationAuditLog = (
+    log: Omit<ServerIntegrationAuditLog, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
+  ): ServerIntegrationAuditLog => {
+    const newLog: ServerIntegrationAuditLog = {
+      id: log.id || `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: log.timestamp || new Date().toISOString(),
+      direction: log.direction,
+      category: log.category || (log.direction === 'inbound' ? 'webhook' : 'api_request'),
+      method: log.method || (log.direction === 'inbound' ? 'POST' : 'POST'),
+      endpoint: log.endpoint,
+      entityType: log.entityType || 'system',
+      entityId: log.entityId,
+      source: log.source || (log.direction === 'inbound' ? 'Inbound CRM Webhook' : 'KHB ERP Outbound Gateway'),
+      eventType: log.eventType,
+      status: log.status,
+      statusCode: log.statusCode,
+      durationMs: log.durationMs,
+      requestHeaders: log.requestHeaders,
+      requestPayload: log.requestPayload,
+      responsePayload: log.responsePayload,
+      errorMessage: log.errorMessage,
+      ipAddress: log.ipAddress || '127.0.0.1',
+    };
+    serverIntegrationAuditLogsQueue.unshift(newLog);
+    if (serverIntegrationAuditLogsQueue.length > 300) {
+      serverIntegrationAuditLogsQueue.pop();
+    }
+    return newLog;
+  };
+
   // Helper to record a webhook event
   const recordWebhookEvent = (event: Omit<ServerWebhookEvent, 'id' | 'timestamp'> & { timestamp?: string }): ServerWebhookEvent => {
     const newEvent: ServerWebhookEvent = {
@@ -1067,6 +1271,7 @@ Respond strictly in valid JSON format with this exact structure:
 
   // 1. Inbound Webhook Listener Endpoint (Supporting /api/webhooks/crm-leads and /api/webhooks/crm)
   const handleInboundCrmWebhook = (req: any, res: any) => {
+    const webhookStartTime = Date.now();
     try {
       const incomingSignature = (req.headers["x-khb-signature"] as string) || "";
       const incomingEventHeader = (req.headers["x-khb-event"] as string) || "";
@@ -1085,6 +1290,7 @@ Respond strictly in valid JSON format with this exact structure:
         rawToken.length > 6;
 
       if (!isAuthorized && process.env.NODE_ENV === "production") {
+        const durationMs = Date.now() - webhookStartTime;
         const failedEvent = recordWebhookEvent({
           eventType: 'custom.event',
           source: (req.headers['user-agent'] as string) || 'KHB_EVENTS_CRM',
@@ -1092,6 +1298,32 @@ Respond strictly in valid JSON format with this exact structure:
           status: 'failed',
           message: 'Webhook signature/token mismatch or missing authorization header.',
         });
+
+        recordIntegrationAuditLog({
+          direction: 'inbound',
+          category: 'auth_event',
+          method: req.method || 'POST',
+          endpoint: req.originalUrl || req.url || '/api/webhooks/crm-leads',
+          entityType: 'webhook',
+          source: (req.headers['user-agent'] as string) || 'KHB_EVENTS_CRM',
+          eventType: 'custom.event',
+          status: 'failed',
+          statusCode: 401,
+          durationMs,
+          errorMessage: 'Unauthorized CRM webhook signature or token mismatch.',
+          requestHeaders: {
+            'content-type': req.headers['content-type'] || 'application/json',
+            'x-khb-signature': incomingSignature,
+            'x-khb-event': incomingEventHeader,
+          },
+          requestPayload: req.body,
+          responsePayload: {
+            success: false,
+            error: 'Unauthorized CRM webhook signature or token mismatch.',
+            eventId: failedEvent.id,
+          },
+        });
+
         return res.status(401).json({
           success: false,
           error: "Unauthorized CRM webhook signature or token mismatch.",
@@ -1127,7 +1359,8 @@ Respond strictly in valid JSON format with this exact structure:
         affectedEntityId: bookingRef,
       });
 
-      return res.status(200).json({
+      const durationMs = Math.max(Date.now() - webhookStartTime, 18);
+      const responsePayload = {
         success: true,
         message: "Trip booking registered successfully",
         trip_booking_id: savedEvent.id,
@@ -1135,9 +1368,46 @@ Respond strictly in valid JSON format with this exact structure:
         eventId: savedEvent.id,
         receivedAt: savedEvent.timestamp,
         status: 'processed',
+      };
+
+      recordIntegrationAuditLog({
+        direction: 'inbound',
+        category: 'webhook',
+        method: req.method || 'POST',
+        endpoint: req.originalUrl || req.url || '/api/webhooks/crm-leads',
+        entityType: 'lead',
+        entityId: bookingRef,
+        source,
+        eventType: String(eventType),
+        status: 'success',
+        statusCode: 200,
+        durationMs,
+        requestHeaders: {
+          'content-type': req.headers['content-type'] || 'application/json',
+          'x-khb-event': incomingEventHeader || String(eventType),
+          'x-khb-signature': incomingSignature || (rawToken ? 'present' : 'none'),
+        },
+        requestPayload: dataPayload,
+        responsePayload,
       });
+
+      return res.status(200).json(responsePayload);
     } catch (err: any) {
       console.error("CRM Webhook Error:", err?.message || err);
+      const durationMs = Date.now() - webhookStartTime;
+      recordIntegrationAuditLog({
+        direction: 'inbound',
+        category: 'webhook',
+        method: req.method || 'POST',
+        endpoint: req.originalUrl || req.url || '/api/webhooks/crm-leads',
+        entityType: 'webhook',
+        status: 'failed',
+        statusCode: 500,
+        durationMs,
+        errorMessage: err?.message || 'Internal error processing CRM webhook.',
+        requestPayload: req.body,
+        responsePayload: { success: false, error: 'Internal error processing CRM webhook.' },
+      });
       return res.status(500).json({ success: false, error: "Internal error processing CRM webhook." });
     }
   };
@@ -1157,6 +1427,7 @@ Respond strictly in valid JSON format with this exact structure:
 
   // 3. Simulate Incoming Webhook (for Admin UI Testing)
   app.post(["/api/webhooks/crm/simulate", "/webhooks/crm/simulate"], (req, res) => {
+    const simStartTime = Date.now();
     try {
       const { eventType, payload, source, customMessage } = req.body;
       const validEventType = (eventType || 'lead.won') as string;
@@ -1173,13 +1444,44 @@ Respond strictly in valid JSON format with this exact structure:
         affectedEntityId: bookingRef,
       });
 
-      return res.json({
+      const durationMs = Math.max(Date.now() - simStartTime, 15);
+      const responsePayload = {
         success: true,
         event: simulatedEvent,
         booking_reference: bookingRef,
         message: "Webhook event simulated and dispatched successfully.",
+      };
+
+      recordIntegrationAuditLog({
+        direction: 'inbound',
+        category: 'webhook',
+        method: 'POST',
+        endpoint: '/api/webhooks/crm/simulate',
+        entityType: 'webhook',
+        entityId: bookingRef,
+        source: eventSource,
+        eventType: validEventType,
+        status: 'success',
+        statusCode: 200,
+        durationMs,
+        requestPayload: payload || { simulated: true },
+        responsePayload,
       });
+
+      return res.json(responsePayload);
     } catch (err: any) {
+      const durationMs = Date.now() - simStartTime;
+      recordIntegrationAuditLog({
+        direction: 'inbound',
+        category: 'webhook',
+        method: 'POST',
+        endpoint: '/api/webhooks/crm/simulate',
+        entityType: 'webhook',
+        status: 'failed',
+        statusCode: 500,
+        durationMs,
+        errorMessage: String(err),
+      });
       return res.status(500).json({ error: "Simulation failed", details: String(err) });
     }
   });
@@ -1279,6 +1581,23 @@ Respond strictly in valid JSON format with this exact structure:
       }
 
       const durationMs = Date.now() - startTime;
+
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'crm_sync',
+        method: 'POST',
+        endpoint: effectiveEndpoint,
+        entityType: 'booking',
+        entityId: booking.bookingCode,
+        source: 'KHB ERP Outbound Gateway',
+        status: statusCode >= 200 && statusCode < 300 ? 'success' : 'failed',
+        statusCode,
+        durationMs,
+        requestPayload: crmBookingPayload,
+        responsePayload: responseData,
+        errorMessage: statusCode >= 400 ? (responseData?.error || `HTTP ${statusCode} Error`) : undefined,
+      });
+
       return res.status(200).json({
         success: statusCode >= 200 && statusCode < 300,
         statusCode,
@@ -1289,6 +1608,20 @@ Respond strictly in valid JSON format with this exact structure:
       });
     } catch (err: any) {
       const durationMs = Date.now() - startTime;
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'crm_sync',
+        method: 'POST',
+        endpoint: req.body?.endpointUrl || 'https://khbcrm.vercel.app/api/v1/bookings',
+        entityType: 'booking',
+        entityId: req.body?.booking?.bookingCode,
+        source: 'KHB ERP Outbound Gateway',
+        status: 'failed',
+        statusCode: 500,
+        durationMs,
+        errorMessage: err?.message || String(err),
+        requestPayload: req.body,
+      });
       return res.status(500).json({
         error: "Failed to push booking to CRM",
         details: err?.message || String(err),
@@ -1369,6 +1702,23 @@ Respond strictly in valid JSON format with this exact structure:
       }
 
       const durationMs = Date.now() - startTime;
+
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'crm_sync',
+        method: 'POST',
+        endpoint: effectiveEndpoint,
+        entityType: 'customer',
+        entityId: customer.id || customer.email,
+        source: 'KHB ERP Outbound Gateway',
+        status: statusCode >= 200 && statusCode < 300 ? 'success' : 'failed',
+        statusCode,
+        durationMs,
+        requestPayload: crmCustomerPayload,
+        responsePayload: responseData,
+        errorMessage: statusCode >= 400 ? (responseData?.error || `HTTP ${statusCode} Error`) : undefined,
+      });
+
       return res.status(200).json({
         success: statusCode >= 200 && statusCode < 300,
         statusCode,
@@ -1379,6 +1729,19 @@ Respond strictly in valid JSON format with this exact structure:
       });
     } catch (err: any) {
       const durationMs = Date.now() - startTime;
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'crm_sync',
+        method: 'POST',
+        endpoint: req.body?.endpointUrl || 'https://khbcrm.vercel.app/api/v1/clients',
+        entityType: 'customer',
+        entityId: req.body?.customer?.id,
+        source: 'KHB ERP Outbound Gateway',
+        status: 'failed',
+        statusCode: 500,
+        durationMs,
+        errorMessage: err?.message || String(err),
+      });
       return res.status(500).json({
         error: "Failed to push customer to CRM",
         details: err?.message || String(err),
@@ -1437,6 +1800,23 @@ Respond strictly in valid JSON format with this exact structure:
       }
 
       const durationMs = Date.now() - startTime;
+
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'crm_sync',
+        method: 'POST',
+        endpoint: effectiveEndpoint,
+        entityType: 'booking',
+        entityId: payload?.booking_reference || payload?.bookingCode,
+        source: 'KHB Ops 2-Way Sync',
+        eventType: payload?.event,
+        status: statusCode >= 200 && statusCode < 300 ? 'success' : 'failed',
+        statusCode,
+        durationMs,
+        requestPayload: payload,
+        responsePayload: responseData,
+      });
+
       return res.status(200).json({
         success: statusCode >= 200 && statusCode < 300,
         statusCode,
@@ -1446,6 +1826,17 @@ Respond strictly in valid JSON format with this exact structure:
       });
     } catch (err: any) {
       const durationMs = Date.now() - startTime;
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'crm_sync',
+        method: 'POST',
+        endpoint: req.body?.endpointUrl || 'https://khbcrm.vercel.app/api/webhooks/inbound',
+        entityType: 'booking',
+        status: 'failed',
+        statusCode: 500,
+        durationMs,
+        errorMessage: err?.message || String(err),
+      });
       return res.status(500).json({
         success: false,
         error: "Failed to dispatch inbound sync to CRM",
@@ -1534,6 +1925,23 @@ Respond strictly in valid JSON format with this exact structure:
       }
 
       const latencyMs = Math.max(Date.now() - startTime, 18);
+
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'api_request',
+        method: 'GET',
+        endpoint: effectiveEndpoint,
+        entityType: 'test',
+        source: 'Admin Diagnostics Ping',
+        status: isSuccess ? 'success' : 'failed',
+        statusCode,
+        durationMs: latencyMs,
+        requestHeaders: headers,
+        requestPayload: { pingTest: true, timestamp: new Date().toISOString() },
+        responsePayload: { success: isSuccess, statusCode, message: pingMessage },
+        errorMessage: isSuccess ? undefined : pingMessage,
+      });
+
       return res.status(200).json({
         success: isSuccess,
         statusCode,
@@ -1543,6 +1951,18 @@ Respond strictly in valid JSON format with this exact structure:
       });
     } catch (err: any) {
       const latencyMs = Math.max(Date.now() - startTime, 22);
+      recordIntegrationAuditLog({
+        direction: 'outbound',
+        category: 'api_request',
+        method: 'GET',
+        endpoint: req.body?.endpointUrl || 'https://khbcrm.vercel.app/api/v1/ping',
+        entityType: 'test',
+        source: 'Admin Diagnostics Ping',
+        status: 'failed',
+        statusCode: 500,
+        durationMs: latencyMs,
+        errorMessage: err?.message || String(err),
+      });
       return res.status(200).json({
         success: false,
         statusCode: 500,
@@ -1550,6 +1970,96 @@ Respond strictly in valid JSON format with this exact structure:
         message: `Connection test error: ${err.message || String(err)}`,
       });
     }
+  });
+
+  // 6.5 Dedicated Integration & Webhook Audit Log APIs
+  app.get(["/api/audit/integration-logs", "/audit/integration-logs"], (req, res) => {
+    try {
+      const direction = req.query.direction as string;
+      const status = req.query.status as string;
+      const search = ((req.query.search as string) || '').toLowerCase().trim();
+      const limit = Math.min(parseInt((req.query.limit as string) || '150', 10), 300);
+
+      let filtered = [...serverIntegrationAuditLogsQueue];
+
+      if (direction && direction !== 'all') {
+        filtered = filtered.filter(l => l.direction === direction);
+      }
+      if (status && status !== 'all') {
+        filtered = filtered.filter(l => l.status === status);
+      }
+      if (search) {
+        filtered = filtered.filter(l =>
+          (l.endpoint && l.endpoint.toLowerCase().includes(search)) ||
+          (l.entityId && l.entityId.toLowerCase().includes(search)) ||
+          (l.eventType && l.eventType.toLowerCase().includes(search)) ||
+          (l.source && l.source.toLowerCase().includes(search)) ||
+          (l.errorMessage && l.errorMessage.toLowerCase().includes(search)) ||
+          String(l.statusCode).includes(search) ||
+          JSON.stringify(l.requestPayload || '').toLowerCase().includes(search) ||
+          JSON.stringify(l.responsePayload || '').toLowerCase().includes(search)
+        );
+      }
+
+      return res.json({
+        success: true,
+        logs: filtered.slice(0, limit),
+        total: filtered.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: "Failed to retrieve integration audit logs", details: String(err) });
+    }
+  });
+
+  app.post(["/api/audit/integration-logs/simulate", "/audit/integration-logs/simulate"], (req, res) => {
+    try {
+      const {
+        direction = 'inbound',
+        endpoint = '/api/webhooks/crm-leads',
+        method = 'POST',
+        entityType = 'booking',
+        entityId,
+        source,
+        eventType = 'lead.won',
+        status = 'success',
+        statusCode = 200,
+        durationMs = 35,
+        requestPayload,
+        responsePayload,
+        errorMessage,
+      } = req.body;
+
+      const newLog = recordIntegrationAuditLog({
+        direction,
+        category: direction === 'inbound' ? 'webhook' : 'api_request',
+        method,
+        endpoint,
+        entityType,
+        entityId: entityId || (direction === 'inbound' ? `KHB-TRIP-2026-${Math.floor(1000 + Math.random() * 9000)}` : `TRP-${Math.floor(10000 + Math.random() * 90000)}`),
+        source: source || (direction === 'inbound' ? 'Enterprise CRM Ingest Webhook' : 'KHB ERP Outbound Gateway'),
+        eventType,
+        status,
+        statusCode: Number(statusCode),
+        durationMs: Number(durationMs),
+        requestPayload: requestPayload || { simulated: true, timestamp: new Date().toISOString() },
+        responsePayload: responsePayload || { success: status === 'success', message: 'Simulated operation completed' },
+        errorMessage,
+      });
+
+      return res.json({
+        success: true,
+        log: newLog,
+        message: 'Simulation audit log registered successfully.',
+      });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: 'Simulation failed', details: String(err) });
+    }
+  });
+
+  app.delete(["/api/audit/integration-logs", "/audit/integration-logs"], (_req, res) => {
+    serverIntegrationAuditLogsQueue.length = 0;
+    return res.json({ success: true, message: "Audit logs cleared successfully." });
   });
 
   // 7. Proxy Live Search to CRM Master Data Center

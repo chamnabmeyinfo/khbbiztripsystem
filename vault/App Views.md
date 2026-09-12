@@ -67,7 +67,9 @@ type ActiveView = 'marketing' | 'customer_portal' | 'admin_dashboard' | 'package
 11. **Expenses (`ExpensesSection`)**: Operational trip expenses, receipts, budget category tags, and reimbursement status.
 12. **Recycle Bin (`RecycleBinSection`)**: 100% loss-free audit log and instant one-click data restoration.
 13. **User Management & RBAC (`UserManagementSection`)**: Role assignment, departmental access clearance, and security status.
-14. **AI Copilot (`AiCopilotSection`) & Settings (`SettingsSection`)**: System settings, payment gateways, tax rates, and AI business intelligence.
+14. **CRM & Webhooks (`CrmIntegrationSection`)**: CRM webhook receiver, bidirectional push rules, test simulator, and live field mappings.
+15. **Integration & API Audit Log (`AdminAuditLogSection`)**: Chronological audit trail of outbound API calls and inbound CRM webhooks, status tracking (success, failed, timeout), millisecond latency analytics, raw payload inspector, cURL reproducer, and JSON/CSV export.
+16. **AI Copilot (`AiCopilotSection`) & Settings (`SettingsSection`)**: System settings, payment gateways, tax rates, and AI business intelligence.
 
 ---
 

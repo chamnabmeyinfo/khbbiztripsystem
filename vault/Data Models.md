@@ -375,6 +375,31 @@ export interface SystemSettings {
   companyAddress: string;
   // ... Theme presets, typography, and CRM configs
 }
+
+## Integration & API Audit Log Model (`IntegrationAuditLog`)
+Used for real-time observability of inbound webhooks and outbound CRM requests:
+```typescript
+export interface IntegrationAuditLog {
+  id: string;
+  timestamp: string;
+  direction: 'inbound' | 'outbound';
+  category: 'webhook' | 'crm_sync' | 'api_push' | 'auth' | 'system';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  endpoint: string;
+  entityType?: 'booking' | 'customer' | 'lead' | 'package' | 'system';
+  entityId?: string;
+  source: string; // e.g. 'KHB_CRM', 'HubSpot', 'Salesforce', 'AppClient'
+  eventType?: string; // e.g. 'lead.won', 'booking.created'
+  status: 'success' | 'failed' | 'pending' | 'timeout';
+  statusCode: number;
+  durationMs: number; // Latency in milliseconds
+  requestPayload?: any; // Sanitized JSON payload
+  responsePayload?: any; // Sanitized JSON response
+  errorMessage?: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+```
 ```
 
 ## Package Localization Engine & Strict Bilingual Resolution

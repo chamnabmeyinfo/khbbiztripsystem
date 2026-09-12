@@ -45,7 +45,8 @@ import {
   RefreshCw,
   KeyRound,
   Rocket,
-  Star
+  Star,
+  Activity
 } from 'lucide-react';
 import { ViewContextMenu, ViewContextMenuState } from '../common/ViewContextMenu';
 import { AutoSaveStatusPill } from '../common/AutoSaveStatusPill';
@@ -64,6 +65,7 @@ import { UserManagementSection } from './UserManagementSection';
 import { PackageManagementSection } from './PackageManagementSection';
 import { CrmIntegrationSection } from './CrmIntegrationSection';
 import { InboundWonLeadsSection } from './InboundWonLeadsSection';
+import { AdminAuditLogSection } from './AdminAuditLogSection';
 import { ROLE_CONFIGS } from '../../services/rolePermissions';
 
 export const AdminDashboard: React.FC = () => {
@@ -127,6 +129,7 @@ export const AdminDashboard: React.FC = () => {
     | 'recycle_bin'
     | 'ai_copilot'
     | 'crm'
+    | 'audit_log'
     | 'settings';
 
   const activeTab = (adminActiveTab as AdminTab) || 'overview';
@@ -271,6 +274,7 @@ export const AdminDashboard: React.FC = () => {
       items: [
         { id: 'users' as AdminTab, label: language === 'km' ? 'គ្រប់គ្រងអ្នកប្រើប្រាស់ & RBAC' : 'User Management (RBAC)', icon: Users, count: users.length },
         { id: 'crm' as AdminTab, label: language === 'km' ? 'សមាហរណកម្ម CRM & Webhooks' : 'CRM & Webhooks', icon: Webhook, count: crmEvents.length },
+        { id: 'audit_log' as AdminTab, label: language === 'km' ? 'កំណត់ហេតុសវនកម្ម (Audit Log)' : 'Audit Logs (API & Webhooks)', icon: Activity },
         { id: 'ai_copilot' as AdminTab, label: t('navAiCopilot'), icon: Sparkles, highlight: true },
         { id: 'settings' as AdminTab, label: t('navSettings'), icon: Settings }
       ]
@@ -1156,6 +1160,7 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'recycle_bin' && <div className="animate-in fade-in duration-200"><RecycleBinSection /></div>}
         {activeTab === 'ai_copilot' && <div className="animate-in fade-in duration-200"><AiCopilotSection /></div>}
         {activeTab === 'crm' && <div className="animate-in fade-in duration-200"><CrmIntegrationSection /></div>}
+        {activeTab === 'audit_log' && <div className="animate-in fade-in duration-200"><AdminAuditLogSection /></div>}
         {activeTab === 'settings' && <div className="animate-in fade-in duration-200"><SettingsSection /></div>}
 
         {/* ── CREATE TOUR PACKAGE MODAL ─────────────────────────────────── */}

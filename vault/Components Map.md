@@ -67,6 +67,7 @@
 | `CashFlowSection` | `CashFlowSection.tsx` | Cash inflows vs outflows ledger, monthly burn rate, and liquidity summaries |
 | `RecycleBinSection` | `RecycleBinSection.tsx` | 100% loss-free audit log & trash recovery for deleted bookings, packages, POs, and expenses |
 | `AiCopilotSection` | `AiCopilotSection.tsx` | AI operations advisor for revenue optimization, itinerary planning, and supplier analytics |
+| `AdminAuditLogSection` | `AdminAuditLogSection.tsx` | Chronological audit log inspector for outbound API requests and inbound CRM webhooks with latency metrics, payload inspector drawer, cURL generators, real-time filtering, simulation triggers, and CSV/JSON export |
 | `SettingsSection` | `SettingsSection.tsx` | System configurations, payment gateway toggles, VAT rates, branding, and security policies |
 
 ---

@@ -4,6 +4,7 @@ import {
   CrmConfig,
   CrmWebhookEvent,
   CrmSyncLog,
+  IntegrationAuditLog,
   CrmWebhookEventType,
   InboundWonLead,
   LeadPassenger,
@@ -725,4 +726,125 @@ export async function syncAllLeadsProgressToCrm(
   }
   return { total: leads.length, success: successCount };
 }
+
+// ─── Unified Integration Audit Log (Outbound Requests & Inbound Webhooks) ──────
+
+export async function fetchServerIntegrationAuditLogs(filters?: {
+  direction?: 'all' | 'inbound' | 'outbound';
+  status?: 'all' | 'success' | 'failed';
+  search?: string;
+  limit?: number;
+}): Promise<{ logs: IntegrationAuditLog[]; total: number }> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.direction && filters.direction !== 'all') {
+      params.append('direction', filters.direction);
+    }
+    if (filters?.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    if (filters?.search) {
+      params.append('search', filters.search);
+    }
+    if (filters?.limit) {
+      params.append('limit', String(filters.limit));
+    }
+
+    const url = `/api/audit/integration-logs?${params.toString()}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data?.logs && Array.isArray(data.logs)) {
+        return { logs: data.logs, total: data.total ?? data.logs.length };
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch server integration audit logs:', err);
+  }
+
+  // Fallback: merge local storage CRM sync logs and webhook events
+  const localSyncLogs = getStoredCrmLogs();
+  const localWebhookEvents = getStoredWebhookEvents();
+
+  const combined: IntegrationAuditLog[] = [
+    ...localSyncLogs.map(l => ({
+      id: l.id,
+      timestamp: l.timestamp,
+      direction: l.direction,
+      category: (l.direction === 'inbound' ? 'webhook' : 'crm_sync') as any,
+      method: (l.direction === 'inbound' ? 'POST' : 'POST') as any,
+      endpoint: l.endpoint,
+      entityType: l.entityType as any,
+      entityId: l.entityId,
+      status: l.status,
+      statusCode: l.statusCode,
+      durationMs: l.durationMs,
+      requestPayload: l.requestPayload,
+      responsePayload: l.responsePayload,
+      errorMessage: l.errorMessage,
+    })),
+    ...localWebhookEvents.map(w => ({
+      id: w.id,
+      timestamp: w.timestamp,
+      direction: 'inbound' as const,
+      category: 'webhook' as const,
+      method: 'POST' as const,
+      endpoint: '/api/webhooks/crm-leads',
+      entityType: 'lead' as const,
+      entityId: w.affectedEntityId,
+      source: w.source,
+      eventType: w.eventType,
+      status: (w.status === 'failed' ? 'failed' : 'success') as 'failed' | 'success',
+      statusCode: w.status === 'failed' ? 400 : 200,
+      durationMs: 25,
+      requestPayload: w.payload,
+      responsePayload: { status: w.status, message: w.message },
+      errorMessage: w.status === 'failed' ? w.message : undefined,
+    })),
+  ];
+
+  combined.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return { logs: combined, total: combined.length };
+}
+
+export async function simulateServerAuditLog(payload: {
+  direction: 'inbound' | 'outbound';
+  endpoint?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  entityType?: 'booking' | 'customer' | 'lead' | 'payment' | 'package' | 'test' | 'webhook';
+  entityId?: string;
+  source?: string;
+  eventType?: string;
+  status?: 'success' | 'failed';
+  statusCode?: number;
+  durationMs?: number;
+  requestPayload?: any;
+  responsePayload?: any;
+  errorMessage?: string;
+}): Promise<IntegrationAuditLog | null> {
+  try {
+    const resp = await fetch('/api/audit/integration-logs/simulate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      return data.log || null;
+    }
+  } catch (e) {
+    console.warn('Failed to simulate server audit log:', e);
+  }
+  return null;
+}
+
+export async function clearServerIntegrationAuditLogs(): Promise<boolean> {
+  try {
+    const resp = await fetch('/api/audit/integration-logs', { method: 'DELETE' });
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
 

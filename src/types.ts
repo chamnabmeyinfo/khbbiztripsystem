@@ -1007,6 +1007,27 @@ export interface CrmSyncLog {
   errorMessage?: string;
 }
 
+export interface IntegrationAuditLog {
+  id: string;
+  timestamp: string;
+  direction: 'inbound' | 'outbound';
+  category?: 'webhook' | 'api_request' | 'crm_sync' | 'ai_service' | 'auth_event';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  endpoint: string;
+  entityType?: 'booking' | 'customer' | 'lead' | 'payment' | 'package' | 'test' | 'webhook' | 'system';
+  entityId?: string;
+  source?: string;
+  eventType?: string;
+  status: 'success' | 'failed';
+  statusCode: number;
+  durationMs: number;
+  requestHeaders?: Record<string, string>;
+  requestPayload?: any;
+  responsePayload?: any;
+  errorMessage?: string;
+  ipAddress?: string;
+}
+
 export type LeadOperationalStage =
   | 'won_ingested'
   | 'manifest_pending'
