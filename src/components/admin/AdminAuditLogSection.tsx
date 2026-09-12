@@ -585,7 +585,7 @@ export const AdminAuditLogSection: React.FC = () => {
       </div>
 
       {/* KPI Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Events */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between">
@@ -624,27 +624,6 @@ export const AdminAuditLogSection: React.FC = () => {
           </div>
           <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             HubSpot, Salesforce, & Lead Gateways
-          </div>
-        </div>
-
-        {/* Outbound API */}
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Outbound API Transmissions
-            </span>
-            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.outboundCount}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              Avg Latency: <strong className="text-slate-700 dark:text-slate-200">{metrics.avgLatency}ms</strong>
-            </span>
-          </div>
-          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            Booking relays, delegate sync, pings
           </div>
         </div>
 
