@@ -464,120 +464,132 @@ export const AdminAuditLogSection: React.FC = () => {
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Auto-Refresh Toggle */}
-          <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors border ${
-              autoRefresh
-                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-            }`}
-            title="Toggle 6-second live polling"
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                autoRefresh ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {/* Cluster 1: Live Stream Polling & Manual Refresh */}
+          <div className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-800/90 p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                autoRefresh
+                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
-            />
-            {autoRefresh ? 'Live Polling (6s)' : 'Polling Paused'}
-          </button>
+              title="Toggle live log polling (6 seconds)"
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  autoRefresh ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                }`}
+              />
+              <span>{autoRefresh ? 'Live (6s)' : 'Paused'}</span>
+            </button>
+            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
+            <button
+              onClick={() => loadLogs()}
+              disabled={refreshing}
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 transition-all disabled:opacity-50 cursor-pointer"
+              title="Manually refresh audit logs"
+              aria-label="Refresh logs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-indigo-600 dark:text-indigo-400' : ''}`} />
+            </button>
+          </div>
 
-          {/* Manual Refresh */}
-          <button
-            onClick={() => loadLogs()}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
-            Refresh
-          </button>
-
-          {/* Simulate Menu */}
+          {/* Cluster 2: Developer Traffic Simulator */}
           <div className="relative">
             <button
               onClick={() => setShowSimulateMenu(!showSimulateMenu)}
               disabled={simulating}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors shadow-2xs cursor-pointer"
+              title="Simulate incoming webhooks or outbound CRM transmissions"
             >
-              <Zap className={`w-3.5 h-3.5 ${simulating ? 'animate-bounce' : ''}`} />
-              {simulating ? 'Simulating...' : 'Simulate Traffic'}
+              <Zap className={`w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 ${simulating ? 'animate-bounce' : ''}`} />
+              <span>{simulating ? 'Simulating...' : 'Simulate Traffic'}</span>
             </button>
 
             {showSimulateMenu && (
-              <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 py-1.5 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="px-3 py-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Trigger Test Scenario
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowSimulateMenu(false)}
+                />
+                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-3.5 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                    Trigger Test Scenario
+                  </div>
+                  <button
+                    onClick={() => handleTriggerSimulation('inbound_lead')}
+                    className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <ArrowDownLeft className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-white">Inbound Lead Won (HubSpot)</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">200 OK • New delegation delegate lead</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleTriggerSimulation('inbound_status')}
+                    className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <ArrowDownLeft className="w-4 h-4 text-blue-500 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-white">Inbound Booking Confirmed</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">200 OK • Update status for TRP-84920</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleTriggerSimulation('outbound_booking')}
+                    className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <ArrowUpRight className="w-4 h-4 text-sky-500 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-white">Outbound CRM Push Relay</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">200 OK • Push booking to external CRM</div>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => handleTriggerSimulation('auth_fail')}
+                    className="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2.5 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+                  >
+                    <Shield className="w-4 h-4 text-rose-500 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-rose-700 dark:text-rose-300">Simulate Signature Mismatch</div>
+                      <div className="text-[11px] text-rose-500 dark:text-rose-400">401 Unauthorized • Test alert handling</div>
+                    </div>
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleTriggerSimulation('inbound_lead')}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
-                >
-                  <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-500" />
-                  <div>
-                    <div className="font-semibold text-slate-900 dark:text-white">Inbound Lead Won (HubSpot)</div>
-                    <div className="text-[11px] text-slate-500">200 OK • New delegation delegate lead</div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleTriggerSimulation('inbound_status')}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
-                >
-                  <ArrowDownLeft className="w-3.5 h-3.5 text-blue-500" />
-                  <div>
-                    <div className="font-semibold text-slate-900 dark:text-white">Inbound Booking Confirmed</div>
-                    <div className="text-[11px] text-slate-500">200 OK • Update status for TRP-84920</div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleTriggerSimulation('outbound_booking')}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
-                >
-                  <ArrowUpRight className="w-3.5 h-3.5 text-sky-500" />
-                  <div>
-                    <div className="font-semibold text-slate-900 dark:text-white">Outbound CRM Push Relay</div>
-                    <div className="text-[11px] text-slate-500">200 OK • Push booking to external CRM</div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleTriggerSimulation('auth_fail')}
-                  className="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 text-rose-600 dark:text-rose-400"
-                >
-                  <Shield className="w-3.5 h-3.5 text-rose-500" />
-                  <div>
-                    <div className="font-semibold">Simulate Signature Mismatch</div>
-                    <div className="text-[11px] text-slate-500">401 Unauthorized • Test alert handling</div>
-                  </div>
-                </button>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Export Options */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700">
+          {/* Cluster 3: Data Export & Management */}
+          <div className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-800/90 p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+            <span className="pl-2 pr-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">Export</span>
             <button
               onClick={handleExportJson}
-              className="px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1"
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
               title="Export filtered logs as JSON"
             >
-              <Download className="w-3 h-3" />
-              JSON
+              <Download className="w-3 h-3 text-slate-400" />
+              <span>JSON</span>
             </button>
+            <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
             <button
               onClick={handleExportCsv}
-              className="px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1"
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-900 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
               title="Export filtered logs as CSV"
             >
-              <Download className="w-3 h-3" />
-              CSV
+              <Download className="w-3 h-3 text-slate-400" />
+              <span>CSV</span>
             </button>
           </div>
 
-          {/* Clear Logs */}
+          {/* Clear Logs Button */}
           <button
             onClick={() => setClearConfirmOpen(true)}
-            className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl border border-slate-200 dark:border-slate-700/80 hover:border-rose-200 dark:hover:border-rose-800 transition-colors shadow-2xs cursor-pointer"
             title="Clear all logs"
+            aria-label="Clear all logs"
           >
             <Trash2 className="w-4 h-4" />
           </button>
