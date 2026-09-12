@@ -110,6 +110,7 @@ import {
 } from '../utils/firestoreQuota';
 import { reconcileTourPackages } from '../utils/packageReconciler';
 import { applyThemeToDOM } from '../services/aiThemeService';
+import { packagesApi } from '../api';
 import {
   safeSetItem,
   safeGetItem,
@@ -3241,6 +3242,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.warn('Package Firestore save notice:', e);
     }
 
+    // Sync with Modular Backend REST API
+    packagesApi.createPackage(newPkg).catch(err => {
+      console.warn('Modular backend API create notice:', err?.message);
+    });
+
     setSelectedPackage(prev => (prev && prev.id === newPkg.id ? newPkg : prev));
     triggerAutoSave('Auto-saving tour package...');
 
@@ -3326,6 +3332,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {
       console.warn('Package Firestore update notice:', e);
     }
+
+    // Sync with Modular Backend REST API
+    packagesApi.updatePackage(pkg.id, updatedPkg).catch(err => {
+      console.warn('Modular backend API update notice:', err?.message);
+    });
 
     setSelectedPackage(prev => (prev && prev.id === updatedPkg.id ? updatedPkg : prev));
     triggerAutoSave('Auto-saving package updates...');
@@ -3537,6 +3548,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.warn('Package Firestore delete notice:', e);
     }
 
+    // Sync with Modular Backend REST API
+    packagesApi.deletePackage(packageId).catch(err => {
+      console.warn('Modular backend API delete notice:', err?.message);
+    });
+
     // Record in System Update History
     recordSystemUpdate({
       title: `Tour Package Deleted: ${pkg?.title || packageId}`,
@@ -3615,7 +3631,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       return merged;
     } catch (err: any) {
-      console.warn('Manual packages sync fallback:', err?.message);
+      console.warn('Firestore packages sync fallback, attempting modular backend API:', err?.message);
+      try {
+        const backendPkgs = await packagesApi.getPackages();
+        if (Array.isArray(backendPkgs) && backendPkgs.length > 0) {
+          const deletedSet = new Set<string>(deletedIds);
+          const cleaned = backendPkgs.filter(p => !deletedSet.has(p.id) && p.status !== 'deleted');
+          setPackages(cleaned);
+          try {
+            safeSetItem(STORAGE_KEYS.PACKAGES, JSON.stringify(cleaned));
+          } catch (e) {}
+          addNotification(
+            'Backend API Synchronized',
+            `Retrieved ${cleaned.length} package(s) from Modular Backend REST API.`,
+            'system'
+          );
+          return cleaned;
+        }
+      } catch (apiErr: any) {
+        console.warn('Modular backend API fallback notice:', apiErr?.message);
+      }
+
       // Fallback: clean current local state against deletedIds
       const deletedSet = new Set<string>(deletedIds);
       const cleaned = packages.filter(p => !deletedSet.has(p.id) && p.status !== 'deleted');

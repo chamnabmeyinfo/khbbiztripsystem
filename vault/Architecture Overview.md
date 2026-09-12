@@ -4,31 +4,31 @@
 
 ## System Design
 
-TripDesk is a **client-side React SPA** with **Firebase as its Backend-as-a-Service (BaaS)**. There is no traditional server — all business logic runs in the browser, secured by Firestore Security Rules.
+TripDesk features a **decoupled modern architecture** combining a **Modular Node/Express Backend (`/server`)** with a **React 19 SPA (`/src`)**, supported by Google Cloud Firestore and Multi-Provider AI services.
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Browser (React SPA)                │
-│                                                      │
-│  ┌──────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │Marketing │  │Customer      │  │Admin          │  │
-│  │LandingPg │  │Portal        │  │Dashboard      │  │
-│  └──────────┘  └──────────────┘  └───────────────┘  │
-│                                                      │
-│  ┌────────────────────────────────────────────────┐  │
-│  │             AppContext (Global State)           │  │
-│  │  • Auth State   • Packages   • Bookings        │  │
-│  │  • Invoices     • Chats      • Notifications   │  │
-│  └────────────────────────────────────────────────┘  │
-└───────────────────┬─────────────────────────────────┘
-                    │ Firebase SDK & Google GenAI
-        ┌───────────┼───────────────┬─────────────────┐
-        ▼           ▼               ▼                 ▼
-  ┌──────────┐ ┌──────────┐  ┌───────────┐     ┌─────────────┐
-  │Firestore │ │Firebase  │  │Firebase   │     │Google Gemini│
-  │Database  │ │Storage   │  │Auth       │     │AI API       │
-  │ (Google) │ │ (Google) │  │ (Google)  │     │  (Google)   │
-  └──────────┘ └──────────┘  └───────────┘     └─────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                    FRONTEND CLIENT (src/ - Presentation)               │
+│  • React 19 UI Views & Components (Marketing, Sales, Portal, Admin)     │
+│  • Feature Hooks (e.g. usePackages) & Context Layer (AppContext)        │
+│  • Standard API Client Layer (src/api/client.ts, packagesApi.ts)       │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Standard REST HTTP (/api/*)
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                    MODULAR BACKEND (server/ - Service Layer)           │
+│  • Routes (/server/routes/api.router.ts)                              │
+│  • Controllers with DTO Validation (/server/modules/*/controller.ts)   │
+│  • Domain Business Services (/server/modules/*/service.ts)             │
+│  • Repositories & Data Access (/server/modules/*/repository.ts)        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Dual-Layer Persistence & AI
+        ┌───────────────────────────┼────────────────────────────┐
+        ▼                           ▼                            ▼
+  ┌──────────────┐            ┌──────────────┐            ┌──────────────┐
+  │Cloud Firestore│           │Firebase Auth │            │Google Gemini │
+  │Enterprise DB │            │& WebAuthn    │            │& Multi-LLM   │
+  └──────────────┘            └──────────────┘            └──────────────┘
+```
 
 ## 🌐 Hosting & Cloud Infrastructure Split
 

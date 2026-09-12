@@ -3,9 +3,9 @@ import path from "path";
 import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { apiRouter } from "./server/routes/api.router";
 
 dotenv.config();
-
 
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
@@ -24,6 +24,9 @@ dotenv.config();
     }
     next();
   });
+
+  // Mount Standard Modular Backend Router
+  app.use("/api", apiRouter);
 
 // Shared Gemini client utility on the server with User-Agent telemetry
   const getAiClient = () => {

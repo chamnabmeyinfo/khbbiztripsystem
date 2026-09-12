@@ -17,6 +17,19 @@ khbbiztripsystem/
 ├── vercel.json                   # Vercel deployment routing configuration
 ├── vite.config.ts                # Vite config with React & Tailwind plugins
 ├── server.ts                     # Full-stack Express server + SSR fallback
+├── app.ts                        # Root Express Application mounting modular backend
+│
+├── server/                       # 🚀 Standard Modular Backend Architecture
+│   ├── types/                    # Common API response & pagination types
+│   ├── middleware/               # CORS, RBAC corporate auth, error handler
+│   ├── routes/                   # Central API router (api.router.ts)
+│   └── modules/                  # Domain-driven backend modules
+│       └── packages/             # Feature 1: Tour Packages & Itinerary Engine
+│           ├── package.types.ts
+│           ├── package.repository.ts
+│           ├── package.service.ts
+│           ├── package.controller.ts
+│           └── package.routes.ts
 │
 ├── vault/                        # 📓 Obsidian Architecture & Knowledge Vault
 │   ├── Home.md                   # Vault root & navigation index
@@ -41,6 +54,14 @@ khbbiztripsystem/
     ├── App.tsx                   # Main root view & modal router
     ├── index.css                 # Tailwind CSS v4 design system
     ├── types.ts                  # Universal TypeScript interfaces & ERP models
+    │
+    ├── api/                      # 🌐 Decoupled Frontend API Client Layer
+    │   ├── client.ts             # Standard fetch HTTP client with auth & error handling
+    │   ├── packagesApi.ts        # Type-safe package & category REST endpoints
+    │   └── index.ts              # API barrel exports
+    │
+    ├── hooks/
+    │   └── usePackages.ts        # Decoupled tour package state & mutation hook
     │
     ├── context/
     │   └── AppContext.tsx        # Central state, Firestore two-way sync & RBAC
